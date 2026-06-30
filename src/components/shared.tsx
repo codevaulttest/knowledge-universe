@@ -79,66 +79,29 @@ const STAR_SHADOWS: Record<number, string> = {
   5: 'rgba(245,158,11,0.8)',
 };
 
-export function Rating({ value }: { value: number }) {
+export function Rating({ value, size = 28 }: { value: number; size?: number }) {
   const { t } = useApp();
   const level = Math.max(0, Math.min(5, value));
   const color = STAR_COLORS[level] ?? STAR_COLORS[0];
   const shadow = STAR_SHADOWS[level] ?? STAR_SHADOWS[0];
-  const sc = 0.75;
-  const base = 6.5 * sc;
-  const single = 11 * sc;
-  const cvs = Math.round(36 * sc);
-  const circleSize = 28;
-
-  // 星星全部黑色（isBlack=true，gemini 激活态风格）
-  const S = (sz: number) => <Star size={sz} fill="#000" strokeWidth={0} />;
-
-  let inner: React.ReactNode;
-  if (level === 0) {
-    inner = null;
-  } else {
-    switch (level) {
-      case 1: inner = S(single); break;
-      case 2: inner = <div style={{ display: 'flex', gap: 2 }}>{S(base)}{S(base)}</div>; break;
-      case 3: inner = (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-          {S(base)}
-          <div style={{ display: 'flex', gap: 2 }}>{S(base)}{S(base)}</div>
-        </div>
-      ); break;
-      case 4: inner = (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-          {S(base)}{S(base)}{S(base)}{S(base)}
-        </div>
-      ); break;
-      case 5: inner = (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(3, ${base}px)`,
-          gridTemplateRows: `repeat(3, ${base}px)`,
-          gap: 2,
-        }}>
-          {S(base)}<span />{S(base)}
-          <span />{S(base)}<span />
-          {S(base)}<span />{S(base)}
-        </div>
-      ); break;
-      default: inner = null;
-    }
-  }
 
   return (
     <div
       aria-label={t(`${level} 星`, `${level} ${level === 1 ? 'star' : 'stars'}`)}
-      style={{
-        width: circleSize, height: circleSize, borderRadius: '50%',
-        backgroundColor: color,
-        boxShadow: `0 0 10px ${shadow}`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
-      }}
+      style={{ position: 'relative', width: size, height: size, flexShrink: 0, filter: `drop-shadow(0 0 6px ${shadow})` }}
     >
-      {inner}
+      <Star size={size} fill={color} strokeWidth={0} style={{ display: 'block' }} />
+      <span style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontWeight: 700,
+        fontSize: Math.floor(size * 0.4),
+        lineHeight: 1,
+        textShadow: '0 1px 2px rgba(0,0,0,0.25)',
+        pointerEvents: 'none',
+      }}>
+        {level}
+      </span>
     </div>
   );
 }

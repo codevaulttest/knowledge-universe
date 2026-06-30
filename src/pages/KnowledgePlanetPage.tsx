@@ -80,67 +80,22 @@ const STAR_SHADOWS: Record<number, string> = {
 function StarDisplay({ level }: { level: number }) {
   const color = STAR_COLORS[level];
   const shadow = STAR_SHADOWS[level];
-  const base = 7;    // 多星排列用
-  const single = 13; // 1★ / 5★ 排列用
-  const cvs = 38;    // 5★ 相对定位容器
-
-  const S = (sz: number) => <Star size={sz} fill="#000" strokeWidth={0} />;
-
-  let inner: React.ReactNode;
-  switch (level) {
-    case 0: inner = <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#000', opacity: 0.35 }} />; break;
-    case 1: inner = S(single); break;
-    case 2: inner = <div style={{ display: 'flex', gap: 2 }}>{S(base)}{S(base)}</div>; break;
-    case 3: inner = (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-        {S(base)}
-        <div style={{ display: 'flex', gap: 2 }}>{S(base)}{S(base)}</div>
-      </div>
-    ); break;
-    case 4: inner = (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-        {S(base)}{S(base)}{S(base)}{S(base)}
-      </div>
-    ); break;
-    case 5: {
-      const r = 11; // 五角形分布半径
-      const angles = [-90, -18, 54, 126, 198]; // 顶点朝上的正五边形
-      inner = (
-        <div style={{ position: 'relative', width: 32, height: 32 }}>
-          {angles.map((deg, i) => {
-            const rad = (deg * Math.PI) / 180;
-            const x = (r * Math.cos(rad)).toFixed(2);
-            const y = (r * Math.sin(rad)).toFixed(2);
-            return (
-              <div
-                key={i}
-                style={{
-                  position: 'absolute',
-                  left: '50%',
-                  top: '50%',
-                  transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-                }}
-              >
-                {S(base)}
-              </div>
-            );
-          })}
-        </div>
-      );
-      break;
-    }
-    default: inner = null;
-  }
+  const size = 44;
 
   return (
-    <div style={{
-      width: 44, height: 44, borderRadius: '50%',
-      backgroundColor: color,
-      boxShadow: `0 0 12px ${shadow}`,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexShrink: 0,
-    }}>
-      {inner}
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0, filter: `drop-shadow(0 0 8px ${shadow})` }}>
+      <Star size={size} fill={color} strokeWidth={0} style={{ display: 'block' }} />
+      <span style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontWeight: 700,
+        fontSize: Math.floor(size * 0.4),
+        lineHeight: 1,
+        textShadow: '0 1px 2px rgba(0,0,0,0.25)',
+        pointerEvents: 'none',
+      }}>
+        {level}
+      </span>
     </div>
   );
 }
