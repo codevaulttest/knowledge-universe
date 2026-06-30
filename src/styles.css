@@ -2207,12 +2207,12 @@ button {
   line-height: 1.5;
 }
 
-/* 手续费区块 — 虚线分隔 */
+/* 手续费区块 — 实线分隔 */
 .pay-page-fee-section {
-  border-top: 1.5px dashed var(--ku-color-border);
+  border-top: 1px solid var(--ku-color-border);
 }
 .pay-page-fee-section .pay-page-row {
-  border-bottom: 1.5px dashed var(--ku-color-border);
+  border-bottom: 1px solid var(--ku-color-border);
 }
 .pay-page-fee-section .pay-page-row:last-child { border-bottom: none; }
 
