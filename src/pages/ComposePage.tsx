@@ -267,17 +267,7 @@ export function ComposePage({
                 {kindLabel[kind]}
               </span>
             )}
-            <button
-              type="button"
-              className={`compose-type-chip compose-type-chip--btn${articleMode ? ' compose-type-chip--active' : ''}${imgCount > 0 || hasVideo ? ' compose-type-chip--dim' : ''}`}
-              onClick={handleToggleArticle}
-              aria-label={t('切换为长文模式', 'Toggle article mode')}
-              aria-pressed={articleMode}
-            >
-              <FileText size={11} strokeWidth={2} aria-hidden />
-              {t('长文', 'Article')}
-              {articleMode && <X size={10} strokeWidth={2.5} aria-hidden />}
-            </button>
+            {/* 长文类型暂未开放 */}
           </div>
         )}
 

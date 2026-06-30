@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { ArrowLeft, Bell, Bookmark, Camera, Check, ChevronDown, ChevronUp, Edit3, Eye, FileText, Gift, Languages, LayoutGrid, Lock, MessageCircle, Repeat2, Settings, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Bell, Bookmark, Camera, Check, Edit3, Eye, FileText, Gift, Languages, LayoutGrid, Lock, MessageCircle, Repeat2, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -24,7 +24,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   // 他人主页内容筛选：'all' | 'free' | 'sub'
   const [contentFilter, setContentFilter] = useState<'all' | 'free' | 'sub'>('all');
   const [followListType, setFollowListType] = useState<'following' | 'followers' | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
   const [confirmDeleteDraftId, setConfirmDeleteDraftId] = useState<string | null>(null);
   const [tipTarget, setTipTarget] = useState<{ context: 'post' | 'author'; postTitle?: string } | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -90,10 +89,10 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               <button
                 type="button"
                 className="profile-settings-btn"
-                onClick={() => setShowSettings(true)}
-                aria-label={t('设置', 'Settings')}
+                onClick={() => setLanguage(language === 'zh-CN' ? 'en' : 'zh-CN')}
+                aria-label={t('切换语言', 'Switch language')}
               >
-                <Settings size={20} strokeWidth={1.8} />
+                <Languages size={20} strokeWidth={1.8} />
               </button>
             </div>
           ) : null}
@@ -279,13 +278,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         />
       )}
 
-      {showSettings && (
-        <SettingsDropdown
-          language={language}
-          setLanguage={setLanguage}
-          onClose={() => setShowSettings(false)}
-        />
-      )}
 
       {tipTarget && (
         <TipModal
@@ -502,79 +494,6 @@ function FollowListModal({
         </div>
       </div>
     </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Settings Sheet
-// ═══════════════════════════════════════════════════════════════
-
-function SettingsDropdown({
-  language,
-  setLanguage,
-  onClose,
-}: {
-  language: string;
-  setLanguage: (lang: 'zh-CN' | 'en') => void;
-  onClose: () => void;
-}) {
-  const { t } = useApp();
-  const [expanded, setExpanded] = useState<string | null>('language');
-
-  const languageOptions = [
-    { value: 'zh-CN' as const, label: '简体中文' },
-    { value: 'en' as const, label: 'English' },
-  ];
-
-  const currentLangLabel = languageOptions.find(o => o.value === language)?.label ?? '';
-
-  return (
-    <>
-      <div className="settings-backdrop" onClick={onClose} />
-      <div className="settings-sheet" role="dialog" aria-label={t('设置', 'Settings')}>
-        <div className="settings-sheet-body">
-          <div className="settings-section">
-
-            {/* Language row */}
-            <button
-              type="button"
-              className={`settings-row${expanded === 'language' ? ' settings-row--expanded' : ''}`}
-              onClick={() => setExpanded(prev => prev === 'language' ? null : 'language')}
-              aria-expanded={expanded === 'language'}
-            >
-              <span className="settings-row-icon"><Languages size={17} strokeWidth={1.8} /></span>
-              <span className="settings-row-label">{t('语言', 'Language')}</span>
-              <span className="settings-row-value">{currentLangLabel}</span>
-              <span className="settings-row-chevron">
-                {expanded === 'language' ? <ChevronUp size={15} strokeWidth={2} /> : <ChevronDown size={15} strokeWidth={2} />}
-              </span>
-            </button>
-
-            {expanded === 'language' && (
-              <div className="settings-row-options" role="radiogroup" aria-label={t('选择语言', 'Choose language')}>
-                {languageOptions.map(option => {
-                  const isSelected = language === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      className={`settings-option${isSelected ? ' settings-option--selected' : ''}`}
-                      role="radio"
-                      aria-checked={isSelected}
-                      onClick={() => { setLanguage(option.value); onClose(); }}
-                    >
-                      <span>{option.label}</span>
-                      {isSelected && <Check size={15} strokeWidth={2.4} aria-hidden="true" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-          </div>
-        </div>
-      </div>
-    </>
   );
 }
 

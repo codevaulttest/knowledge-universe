@@ -144,7 +144,7 @@ export default function App() {
   const goBack = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
   const setTab = (t: 0 | 1) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
 
-  const [posts, setPosts] = useState<Post[]>(ALL_POSTS);
+  const [posts, setPosts] = useState<Post[]>(ALL_POSTS.filter(p => p.kind !== 'article'));
 
   const showToast = (msg: string, type?: 'demo') => {
     setToastMsg({ msg, type });
