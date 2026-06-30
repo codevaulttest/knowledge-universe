@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fdf6e3"/>
+      <stop offset="100%" stop-color="#f0e0c0"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bg)"/>
+  <!-- shelf -->
+  <rect x="0" y="400" width="600" height="18" fill="#c8a472" rx="2"/>
+  <rect x="0" y="418" width="600" height="8" fill="#a07848" rx="1"/>
+  <!-- books -->
+  <rect x="70" y="260" width="54" height="140" fill="#e85555" rx="4"/>
+  <rect x="70" y="262" width="8" height="136" fill="#d04040" rx="2"/>
+  <rect x="128" y="280" width="46" height="120" fill="#5577e8" rx="4"/>
+  <rect x="128" y="282" width="7" height="116" fill="#3a5cd0" rx="2"/>
+  <rect x="178" y="255" width="60" height="145" fill="#45b87c" rx="4"/>
+  <rect x="178" y="257" width="9" height="141" fill="#309060" rx="2"/>
+  <rect x="242" y="240" width="50" height="160" fill="#f0a030" rx="4"/>
+  <rect x="242" y="242" width="8" height="156" fill="#d08010" rx="2"/>
+  <rect x="296" y="270" width="42" height="130" fill="#9b6be0" rx="4"/>
+  <rect x="296" y="272" width="7" height="126" fill="#7a50c0" rx="2"/>
+  <rect x="342" y="248" width="56" height="152" fill="#e04f80" rx="4"/>
+  <rect x="342" y="250" width="8" height="148" fill="#c03060" rx="2"/>
+  <rect x="402" y="265" width="46" height="135" fill="#38b8c8" rx="4"/>
+  <rect x="402" y="267" width="7" height="131" fill="#2090a8" rx="2"/>
+  <rect x="452" y="275" width="52" height="125" fill="#d4623c" rx="4"/>
+  <rect x="452" y="277" width="8" height="121" fill="#b04020" rx="2"/>
+  <!-- decorative text lines on books -->
+  <rect x="78" y="300" width="38" height="3" fill="#fff" opacity="0.4" rx="1"/>
+  <rect x="78" y="308" width="28" height="3" fill="#fff" opacity="0.4" rx="1"/>
+  <rect x="136" y="315" width="30" height="3" fill="#fff" opacity="0.4" rx="1"/>
+  <rect x="186" y="295" width="42" height="3" fill="#fff" opacity="0.4" rx="1"/>
+  <rect x="186" y="303" width="30" height="3" fill="#fff" opacity="0.4" rx="1"/>
+  <!-- potted plant -->
+  <ellipse cx="535" cy="368" rx="28" ry="14" fill="#4aaa60" opacity="0.9"/>
+  <ellipse cx="520" cy="355" rx="18" ry="12" fill="#5abe72"/>
+  <ellipse cx="548" cy="358" rx="16" ry="10" fill="#3a9850"/>
+  <rect x="525" y="375" width="20" height="25" fill="#a07040" rx="3"/>
+  <rect x="520" y="392" width="30" height="8" fill="#8a6030" rx="2"/>
+</svg>

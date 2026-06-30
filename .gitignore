@@ -1,0 +1,20 @@
+node_modules/
+dist/
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+archive
+
+# Private / agent config
+CLAUDE.md
+AGENTS.md
+.claude/
+raw_context/
+design-qa.md
+docs/
+design/
+
+# Firebase config
+.firebase/
+.firebaserc
+firebase.json

@@ -1,0 +1,375 @@
+/*
+ * 知识宇宙 / 信息广场 Design Tokens
+ * ============================================================
+ * 本文件是 knowledge-universe 项目唯一的设计系统真源。
+ * 所有 UI 实现必须从此处消费变量，禁止在组件或页面中出现硬编码
+ * 颜色值、字体名、间距数值、圆角、阴影等。
+ *
+ * 品牌色系：Mint / Teal（区别于 CodeVAULT 主 App 的 #526CFF 蓝紫色系）
+ * 更新时间：2026-05-27
+ * ============================================================
+ */
+
+:root {
+
+  /* ═══════════════════════════════════════════════════
+     品牌色 (Brand — Mint / Teal)
+     ═══════════════════════════════════════════════════ */
+
+  --ku-color-primary:          #00cdb8;
+  --ku-color-primary-dark:     #02bba9;
+  --ku-color-on-primary:       #ffffff;
+  --ku-color-compose-button-bg:#ffffff;
+  --ku-color-compose-button-icon:#1bcab4;
+  --ku-gradient-primary:       linear-gradient(135deg, #05d0b9 0%, #10b69b 100%);
+  --ku-shadow-primary:         0 4px 12px rgba(0, 200, 180, 0.25);
+  --ku-shadow-compose-button:  0 8px 24px rgba(14, 22, 44, 0.10);
+  --ku-color-primary-alpha-04: rgba(0, 205, 184, 0.04);  /* 未读条目底色 */
+  --ku-color-primary-alpha-06: rgba(0, 205, 184, 0.06);  /* 按钮 hover 底色 */
+  --ku-color-primary-alpha-14: rgba(0, 205, 184, 0.14);  /* 按钮 active 底色 */
+
+  /* Badge（薄荷浅色）*/
+  --ku-color-badge-bg:         #d6fff6;
+  --ku-color-badge-text:       #00bda9;
+
+  /* ═══════════════════════════════════════════════════
+     文本颜色 (Text)
+     ═══════════════════════════════════════════════════ */
+
+  --ku-color-text-primary:     #07090d;  /* 正文、标题 */
+  --ku-color-text-secondary:   #8391aa;  /* 次要文本、muted */
+  --ku-color-text-meta:        #8795ad;  /* 作者时间戳、辅助说明 */
+  --ku-color-text-tab-inactive:#7d8da7;  /* 导航 Tab 未激活 */
+  --ku-color-text-strong:      #111;     /* 节点头、强调文本 */
+  --ku-color-text-action:      #060606;  /* 操作栏数字 */
+
+  /* ═══════════════════════════════════════════════════
+     语义色 (Semantic)
+     ═══════════════════════════════════════════════════ */
+
+  --ku-color-success-bg:       #d9f7e6;
+  --ku-color-success-text:     #19b750;
+  --ku-color-heat:             #ff4824;  /* 热度火焰图标 */
+  --ku-color-text-danger:      #e74c3c;  /* 危险操作文字（删除等） */
+  --ku-color-verified:         #1B6BFF;  /* 用户蓝 V 认证标识 */
+  --ku-color-verified-check:   #ffffff;  /* 蓝 V 内勾色 */
+
+  /* ═══════════════════════════════════════════════════
+     背景色 (Surface)
+     ═══════════════════════════════════════════════════ */
+
+  --ku-color-bg-root:          #f5f6f8;  /* <html> 背景 */
+  --ku-color-bg-page:          #f0f2f5;  /* <body> / 页面底色 */
+  --ku-color-bg-phone:         #ffffff;  /* 手机壳内容区 */
+  --ku-color-bg-tabs:          rgba(255, 255, 255, 0.96);  /* 顶部 Tab 毛玻璃背景 */
+  --ku-color-nav-glass:        rgba(248, 251, 252, 0.94);  /* iOS 26 Liquid Glass 导航材质 */
+  --ku-color-nav-glass-border: rgba(255, 255, 255, 0.82);
+  --ku-color-nav-glass-shine:  linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.08));
+  --ku-color-nav-active-bg:    rgba(0, 205, 184, 0.12);
+  --ku-color-modal-backdrop:   rgba(14, 22, 44, 0.45);
+
+  /* iOS 26 原生 Alert（Liquid Glass + 左对齐）*/
+  --ku-ios26-system-blue:          #007aff;
+  --ku-ios26-system-red:           #ff3b30;
+  --ku-ios26-alert-glass:          rgba(255, 255, 255, 0.84);
+  --ku-ios26-alert-glass-border:   rgba(255, 255, 255, 0.78);
+  --ku-ios26-alert-glass-shine:    linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.10));
+  --ku-ios26-alert-glass-filter:   blur(40px) saturate(180%);
+  --ku-ios26-alert-label:          #000000;
+  --ku-ios26-alert-label-secondary: rgba(60, 60, 67, 0.6);
+  --ku-ios26-alert-separator:      rgba(60, 60, 67, 0.16);
+  --ku-ios26-alert-backdrop:       rgba(0, 0, 0, 0.28);
+  --ku-ios26-alert-pressed:        rgba(60, 60, 67, 0.08);
+  --ku-ios26-alert-width:          300px;
+  --ku-ios26-alert-radius:         20px;
+  --ku-ios26-alert-action-height:  56px;
+  --ku-shadow-ios26-alert:         0 12px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+
+  /* ═══════════════════════════════════════════════════
+     边框 / 分割线 (Border & Divider)
+     ═══════════════════════════════════════════════════ */
+
+  --ku-color-border:           #e9edf5;  /* 帖子分割线（--line） */
+  --ku-color-border-card:      #e6ecf5;  /* 节点卡片边框 */
+  --ku-color-border-cell:      #edf0f5;  /* 节点 cell 内分割线 */
+  --ku-color-border-control:   #d4dbe6;  /* 描边按钮（已关注等）轮廓，白底可见 */
+  --ku-color-graph-line:       #d8edf0;  /* 知识图谱连线 */
+
+  /* ═══════════════════════════════════════════════════
+     字体 (Typography)
+     ═══════════════════════════════════════════════════ */
+
+  --ku-font-family:
+    -apple-system, BlinkMacSystemFont,
+    "PingFang SC", "Microsoft YaHei",
+    "Helvetica Neue", Arial, sans-serif;
+
+  /* ── 字号 / 行高 / 字重组合 ── */
+  --ku-text-author-name:       700 15px/19px var(--ku-font-family);  /* 作者姓名 */
+  --ku-text-tab:               600 15px/1 var(--ku-font-family);     /* Tab 标签 */
+  --ku-text-post-body:         400 15px/1.62 var(--ku-font-family);  /* 帖子正文 — iOS 标准正文尺寸 */
+  --ku-text-node-label:        600 12px/1 var(--ku-font-family);     /* 节点 cell label */
+  --ku-text-node-value:        400 13px/16px var(--ku-font-family);  /* 节点 cell value */
+  --ku-text-node-code:         inherit;                               /* 节点编号（继承主色） */
+  --ku-text-metric:            600 12px/1 var(--ku-font-family);     /* 指标标签 */
+  --ku-text-metric-value:      400 13px/1 var(--ku-font-family);     /* 指标数值 */
+  --ku-text-node-head:         600 12px/1 var(--ku-font-family);     /* 节点卡头部 */
+  --ku-text-action:            400 13px/1 var(--ku-font-family);     /* 操作栏数字 */
+  --ku-text-action-cta:        600 12px/1 var(--ku-font-family);    /* 操作栏 CTA 按钮文字 */
+  --ku-text-badge:             600 12px/1 var(--ku-font-family);     /* 徽章 */
+  --ku-text-body-sm:           400 14px/1.5 var(--ku-font-family);   /* 小号正文 / 作者名 */
+  --ku-text-meta:              400 12px/1.4 var(--ku-font-family);  /* 时间戳、辅助 */
+  --ku-text-duration:          400 12px/15px var(--ku-font-family);  /* 视频时长 */
+  --ku-text-reward-chip:       400 12px/1 var(--ku-font-family);     /* 收益芯片 */
+  --ku-text-caption:           400 12px/1 var(--ku-font-family);     /* 最小辅助文字 */
+  --ku-text-caption-strong:    700 12px/1.4 var(--ku-font-family);   /* 强调辅助文字 */
+  --ku-text-locked-media:      600 11px/1 var(--ku-font-family);     /* 锁定图片提示 */
+
+  /* ═══════════════════════════════════════════════════
+     圆角 (Border Radius)
+     ═══════════════════════════════════════════════════ */
+
+  --ku-radius-tab-indicator:   2.5px; /* Tab 激活下划线 */
+  --ku-radius-badge:           4px;   /* 用户徽章 */
+  --ku-radius-media:           10px;  /* 文章/视频封面 — iOS 风格更大圆角 */
+  --ku-radius-card:            12px;  /* 节点卡片、帖子卡片 — iOS HIG 推荐 */
+  --ku-radius-reward-chip:     12px;  /* 收益状态芯片 */
+  --ku-radius-nav-shell:       30px;  /* iOS 26 浮动导航胶囊 */
+  --ku-radius-nav-active:      24px;  /* 与导航胶囊同心的选中态 */
+  --ku-radius-modal:           20px;  /* 全局居中弹窗 */
+  --ku-radius-circle:          50%;   /* 圆形头像、评级球 */
+
+  /* ═══════════════════════════════════════════════════
+     阴影 (Shadows)
+     ═══════════════════════════════════════════════════ */
+
+  --ku-shadow-phone:           0 0 0 1px rgba(0,0,0,0.06), 0 8px 32px rgba(14,22,44,0.10);
+  --ku-shadow-card:            0 1px 8px rgba(42, 78, 120, 0.04);
+  --ku-shadow-bar:             0 2px 12px rgba(14, 22, 44, 0.08), 0 0 0 1px rgba(14, 22, 44, 0.02);
+  --ku-shadow-nav:             0 8px 28px rgba(23, 43, 61, 0.14), 0 1px 3px rgba(23, 43, 61, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --ku-shadow-nav-active:      inset 0 0 0 1px rgba(255, 255, 255, 0.56), 0 2px 8px rgba(0, 167, 151, 0.10);
+  --ku-shadow-modal:           0 20px 56px rgba(14, 22, 44, 0.24);
+  --ku-shadow-locked-media-callout: 0 6px 18px rgba(14, 22, 44, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+
+  /* ═══════════════════════════════════════════════════
+     布局尺寸 (Layout)
+     ═══════════════════════════════════════════════════ */
+
+  --ku-phone-width:            390px;   /* iPhone 15 标准宽度 */
+  --ku-phone-height:           844px;   /* iPhone 15 标准高度（含状态栏+Home Indicator）*/
+  --ku-tabs-height:            52px;
+  --ku-tabs-action-column:     76px;
+  --ku-feed-header-side-column: 60px;
+  --ku-feed-header-actions-column: 84px;
+  --ku-feed-header-actions-gap: 2px;
+  --ku-feed-header-actions-padding-right: 6px;
+  --ku-feed-tabs-gap:          8px;
+  --ku-feed-tabs-padding-x:    0px;
+  --ku-feed-tab-padding-x:     8px;
+  --ku-compose-button-size:    32px;
+  --ku-compose-button-inset:   16px;
+  --ku-compose-fab-size:       52px;
+  --ku-compose-fab-inset:      20px;
+  --ku-compose-fab-icon-size:  24px;
+  --ku-post-button-width:      36px;
+  --ku-post-button-height:     28px;
+  --ku-avatar-size:            40px;
+  --ku-avatar-size-compact:    32px;
+  --ku-activity-avatar-step:   14px;
+  --ku-content-width:          346px;  /* feed 内内容最大宽度（390 - 22×2） */
+  --ku-feed-padding-x:         22px;   /* feed 左右内边距 */
+  --ku-feed-padding-top:       8px;    /* feed 顶部内边距 */
+  --ku-post-gap:               14px;   /* 帖子间距 */
+  --ku-author-meta-gap:        12px;   /* 头像 → 作者信息间距 */
+  --ku-detail-composer-gap:    9px;    /* 详情页底部回复栏控件间距 */
+  --ku-detail-composer-padding-bottom: 14px; /* 详情页底部回复栏底部留白 */
+  --ku-search-header-height:   56px;
+  --ku-search-input-height:    38px;
+  --ku-search-input-icon-size: 16px;
+  --ku-search-input-padding-x: 12px;
+  --ku-search-input-gap:       8px;
+  --ku-search-content-padding-top: 14px;
+  --ku-search-content-padding-bottom: 20px;
+  --ku-search-section-gap:     20px;
+  --ku-search-section-head-gap: 10px;
+  --ku-search-chip-gap:        8px;
+  --ku-search-chip-padding-y:  9px;
+  --ku-search-chip-padding-x:  12px;
+  --ku-search-chip-remove-size: 20px;
+
+  --ku-media-image-ratio:      16 / 9;  /* 单图比例 */
+  --ku-media-article-ratio:    2.5 / 1; /* 文章 feed 封面比例 */
+  --ku-media-video-ratio:      16 / 9;  /* 视频封面比例 */
+  --ku-media-grid-gap:         3px;
+  --ku-tabs-padding-top:       10px;
+  --ku-layout-max-width:       480px;  /* 桌面端 phone-shell 居中限宽 */
+  --ku-nav-bottom:             24px;
+  --ku-nav-inset-x:            16px;
+  --ku-nav-height:             60px;
+  --ku-nav-padding:            6px;
+  --ku-nav-item-size:          48px;
+  --ku-nav-item-gap:           2px;
+  --ku-nav-planet-icon-size:   24px;
+  --ku-nav-active-width:       56px;
+  --ku-nav-glass-filter:       blur(30px) saturate(180%);
+  /* CodeVAULT 宿主底栏（复刻 Fast 虚拟卡原型） */
+  --ku-host-nav-height:        82px;
+  --ku-host-nav-padding-top:   4px;
+  --ku-host-nav-item-padding-y:4px;
+  --ku-host-nav-icon-size:     26px;
+  --ku-host-nav-icon-gap:      1px;
+  --ku-host-nav-active:        #526cff;
+  --ku-host-nav-inactive:      #9ba0b5;
+  --ku-host-nav-border:        rgba(0, 0, 0, 0.06);
+  --ku-host-nav-home-width:    134px;
+  --ku-host-nav-home-height:   5px;
+  --ku-host-nav-home-bottom:   8px;
+  --ku-host-nav-home-opacity:  0.18;
+  --ku-layout-home-clearance:  calc(var(--ku-host-nav-home-bottom) + var(--ku-host-nav-home-height) + 12px);
+  --ku-host-nav-text:          400 12px/1.3 var(--ku-font-family);
+  --ku-compose-fab-bottom:     calc(var(--ku-host-nav-height) + var(--ku-compose-fab-inset));
+  --ku-modal-width:            400px;
+  --ku-modal-compact-width:    280px;
+  --ku-modal-screen-padding:   24px;
+  --ku-modal-content-padding:  20px;
+  --ku-modal-max-height:       calc(100vh - 48px);
+  --ku-lightbox-lock-icon-size: 28px;
+  --ku-lightbox-lock-gap:      12px;
+  --ku-lightbox-unlock-padding-y: 10px;
+  --ku-lightbox-unlock-padding-x: 18px;
+  --ku-article-card-padding-y: 12px;
+  --ku-article-card-padding-x: 14px;
+  --ku-article-card-gap:       12px;
+  --ku-compose-cover-meta-gap: 6px;
+  --ku-compose-cover-hint-gap: 8px;
+  /* 响应式断点 600px 因 CSS 规范限制无法在 @media 中使用变量，见 styles.css */
+
+  /* ═══════════════════════════════════════════════════
+     知识星球节点徽标 (GeminiNodeBadge)
+     ═══════════════════════════════════════════════════ */
+
+  --ku-gemini-bg:              #f4fbfb;
+  --ku-gemini-bg-hover:        #edf8f8;
+  --ku-gemini-border:          #dbf0f0;
+  --ku-gemini-text:            #009e8e;
+  --ku-gemini-id:              #8db7bb;
+  --ku-gemini-icon:            #00bda9;
+  --ku-gemini-icon-size:       13px;
+  --ku-text-gemini:            600 12px/1 var(--ku-font-family);
+
+  /* ═══════════════════════════════════════════════════
+     付费内容遮罩 (ContentMask)
+     ═══════════════════════════════════════════════════ */
+
+  --ku-mask-color-from:        rgba(255, 255, 255, 0);
+  --ku-mask-color-to:          rgba(255, 255, 255, 1);
+  --ku-article-mask-fade-height: 60px;
+  --ku-unlock-bg:              #f4fbfb;
+  --ku-unlock-bg-hover:        #edf8f8;
+  --ku-unlock-border:          #dbf0f0;
+  --ku-unlock-text:            #009e8e;
+  --ku-text-unlock:            500 12px/1 var(--ku-font-family);
+  --ku-lightbox-lock-overlay:  rgba(0, 0, 0, 0.62);
+  --ku-lightbox-locked-filter: brightness(0.42) saturate(0.55);
+  --ku-locked-media-scrim:     rgba(231, 244, 242, 0.74);
+  --ku-locked-media-scrim-hover: rgba(219, 241, 237, 0.68);
+  --ku-locked-media-filter:    blur(8px) saturate(0.72) brightness(1.04);
+  --ku-locked-media-filter-hover: blur(6px) saturate(0.82) brightness(1.02);
+  --ku-locked-media-placeholder-bg: #bcc3cf;
+  --ku-locked-media-placeholder-bg-hover: #b3bac7;
+  --ku-locked-media-placeholder-text: #616a7b;
+  --ku-locked-media-callout-bg: rgba(255, 255, 255, 0.88);
+  --ku-locked-media-callout-border: 1px solid rgba(255, 255, 255, 0.82);
+  --ku-locked-media-callout-text: #587276;
+  --ku-locked-media-callout-height: 34px;
+  --ku-locked-media-callout-padding-y: 5px;
+  --ku-locked-media-callout-padding-x: 10px;
+  --ku-locked-media-callout-gap: 6px;
+  --ku-locked-media-icon-size: 22px;
+  --ku-locked-media-icon-bg:   rgba(0, 205, 184, 0.12);
+  --ku-locked-media-icon-color:#009e8e;
+
+  /* ═══════════════════════════════════════════════════
+     知识星球节点页 (KnowledgePlanetPage)
+     ═══════════════════════════════════════════════════ */
+  --ku-planet-airdrop-bg:          #f0fdf9;
+  --ku-planet-airdrop-border:      rgba(0, 205, 184, 0.28);
+  --ku-planet-airdrop-amount:      #007a6f;
+  --ku-planet-node-upgrade-bg:     rgba(0, 205, 184, 0.09);
+  --ku-planet-node-upgrade-border: rgba(0, 205, 184, 0.35);
+  --ku-planet-node-upgrade-text:   var(--ku-color-primary);
+
+  /* 节点面额标签（10 / 100 / 1000 PB），层级：金(最高) > 薄荷(中) > 灰(基础) */
+  --ku-planet-tier-prem-bg:    #ffedcc;                          /* 1000 PB —— 金，最高档 */
+  --ku-planet-tier-prem-text:  #a05e00;
+  --ku-planet-tier-prem-ring:  rgba(160, 94, 0, 0.28);
+  --ku-planet-tier-mid-bg:     var(--ku-color-primary-alpha-14); /* 100 PB —— 品牌薄荷，中档 */
+  --ku-planet-tier-mid-text:   var(--ku-color-primary-dark);
+  --ku-planet-tier-base-bg:    #eef1f6;                          /* 10 PB —— 灰，基础档 */
+  --ku-planet-tier-base-text:  #6b788e;
+
+  /* ═══════════════════════════════════════════════════
+     创世节点运营 Banner (GenesisBanner)
+     —— 关闭按钮用深色半透明，确保在高亮插画区也清晰可见
+     ═══════════════════════════════════════════════════ */
+  --ku-genesis-overlay-chip:        rgba(10, 11, 13, 0.46);
+  --ku-genesis-overlay-chip-active: rgba(10, 11, 13, 0.64);
+  --ku-genesis-overlay-chip-ring:   rgba(255, 255, 255, 0.45);
+
+  /* Motion */
+  --ku-motion-fast:            160ms ease;
+}
+
+/* ════════════════════════════════════════════════════════════
+   蓝色主题覆盖（星云蓝 #1B6BFF）
+   用法：<html data-theme="blue"> 切换；移除属性恢复青绿
+   ════════════════════════════════════════════════════════════ */
+[data-theme="blue"] {
+
+  /* 品牌主色 */
+  --ku-color-primary:          #1B6BFF;
+  --ku-color-primary-dark:     #1259EE;
+  --ku-color-compose-button-icon: #1B6BFF;
+  --ku-gradient-primary:       linear-gradient(135deg, #1B6BFF 0%, #1259EE 100%);
+  --ku-shadow-primary:         0 4px 12px rgba(27, 107, 255, 0.25);
+  --ku-color-primary-alpha-04: rgba(27, 107, 255, 0.04);
+  --ku-color-primary-alpha-06: rgba(27, 107, 255, 0.06);
+  --ku-color-primary-alpha-14: rgba(27, 107, 255, 0.14);
+
+  /* Badge */
+  --ku-color-badge-bg:         #e8f0ff;
+  --ku-color-badge-text:       #1B6BFF;
+
+  /* 导航激活态 */
+  --ku-color-nav-active-bg:    rgba(27, 107, 255, 0.12);
+  --ku-shadow-nav-active:      inset 0 0 0 1px rgba(255, 255, 255, 0.56), 0 2px 8px rgba(27, 107, 255, 0.10);
+
+  /* 知识图谱连线（青绿淡蓝色 → 星空蓝淡色） */
+  --ku-color-graph-line:       #ccd8f5;
+
+  /* 知识星球节点徽标 */
+  --ku-gemini-bg:              #f0f5ff;
+  --ku-gemini-bg-hover:        #e8efff;
+  --ku-gemini-border:          #c8daff;
+  --ku-gemini-text:            #1259EE;
+  --ku-gemini-id:              #7ba0e0;
+  --ku-gemini-icon:            #1B6BFF;
+
+  /* 付费内容遮罩 / 解锁区块 */
+  --ku-unlock-bg:              #f0f5ff;
+  --ku-unlock-bg-hover:        #e8efff;
+  --ku-unlock-border:          #c8daff;
+  --ku-unlock-text:            #1259EE;
+  --ku-locked-media-scrim:     rgba(224, 234, 255, 0.74);
+  --ku-locked-media-scrim-hover: rgba(210, 225, 255, 0.68);
+  --ku-locked-media-icon-bg:   rgba(27, 107, 255, 0.12);
+  --ku-locked-media-icon-color:#1259EE;
+  --ku-locked-media-callout-text: #3d5a8a;
+
+  /* 知识星球节点页 */
+  --ku-planet-airdrop-bg:      #f0f5ff;
+  --ku-planet-airdrop-border:  rgba(27, 107, 255, 0.28);
+  --ku-planet-airdrop-amount:  #1248cc;
+  --ku-planet-node-upgrade-bg: rgba(27, 107, 255, 0.09);
+  --ku-planet-node-upgrade-border: rgba(27, 107, 255, 0.35);
+}

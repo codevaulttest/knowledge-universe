@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8eef4"/>
+      <stop offset="100%" stop-color="#d0dce8"/>
+    </linearGradient>
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8d5b8"/>
+      <stop offset="100%" stop-color="#c8b090"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#wall)"/>
+  <!-- floor/desk transition -->
+  <rect x="0" y="370" width="600" height="230" fill="url(#desk)"/>
+  <rect x="0" y="368" width="600" height="6" fill="#b89870" rx="1"/>
+  <!-- monitor stand -->
+  <rect x="258" y="335" width="84" height="40" fill="#c0c0c8" rx="4"/>
+  <rect x="240" y="370" width="120" height="8" fill="#a8a8b0" rx="3"/>
+  <!-- monitor -->
+  <rect x="100" y="120" width="400" height="230" fill="#1a1a2e" rx="12"/>
+  <rect x="112" y="132" width="376" height="206" fill="#0d1117" rx="6"/>
+  <!-- screen content - code editor -->
+  <rect x="112" y="132" width="80" height="206" fill="#161b22" rx="6"/>
+  <!-- file tree -->
+  <rect x="122" y="150" width="60" height="6" fill="#58a6ff" rx="1" opacity="0.8"/>
+  <rect x="128" y="164" width="50" height="5" fill="#8b949e" rx="1" opacity="0.6"/>
+  <rect x="128" y="176" width="44" height="5" fill="#8b949e" rx="1" opacity="0.6"/>
+  <rect x="128" y="188" width="52" height="5" fill="#79c0ff" rx="1" opacity="0.7"/>
+  <rect x="128" y="200" width="40" height="5" fill="#8b949e" rx="1" opacity="0.5"/>
+  <!-- code content -->
+  <rect x="200" y="148" width="280" height="6" fill="#ff7b72" rx="1" opacity="0.8"/>
+  <rect x="200" y="162" width="60" height="5" fill="#79c0ff" rx="1" opacity="0.8"/>
+  <rect x="268" y="162" width="100" height="5" fill="#fff" rx="1" opacity="0.6"/>
+  <rect x="200" y="176" width="50" height="5" fill="#7ee787" rx="1" opacity="0.8"/>
+  <rect x="258" y="176" width="120" height="5" fill="#e6edf3" rx="1" opacity="0.5"/>
+  <rect x="200" y="190" width="80" height="5" fill="#79c0ff" rx="1" opacity="0.7"/>
+  <rect x="288" y="190" width="90" height="5" fill="#ffa657" rx="1" opacity="0.7"/>
+  <rect x="200" y="204" width="40" height="5" fill="#ff7b72" rx="1" opacity="0.8"/>
+  <rect x="200" y="218" width="140" height="5" fill="#e6edf3" rx="1" opacity="0.4"/>
+  <rect x="200" y="232" width="70" height="5" fill="#7ee787" rx="1" opacity="0.7"/>
+  <rect x="278" y="232" width="110" height="5" fill="#e6edf3" rx="1" opacity="0.4"/>
+  <rect x="200" y="246" width="50" height="5" fill="#79c0ff" rx="1" opacity="0.7"/>
+  <rect x="200" y="260" width="100" height="5" fill="#ffa657" rx="1" opacity="0.6"/>
+  <rect x="308" y="260" width="80" height="5" fill="#e6edf3" rx="1" opacity="0.4"/>
+  <!-- keyboard -->
+  <rect x="150" y="395" width="300" height="55" fill="#d8d8e0" rx="6"/>
+  <rect x="160" y="405" width="280" height="36" fill="#c8c8d0" rx="4"/>
+  <!-- key rows -->
+  <rect x="166" y="409" width="268" height="8" fill="none" stroke="#b0b0b8" stroke-width="0.5"/>
+  <rect x="166" y="421" width="268" height="8" fill="none" stroke="#b0b0b8" stroke-width="0.5"/>
+  <!-- mouse -->
+  <ellipse cx="498" cy="420" rx="28" ry="34" fill="#d0d0d8"/>
+  <line x1="498" y1="386" x2="498" y2="404" stroke="#b8b8c0" stroke-width="1.5"/>
+  <!-- coffee mug -->
+  <rect x="80" y="368" width="45" height="48" fill="#fff" rx="6" stroke="#ddd" stroke-width="1"/>
+  <path d="M 125 380 Q 145 380 145 395 Q 145 410 125 410" fill="none" stroke="#ddd" stroke-width="3"/>
+  <rect x="86" y="374" width="33" height="12" fill="#c8956a" rx="2" opacity="0.6"/>
+  <!-- plant -->
+  <rect x="498" y="350" width="16" height="20" fill="#8b6040" rx="2"/>
+  <rect x="492" y="340" width="28" height="12" fill="#c8a070" rx="3"/>
+  <ellipse cx="506" cy="325" rx="20" ry="18" fill="#4aaa60"/>
+  <ellipse cx="490" cy="330" rx="14" ry="16" fill="#5bc070"/>
+  <ellipse cx="522" cy="332" rx="12" ry="14" fill="#3a9850"/>
+</svg>

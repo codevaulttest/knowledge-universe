@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../wujie_mono/apps/web3/gemini"
+		}
+	],
+	"settings": {
+		"claudeCode.allowDangerouslySkipPermissions": true
+	}
+}

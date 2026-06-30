@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <rect width="600" height="600" fill="#f0faf4"/>
+  <text x="300" y="52" text-anchor="middle" fill="#1a6640" font-size="20" font-weight="700" font-family="sans-serif">Day 180 ✓</text>
+  <!-- Calendar grid: 6 months × 30 days -->
+  <!-- Month labels -->
+  <text x="68" y="88" fill="#2a8050" font-size="13" font-weight="600" font-family="sans-serif">Jan</text>
+  <text x="148" y="88" fill="#2a8050" font-size="13" font-weight="600" font-family="sans-serif">Feb</text>
+  <text x="228" y="88" fill="#2a8050" font-size="13" font-weight="600" font-family="sans-serif">Mar</text>
+  <text x="308" y="88" fill="#2a8050" font-size="13" font-weight="600" font-family="sans-serif">Apr</text>
+  <text x="388" y="88" fill="#2a8050" font-size="13" font-weight="600" font-family="sans-serif">May</text>
+  <text x="468" y="88" fill="#2a8050" font-size="13" font-weight="600" font-family="sans-serif">Jun</text>
+  <!-- Day dots grid: 30 days per month, 6 months -->
+  <!-- Each dot: 14x14, gap 4, 6 columns per month, 5 rows -->
+  <!-- Using script-like repeated structure for 30×6 = 180 dots -->
+  <!-- I'll draw them month by month -->
+  <!-- Colors: lighter green early months, darker as progress -->
+  <!-- Jan (days 1-30, all green, first month) -->
+  <g fill="#6dd48a" opacity="0.9">
+    <!-- 5 rows × 6 cols = 30 days -->
+    <rect x="58" y="100" width="12" height="12" rx="3"/><rect x="74" y="100" width="12" height="12" rx="3"/><rect x="90" y="100" width="12" height="12" rx="3"/><rect x="106" y="100" width="12" height="12" rx="3"/><rect x="122" y="100" width="12" height="12" rx="3"/><rect x="58" y="116" width="12" height="12" rx="3"/><rect x="74" y="116" width="12" height="12" rx="3"/><rect x="90" y="116" width="12" height="12" rx="3"/><rect x="106" y="116" width="12" height="12" rx="3"/><rect x="122" y="116" width="12" height="12" rx="3"/><rect x="58" y="132" width="12" height="12" rx="3"/><rect x="74" y="132" width="12" height="12" rx="3"/><rect x="90" y="132" width="12" height="12" rx="3"/><rect x="106" y="132" width="12" height="12" rx="3"/><rect x="122" y="132" width="12" height="12" rx="3"/><rect x="58" y="148" width="12" height="12" rx="3"/><rect x="74" y="148" width="12" height="12" rx="3"/><rect x="90" y="148" width="12" height="12" rx="3"/><rect x="106" y="148" width="12" height="12" rx="3"/><rect x="122" y="148" width="12" height="12" rx="3"/><rect x="58" y="164" width="12" height="12" rx="3"/><rect x="74" y="164" width="12" height="12" rx="3"/><rect x="90" y="164" width="12" height="12" rx="3"/><rect x="106" y="164" width="12" height="12" rx="3"/><rect x="122" y="164" width="12" height="12" rx="3"/><rect x="58" y="180" width="12" height="12" rx="3"/><rect x="74" y="180" width="12" height="12" rx="3"/><rect x="90" y="180" width="12" height="12" rx="3"/><rect x="106" y="180" width="12" height="12" rx="3"/><rect x="122" y="180" width="12" height="12" rx="3"/>
+  </g>
+  <!-- Feb -->
+  <g fill="#4dc874" opacity="0.9">
+    <rect x="138" y="100" width="12" height="12" rx="3"/><rect x="154" y="100" width="12" height="12" rx="3"/><rect x="170" y="100" width="12" height="12" rx="3"/><rect x="186" y="100" width="12" height="12" rx="3"/><rect x="202" y="100" width="12" height="12" rx="3"/><rect x="138" y="116" width="12" height="12" rx="3"/><rect x="154" y="116" width="12" height="12" rx="3"/><rect x="170" y="116" width="12" height="12" rx="3"/><rect x="186" y="116" width="12" height="12" rx="3"/><rect x="202" y="116" width="12" height="12" rx="3"/><rect x="138" y="132" width="12" height="12" rx="3"/><rect x="154" y="132" width="12" height="12" rx="3"/><rect x="170" y="132" width="12" height="12" rx="3"/><rect x="186" y="132" width="12" height="12" rx="3"/><rect x="202" y="132" width="12" height="12" rx="3"/><rect x="138" y="148" width="12" height="12" rx="3"/><rect x="154" y="148" width="12" height="12" rx="3"/><rect x="170" y="148" width="12" height="12" rx="3"/><rect x="186" y="148" width="12" height="12" rx="3"/><rect x="202" y="148" width="12" height="12" rx="3"/><rect x="138" y="164" width="12" height="12" rx="3"/><rect x="154" y="164" width="12" height="12" rx="3"/><rect x="170" y="164" width="12" height="12" rx="3"/><rect x="186" y="164" width="12" height="12" rx="3"/><rect x="202" y="164" width="12" height="12" rx="3"/><rect x="138" y="180" width="12" height="12" rx="3"/><rect x="154" y="180" width="12" height="12" rx="3"/><rect x="170" y="180" width="12" height="12" rx="3"/><rect x="186" y="180" width="12" height="12" rx="3"/><rect x="202" y="180" width="12" height="12" rx="3"/>
+  </g>
+  <!-- Mar -->
+  <g fill="#2db858" opacity="0.9">
+    <rect x="218" y="100" width="12" height="12" rx="3"/><rect x="234" y="100" width="12" height="12" rx="3"/><rect x="250" y="100" width="12" height="12" rx="3"/><rect x="266" y="100" width="12" height="12" rx="3"/><rect x="282" y="100" width="12" height="12" rx="3"/><rect x="218" y="116" width="12" height="12" rx="3"/><rect x="234" y="116" width="12" height="12" rx="3"/><rect x="250" y="116" width="12" height="12" rx="3"/><rect x="266" y="116" width="12" height="12" rx="3"/><rect x="282" y="116" width="12" height="12" rx="3"/><rect x="218" y="132" width="12" height="12" rx="3"/><rect x="234" y="132" width="12" height="12" rx="3"/><rect x="250" y="132" width="12" height="12" rx="3"/><rect x="266" y="132" width="12" height="12" rx="3"/><rect x="282" y="132" width="12" height="12" rx="3"/><rect x="218" y="148" width="12" height="12" rx="3"/><rect x="234" y="148" width="12" height="12" rx="3"/><rect x="250" y="148" width="12" height="12" rx="3"/><rect x="266" y="148" width="12" height="12" rx="3"/><rect x="282" y="148" width="12" height="12" rx="3"/><rect x="218" y="164" width="12" height="12" rx="3"/><rect x="234" y="164" width="12" height="12" rx="3"/><rect x="250" y="164" width="12" height="12" rx="3"/><rect x="266" y="164" width="12" height="12" rx="3"/><rect x="282" y="164" width="12" height="12" rx="3"/><rect x="218" y="180" width="12" height="12" rx="3"/><rect x="234" y="180" width="12" height="12" rx="3"/><rect x="250" y="180" width="12" height="12" rx="3"/><rect x="266" y="180" width="12" height="12" rx="3"/><rect x="282" y="180" width="12" height="12" rx="3"/>
+  </g>
+  <!-- Apr -->
+  <g fill="#18a040" opacity="0.9">
+    <rect x="298" y="100" width="12" height="12" rx="3"/><rect x="314" y="100" width="12" height="12" rx="3"/><rect x="330" y="100" width="12" height="12" rx="3"/><rect x="346" y="100" width="12" height="12" rx="3"/><rect x="362" y="100" width="12" height="12" rx="3"/><rect x="298" y="116" width="12" height="12" rx="3"/><rect x="314" y="116" width="12" height="12" rx="3"/><rect x="330" y="116" width="12" height="12" rx="3"/><rect x="346" y="116" width="12" height="12" rx="3"/><rect x="362" y="116" width="12" height="12" rx="3"/><rect x="298" y="132" width="12" height="12" rx="3"/><rect x="314" y="132" width="12" height="12" rx="3"/><rect x="330" y="132" width="12" height="12" rx="3"/><rect x="346" y="132" width="12" height="12" rx="3"/><rect x="362" y="132" width="12" height="12" rx="3"/><rect x="298" y="148" width="12" height="12" rx="3"/><rect x="314" y="148" width="12" height="12" rx="3"/><rect x="330" y="148" width="12" height="12" rx="3"/><rect x="346" y="148" width="12" height="12" rx="3"/><rect x="362" y="148" width="12" height="12" rx="3"/><rect x="298" y="164" width="12" height="12" rx="3"/><rect x="314" y="164" width="12" height="12" rx="3"/><rect x="330" y="164" width="12" height="12" rx="3"/><rect x="346" y="164" width="12" height="12" rx="3"/><rect x="362" y="164" width="12" height="12" rx="3"/><rect x="298" y="180" width="12" height="12" rx="3"/><rect x="314" y="180" width="12" height="12" rx="3"/><rect x="330" y="180" width="12" height="12" rx="3"/><rect x="346" y="180" width="12" height="12" rx="3"/><rect x="362" y="180" width="12" height="12" rx="3"/>
+  </g>
+  <!-- May -->
+  <g fill="#0e8830" opacity="0.9">
+    <rect x="378" y="100" width="12" height="12" rx="3"/><rect x="394" y="100" width="12" height="12" rx="3"/><rect x="410" y="100" width="12" height="12" rx="3"/><rect x="426" y="100" width="12" height="12" rx="3"/><rect x="442" y="100" width="12" height="12" rx="3"/><rect x="378" y="116" width="12" height="12" rx="3"/><rect x="394" y="116" width="12" height="12" rx="3"/><rect x="410" y="116" width="12" height="12" rx="3"/><rect x="426" y="116" width="12" height="12" rx="3"/><rect x="442" y="116" width="12" height="12" rx="3"/><rect x="378" y="132" width="12" height="12" rx="3"/><rect x="394" y="132" width="12" height="12" rx="3"/><rect x="410" y="132" width="12" height="12" rx="3"/><rect x="426" y="132" width="12" height="12" rx="3"/><rect x="442" y="132" width="12" height="12" rx="3"/><rect x="378" y="148" width="12" height="12" rx="3"/><rect x="394" y="148" width="12" height="12" rx="3"/><rect x="410" y="148" width="12" height="12" rx="3"/><rect x="426" y="148" width="12" height="12" rx="3"/><rect x="442" y="148" width="12" height="12" rx="3"/><rect x="378" y="164" width="12" height="12" rx="3"/><rect x="394" y="164" width="12" height="12" rx="3"/><rect x="410" y="164" width="12" height="12" rx="3"/><rect x="426" y="164" width="12" height="12" rx="3"/><rect x="442" y="164" width="12" height="12" rx="3"/><rect x="378" y="180" width="12" height="12" rx="3"/><rect x="394" y="180" width="12" height="12" rx="3"/><rect x="410" y="180" width="12" height="12" rx="3"/><rect x="426" y="180" width="12" height="12" rx="3"/><rect x="442" y="180" width="12" height="12" rx="3"/>
+  </g>
+  <!-- Jun (last month, darkest) -->
+  <g fill="#076020" opacity="0.95">
+    <rect x="458" y="100" width="12" height="12" rx="3"/><rect x="474" y="100" width="12" height="12" rx="3"/><rect x="490" y="100" width="12" height="12" rx="3"/><rect x="506" y="100" width="12" height="12" rx="3"/><rect x="522" y="100" width="12" height="12" rx="3"/><rect x="458" y="116" width="12" height="12" rx="3"/><rect x="474" y="116" width="12" height="12" rx="3"/><rect x="490" y="116" width="12" height="12" rx="3"/><rect x="506" y="116" width="12" height="12" rx="3"/><rect x="522" y="116" width="12" height="12" rx="3"/><rect x="458" y="132" width="12" height="12" rx="3"/><rect x="474" y="132" width="12" height="12" rx="3"/><rect x="490" y="132" width="12" height="12" rx="3"/><rect x="506" y="132" width="12" height="12" rx="3"/><rect x="522" y="132" width="12" height="12" rx="3"/><rect x="458" y="148" width="12" height="12" rx="3"/><rect x="474" y="148" width="12" height="12" rx="3"/><rect x="490" y="148" width="12" height="12" rx="3"/><rect x="506" y="148" width="12" height="12" rx="3"/><rect x="522" y="148" width="12" height="12" rx="3"/><rect x="458" y="164" width="12" height="12" rx="3"/><rect x="474" y="164" width="12" height="12" rx="3"/><rect x="490" y="164" width="12" height="12" rx="3"/><rect x="506" y="164" width="12" height="12" rx="3"/><rect x="522" y="164" width="12" height="12" rx="3"/><rect x="458" y="180" width="12" height="12" rx="3"/><rect x="474" y="180" width="12" height="12" rx="3"/><rect x="490" y="180" width="12" height="12" rx="3"/><rect x="506" y="180" width="12" height="12" rx="3"/><rect x="522" y="180" width="12" height="12" rx="3"/>
+  </g>
+  <!-- Milestone markers -->
+  <line x1="58" y1="208" x2="534" y2="208" stroke="#c0e8c8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <!-- Product screenshot mockup -->
+  <rect x="60" y="222" width="480" height="320" fill="#fff" rx="12" stroke="#d0e8d8" stroke-width="2"/>
+  <rect x="60" y="222" width="480" height="32" fill="#f0f9f3" rx="12"/>
+  <rect x="60" y="240" width="480" height="14" fill="#f0f9f3"/>
+  <circle cx="84" cy="238" r="6" fill="#ff5f57"/>
+  <circle cx="100" cy="238" r="6" fill="#febc2e"/>
+  <circle cx="116" cy="238" r="6" fill="#28c840"/>
+  <text x="300" y="243" text-anchor="middle" fill="#2a7040" font-size="11" font-family="sans-serif">myapp.io — 首个付费用户 🎉</text>
+  <!-- app content mockup -->
+  <rect x="80" y="268" width="440" height="50" fill="#f6fdf8" rx="6"/>
+  <circle cx="110" cy="293" r="16" fill="#44c490"/>
+  <text x="110" y="299" text-anchor="middle" fill="#fff" font-size="16" font-family="sans-serif">★</text>
+  <rect x="140" y="278" width="200" height="8" fill="#1a6640" rx="2" opacity="0.7"/>
+  <rect x="140" y="294" width="140" height="6" fill="#4a9060" rx="2" opacity="0.4"/>
+  <rect x="420" y="282" width="80" height="24" fill="#44c490" rx="12"/>
+  <text x="460" y="299" text-anchor="middle" fill="#fff" font-size="11" font-weight="600" font-family="sans-serif">付费 ✓</text>
+  <rect x="80" y="330" width="440" height="6" fill="#e8f4ec" rx="2"/>
+  <rect x="80" y="344" width="380" height="6" fill="#e8f4ec" rx="2"/>
+  <rect x="80" y="358" width="410" height="6" fill="#e8f4ec" rx="2"/>
+  <rect x="80" y="372" width="340" height="6" fill="#e8f4ec" rx="2"/>
+  <!-- Revenue chart mini -->
+  <rect x="80" y="400" width="440" height="120" fill="#f0fdf4" rx="8"/>
+  <text x="300" y="425" text-anchor="middle" fill="#2a8050" font-size="13" font-weight="600" font-family="sans-serif">月收入趋势</text>
+  <polyline points="100,490 170,485 230,475 290,462 360,440 440,415 500,400" fill="none" stroke="#44c490" stroke-width="3"/>
+  <circle cx="500" cy="400" r="6" fill="#44c490"/>
+  <text x="510" y="404" fill="#1a6640" font-size="11" font-family="sans-serif">¥</text>
+</svg>
