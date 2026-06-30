@@ -175,7 +175,6 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
                 aria-label={t('打赏此帖', 'Tip this post')}
               >
                 <Gift size={15} strokeWidth={2} />
-                {t('打赏', 'Tip')}
               </button>
             ) : undefined}
           />
