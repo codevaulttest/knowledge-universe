@@ -2207,10 +2207,7 @@ button {
   line-height: 1.5;
 }
 
-/* 手续费区块 — 实线分隔 */
-.pay-page-fee-section {
-  border-top: 1px solid var(--ku-color-border);
-}
+/* 手续费区块 — 实线分隔（顶部分割线复用上一行的 border-bottom，避免双线变粗） */
 .pay-page-fee-section .pay-page-row {
   border-bottom: 1px solid var(--ku-color-border);
 }
