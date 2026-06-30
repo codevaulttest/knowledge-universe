@@ -290,7 +290,7 @@ export function PostCard({
             visiblePercent={post.visiblePercent}
             onImageClick={post.kind === 'image' ? (idx) => {
               if (idx >= visibleImgCount) {
-                openLink(post.id);
+                openLink(post.id, 'unlock');
               } else {
                 openImageLightbox(post, idx, visibleImgCount);
               }

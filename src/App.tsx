@@ -464,24 +464,6 @@ export default function App() {
           ) : null;
         })()}
 
-        {/* 覆盖层：链接面额选择 */}
-        {linkSheet && (() => {
-          const linkPost = posts.find(p => p.id === linkSheet.postId);
-          if (!linkPost) return null;
-          return (
-            <LinkSheet
-              post={linkPost}
-              mode={linkSheet.mode}
-              onSuccess={() => {
-                const id = linkSheet.postId;
-                setLinkSheet(null);
-                performLink(id);
-              }}
-              onClose={() => setLinkSheet(null)}
-            />
-          );
-        })()}
-
         {/* 覆盖层：P1.x 支付浮层 */}
         {paySheet && (
           <PaymentSheet
@@ -501,6 +483,7 @@ export default function App() {
             <GeminiStakeModal
               post={stakePost}
               onClose={() => setStakeModal(null)}
+              onSkip={() => { stakeModal.onSkip(); setStakeModal(null); }}
               onParticipate={(tier) => {
                 const { postId, action, onAfterPay } = stakeModal;
                 setStakeModal(null);
@@ -554,6 +537,24 @@ export default function App() {
             onClose={() => setVideoPlayerPost(null)}
           />
         )}
+
+        {/* 覆盖层：链接面额选择 */}
+        {linkSheet && (() => {
+          const linkPost = posts.find(p => p.id === linkSheet.postId);
+          if (!linkPost) return null;
+          return (
+            <LinkSheet
+              post={linkPost}
+              mode={linkSheet.mode}
+              onSuccess={() => {
+                const id = linkSheet.postId;
+                setLinkSheet(null);
+                performLink(id);
+              }}
+              onClose={() => setLinkSheet(null)}
+            />
+          );
+        })()}
 
         {/* 覆盖层：每日签到领取空投 */}
         {checkInPreview && (
