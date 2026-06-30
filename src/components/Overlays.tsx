@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
-import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Gift, Sparkles, CalendarCheck, Link, Flame } from 'lucide-react';
+import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Gift, Sparkles, CalendarCheck, Flame } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
@@ -193,11 +193,11 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
               <span className="pay-combo-value">{tier} PB</span>
             </div>
             <div className="pay-combo-row">
-              <span className="pay-combo-label">{t('码库 SUP', 'CodeVault SUP')}</span>
-              <span className="pay-combo-value">{formatSuperAmount(superAmount)} SUP</span>
+              <span className="pay-combo-label">{t('码库 PB', 'CodeVault PB')}</span>
+              <span className="pay-combo-value">{formatSuperAmount(superAmount)} PB</span>
             </div>
             <p className="pay-combo-hint">
-              {t('将从 P客扣除 PB，同时通过码库支付 SUP', 'Deducts PB from P-Pay and pays SUP via CodeVault')}
+              {t('将从 P客扣除 PB，同时通过码库支付 PB', 'Deducts PB from P-Pay and pays PB via CodeVault')}
             </p>
           </div>
         )}
@@ -209,7 +209,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
                 <span className="pay-option-name">{t('组合支付', 'Combo payment')}</span>
                 <span className="pay-option-sub">
                   {tier > 0
-                    ? `${tier} PB + ${formatSuperAmount(superAmount)} SUP`
+                    ? `${tier} PB + ${formatSuperAmount(superAmount)} PB`
                     : t('确认支付', 'Confirm payment')}
                 </span>
               </div>
@@ -314,97 +314,164 @@ export function GeminiStakeModal({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PaymentConfirmView — 支付确认视图（内部组件）
+// PaymentConfirmPage — 全页支付确认（内部组件）
 // ═══════════════════════════════════════════════════════════════
 
-type ConfirmRow = { label: string; value: string; fee?: boolean };
+const MOCK_WALLET_ADDR = '0xB6E546209F774f5F0307cF68b8c1998B1E2d0C85';
+const MOCK_PB_BALANCE  = '7,152.77';
+const MOCK_NETWORK     = 'BSC';
 
-function PaymentConfirmView({
-  title,
+function FeeLabelTooltip({ label, tip }: { label: string; tip: string }) {
+  return (
+    <span
+      className="fee-tooltip"
+      tabIndex={0}
+      role="button"
+      aria-label={`${label}: ${tip}`}
+    >
+      <span className="fee-tooltip-trigger pay-page-row-label">{label}</span>
+      <span className="fee-tooltip-bubble" role="tooltip">{tip}</span>
+    </span>
+  );
+}
+
+function PaymentConfirmPage({
+  pageStep,
   icon,
+  productName,
+  remark,
   amountText,
-  amountSub,
-  rows,
-  confirmLabel,
+  networkFee,
+  tokenFee,
+  failReason,
   onConfirm,
+  onRetry,
   onBack,
-  onClose,
-  disabled,
 }: {
-  title: string;
+  pageStep: 'confirm' | 'paying' | 'done' | 'failed';
   icon: ReactNode;
+  productName: string;
+  remark: string;
   amountText: string;
-  amountSub?: string;
-  rows: ConfirmRow[];
-  confirmLabel: string;
+  networkFee: string;
+  tokenFee: string;
+  failReason?: string;
   onConfirm: () => void;
+  onRetry: () => void;
   onBack: () => void;
-  onClose: () => void;
-  disabled?: boolean;
 }) {
   const { t } = useApp();
-  const mainRows = rows.filter(r => !r.fee);
-  const feeRows = rows.filter(r => r.fee);
+  const isPaying = pageStep === 'paying';
+  const isDone   = pageStep === 'done';
+  const isFailed = pageStep === 'failed';
 
   return (
-    <>
-      <div className="pay-confirm-head">
-        <button
-          type="button"
-          className="pay-confirm-back-btn"
-          onClick={onBack}
-          disabled={disabled}
-          aria-label={t('返回', 'Back')}
-        >
-          <ArrowLeft size={16} strokeWidth={2} />
-        </button>
-        <span className="sheet-title">{title}</span>
-        <button
-          type="button"
-          className="modal-close"
-          onClick={onClose}
-          disabled={disabled}
-          aria-label={t('关闭', 'Close')}
-        >
-          <X size={18} strokeWidth={2} />
-        </button>
+    <div className="pay-page-wrap">
+      {/* Gradient header */}
+      <div className="pay-page-header">
+        <div className="pay-page-header-spacer" aria-hidden />
+        <span className="pay-page-header-title">{t('确认支付', 'Confirm Payment')}</span>
+        <div className="pay-page-header-spacer" aria-hidden />
       </div>
 
-      <div className="pay-confirm-brand">{icon}</div>
-
-      <div className="pay-confirm-hero">
-        <span className="pay-confirm-hero-value">{amountText}</span>
-        {amountSub && <span className="pay-confirm-hero-sub">{amountSub}</span>}
+      {/* Brand circle overlapping the header gradient */}
+      <div className="pay-page-brand-row">
+        <div className="pay-page-brand-circle">{icon}</div>
       </div>
 
-      <div className="pay-confirm-card">
-        {mainRows.map((row, i) => (
-          <div key={i} className="pay-confirm-row">
-            <span className="pay-confirm-row-label">{row.label}</span>
-            <span className="pay-confirm-row-value">{row.value}</span>
+      {/* Confirm / Paying state */}
+      {(pageStep === 'confirm' || isPaying) && (
+        <>
+          <div className="pay-page-hero">
+            <span className="pay-page-hero-amount">{amountText}</span>
           </div>
-        ))}
-        {feeRows.length > 0 && (
-          <div className="pay-confirm-fee-section">
-            {feeRows.map((row, i) => (
-              <div key={i} className="pay-confirm-row">
-                <span className="pay-confirm-row-label">{row.label}</span>
-                <span className="pay-confirm-row-value pay-confirm-row-value--fee">{row.value}</span>
+
+          <div className="pay-page-sep" aria-hidden />
+
+          <div className="pay-page-rows">
+            <div className="pay-page-row">
+              <span className="pay-page-row-label">{t('商品名称', 'Product')}</span>
+              <span className="pay-page-row-value">{productName}</span>
+            </div>
+            <div className="pay-page-row">
+              <span className="pay-page-row-label">{t('备注', 'Remark')}</span>
+              <span className="pay-page-row-value">{remark}</span>
+            </div>
+            <div className="pay-page-row">
+              <span className="pay-page-row-label">{t('钱包地址', 'Wallet')}</span>
+              <span className="pay-page-row-value pay-page-addr">{MOCK_WALLET_ADDR}</span>
+            </div>
+            <div className="pay-page-row">
+              <span className="pay-page-row-label">{t('余额', 'Balance')}</span>
+              <span className="pay-page-row-value">{MOCK_PB_BALANCE} PB</span>
+            </div>
+            <div className="pay-page-row">
+              <span className="pay-page-row-label">{t('网络', 'Network')}</span>
+              <span className="pay-page-row-value">{MOCK_NETWORK}</span>
+            </div>
+            <div className="pay-page-fee-section">
+              <div className="pay-page-row">
+                <FeeLabelTooltip
+                  label={t('网络手续费', 'Network fee')}
+                  tip={t('提示文案占位', 'Tooltip placeholder')}
+                />
+                <span className="pay-page-row-value">{networkFee}</span>
               </div>
-            ))}
+              <div className="pay-page-row">
+                <FeeLabelTooltip
+                  label={t('代币手续费', 'Token fee')}
+                  tip={t('提示文案占位', 'Tooltip placeholder')}
+                />
+                <span className="pay-page-row-value">{tokenFee}</span>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
 
-      <button
-        type="button"
-        className="pay-confirm-cta"
-        onClick={onConfirm}
-        disabled={disabled}
-      >
-        {confirmLabel}
-      </button>
-    </>
+          <div className="pay-page-footer">
+            <button
+              type="button"
+              className="pay-page-confirm-btn"
+              onClick={onConfirm}
+              disabled={isPaying}
+            >
+              {isPaying
+                ? <><span className="spinner pay-page-spinner" />{t('支付中…', 'Processing…')}</>
+                : t('确定', 'Confirm')}
+            </button>
+            <button
+              type="button"
+              className="pay-page-reject-btn"
+              onClick={onBack}
+              disabled={isPaying}
+            >
+              {t('拒绝', 'Reject')}
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Done state */}
+      {isDone && (
+        <div className="pay-page-result">
+          <div className="pay-page-result-icon pay-page-result-icon--success">
+            <Check size={32} strokeWidth={2.5} />
+          </div>
+          <span className="pay-page-result-title">{t('支付成功', 'Payment successful')}</span>
+        </div>
+      )}
+
+      {/* Failed state */}
+      {isFailed && (
+        <div className="pay-page-result">
+          <div className="pay-page-result-icon pay-page-result-icon--error">✕</div>
+          <span className="pay-page-result-title">{t('支付失败', 'Payment failed')}</span>
+          {failReason && <p className="pay-page-result-reason">{failReason}</p>}
+          <button type="button" className="pay-retry-btn" onClick={onRetry}>
+            {t('重试', 'Retry')}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -434,114 +501,78 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
         setStep('failed');
       } else {
         setStep('done');
-        setTimeout(() => onSuccess(selected), 700);
+        setTimeout(() => onSuccess(selected), 800);
       }
     }, 1300);
   };
 
-  const actionLabel = mode === 'unlock'
-    ? t('解锁全文', 'Unlock full content')
-    : t('创建子节点', 'Create child node');
-
-  const confirmRows: ConfirmRow[] = [
-    { label: t('操作', 'Action'), value: actionLabel },
-    ...(post.nodeId ? [{ label: t('节点', 'Node'), value: post.nodeId }] : []),
-    { label: t('链接面额', 'Denomination'), value: `${selected} PB` },
-    { label: t('网络手续费', 'Network fee'), value: `${formatSuperAmount(superAmount)} SUP`, fee: true },
-  ];
+  // Full-page confirm/paying/done/failed
+  if (step !== 'select') {
+    return (
+      <PaymentConfirmPage
+        pageStep={step}
+        icon={<div className="pay-page-brand-icon"><KnowledgePlanetIcon style={{ width: 30, height: 30 }} /></div>}
+        productName={t('知识宇宙', 'Knowledge Universe')}
+        remark={post.nodeId ? `节点 ${post.nodeId}` : t('知识星球', 'Knowledge Planet')}
+        amountText={`${selected} PB`}
+        networkFee={`${formatSuperAmount(superAmount)} PB`}
+        tokenFee={`${selected}.0000 PB`}
+        failReason={failReason}
+        onConfirm={pay}
+        onRetry={() => setStep('confirm')}
+        onBack={() => setStep('select')}
+      />
+    );
+  }
 
   return (
-    <div className="sheet-backdrop" onClick={step === 'paying' ? undefined : onClose}>
+    <div className="sheet-backdrop" onClick={onClose}>
       <div className="gemini-stake-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div className="sheet-header">
+          <span className="sheet-title">
+            {mode === 'unlock' ? t('解锁全部内容', 'Unlock full content') : t('创建子节点', 'Create child node')}
+          </span>
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
 
-        {step === 'select' && (
-          <>
-            <div className="sheet-header">
-              <span className="sheet-title">
-                <Link size={14} strokeWidth={2.5} style={{ verticalAlign: 'middle', marginRight: 6 }} />
-                {mode === 'unlock' ? t('解锁全部内容', 'Unlock full content') : t('创建子节点', 'Create child node')}
-              </span>
-              <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
-                <X size={18} strokeWidth={2} />
-              </button>
+        {post.nodeId && (
+          <div className="link-modal-post">
+            <div className="gemini-left">
+              <KnowledgePlanetIcon className="gemini-icon" />
+              <span className="gemini-label">{t('知识星球', 'Knowledge Planet')}</span>
+              <span className="gemini-sep">·</span>
+              <Rating value={post.rating} />
+              <span className="gemini-sep">·</span>
+              <span className="gemini-id">{post.nodeId}</span>
             </div>
+          </div>
+        )}
 
-            {post.nodeId && (
-              <div className="link-modal-post">
-                <div className="gemini-left">
-                  <KnowledgePlanetIcon className="gemini-icon" />
-                  <span className="gemini-label">{t('知识星球', 'Knowledge Planet')}</span>
-                  <span className="gemini-sep">·</span>
-                  <Rating value={post.rating} />
-                  <span className="gemini-sep">·</span>
-                  <span className="gemini-id">{post.nodeId}</span>
-                </div>
-              </div>
-            )}
-
-            <p className="gemini-stake-lead">
-              {mode === 'unlock'
-                ? t('选择面额创建知识星球子节点，同步解锁全部内容', 'Choose an amount to create a Knowledge Planet child node and unlock full content')
-                : t('选择链接面额，在此节点下生成子节点并加入空投激励网络', 'Choose an amount to create a child node and join airdrop rewards')}
-            </p>
-            <div className="stake-tier-list" style={{ marginBottom: 16 }}>
-              {tiers.map(tier => (
-                <button
-                  key={tier}
-                  type="button"
-                  className={`stake-tier-option${selected === tier ? ' stake-tier-option--active' : ''}`}
-                  onClick={() => setSelected(tier)}
-                >
-                  <span className="stake-tier-option__amount">{tier} PB</span>
-                  <span className="stake-tier-option__desc">{stakeTierDescription(tier, zh)}</span>
-                </button>
-              ))}
-            </div>
-            <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" onClick={() => setStep('confirm')}>
-              {mode === 'unlock'
-                ? t(`解锁并创建子节点 · ${selected} PB`, `Unlock & create child node · ${selected} PB`)
-                : t(`创建子节点 · ${selected} PB`, `Create child node · ${selected} PB`)}
+        <p className="gemini-stake-lead">
+          {mode === 'unlock'
+            ? t('选择面额创建知识星球子节点，同步解锁全部内容', 'Choose an amount to create a Knowledge Planet child node and unlock full content')
+            : t('选择链接面额，在此节点下生成子节点并加入空投激励网络', 'Choose an amount to create a child node and join airdrop rewards')}
+        </p>
+        <div className="stake-tier-list" style={{ marginBottom: 16 }}>
+          {tiers.map(tier => (
+            <button
+              key={tier}
+              type="button"
+              className={`stake-tier-option${selected === tier ? ' stake-tier-option--active' : ''}`}
+              onClick={() => setSelected(tier)}
+            >
+              <span className="stake-tier-option__amount">{tier} PB</span>
+              <span className="stake-tier-option__desc">{stakeTierDescription(tier, zh)}</span>
             </button>
-          </>
-        )}
-
-        {step === 'confirm' && (
-          <PaymentConfirmView
-            title={t('确认支付', 'Confirm Payment')}
-            icon={<div className="pay-confirm-icon"><Link size={22} strokeWidth={2} /></div>}
-            amountText={`${selected} PB`}
-            amountSub={`+ ${formatSuperAmount(superAmount)} SUP ${t('网络费', 'network fee')}`}
-            rows={confirmRows}
-            confirmLabel={t('确认支付', 'Confirm Payment')}
-            onConfirm={pay}
-            onBack={() => setStep('select')}
-            onClose={onClose}
-          />
-        )}
-
-        {step === 'paying' && (
-          <div className="pay-status">
-            <span className="spinner" />
-            <span>{t('链接中…', 'Linking…')}</span>
-          </div>
-        )}
-
-        {step === 'done' && (
-          <div className="pay-status pay-status--done">
-            <span className="pay-check">✓</span>
-            <span>{t('链接成功', 'Linked successfully')}</span>
-          </div>
-        )}
-
-        {step === 'failed' && (
-          <div className="pay-status pay-status--failed">
-            <span className="pay-fail-icon">✕</span>
-            <span className="pay-fail-reason">{failReason}</span>
-            <button type="button" className="pay-retry-btn" onClick={() => setStep('confirm')}>
-              {t('重试', 'Retry')}
-            </button>
-          </div>
-        )}
+          ))}
+        </div>
+        <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" onClick={() => setStep('confirm')}>
+          {mode === 'unlock'
+            ? t(`解锁并创建子节点 · ${selected} PB`, `Unlock & create child node · ${selected} PB`)
+            : t(`创建子节点 · ${selected} PB`, `Create child node · ${selected} PB`)}
+        </button>
       </div>
     </div>
   );
@@ -1087,7 +1118,6 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
                   aria-label={t('打赏', 'Tip')}
                 >
                   <Gift size={16} strokeWidth={2} />
-                  <span>{t('打赏', 'Tip')}</span>
                 </button>
               )}
             </div>
@@ -1333,7 +1363,7 @@ export function TipModal({
       setTimeout(() => {
         showToast(t('打赏成功！感谢你的支持', 'Tip sent! Thank you for your support'));
         onClose();
-      }, 700);
+      }, 800);
     }, 1300);
   };
 
@@ -1341,83 +1371,65 @@ export function TipModal({
     ? t(`打赏 ${recipientName}`, `Tip ${recipientName}`)
     : t('打赏此帖', 'Tip this post');
 
-  const confirmRows: ConfirmRow[] = [
-    ...(context === 'post' && postTitle
-      ? [{ label: t('帖子', 'Post'), value: postTitle.split('\n')[0] }]
-      : []),
-    { label: t('打赏给', 'Recipient'), value: recipientName },
-    { label: t('金额', 'Amount'), value: `${selected} PB` },
-  ];
+  const tipRemark = context === 'post' && postTitle
+    ? postTitle.split('\n')[0]
+    : t(`打赏给 ${recipientName}`, `Tip to ${recipientName}`);
+
+  // Full-page confirm/paying/done
+  if (step !== 'select') {
+    return (
+      <PaymentConfirmPage
+        pageStep={step}
+        icon={<div className="pay-page-brand-icon"><Gift size={28} strokeWidth={2} /></div>}
+        productName={t('知识宇宙', 'Knowledge Universe')}
+        remark={tipRemark}
+        amountText={`${selected} PB`}
+        networkFee="0.0100 PB"
+        tokenFee={`${selected}.0000 PB`}
+        onConfirm={handlePay}
+        onRetry={() => setStep('confirm')}
+        onBack={() => setStep('select')}
+      />
+    );
+  }
 
   return (
-    <div className="sheet-backdrop" onClick={step === 'paying' ? undefined : onClose}>
+    <div className="sheet-backdrop" onClick={onClose}>
       <div className="payment-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div className="sheet-header">
+          <span className="sheet-title">{titleLabel}</span>
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
 
-        {step === 'select' && (
-          <>
-            <div className="sheet-header">
-              <span className="sheet-title">{titleLabel}</span>
-              <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
-                <X size={18} strokeWidth={2} />
-              </button>
-            </div>
+        {context === 'post' && postTitle && (
+          <p className="tip-post-title">{postTitle.split('\n')[0]}</p>
+        )}
 
-            {context === 'post' && postTitle && (
-              <p className="tip-post-title">{postTitle.split('\n')[0]}</p>
-            )}
-
-            <div className="tip-amounts">
-              {TIP_AMOUNTS.map(amount => (
-                <button
-                  key={amount}
-                  type="button"
-                  className={`tip-amount-chip${selected === amount ? ' tip-amount-chip--active' : ''}`}
-                  onClick={() => setSelected(amount)}
-                >
-                  {amount} PB
-                </button>
-              ))}
-            </div>
-
+        <div className="tip-amounts">
+          {TIP_AMOUNTS.map(amount => (
             <button
+              key={amount}
               type="button"
-              className="planet-confirm-btn"
-              disabled={!selected}
-              onClick={() => selected && setStep('confirm')}
+              className={`tip-amount-chip${selected === amount ? ' tip-amount-chip--active' : ''}`}
+              onClick={() => setSelected(amount)}
             >
-              {selected
-                ? t(`确认打赏 ${selected} PB`, `Confirm Tip ${selected} PB`)
-                : t('请选择金额', 'Select an amount')}
+              {amount} PB
             </button>
-          </>
-        )}
+          ))}
+        </div>
 
-        {step === 'confirm' && (
-          <PaymentConfirmView
-            title={t('确认打赏', 'Confirm Tip')}
-            icon={<div className="pay-confirm-icon"><Gift size={22} strokeWidth={2} /></div>}
-            amountText={`${selected} PB`}
-            rows={confirmRows}
-            confirmLabel={t('确认支付', 'Confirm Payment')}
-            onConfirm={handlePay}
-            onBack={() => setStep('select')}
-            onClose={onClose}
-          />
-        )}
-
-        {step === 'paying' && (
-          <div className="pay-status">
-            <span className="spinner" />
-            <span>{t('支付中…', 'Processing…')}</span>
-          </div>
-        )}
-
-        {step === 'done' && (
-          <div className="pay-status pay-status--done">
-            <span className="pay-check">✓</span>
-            <span>{t('打赏成功', 'Tip sent!')}</span>
-          </div>
-        )}
+        <button
+          type="button"
+          className="planet-confirm-btn"
+          disabled={!selected}
+          onClick={() => selected && setStep('confirm')}
+        >
+          {selected
+            ? t(`确认打赏 ${selected} PB`, `Confirm Tip ${selected} PB`)
+            : t('请选择金额', 'Select an amount')}
+        </button>
       </div>
     </div>
   );
