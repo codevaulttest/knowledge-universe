@@ -206,7 +206,7 @@ export function KnowledgePlanetPage() {
                 <div className="planet-history-toggle-icon">
                   <History size={14} strokeWidth={2} />
                 </div>
-                <span>{t('红包记录', 'Red Packet History')}</span>
+                <span>{t('红包领取记录', 'Red Packet History')}</span>
               </div>
               <ChevronRight size={14} strokeWidth={2} className="planet-history-toggle-chevron" />
             </button>
@@ -329,7 +329,7 @@ export function KnowledgePlanetPage() {
         <div className="sheet-backdrop" onClick={() => setShowHistoryModal(false)}>
           <div className="payment-sheet planet-history-sheet" onClick={e => e.stopPropagation()}>
             <div className="sheet-header">
-              <span className="sheet-title">{t('红包记录', 'Red Packet History')}</span>
+              <span className="sheet-title">{t('红包领取记录', 'Red Packet History')}</span>
               <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={() => setShowHistoryModal(false)} aria-label={t('关闭', 'Close')}>
                 <X size={18} strokeWidth={2} />
               </button>
