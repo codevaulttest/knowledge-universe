@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Bookmark, Gift, Link, MessageCircle, Repeat2, ThumbsUp } from 'lucide-react';
 import { useApp } from '../AppContext';
+import { ALL_POSTS } from '../mockData';
 import { Avatar, PageHeader } from '../components/shared';
 import type { ActivityGroup, ActivityType } from '../types';
 
@@ -126,7 +127,8 @@ export function ActivityPage() {
   const filtered = filter === 'all' ? activityGroups : activityGroups.filter(g => g.type === filter);
 
   const getPostTitle = (postId: string) => {
-    const post = posts.find(p => p.id === postId);
+    // 通知引用的帖子可能被全局过滤（如长文不在 feed/主页展示），仍需从完整 mock 数据解析标题
+    const post = posts.find(p => p.id === postId) ?? ALL_POSTS.find(p => p.id === postId);
     if (!post) return t('（帖子已删除）', '(Post deleted)');
     const raw = post.title.replace(/\n/g, ' ');
     return raw.length > 36 ? raw.slice(0, 36) + '…' : raw;

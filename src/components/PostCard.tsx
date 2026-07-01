@@ -326,6 +326,7 @@ export function PostCard({
             aria-label={t('打赏此帖', 'Tip this post')}
           >
             <Gift size={18} strokeWidth={2.25} />
+            {t('打赏', 'Tip')}
           </button>
         )}
       />

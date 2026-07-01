@@ -14,7 +14,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, repostedPostIds, unreadActivityCount, t, userProfile, updateUserProfile } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
-  const myPosts = allPosts.filter(p => p.author === authorName);
+  // 我的主页隐藏长文（article）类型的 mock 帖子
+  const myPosts = allPosts.filter(p => p.author === authorName && !(isOwn && p.kind === 'article'));
   const savedPosts = allPosts.filter(p => savedPostIds.has(p.id));
   const repostedPosts = allPosts.filter(p => repostedPostIds.has(p.id));
   const firstPost = allPosts.find(p => p.author === authorName);

@@ -86,12 +86,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1; setTab: (t: 0 | 1) => vo
   return (
     <>
       <div className="feed-header" data-layer="feed-header">
-        <div className="feed-header-left" />
-        <nav className="tabs" data-layer="top-tabs">
-          <button className={tab === 0 ? 'active' : ''} type="button" onClick={() => setTab(0)}>{t('推荐', 'For You')}</button>
-          <button className={tab === 1 ? 'active' : ''} type="button" onClick={() => setTab(1)}>{t('关注', 'Following')}</button>
-        </nav>
-        <div className="feed-header-right">
+        <div className="feed-header-left">
           <button
             type="button"
             className="feed-bell-btn"
@@ -101,6 +96,12 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1; setTab: (t: 0 | 1) => vo
             <CalendarCheck size={22} strokeWidth={2} />
             {checkInClaimable && <span className="feed-bell-dot feed-bell-dot--plain" aria-hidden="true" />}
           </button>
+        </div>
+        <nav className="tabs" data-layer="top-tabs">
+          <button className={tab === 0 ? 'active' : ''} type="button" onClick={() => setTab(0)}>{t('推荐', 'For You')}</button>
+          <button className={tab === 1 ? 'active' : ''} type="button" onClick={() => setTab(1)}>{t('关注', 'Following')}</button>
+        </nav>
+        <div className="feed-header-right">
           <button
             type="button"
             className="feed-bell-btn"

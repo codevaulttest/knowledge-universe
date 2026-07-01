@@ -821,7 +821,7 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
               <div className="article-reader-mask-fade" />
               <div className="article-reader-unlock">
                 <Lock size={16} strokeWidth={2} />
-                <span>{t(`已显示前 ${post.visiblePercent}% 内容`, `Showing the first ${post.visiblePercent}% of content`)}</span>
+                <span>{t('部分内容已隐藏', 'Some content is hidden')}</span>
                 <button
                   type="button"
                   className="article-reader-unlock-btn"
@@ -1049,7 +1049,7 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
             <div className="video-player-unlock-overlay">
               <Lock size={24} strokeWidth={1.8} />
               <p className="video-player-unlock-text">
-                {t(`预览结束，已播放前 ${post.visiblePercent}%`, `Preview ended — first ${post.visiblePercent}% played`)}
+                {t('预览已结束', 'Preview ended')}
               </p>
               <button
                 type="button"
