@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ArrowUp, Check, ChevronRight, Copy, Gift, History, Loader2, Search, Star, X } from 'lucide-react';
+import { ArrowDownToLine, ArrowUp, Check, ChevronRight, Copy, Gift, Loader2, Search, Star, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader, Rating } from '../components/shared';
+import { MOCK_WALLET_ADDRESS } from '../mockData';
 
 // 面额（PB）：仅 1000 档支持五星升级；100 / 10 档不支持升级
 type NodeTier = 10 | 100 | 1000;
@@ -15,6 +16,12 @@ type KnowledgeNode = {
 };
 
 type RedPacketRecord = {
+  id: string;
+  amount: number;
+  time: string;
+};
+
+type WithdrawRecord = {
   id: string;
   amount: number;
   time: string;
@@ -114,6 +121,11 @@ export function KnowledgePlanetPage() {
   const [nodeSearch, setNodeSearch] = useState('');
   const [starFilter, setStarFilter] = useState<number | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showWithdrawSheet, setShowWithdrawSheet] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawHistory, setWithdrawHistory] = useState<WithdrawRecord[]>([]);
+
+  const maskedWallet = `${MOCK_WALLET_ADDRESS.slice(0, 6)}...${MOCK_WALLET_ADDRESS.slice(-6)}`;
 
   const copyNodeCode = (node: KnowledgeNode) => {
     navigator.clipboard.writeText(node.nodeCode).then(() => {
@@ -142,6 +154,25 @@ export function KnowledgePlanetPage() {
       showToast(t(
         `红包已领取，上链额度 +${claimedAmount.toFixed(1)} PB`,
         `Red packet claimed — on-chain credit +${claimedAmount.toFixed(1)} PB`,
+      ));
+    }, 1500);
+  };
+
+  const handleWithdrawConfirm = () => {
+    if (withdrawing || chainCredit <= 0) return;
+    const withdrawAmount = chainCredit;
+    setWithdrawing(true);
+    setTimeout(() => {
+      setWithdrawing(false);
+      setShowWithdrawSheet(false);
+      setChainCredit(0);
+      setWithdrawHistory(prev => [
+        { id: `w${prev.length + 1}`, amount: withdrawAmount, time: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+        ...prev,
+      ]);
+      showToast(t(
+        `提取成功，${withdrawAmount.toFixed(1)} PB 已提取上链`,
+        `Withdrawal successful — ${withdrawAmount.toFixed(1)} PB sent on-chain`,
       ));
     }, 1500);
   };
@@ -204,9 +235,9 @@ export function KnowledgePlanetPage() {
             <button className="planet-history-toggle" onClick={() => setShowHistoryModal(true)}>
               <div className="planet-history-toggle-left">
                 <div className="planet-history-toggle-icon">
-                  <History size={14} strokeWidth={2} />
+                  <Wallet size={14} strokeWidth={2} />
                 </div>
-                <span>{t('红包领取记录', 'Red Packet History')}</span>
+                <span>{t('资产明细', 'Asset Details')}</span>
               </div>
               <ChevronRight size={14} strokeWidth={2} className="planet-history-toggle-chevron" />
             </button>
@@ -329,16 +360,35 @@ export function KnowledgePlanetPage() {
         <div className="sheet-backdrop" onClick={() => setShowHistoryModal(false)}>
           <div className="payment-sheet planet-history-sheet" onClick={e => e.stopPropagation()}>
             <div className="sheet-header">
-              <span className="sheet-title">{t('红包领取记录', 'Red Packet History')}</span>
+              <span className="sheet-title">{t('资产明细', 'Asset Details')}</span>
               <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={() => setShowHistoryModal(false)} aria-label={t('关闭', 'Close')}>
                 <X size={18} strokeWidth={2} />
               </button>
             </div>
             <div className="planet-credit-row planet-credit-row--modal">
-              <span className="planet-credit-label">{t('累计上链额度', 'Total on-chain credit')}</span>
-              <span className="planet-credit-value">{chainCredit.toFixed(1)} PB</span>
+              <div>
+                <span className="planet-credit-label">{t('可提取余额', 'Withdrawable balance')}</span>
+                <div className="planet-credit-value">{chainCredit.toFixed(1)} PB</div>
+              </div>
+              <button
+                className="planet-withdraw-btn"
+                onClick={() => setShowWithdrawSheet(true)}
+                disabled={chainCredit <= 0}
+              >
+                <ArrowDownToLine size={13} strokeWidth={2.2} />
+                {t('提取', 'Withdraw')}
+              </button>
             </div>
             <div className="planet-history-list">
+              {withdrawHistory.map(w => (
+                <div key={w.id} className="planet-history-item">
+                  <div className="planet-history-icon planet-history-icon--withdraw">
+                    <ArrowDownToLine size={16} strokeWidth={1.8} />
+                  </div>
+                  <span className="planet-history-time">{t(`${w.time} · 提取至链上`, `${w.time} · Withdrawn on-chain`)}</span>
+                  <span className="planet-history-amount planet-history-amount--withdraw">-{w.amount.toFixed(1)} PB</span>
+                </div>
+              ))}
               {RED_PACKET_HISTORY.map(r => (
                 <div key={r.id} className="planet-history-item">
                   <div className="planet-history-icon">
@@ -349,6 +399,57 @@ export function KnowledgePlanetPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Withdraw Sheet ── */}
+      {showWithdrawSheet && (
+        <div
+          className="sheet-backdrop"
+          onClick={() => { if (!withdrawing) setShowWithdrawSheet(false); }}
+        >
+          <div
+            className="payment-sheet planet-upgrade-sheet"
+            role="dialog"
+            aria-modal="true"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="sheet-header">
+              <span className="sheet-title">{t('提取到链上', 'Withdraw On-Chain')}</span>
+              <button
+                className="back-btn"
+                style={{ marginLeft: 'auto' }}
+                onClick={() => { if (!withdrawing) setShowWithdrawSheet(false); }}
+                aria-label={t('关闭', 'Close')}
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+
+            <div className="planet-upgrade-row">
+              <span className="planet-upgrade-row-label">{t('提取金额', 'Withdraw Amount')}</span>
+              <div className="planet-upgrade-cost">
+                <span className="planet-upgrade-cost-num">{chainCredit.toFixed(1)}</span>
+                <span className="planet-upgrade-cost-unit"> PB</span>
+              </div>
+            </div>
+            <div className="planet-upgrade-sep" />
+            <div className="planet-upgrade-row">
+              <span className="planet-upgrade-row-label">{t('提取至', 'Withdraw To')}</span>
+              <span className="planet-upgrade-row-value">{maskedWallet}</span>
+            </div>
+
+            <button
+              className="planet-confirm-btn"
+              onClick={handleWithdrawConfirm}
+              disabled={withdrawing}
+            >
+              {withdrawing
+                ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
+                : t('确认提取', 'Confirm Withdrawal')
+              }
+            </button>
           </div>
         </div>
       )}

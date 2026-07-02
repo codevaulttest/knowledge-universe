@@ -4547,6 +4547,7 @@ button {
   padding: 4px 0 14px;
   border-top: none;
   border-bottom: 1px solid var(--ku-color-border);
+  align-items: center;
 }
 .planet-credit-label {
   font: var(--ku-text-body-sm);
@@ -4556,7 +4557,23 @@ button {
   font: 700 16px/1 var(--ku-font-family);
   color: var(--ku-planet-airdrop-amount);
   font-variant-numeric: tabular-nums;
+  margin-top: 4px;
 }
+.planet-withdraw-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-gradient-primary);
+  color: var(--ku-color-on-primary);
+  font: var(--ku-text-action-cta);
+  box-shadow: var(--ku-shadow-primary);
+  transition: opacity var(--ku-motion-fast);
+  white-space: nowrap;
+}
+.planet-withdraw-btn:disabled { opacity: 0.5; }
 .planet-history-toggle {
   display: flex;
   align-items: center;
@@ -4622,6 +4639,14 @@ button {
 .planet-history-amount {
   font: var(--ku-text-caption-strong);
   color: var(--ku-color-primary);
+}
+.planet-history-icon--withdraw {
+  background: var(--ku-color-bg-tabs);
+  border-color: var(--ku-color-border);
+  color: var(--ku-color-text-secondary);
+}
+.planet-history-amount--withdraw {
+  color: var(--ku-color-text-secondary);
 }
 
 /* ── Section Header ── */
