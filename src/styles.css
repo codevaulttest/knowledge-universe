@@ -4602,6 +4602,22 @@ button {
   justify-content: center;
   flex-shrink: 0;
 }
+.planet-history-toggle-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.planet-history-toggle-balance-label {
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-secondary);
+  white-space: nowrap;
+}
+.planet-history-toggle-balance {
+  font: 700 13px/1 var(--ku-font-family);
+  color: var(--ku-planet-airdrop-amount);
+  white-space: nowrap;
+}
 .planet-history-toggle-chevron {
   color: var(--ku-color-text-secondary);
   opacity: 0.5;

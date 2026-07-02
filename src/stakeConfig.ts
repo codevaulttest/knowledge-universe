@@ -3,9 +3,9 @@ import type { Post, StakeTier } from './types';
 export const STAKE_TIERS: StakeTier[] = [0, 10, 100, 1000];
 
 export const SUPER_BY_TIER: Record<Exclude<StakeTier, 0>, number> = {
-  10: 0.01,
-  100: 0.1,
-  1000: 1,
+  10: 1,
+  100: 10,
+  1000: 100,
 };
 
 export function postHasStake(post: Pick<Post, 'isNode' | 'stakeTier'>): boolean {
@@ -13,7 +13,7 @@ export function postHasStake(post: Pick<Post, 'isNode' | 'stakeTier'>): boolean 
 }
 
 export function formatSuperAmount(amount: number): string {
-  return amount < 0.1 ? amount.toFixed(2) : String(amount);
+  return String(amount);
 }
 
 export function stakeTierDescription(tier: StakeTier, zh: boolean): string {

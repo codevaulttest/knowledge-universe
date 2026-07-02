@@ -42,13 +42,13 @@ const INITIAL_NODES: KnowledgeNode[] = [
 ];
 
 const RED_PACKET_HISTORY: RedPacketRecord[] = [
-  { id: 'a1', amount: 125.8, time: '2026-06-22 10:00' },
-  { id: 'a2', amount: 80.5,  time: '2026-06-21 10:00' },
-  { id: 'a3', amount: 200.0, time: '2026-06-20 10:00' },
-  { id: 'a4', amount: 150.2, time: '2026-06-19 10:00' },
+  { id: 'a1', amount: 126, time: '2026-06-22 10:00' },
+  { id: 'a2', amount: 81,  time: '2026-06-21 10:00' },
+  { id: 'a3', amount: 200, time: '2026-06-20 10:00' },
+  { id: 'a4', amount: 150, time: '2026-06-19 10:00' },
 ];
 
-const PENDING_RED_PACKET = 238.6;
+const PENDING_RED_PACKET = 239;
 // 已领取红包累计形成的「上链额度」（= 历史红包之和），领取后等额增加
 const INITIAL_CHAIN_CREDIT = RED_PACKET_HISTORY.reduce((sum, r) => sum + r.amount, 0);
 
@@ -152,8 +152,8 @@ export function KnowledgePlanetPage() {
       setChainCredit(c => c + claimedAmount);
       setPendingAmount(0);
       showToast(t(
-        `红包已领取，上链额度 +${claimedAmount.toFixed(1)} PB`,
-        `Red packet claimed — on-chain credit +${claimedAmount.toFixed(1)} PB`,
+        `红包已领取，上链额度 +${claimedAmount.toFixed(0)} PB`,
+        `Red packet claimed — on-chain credit +${claimedAmount.toFixed(0)} PB`,
       ));
     }, 1500);
   };
@@ -171,8 +171,8 @@ export function KnowledgePlanetPage() {
         ...prev,
       ]);
       showToast(t(
-        `提取成功，${withdrawAmount.toFixed(1)} PB 已提取上链`,
-        `Withdrawal successful — ${withdrawAmount.toFixed(1)} PB sent on-chain`,
+        `提取成功，${withdrawAmount.toFixed(0)} PB 已提取上链`,
+        `Withdrawal successful — ${withdrawAmount.toFixed(0)} PB sent on-chain`,
       ));
     }, 1500);
   };
@@ -212,7 +212,7 @@ export function KnowledgePlanetPage() {
                     <div className="planet-claimed-badge">{t('今日已领取', 'Claimed today')}</div>
                   ) : (
                     <div className="planet-airdrop-amount">
-                      {pendingAmount.toFixed(1)}
+                      {pendingAmount.toFixed(0)}
                       <span className="planet-airdrop-unit"> PB</span>
                     </div>
                   )}
@@ -239,7 +239,11 @@ export function KnowledgePlanetPage() {
                 </div>
                 <span>{t('资产明细', 'Asset Details')}</span>
               </div>
-              <ChevronRight size={14} strokeWidth={2} className="planet-history-toggle-chevron" />
+              <div className="planet-history-toggle-right">
+                <span className="planet-history-toggle-balance-label">{t('可提取', 'Withdrawable')}</span>
+                <span className="planet-history-toggle-balance">{chainCredit.toFixed(0)} PB</span>
+                <ChevronRight size={14} strokeWidth={2} className="planet-history-toggle-chevron" />
+              </div>
             </button>
           </div>
 
@@ -368,7 +372,7 @@ export function KnowledgePlanetPage() {
             <div className="planet-credit-row planet-credit-row--modal">
               <div>
                 <span className="planet-credit-label">{t('可提取余额', 'Withdrawable balance')}</span>
-                <div className="planet-credit-value">{chainCredit.toFixed(1)} PB</div>
+                <div className="planet-credit-value">{chainCredit.toFixed(0)} PB</div>
               </div>
               <button
                 className="planet-withdraw-btn"
@@ -386,7 +390,7 @@ export function KnowledgePlanetPage() {
                     <ArrowDownToLine size={16} strokeWidth={1.8} />
                   </div>
                   <span className="planet-history-time">{t(`${w.time} · 提取至链上`, `${w.time} · Withdrawn on-chain`)}</span>
-                  <span className="planet-history-amount planet-history-amount--withdraw">-{w.amount.toFixed(1)} PB</span>
+                  <span className="planet-history-amount planet-history-amount--withdraw">-{w.amount.toFixed(0)} PB</span>
                 </div>
               ))}
               {RED_PACKET_HISTORY.map(r => (
@@ -395,7 +399,7 @@ export function KnowledgePlanetPage() {
                     <Gift size={16} strokeWidth={1.8} />
                   </div>
                   <span className="planet-history-time">{r.time}</span>
-                  <span className="planet-history-amount">+{r.amount.toFixed(1)} PB</span>
+                  <span className="planet-history-amount">+{r.amount.toFixed(0)} PB</span>
                 </div>
               ))}
             </div>
@@ -430,7 +434,7 @@ export function KnowledgePlanetPage() {
             <div className="planet-upgrade-row">
               <span className="planet-upgrade-row-label">{t('提取金额', 'Withdraw Amount')}</span>
               <div className="planet-upgrade-cost">
-                <span className="planet-upgrade-cost-num">{chainCredit.toFixed(1)}</span>
+                <span className="planet-upgrade-cost-num">{chainCredit.toFixed(0)}</span>
                 <span className="planet-upgrade-cost-unit"> PB</span>
               </div>
             </div>

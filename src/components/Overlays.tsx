@@ -318,7 +318,7 @@ export function GeminiStakeModal({
 // ═══════════════════════════════════════════════════════════════
 
 const MOCK_WALLET_ADDR = '0xB6E546209F774f5F0307cF68b8c1998B1E2d0C85';
-const MOCK_PB_BALANCE  = '7,152.77';
+const MOCK_PB_BALANCE  = '7,152';
 const MOCK_NETWORK     = 'BSC';
 
 function FeeLabelTooltip({ label, tip }: { label: string; tip: string }) {
@@ -516,7 +516,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
         remark={post.nodeId ? `节点 ${post.nodeId}` : t('知识星球', 'Knowledge Planet')}
         amountText={`${selected} PB`}
         networkFee={`${formatSuperAmount(superAmount)} PB`}
-        tokenFee={`${selected}.0000 PB`}
+        tokenFee={`${selected} PB`}
         failReason={failReason}
         onConfirm={pay}
         onRetry={() => setStep('confirm')}
@@ -1384,8 +1384,8 @@ export function TipModal({
         productName={t('知识宇宙', 'Knowledge Universe')}
         remark={tipRemark}
         amountText={`${selected} PB`}
-        networkFee="0.0100 PB"
-        tokenFee={`${selected}.0000 PB`}
+        networkFee="1 PB"
+        tokenFee={`${selected} PB`}
         onConfirm={handlePay}
         onRetry={() => setStep('confirm')}
         onBack={() => setStep('select')}
