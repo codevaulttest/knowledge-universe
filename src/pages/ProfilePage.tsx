@@ -49,7 +49,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const displayedEntries: { post: (typeof allPosts)[number]; repostedBy?: RepostedBy }[] =
     isOwn && profileTab === 2 ? ownRepostEntries
     : isOwn && profileTab === 3 ? savedPosts.map(post => ({ post }))
-    : isOwn ? [...myPosts.map(post => ({ post })), ...ownRepostEntries]
+    : isOwn ? myPosts.map(post => ({ post }))
     : contentFilter === 'all' ? [...filteredOtherPosts.map(post => ({ post })), ...theirRepostEntries]
     : filteredOtherPosts.map(post => ({ post }));
   const displayedPosts = displayedEntries.map(e => e.post);
@@ -183,7 +183,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               aria-selected={profileTab === 0}
             >
               <FileText size={14} strokeWidth={2} />
-              {t('帖子', 'Posts')}
+              {t('我的帖子', 'My Posts')}
             </button>
             <button
               type="button"
