@@ -2,8 +2,8 @@ import React, { useRef, useState } from 'react';
 import { ArrowLeft, Bell, Bookmark, Camera, Check, Edit3, Eye, FileText, Gift, Languages, LayoutGrid, Lock, MessageCircle, Repeat2, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
-import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_WALLET_ADDRESS } from '../mockData';
-import type { Draft } from '../types';
+import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_WALLET_ADDRESS } from '../mockData';
+import type { Draft, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
 import { Avatar, AuthorName, PageHeader } from '../components/shared';
@@ -20,6 +20,17 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const repostedPosts = allPosts.filter(p => repostedPostIds.has(p.id));
   const firstPost = allPosts.find(p => p.author === authorName);
 
+  // 当前用户转发的帖子（排除自己发布的），带「转发」标识
+  const ownRepostEntries: { post: (typeof allPosts)[number]; repostedBy: RepostedBy }[] = repostedPosts
+    .filter(p => p.author !== CURRENT_USER)
+    .map(post => ({ post, repostedBy: { name: CURRENT_USER, avatarIdx: 0 } }));
+  // 他人主页：该作者转发过的帖子（来自 mock 转发关系）
+  const theirAvatarIdx = ALL_USERS_MOCK.find(u => u.name === authorName)?.avatarIdx ?? 0;
+  const theirRepostEntries: { post: (typeof allPosts)[number]; repostedBy: RepostedBy }[] = (AUTHOR_REPOSTS[authorName] ?? [])
+    .map(id => allPosts.find(p => p.id === id))
+    .filter((p): p is (typeof allPosts)[number] => !!p && p.author !== authorName)
+    .map(post => ({ post, repostedBy: { name: authorName, avatarIdx: theirAvatarIdx } }));
+
   // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 收藏
   const [profileTab, setProfileTab] = useState<0 | 1 | 2 | 3>(0);
   // 他人主页内容筛选：'all' | 'free' | 'sub'
@@ -35,7 +46,13 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     return myPosts;
   })();
 
-  const displayedPosts = isOwn && profileTab === 2 ? repostedPosts : isOwn && profileTab === 3 ? savedPosts : isOwn ? myPosts : filteredOtherPosts;
+  const displayedEntries: { post: (typeof allPosts)[number]; repostedBy?: RepostedBy }[] =
+    isOwn && profileTab === 2 ? ownRepostEntries
+    : isOwn && profileTab === 3 ? savedPosts.map(post => ({ post }))
+    : isOwn ? [...myPosts.map(post => ({ post })), ...ownRepostEntries]
+    : contentFilter === 'all' ? [...filteredOtherPosts.map(post => ({ post })), ...theirRepostEntries]
+    : filteredOtherPosts.map(post => ({ post }));
+  const displayedPosts = displayedEntries.map(e => e.post);
 
   return (
     <div className="page">
@@ -235,7 +252,15 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           </section>
         ) : (
           <section className="feed">
-            {displayedPosts.map((post, i) => <PostCard key={post.id} post={post} index={i % 3} hideFollow={!isOwn} />)}
+            {displayedEntries.map((entry, i) => (
+              <PostCard
+                key={`${entry.post.id}-${entry.repostedBy?.name ?? 'orig'}`}
+                post={entry.post}
+                index={i % 3}
+                hideFollow={!isOwn}
+                repostedBy={entry.repostedBy}
+              />
+            ))}
             {displayedPosts.length === 0 && (
               <div className="profile-empty-state">
                 {profileTab === 2 ? (

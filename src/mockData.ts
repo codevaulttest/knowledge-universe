@@ -325,6 +325,16 @@ export const ALL_USERS_MOCK: UserListItem[] = [
   { name: '林知远', desc: '独立创作者，关注知识管理与可视化表达', avatarIdx: 1 },
 ];
 
+// ── 其他用户的转发记录（author → 转发的帖子 id 列表）──────────────
+// 用于在 feed / 他人主页「帖子」列表中展示「XX 转发了」标识，与 POST_ACTORS.p9.shares 保持一致
+export const AUTHOR_REPOSTS: Record<string, string[]> = {
+  '游牧开发者': ['p9', 'p1'],
+  '深海鱼炸弹': ['p9'],
+  '设计师刘然': ['p9'],
+  '阿May的研究笔记': ['p6'],
+  '产品大叔严磊': ['p1'],
+};
+
 // ── 帖子互动名单（第二层：点击数字查看完整名单）──────────────────
 export const POST_ACTORS: Record<string, PostActors> = {
   p9: {

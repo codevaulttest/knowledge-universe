@@ -352,6 +352,31 @@ button {
   pointer-events: none;
 }
 
+/* ── Repost Banner（转发标识，展示在帖子卡片顶部）── */
+.repost-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta);
+  cursor: pointer;
+  width: fit-content;
+}
+.repost-banner-avatar .avatar {
+  width: 18px;
+  height: 18px;
+}
+.repost-banner-icon {
+  flex-shrink: 0;
+  color: var(--ku-color-text-secondary);
+}
+.repost-banner-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ── Author Row ── */
 .author-row {
   position: relative;

@@ -24,6 +24,11 @@ export type Post = {
 };
 
 
+export type RepostedBy = {
+  name: string;
+  avatarIdx: number;
+};
+
 export type Reply = {
   id: string;
   author: string;

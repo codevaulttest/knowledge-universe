@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Bookmark, Check, Ellipsis, Gift, MessageCircle, Repeat2, ThumbsUp, Trash2, Users } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, POST_ACTORS } from '../mockData';
-import type { Post, PostAction, PostActorEntry } from '../types';
+import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
 import { ArticleFeedCard, AuthorName, Avatar, GeminiNodeBadge, MediaPlaceholder, PostContent } from './shared';
 import { TipModal, Ios26Alert } from './Overlays';
 import { localizeTime } from '../i18n';
@@ -198,11 +198,13 @@ export function PostCard({
   index,
   hideFollow,
   onOpen,
+  repostedBy,
 }: {
   post: Post;
   index: number;
   hideFollow?: boolean;
   onOpen?: (post: Post) => void;
+  repostedBy?: RepostedBy;
 }) {
   const { navigate, followedAuthors, toggleFollow, requestDeletePost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile } = useApp();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -229,6 +231,22 @@ export function PostCard({
       role="button" tabIndex={0}
       aria-label={t(`查看帖子：${post.author} — ${post.title.slice(0, 20)}`, `View post by ${post.author}: ${post.title.slice(0, 20)}`)}
     >
+      {repostedBy && (
+        <div
+          className="repost-banner"
+          role="button"
+          tabIndex={0}
+          onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: repostedBy.name }); }}
+        >
+          <span className="repost-banner-avatar"><Avatar index={repostedBy.avatarIdx} seed={repostedBy.name === CURRENT_USER ? userProfile.avatarSeed : repostedBy.name} /></span>
+          <Repeat2 size={13} strokeWidth={2.4} className="repost-banner-icon" />
+          <span className="repost-banner-text">
+            {repostedBy.name === CURRENT_USER
+              ? t('你转发了', 'You reposted this')
+              : t(`${repostedBy.name} 转发了`, `${repostedBy.name} reposted this`)}
+          </span>
+        </div>
+      )}
       <div className="author-row">
         <Avatar index={index} seed={avatarSeed} onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} />
         <div className="author-meta" onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') navigate({ page: 'P6', authorName: post.author }); }}>

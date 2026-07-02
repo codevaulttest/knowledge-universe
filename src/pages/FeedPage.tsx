@@ -1,16 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Bell, CalendarCheck } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { BATCH_SIZE } from '../mockData';
+import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
+import type { Post, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { GenesisBanner } from '../components/GenesisBanner';
+
+type FeedEntry = { post: Post; repostedBy?: RepostedBy };
+
+// feed 第二条 mock 帖子固定演示为「转发」样式
+const DEMO_REPOST_INDEX = 1;
+const DEMO_REPOSTER: RepostedBy = {
+  name: '游牧开发者',
+  avatarIdx: ALL_USERS_MOCK.find(u => u.name === '游牧开发者')?.avatarIdx ?? 2,
+};
 
 function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElement | null> }) {
   const { posts, t } = useApp();
   const [shownCount, setShownCount] = useState(BATCH_SIZE);
   const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const hasMore = shownCount < posts.length;
+
+  const entries: FeedEntry[] = posts.map((post, i) => (
+    i === DEMO_REPOST_INDEX ? { post, repostedBy: DEMO_REPOSTER } : { post }
+  ));
+  const hasMore = shownCount < entries.length;
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -19,14 +33,14 @@ function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElemen
       ([entry]) => {
         if (entry.isIntersecting && hasMore && !loading) {
           setLoading(true);
-          setTimeout(() => { setShownCount(c => Math.min(c + BATCH_SIZE, posts.length)); setLoading(false); }, 900);
+          setTimeout(() => { setShownCount(c => Math.min(c + BATCH_SIZE, entries.length)); setLoading(false); }, 900);
         }
       },
       { root: scrollRef.current, threshold: 0.1 },
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMore, loading, scrollRef, posts.length]);
+  }, [hasMore, loading, scrollRef, entries.length]);
 
   if (posts.length === 0) {
     return (
@@ -40,8 +54,13 @@ function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElemen
   return (
     <section className="feed" data-layer="feed">
       <GenesisBanner />
-      {posts.slice(0, shownCount).map((post, i) => (
-        <PostCard key={post.id} post={post} index={i % 3} />
+      {entries.slice(0, shownCount).map((entry, i) => (
+        <PostCard
+          key={`${entry.post.id}-${entry.repostedBy?.name ?? 'orig'}`}
+          post={entry.post}
+          index={i % 3}
+          repostedBy={entry.repostedBy}
+        />
       ))}
       {loading && <div className="feed-loading"><span className="spinner" /></div>}
       {!hasMore && !loading && <div className="feed-end">— {t('已经到底了', "You're all caught up")} —</div>}
