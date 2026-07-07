@@ -1,15 +1,18 @@
 import { useState } from 'react';
-import { ArrowDownToLine, ArrowUp, ArrowUpToLine, Check, ChevronRight, Copy, Gift, Loader2, Search, Star, Wallet, X } from 'lucide-react';
+import { ArrowDownToLine, ArrowUp, ArrowUpToLine, Check, ChevronDown, ChevronRight, Copy, Crown, FileText, Gift, LayoutGrid, Loader2, Lock, MessageCircle, Radio, Repeat2, Search, Star, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader, Rating } from '../components/shared';
 import { CURRENT_USER, MOCK_WALLET_ADDRESS } from '../mockData';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
+import type { LucideIcon } from 'lucide-react';
 
 // 面额（PB）：仅 1000 档支持五星升级；100 / 10 档不支持升级
 type NodeTier = 10 | 100 | 1000;
 
 // 节点来源：产生该节点的具体行为，便于用户筛选、了解自己节点的构成
-type NodeSource = '发帖' | '回帖' | '转发' | '解锁' | '开通频道' | '创世认购';
+type NodeSource = '发帖' | '回帖' | '转发' | '解锁' | '频道开通' | '创世认购';
+
+const ALL_NODE_SOURCES: NodeSource[] = ['发帖', '回帖', '转发', '解锁', '频道开通', '创世认购'];
 
 type KnowledgeNode = {
   id: string;
@@ -31,6 +34,26 @@ type WithdrawRecord = {
   amount: number;
   time: string;
 };
+
+const NODE_SOURCE_ICONS: Record<NodeSource, LucideIcon> = {
+  '发帖': FileText,
+  '回帖': MessageCircle,
+  '转发': Repeat2,
+  '解锁': Lock,
+  '频道开通': Radio,
+  '创世认购': Crown,
+};
+
+function NodeSourceIcon({ source, size = 14 }: { source: NodeSource | null; size?: number }) {
+  if (source === null) {
+    return <LayoutGrid size={size} strokeWidth={2} aria-hidden />;
+  }
+  const Icon = NODE_SOURCE_ICONS[source];
+  if (source === '创世认购') {
+    return <Icon size={size} strokeWidth={0} fill="currentColor" aria-hidden />;
+  }
+  return <Icon size={size} strokeWidth={2} aria-hidden />;
+}
 
 const INITIAL_NODES: KnowledgeNode[] = [
   // 1000 PB —— 支持五星升级、红包无上限
@@ -89,10 +112,9 @@ const STAR_SHADOWS: Record<number, string> = {
   5: 'rgba(245,158,11,0.8)',
 };
 
-function StarDisplay({ level }: { level: number }) {
+function StarDisplay({ level, size = 44 }: { level: number; size?: number }) {
   const color = STAR_COLORS[level];
   const shadow = STAR_SHADOWS[level];
-  const size = 44;
 
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0, filter: `drop-shadow(0 0 8px ${shadow})` }}>
@@ -112,7 +134,7 @@ function StarDisplay({ level }: { level: number }) {
   );
 }
 
-// 用户开通的频道会同步产生一个来源为"开通频道"的 1000 PB 双子星节点（懒初始化，每次进入本页时依据最新 channels 状态重新推导）
+// 用户开通的频道会同步产生一个来源为"频道开通"的 1000 PB 双子星节点（懒初始化，每次进入本页时依据最新 channels 状态重新推导）
 function seedNodesWithChannel(channels: { ownerName: string; id: string; createdAt: string }[]): KnowledgeNode[] {
   const ownChannel = channels.find(c => c.ownerName === CURRENT_USER);
   if (!ownChannel) return INITIAL_NODES;
@@ -123,7 +145,7 @@ function seedNodesWithChannel(channels: { ownerName: string; id: string; created
       tier: 1000,
       stars: 1,
       createdAt: ownChannel.createdAt,
-      source: '开通频道',
+      source: '频道开通',
     },
     ...INITIAL_NODES,
   ];
@@ -150,6 +172,7 @@ export function KnowledgePlanetPage() {
   const [showRechargeSheet, setShowRechargeSheet] = useState(false);
   const [rechargeAmount, setRechargeAmount] = useState(1);
   const [recharging, setRecharging] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<'star' | 'source' | null>(null);
 
   const maskedWallet = `${MOCK_WALLET_ADDRESS.slice(0, 6)}...${MOCK_WALLET_ADDRESS.slice(-6)}`;
 
@@ -161,7 +184,6 @@ export function KnowledgePlanetPage() {
   };
 
   const starCounts = [0, 1, 2, 3, 4, 5].map(s => nodes.filter(n => n.stars === s).length);
-  const nodeSources = Array.from(new Set(nodes.map(n => n.source)));
   const search = nodeSearch.trim().toLowerCase();
   const filteredNodes = nodes.filter(n => {
     if (starFilter !== null && n.stars !== starFilter) return false;
@@ -169,6 +191,11 @@ export function KnowledgePlanetPage() {
     if (search && !n.nodeCode.toLowerCase().includes(search)) return false;
     return true;
   });
+  const hasNodeFilters = starFilter !== null || sourceFilter !== null;
+  const hasNodeListConstraints = hasNodeFilters || search.length > 0;
+  const nodeCountLabel = hasNodeListConstraints
+    ? `${filteredNodes.length}/${nodes.length}`
+    : String(nodes.length);
 
   const handleClaim = () => {
     if (claiming || claimed) return;
@@ -232,6 +259,12 @@ export function KnowledgePlanetPage() {
     }, 1500);
   };
 
+  const clearNodeFilters = () => {
+    setStarFilter(null);
+    setSourceFilter(null);
+    setOpenDropdown(null);
+  };
+
   return (
     <div className="page">
       <PageHeader title={t('我的知识星球', 'Knowledge Planet')} onBack={canGoBack ? goBack : undefined} />
@@ -293,51 +326,17 @@ export function KnowledgePlanetPage() {
           <div className="planet-section">
             <div className="planet-section-header">
               <span className="planet-section-title">{t('我的节点', 'My Nodes')}</span>
-              <span className="planet-section-badge">{nodes.length}</span>
-            </div>
-
-            {/* Star distribution（点击筛选该等级节点）*/}
-            <div className="planet-star-grid">
-              {[5, 4, 3, 2, 1, 0].map(s => {
-                const count = starCounts[s];
-                const active = starFilter === s;
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    className={`planet-star-cell${active ? ' planet-star-cell--active' : ''}`}
-                    onClick={() => setStarFilter(active ? null : s)}
-                    disabled={count === 0}
-                    aria-pressed={active}
-                    aria-label={t(`${s} 星节点 ${count} 个`, `${count} nodes at ${s} stars`)}
-                  >
-                    <StarDisplay level={s} />
-                    <span className="planet-star-num">{count}</span>
-                  </button>
-                );
-              })}
+              <span
+                className={`planet-section-badge${hasNodeListConstraints ? ' planet-section-badge--filtered' : ''}`}
+                aria-label={hasNodeListConstraints
+                  ? t(`共 ${nodes.length} 个节点，当前显示 ${filteredNodes.length} 个`, `${filteredNodes.length} of ${nodes.length} nodes`)
+                  : t(`共 ${nodes.length} 个节点`, `${nodes.length} nodes total`)}
+              >
+                {nodeCountLabel}
+              </span>
             </div>
           </div>
 
-          {/* ── Source Filter（按来源筛选：发帖/回帖/转发/解锁/开通频道/创世认购）── */}
-          <div className="planet-source-filter-row">
-            {nodeSources.map(source => {
-              const active = sourceFilter === source;
-              return (
-                <button
-                  key={source}
-                  type="button"
-                  className={`planet-source-chip${active ? ' planet-source-chip--active' : ''}`}
-                  onClick={() => setSourceFilter(active ? null : source)}
-                  aria-pressed={active}
-                >
-                  {source}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* ── Node Search ── */}
           <div className="planet-node-search-wrap">
             <Search size={15} strokeWidth={2} className="planet-node-search-icon" />
             <input
@@ -354,30 +353,138 @@ export function KnowledgePlanetPage() {
             )}
           </div>
 
-          {/* ── 等级 / 来源筛选状态 ── */}
-          {(starFilter !== null || sourceFilter !== null) && (
-            <div className="planet-filter-chip-row">
-              {starFilter !== null && (
-                <button
-                  className="planet-filter-chip"
-                  onClick={() => setStarFilter(null)}
-                  aria-label={t('清除等级筛选', 'Clear star filter')}
-                >
-                  <span>{t(`${starFilter} 星节点`, `${starFilter}-star nodes`)}</span>
-                  <X size={13} strokeWidth={2.5} />
-                </button>
-              )}
-              {sourceFilter !== null && (
-                <button
-                  className="planet-filter-chip"
-                  onClick={() => setSourceFilter(null)}
-                  aria-label={t('清除来源筛选', 'Clear source filter')}
-                >
-                  <span>{t(`来源：${sourceFilter}`, `Source: ${sourceFilter}`)}</span>
-                  <X size={13} strokeWidth={2.5} />
-                </button>
+          <div className="planet-node-filter-row">
+            <div className="planet-node-dropdown">
+              <button
+                type="button"
+                className={`planet-node-dropdown-trigger${starFilter !== null ? ' planet-node-dropdown-trigger--active' : ''}`}
+                onClick={() => setOpenDropdown(d => d === 'star' ? null : 'star')}
+                aria-expanded={openDropdown === 'star'}
+                aria-haspopup="listbox"
+                aria-label={t('星级筛选', 'Filter by star level')}
+              >
+                <span className="planet-node-dropdown-value">
+                  {starFilter !== null ? (
+                    <>
+                      <StarDisplay level={starFilter} size={18} />
+                      <span>{t(`${starFilter} 星`, `${starFilter}★`)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Star size={14} strokeWidth={2} aria-hidden />
+                      <span>{t('全部星级', 'All stars')}</span>
+                    </>
+                  )}
+                </span>
+                <ChevronDown size={14} strokeWidth={2} className={`planet-node-dropdown-chevron${openDropdown === 'star' ? ' planet-node-dropdown-chevron--open' : ''}`} />
+              </button>
+              {openDropdown === 'star' && (
+                <div className="planet-node-dropdown-menu planet-node-dropdown-menu--fit" role="listbox">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={starFilter === null}
+                    className={`planet-node-dropdown-item${starFilter === null ? ' planet-node-dropdown-item--active' : ''}`}
+                    onClick={() => { setStarFilter(null); setOpenDropdown(null); }}
+                  >
+                    <span className="planet-node-dropdown-item-leading">
+                      <Star size={14} strokeWidth={2} aria-hidden />
+                      <span>{t('全部星级', 'All stars')}</span>
+                    </span>
+                  </button>
+                  {[5, 4, 3, 2, 1, 0].map(s => {
+                    const count = starCounts[s];
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        role="option"
+                        aria-selected={starFilter === s}
+                        disabled={count === 0}
+                        className={`planet-node-dropdown-item${starFilter === s ? ' planet-node-dropdown-item--active' : ''}`}
+                        onClick={() => { setStarFilter(s); setOpenDropdown(null); }}
+                      >
+                        <span className="planet-node-dropdown-item-leading">
+                          <StarDisplay level={s} size={22} />
+                          <span>{t(`${s} 星`, `${s}★`)}</span>
+                        </span>
+                        <span className="planet-node-dropdown-item-count">{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
             </div>
+
+            <div className="planet-node-dropdown">
+              <button
+                type="button"
+                className={`planet-node-dropdown-trigger${sourceFilter !== null ? ' planet-node-dropdown-trigger--active' : ''}`}
+                onClick={() => setOpenDropdown(d => d === 'source' ? null : 'source')}
+                aria-expanded={openDropdown === 'source'}
+                aria-haspopup="listbox"
+                aria-label={t('来源筛选', 'Filter by source')}
+              >
+                <span className="planet-node-dropdown-value">
+                  <NodeSourceIcon source={sourceFilter} size={14} />
+                  <span>{sourceFilter ?? t('全部来源', 'All sources')}</span>
+                </span>
+                <ChevronDown size={14} strokeWidth={2} className={`planet-node-dropdown-chevron${openDropdown === 'source' ? ' planet-node-dropdown-chevron--open' : ''}`} />
+              </button>
+              {openDropdown === 'source' && (
+                <div className="planet-node-dropdown-menu" role="listbox">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={sourceFilter === null}
+                    className={`planet-node-dropdown-item${sourceFilter === null ? ' planet-node-dropdown-item--active' : ''}`}
+                    onClick={() => { setSourceFilter(null); setOpenDropdown(null); }}
+                  >
+                    <span className="planet-node-dropdown-item-leading">
+                      <NodeSourceIcon source={null} size={14} />
+                      <span>{t('全部来源', 'All sources')}</span>
+                    </span>
+                  </button>
+                  {ALL_NODE_SOURCES.map(source => (
+                    <button
+                      key={source}
+                      type="button"
+                      role="option"
+                      aria-selected={sourceFilter === source}
+                      className={`planet-node-dropdown-item${sourceFilter === source ? ' planet-node-dropdown-item--active' : ''}`}
+                      onClick={() => { setSourceFilter(source); setOpenDropdown(null); }}
+                    >
+                      <span className="planet-node-dropdown-item-leading">
+                        <NodeSourceIcon source={source} size={14} />
+                        <span>{source}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {hasNodeFilters && (
+              <button
+                type="button"
+                className="planet-node-filter-reset"
+                onClick={clearNodeFilters}
+                aria-label={t('清除筛选', 'Clear filters')}
+              >
+                <X size={14} strokeWidth={2.2} />
+                {t('清除', 'Clear')}
+              </button>
+            )}
+          </div>
+
+          {openDropdown && (
+            <button
+              type="button"
+              className="planet-node-dropdown-backdrop"
+              aria-hidden
+              tabIndex={-1}
+              onClick={() => setOpenDropdown(null)}
+            />
           )}
 
           {/* ── Node List ── */}
@@ -389,7 +496,9 @@ export function KnowledgePlanetPage() {
                 <span className="planet-node-empty-sub">
                   {nodeSearch.trim()
                     ? t(`编号中不含「${nodeSearch}」`, `No node code contains "${nodeSearch}"`)
-                    : t(`没有 ${starFilter} 星节点`, `No ${starFilter}-star nodes`)}
+                    : hasNodeFilters
+                      ? t('没有符合筛选条件的节点', 'No nodes match the current filters')
+                      : t('暂无节点', 'No nodes yet')}
                 </span>
               </div>
             ) : filteredNodes.map((node, idx) => (
@@ -407,9 +516,13 @@ export function KnowledgePlanetPage() {
                     </button>
                   </div>
                   <div className="planet-node-badges">
-                    <span className={`planet-node-tier planet-node-tier--t${node.tier}`}>{t(`质押 ${node.tier} PB`, `Stake ${node.tier} PB`)}</span>
+                    <span className={`planet-node-attrs planet-node-attrs--t${node.tier}`}>
+                      {t(`质押 ${node.tier} PB`, `Stake ${node.tier} PB`)}
+                    </span>
+                    <span className={`planet-node-attrs planet-node-attrs--t${node.tier}`}>
+                      {redPacketCapLabel(node.tier, zh)}
+                    </span>
                     <span className="planet-node-source">{node.source}</span>
-                    <span className="planet-node-cap">{redPacketCapLabel(node.tier, zh)}</span>
                   </div>
                   <span className="planet-node-meta">{node.createdAt}</span>
                 </div>

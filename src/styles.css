@@ -492,6 +492,7 @@ button {
 }
 
 .verified-badge {
+  display: none;
   flex-shrink: 0;
   color: var(--ku-color-verified);
   fill: var(--ku-color-verified);
@@ -4639,7 +4640,13 @@ button {
    知识星球页 (KnowledgePlanetPage)
    ═══════════════════════════════════════════════════════════════ */
 
-.planet-scroll { /* no extra overrides needed; scroll-area handles it */ }
+.planet-scroll {
+  background: var(--ku-color-bg-page);
+}
+
+.page:has(.planet-scroll) .page-header {
+  background: var(--ku-color-bg-page);
+}
 
 .planet-content {
   padding: 16px var(--ku-feed-padding-x) 24px;
@@ -4868,72 +4875,159 @@ button {
 }
 .planet-section-badge {
   font: 600 12px/1 var(--ku-font-family);
+  font-variant-numeric: tabular-nums;
   color: var(--ku-color-text-secondary);
   background: var(--ku-color-bg-tabs);
   border: 1px solid var(--ku-color-border);
   border-radius: 99px;
   padding: 2px 8px;
 }
+.planet-section-badge--filtered {
+  color: var(--ku-color-primary-dark);
+  background: var(--ku-color-primary-alpha-06);
+  border-color: var(--ku-color-primary);
+}
 
-/* ── Star Distribution Grid ── */
-.planet-star-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+/* ── Node Filters & Search ── */
+.planet-node-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
 }
-.planet-star-cell {
-  display: flex;
-  flex-direction: column;
+.planet-node-dropdown {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  flex: 0 0 auto;
+  z-index: 1;
+}
+.planet-node-dropdown:has(.planet-node-dropdown-menu) {
+  z-index: 22;
+}
+.planet-node-dropdown-trigger {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 12px 0;
+  width: auto;
+  max-width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--ku-color-border);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-primary);
+  font: var(--ku-text-caption-strong);
+  cursor: pointer;
+  transition: border-color var(--ku-motion-fast), background var(--ku-motion-fast);
+}
+.planet-node-dropdown-trigger--active {
+  border-color: var(--ku-color-primary);
+  background: var(--ku-color-bg-phone);
+}
+.planet-node-dropdown-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: left;
+  white-space: nowrap;
+}
+.planet-node-dropdown-chevron {
+  flex-shrink: 0;
+  color: var(--ku-color-text-secondary);
+  transition: transform var(--ku-motion-fast);
+}
+.planet-node-dropdown-chevron--open {
+  transform: rotate(180deg);
+}
+.planet-node-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: auto;
+  min-width: 100%;
+  width: max-content;
+  max-height: 220px;
+  overflow-y: auto;
   background: var(--ku-color-bg-phone);
   border: 1px solid var(--ku-color-border-card);
   border-radius: var(--ku-radius-card);
   box-shadow: var(--ku-shadow-card);
-  cursor: pointer;
-  transition: border-color var(--ku-motion-fast), box-shadow var(--ku-motion-fast), background var(--ku-motion-fast), transform var(--ku-motion-fast);
+  padding: 4px 0;
+  z-index: 23;
 }
-.planet-star-cell:not(:disabled):active { transform: scale(0.97); }
-.planet-star-cell--active {
-  border-color: var(--ku-color-primary);
-  background: var(--ku-color-primary-alpha-06);
-  box-shadow: inset 0 0 0 1px var(--ku-color-primary);
+.planet-node-dropdown-menu--fit {
+  max-height: none;
+  overflow-y: visible;
 }
-.planet-star-cell:disabled {
-  cursor: default;
-  opacity: 0.5;
-  box-shadow: none;
-}
-.planet-star-num {
-  font: 600 16px/1 var(--ku-font-family);
-  color: var(--ku-color-text-primary);
-}
-.planet-filter-chip-row {
+.planet-node-dropdown-item {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--ku-search-chip-gap);
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-primary);
+  transition: background var(--ku-motion-fast);
 }
-.planet-filter-chip {
+.planet-node-dropdown-item-leading {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 99px;
-  background: var(--ku-color-primary-alpha-14);
+  gap: 8px;
+  min-width: 0;
+}
+.planet-node-dropdown-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.planet-node-dropdown-item--active {
+  color: var(--ku-color-primary-dark);
+  background: var(--ku-color-primary-alpha-06);
+}
+.planet-node-dropdown-item:not(:disabled):active {
+  background: var(--ku-color-primary-alpha-06);
+}
+.planet-node-dropdown-item-count {
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.planet-node-filter-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-primary-alpha-06);
   color: var(--ku-color-primary-dark);
   font: var(--ku-text-caption-strong);
-  transition: opacity var(--ku-motion-fast);
+  cursor: pointer;
+  flex-shrink: 0;
 }
-.planet-filter-chip:active { opacity: 0.7; }
+.planet-node-filter-reset:active {
+  opacity: 0.7;
+}
+.planet-node-dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 21;
+  border: none;
+  background: transparent;
+  cursor: default;
+}
 
 /* ── Node List ── */
 .planet-node-search-wrap {
   position: relative;
   display: flex;
   align-items: center;
-  background: var(--ku-color-bg-root);
+  background: var(--ku-color-bg-phone);
   border: 1px solid var(--ku-color-border);
   border-radius: var(--ku-radius-card);
   padding: 0 10px;
@@ -5038,24 +5132,19 @@ button {
   gap: 6px;
   flex-wrap: wrap;
 }
-.planet-node-tier {
+.planet-node-attrs {
   font: var(--ku-text-caption);
   padding: 1px 6px;
   border-radius: var(--ku-radius-badge);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.planet-node-tier--t1000 {
+.planet-node-attrs--t1000 {
   background: var(--ku-planet-tier-prem-bg);
   color: var(--ku-planet-tier-prem-text);
 }
-.planet-node-tier--t100  { background: var(--ku-planet-tier-mid-bg);  color: var(--ku-planet-tier-mid-text); }
-.planet-node-tier--t10   { background: var(--ku-planet-tier-base-bg); color: var(--ku-planet-tier-base-text); }
-.planet-node-cap {
-  font: var(--ku-text-meta);
-  color: var(--ku-color-text-secondary);
-  white-space: nowrap;
-}
+.planet-node-attrs--t100  { background: var(--ku-planet-tier-mid-bg);  color: var(--ku-planet-tier-mid-text); }
+.planet-node-attrs--t10   { background: var(--ku-planet-tier-base-bg); color: var(--ku-planet-tier-base-text); }
 .planet-node-source {
   font: var(--ku-text-caption);
   color: var(--ku-color-text-secondary);
@@ -5065,26 +5154,6 @@ button {
   white-space: nowrap;
 }
 
-/* ── Node Source Filter Row ── */
-.planet-source-filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-.planet-source-chip {
-  padding: 5px 10px;
-  border-radius: 99px;
-  background: var(--ku-color-bg-page);
-  color: var(--ku-color-text-secondary);
-  font: var(--ku-text-caption-strong);
-  border: none;
-  cursor: pointer;
-}
-.planet-source-chip--active {
-  background: var(--ku-color-primary-alpha-14);
-  color: var(--ku-color-primary-dark);
-}
 .planet-node-locked-tag {
   font: var(--ku-text-caption-strong);
   color: var(--ku-color-text-secondary);
@@ -5196,6 +5265,21 @@ button {
   gap: 8px;
 }
 .planet-confirm-btn:disabled { opacity: 0.65; }
+.channel-create-footer {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.channel-create-footer .planet-confirm-btn {
+  margin-top: 0;
+}
+.channel-create-footer-hint {
+  margin: 0;
+  text-align: center;
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-meta);
+}
 
 /* spin animation for loading states */
 @keyframes planet-spin {
@@ -6067,6 +6151,10 @@ button {
   font: 600 15px/1 var(--ku-font-family);
   color: var(--ku-color-text-primary);
 }
+.edit-profile-header-spacer {
+  width: 32px;
+  flex-shrink: 0;
+}
 .edit-profile-save {
   font: 600 14px/1 var(--ku-font-family);
   color: var(--ku-color-primary);
@@ -6125,6 +6213,71 @@ button {
   transition: border-color var(--ku-motion-fast);
 }
 .edit-profile-input:focus { border-color: var(--ku-color-primary); }
+.channel-tier-block {
+  margin-bottom: 8px;
+}
+.channel-tier-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 32px;
+  gap: 10px 12px;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 0;
+}
+.channel-tier-row--head {
+  margin-bottom: 6px;
+}
+.channel-tier-col-label--price {
+  text-align: left;
+}
+.channel-tier-col-label {
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-secondary);
+}
+.channel-tier-col-label--action {
+  width: 32px;
+}
+.channel-tier-name-label {
+  display: flex;
+  align-items: center;
+  min-height: 43px;
+  padding: 0;
+  font: 600 15px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.channel-tier-price-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.channel-tier-price-input {
+  flex: 1;
+  min-width: 112px;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+.channel-tier-price-unit {
+  flex-shrink: 0;
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-secondary);
+  white-space: nowrap;
+}
+.channel-tier-delete {
+  flex-shrink: 0;
+}
+.channel-tier-error {
+  margin: 4px 0 0 52px;
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-danger);
+}
+.edit-profile-input--error {
+  border-color: var(--ku-color-text-danger) !important;
+}
+.edit-profile-input--error:focus {
+  border-color: var(--ku-color-text-danger) !important;
+}
 .edit-profile-charcount {
   align-self: flex-end;
   font: 400 11px/1 var(--ku-font-family);
