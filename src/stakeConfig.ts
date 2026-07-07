@@ -8,12 +8,28 @@ export const SUPER_BY_TIER: Record<Exclude<StakeTier, 0>, number> = {
   1000: 100,
 };
 
+// 产生节点时同步扣除的 SUP（SUP 链原生代币，千分之一比例：1000 PB→100 / 100 PB→10 / 10 PB→1）
+export const SUP_COST_BY_TIER: Record<Exclude<StakeTier, 0>, number> = {
+  10: 1,
+  100: 10,
+  1000: 100,
+};
+
+/** 代币金额统一格式化为整数（PB / SUP 等） */
+export function formatTokenAmount(amount: number): string {
+  return String(Math.round(amount));
+}
+
+export function formatSupAmount(amount: number): string {
+  return formatTokenAmount(amount);
+}
+
 export function postHasStake(post: Pick<Post, 'isNode' | 'stakeTier'>): boolean {
   return post.isNode && (post.stakeTier ?? 0) > 0;
 }
 
 export function formatSuperAmount(amount: number): string {
-  return String(amount);
+  return formatTokenAmount(amount);
 }
 
 export function stakeTierDescription(tier: StakeTier, zh: boolean): string {

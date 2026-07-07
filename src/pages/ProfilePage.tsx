@@ -1,19 +1,23 @@
 import React, { useRef, useState } from 'react';
-import { ArrowLeft, Bell, Bookmark, Camera, Check, Edit3, Eye, FileText, Gift, Languages, LayoutGrid, Lock, MessageCircle, Repeat2, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Bell, Bookmark, Camera, Check, Edit3, Eye, FileText, HandCoins, Languages, LayoutGrid, Lock, MessageCircle, Radio, Repeat2, Settings, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
-import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_WALLET_ADDRESS } from '../mockData';
+import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
 import type { Draft, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
-import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
-import { Avatar, AuthorName, PageHeader } from '../components/shared';
+import { ConfirmDeleteDraftModal, CreateChannelModal, TipModal } from '../components/Overlays';
+import { Avatar, AuthorName, GenesisBadge, PageHeader } from '../components/shared';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, repostedPostIds, unreadActivityCount, t, userProfile, updateUserProfile } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, repostedPostIds, unreadActivityCount, t, userProfile, updateUserProfile, channels, subscribedChannelTiers, openChannelSubscribe, openCreateChannel } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
+  const channel = channels.find(c => c.ownerName === authorName);
+  const genesisTier = getGenesisTier(authorName);
+  const mySubscribedTierIndex = channel ? subscribedChannelTiers[channel.id] : undefined;
+  const [manageChannelOpen, setManageChannelOpen] = useState(false);
   // 我的主页隐藏长文（article）类型的 mock 帖子
   const myPosts = allPosts.filter(p => p.author === authorName && !(isOwn && p.kind === 'article'));
   const savedPosts = allPosts.filter(p => savedPostIds.has(p.id));
@@ -40,9 +44,11 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const [tipTarget, setTipTarget] = useState<{ context: 'post' | 'author'; postTitle?: string } | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
 
+  // 频道三级可见性：全员免费（无 minTierIndex）/ 会员专属（设了 minTierIndex，需订阅达标才可见）
+  const isChannelExclusive = (p: (typeof allPosts)[number]) => !!channel && p.channelId === channel.id && p.minTierIndex != null;
   const filteredOtherPosts = (() => {
-    if (contentFilter === 'free') return myPosts.filter(p => p.stakeTier === 0);
-    if (contentFilter === 'sub') return myPosts.filter(p => p.stakeTier > 0);
+    if (contentFilter === 'free') return myPosts.filter(p => !isChannelExclusive(p));
+    if (contentFilter === 'sub') return myPosts.filter(isChannelExclusive);
     return myPosts;
   })();
 
@@ -77,7 +83,10 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           <div className="profile-info">
             {isOwn ? (
               <>
-                <span className="author-name-row profile-name"><span className="author-name-text">{userProfile.nickname || DEFAULT_WALLET_DISPLAY}</span></span>
+                <span className="author-name-row profile-name">
+                  <span className="author-name-text">{userProfile.nickname || DEFAULT_WALLET_DISPLAY}</span>
+                  {genesisTier && <GenesisBadge tier={genesisTier} />}
+                </span>
                 <button
                   type="button"
                   className="profile-edit-btn"
@@ -88,7 +97,10 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 </button>
               </>
             ) : (
-              <AuthorName name={authorName} className="profile-name" />
+              <span className="profile-name-row">
+                <AuthorName name={authorName} className="profile-name" />
+                {genesisTier && <GenesisBadge tier={genesisTier} />}
+              </span>
             )}
           </div>
           {isOwn ? (
@@ -115,6 +127,49 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             </div>
           ) : null}
         </div>
+
+        {/* ── 频道信息条 ── */}
+        {channel ? (
+          <div className="channel-info-bar">
+            <div className="channel-info-bar-top">
+              <div className="channel-info-bar-left">
+                <span className="channel-info-bar-name">
+                  <Radio size={13} strokeWidth={2.2} />
+                  {channel.name}
+                </span>
+                <span className="channel-info-bar-sub">
+                  {t(`${channel.subscriberCount} 人已订阅 · ${channel.category}`, `${channel.subscriberCount} subscribers · ${channel.category}`)}
+                </span>
+              </div>
+              {isOwn ? (
+                <button type="button" className="channel-manage-btn" onClick={() => setManageChannelOpen(true)}>
+                  <Settings size={13} strokeWidth={2.2} />
+                  {t('管理频道', 'Manage')}
+                </button>
+              ) : channel.tiers.length > 0 ? (
+                <button type="button" className="channel-manage-btn" onClick={() => openChannelSubscribe(channel.id)}>
+                  {mySubscribedTierIndex != null
+                    ? t(`已订阅 · ${channel.tiers[mySubscribedTierIndex].name}`, `Subscribed · ${channel.tiers[mySubscribedTierIndex].name}`)
+                    : t('订阅', 'Subscribe')}
+                </button>
+              ) : null}
+            </div>
+            {channel.tiers.length > 0 && (
+              <div className="channel-info-bar-tiers">
+                {channel.tiers.map((tier, idx) => (
+                  <span key={tier.id} className={`channel-tier-chip${mySubscribedTierIndex === idx ? ' channel-tier-chip--active' : ''}`}>
+                    {tier.name} · {tier.price} PB/{t('月', 'mo')}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : isOwn ? (
+          <button type="button" className="channel-create-entry" onClick={openCreateChannel}>
+            <Radio size={14} strokeWidth={2.2} />
+            {t('开通频道 · 支付 1000 PB', 'Create a channel · Pay 1000 PB')}
+          </button>
+        ) : null}
 
         {!isOwn && (
           <div className="profile-mini-stats">
@@ -144,7 +199,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               onClick={() => setTipTarget({ context: 'author' })}
               aria-label={t('打赏博主', 'Tip creator')}
             >
-              <Gift size={14} strokeWidth={2} />
+              <HandCoins size={14} strokeWidth={2} />
               {t('打赏', 'Tip')}
             </button>
             <button
@@ -227,9 +282,9 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 onClick={() => setContentFilter(f)}
               >
                 {f === 'all' ? <LayoutGrid size={14} strokeWidth={2} /> : f === 'free' ? <Eye size={14} strokeWidth={2} /> : <Lock size={14} strokeWidth={2} />}
-                {f === 'all' ? t('全部', 'All') : f === 'free' ? t('免费', 'Free') : t('订阅', 'Paid')}
+                {f === 'all' ? t('全部', 'All') : f === 'free' ? t('全员免费', 'Free') : t('会员专属', 'Members')}
                 <span className="profile-content-tab-badge" style={{ background: contentFilter === f ? 'var(--ku-color-primary)' : 'var(--ku-color-text-secondary)' }}>
-                  {f === 'all' ? myPosts.length : f === 'free' ? myPosts.filter(p => p.stakeTier === 0).length : myPosts.filter(p => p.stakeTier > 0).length}
+                  {f === 'all' ? myPosts.length : f === 'free' ? myPosts.filter(p => !isChannelExclusive(p)).length : myPosts.filter(isChannelExclusive).length}
                 </span>
               </button>
             ))}
@@ -321,6 +376,10 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           onClose={() => setShowEditProfile(false)}
           t={t}
         />
+      )}
+
+      {manageChannelOpen && channel && (
+        <CreateChannelModal existingChannel={channel} onClose={() => setManageChannelOpen(false)} />
       )}
     </div>
   );

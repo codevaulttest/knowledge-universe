@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, CalendarCheck } from 'lucide-react';
+import { Bell, CalendarCheck, Radio } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
 import type { Post, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { GenesisBanner } from '../components/GenesisBanner';
+import { Avatar } from '../components/shared';
 
 type FeedEntry = { post: Post; repostedBy?: RepostedBy };
 
@@ -87,7 +88,44 @@ function FollowFeed({ followedAuthors }: { followedAuthors: Set<string> }) {
   );
 }
 
-export function FeedPage({ tab, setTab }: { tab: 0 | 1; setTab: (t: 0 | 1) => void }) {
+// ── ChannelDiscoverFeed（频道发现：类似 YouTube 频道推荐）──────────
+function ChannelDiscoverFeed() {
+  const { channels, navigate, t } = useApp();
+  if (channels.length === 0) {
+    return (
+      <div className="empty-state">
+        <p>{t('暂无频道', 'No channels yet')}</p>
+      </div>
+    );
+  }
+  return (
+    <section className="channel-discover-list">
+      {channels.map((channel, i) => (
+        <button
+          key={channel.id}
+          type="button"
+          className="channel-discover-card"
+          onClick={() => navigate({ page: 'P6', authorName: channel.ownerName })}
+        >
+          <Avatar index={i % 3} seed={channel.avatarSeed} />
+          <div className="channel-discover-info">
+            <span className="channel-discover-name">
+              <Radio size={13} strokeWidth={2.2} />
+              {channel.name}
+            </span>
+            <span className="channel-discover-desc">{channel.description}</span>
+            <div className="channel-discover-meta">
+              <span className="channel-discover-category">{channel.category}</span>
+              <span className="channel-discover-subs">{t(`${channel.subscriberCount} 人已订阅`, `${channel.subscriberCount} subscribers`)}</span>
+            </div>
+          </div>
+        </button>
+      ))}
+    </section>
+  );
+}
+
+export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 2) => void }) {
   const { followedAuthors, navigate, unreadActivityCount, openCheckIn, checkInClaimable, t } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevTabRef = useRef(tab);
@@ -119,6 +157,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1; setTab: (t: 0 | 1) => vo
         <nav className="tabs" data-layer="top-tabs">
           <button className={tab === 0 ? 'active' : ''} type="button" onClick={() => setTab(0)}>{t('推荐', 'For You')}</button>
           <button className={tab === 1 ? 'active' : ''} type="button" onClick={() => setTab(1)}>{t('关注', 'Following')}</button>
+          <button className={tab === 2 ? 'active' : ''} type="button" onClick={() => setTab(2)}>{t('频道', 'Channels')}</button>
         </nav>
         <div className="feed-header-right">
           <button
@@ -137,6 +176,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1; setTab: (t: 0 | 1) => vo
       <div className={`scroll-area${slideClass ? ` ${slideClass}` : ''}`} ref={scrollRef}>
         {tab === 0 && <RecommendFeed scrollRef={scrollRef} />}
         {tab === 1 && <FollowFeed followedAuthors={followedAuthors} />}
+        {tab === 2 && <ChannelDiscoverFeed />}
       </div>
     </>
   );

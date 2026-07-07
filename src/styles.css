@@ -205,6 +205,59 @@ button {
   padding: var(--ku-feed-padding-top) var(--ku-feed-padding-x) 0;
 }
 
+/* ── Channel Discover Feed（频道发现）── */
+.channel-discover-list {
+  padding: var(--ku-feed-padding-top) var(--ku-feed-padding-x) 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.channel-discover-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  border: 1px solid var(--ku-color-border-card);
+  text-align: left;
+  cursor: pointer;
+}
+.channel-discover-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.channel-discover-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 700 14px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
+.channel-discover-desc {
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.channel-discover-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+.channel-discover-category {
+  font: var(--ku-text-caption);
+  color: var(--ku-color-primary-dark);
+  background: var(--ku-color-badge-bg);
+  border-radius: var(--ku-radius-badge);
+  padding: 1px 6px;
+}
+.channel-discover-subs {
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-secondary);
+}
+
 /* ── Feed Loading ── */
 .feed-loading {
   display: flex;
@@ -443,6 +496,46 @@ button {
   color: var(--ku-color-verified);
   fill: var(--ku-color-verified);
   stroke: var(--ku-color-verified-check);
+}
+
+/* ── GenesisBadge（创世节点持有者：银/金）── */
+.genesis-owner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  padding: 3px 6px;
+  border-radius: var(--ku-radius-badge);
+  font: var(--ku-text-caption);
+  line-height: 1;
+}
+.genesis-owner-badge--silver {
+  color: var(--ku-color-genesis-silver);
+  background: var(--ku-color-genesis-silver-bg);
+}
+.genesis-owner-badge--gold {
+  color: var(--ku-color-genesis-gold);
+  background: var(--ku-color-genesis-gold-bg);
+}
+.genesis-owner-badge-text {
+  white-space: nowrap;
+}
+
+/* ── ChannelMemberBadge（频道会员身份小标，评论区展示）── */
+.channel-member-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  padding: 3px 6px;
+  border-radius: var(--ku-radius-badge);
+  background: var(--ku-color-member-badge-bg);
+  color: var(--ku-color-member-badge);
+  font: var(--ku-text-caption);
+  line-height: 1;
+}
+.channel-member-badge-text {
+  white-space: nowrap;
 }
 
 .author-time {
@@ -3382,6 +3475,8 @@ button {
   font: var(--ku-text-meta);
   color: var(--ku-color-text-meta);
 }
+.profile-name-row { display: flex; align-items: center; gap: 6px; }
+.post-author-name-row { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
 .follow-btn {
   flex-shrink: 0;
   padding: 7px 18px;
@@ -3409,6 +3504,76 @@ button {
   background: transparent;
   color: var(--ku-color-primary);
 }
+/* ── 频道信息条 ── */
+.channel-info-bar {
+  margin: 0 var(--ku-feed-padding-x) 14px;
+  padding: 12px 14px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-badge-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.channel-info-bar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.channel-info-bar-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.channel-info-bar-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 700 14px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
+.channel-info-bar-sub {
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-secondary);
+}
+.channel-manage-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--ku-radius-reward-chip);
+  background: var(--ku-color-primary);
+  color: var(--ku-color-on-primary);
+  font: var(--ku-text-action-cta);
+  cursor: pointer;
+}
+.channel-info-bar-tiers { display: flex; flex-wrap: wrap; gap: 6px; }
+.channel-tier-chip {
+  padding: 3px 8px;
+  border-radius: var(--ku-radius-badge);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-caption);
+}
+.channel-tier-chip--active {
+  background: var(--ku-color-primary-alpha-14);
+  color: var(--ku-color-primary-dark);
+  font-weight: 700;
+}
+.channel-create-entry {
+  margin: 0 var(--ku-feed-padding-x) 14px;
+  padding: 10px 14px;
+  border: 1px dashed var(--ku-color-border-control);
+  border-radius: var(--ku-radius-card);
+  background: transparent;
+  color: var(--ku-color-primary);
+  font: var(--ku-text-action-cta);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  width: calc(100% - 2 * var(--ku-feed-padding-x));
+  justify-content: center;
+}
+
 .profile-mini-stats {
   display: flex;
   align-items: center;
@@ -4744,11 +4909,16 @@ button {
   font: 600 16px/1 var(--ku-font-family);
   color: var(--ku-color-text-primary);
 }
+.planet-filter-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ku-search-chip-gap);
+  align-items: center;
+}
 .planet-filter-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  align-self: flex-start;
   padding: 6px 12px;
   border-radius: 99px;
   background: var(--ku-color-primary-alpha-14);
@@ -4869,16 +5039,15 @@ button {
   flex-wrap: wrap;
 }
 .planet-node-tier {
-  font: var(--ku-text-caption-strong);
-  padding: 2px 8px;
-  border-radius: 99px;
+  font: var(--ku-text-caption);
+  padding: 1px 6px;
+  border-radius: var(--ku-radius-badge);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .planet-node-tier--t1000 {
   background: var(--ku-planet-tier-prem-bg);
   color: var(--ku-planet-tier-prem-text);
-  box-shadow: inset 0 0 0 1px var(--ku-planet-tier-prem-ring);
 }
 .planet-node-tier--t100  { background: var(--ku-planet-tier-mid-bg);  color: var(--ku-planet-tier-mid-text); }
 .planet-node-tier--t10   { background: var(--ku-planet-tier-base-bg); color: var(--ku-planet-tier-base-text); }
@@ -4886,6 +5055,35 @@ button {
   font: var(--ku-text-meta);
   color: var(--ku-color-text-secondary);
   white-space: nowrap;
+}
+.planet-node-source {
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-secondary);
+  background: var(--ku-color-badge-bg);
+  border-radius: var(--ku-radius-badge);
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+/* ── Node Source Filter Row ── */
+.planet-source-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.planet-source-chip {
+  padding: 5px 10px;
+  border-radius: 99px;
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-caption-strong);
+  border: none;
+  cursor: pointer;
+}
+.planet-source-chip--active {
+  background: var(--ku-color-primary-alpha-14);
+  color: var(--ku-color-primary-dark);
 }
 .planet-node-locked-tag {
   font: var(--ku-text-caption-strong);

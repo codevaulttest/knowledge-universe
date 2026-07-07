@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bookmark, Gift, Link, MessageCircle, Repeat2, ThumbsUp } from 'lucide-react';
+import { Bookmark, HandCoins, Link, MessageCircle, Repeat2, ThumbsUp } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS } from '../mockData';
 import { Avatar, PageHeader } from '../components/shared';
@@ -22,7 +22,7 @@ const ACTION_ICON: Record<ActivityType, React.ReactNode> = {
   save:    <Bookmark size={13} strokeWidth={2.2} />,
   comment: <MessageCircle size={13} strokeWidth={2.2} />,
   link:    <Link size={13} strokeWidth={2.2} />,
-  tip:     <Gift size={13} strokeWidth={2.2} />,
+  tip:     <HandCoins size={13} strokeWidth={2.2} />,
 };
 
 function groupText(group: ActivityGroup, zh: boolean): string {

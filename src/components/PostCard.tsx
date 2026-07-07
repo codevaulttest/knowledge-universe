@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Bookmark, Check, Ellipsis, Gift, MessageCircle, Repeat2, ThumbsUp, Trash2, Users } from 'lucide-react';
+import { Bookmark, Check, Ellipsis, HandCoins, MessageCircle, Repeat2, ThumbsUp, Trash2, Users } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { CURRENT_USER, POST_ACTORS } from '../mockData';
+import { CURRENT_USER, getGenesisTier, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
-import { ArticleFeedCard, AuthorName, Avatar, GeminiNodeBadge, MediaPlaceholder, PostContent } from './shared';
+import { ArticleFeedCard, AuthorName, Avatar, GenesisBadge, GeminiNodeBadge, MediaPlaceholder, PostContent } from './shared';
 import { TipModal, Ios26Alert } from './Overlays';
 import { localizeTime } from '../i18n';
 
@@ -70,7 +70,7 @@ function ActorsSheet({ postId, initialTab, onClose }: {
                 </div>
                 {tab === 'tip' ? (
                   <span className="actors-item-amount">
-                    <Gift size={13} strokeWidth={2.25} />
+                    <HandCoins size={13} strokeWidth={2.25} />
                     {entry.amount ?? 0} PB
                   </span>
                 ) : !isSelf && (
@@ -206,7 +206,7 @@ export function PostCard({
   onOpen?: (post: Post) => void;
   repostedBy?: RepostedBy;
 }) {
-  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile } = useApp();
+  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, openChannelSubscribe } = useApp();
   const [moreOpen, setMoreOpen] = useState(false);
   const [actorsTab, setActorsTab] = useState<PostAction | null>(null);
   const [showTip, setShowTip] = useState(false);
@@ -216,9 +216,19 @@ export function PostCard({
   const hasActors = isOwn && !!POST_ACTORS[post.id];
   const isFollowing = followedAuthors.has(post.author);
   const totalImgs = post.imageCount ?? 3;
-  const imgUnlocked = linkedPostIds.has(post.id) || post.visiblePercent === 100;
+  const genesisTier = getGenesisTier(post.author);
+
+  // 频道会员门槛：未达标时强制锁定，优先于按比例解锁（不看 visiblePercent）
+  const channel = post.channelId ? channels.find(c => c.id === post.channelId) : undefined;
+  const requiredTier = channel && post.minTierIndex != null ? channel.tiers[post.minTierIndex] : undefined;
+  const mySubTierIdx = channel ? subscribedChannelTiers[channel.id] : undefined;
+  const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= post.minTierIndex!);
+  const channelLocked = !!requiredTier && !meetsChannelGate;
+  const openChannelGate = () => channel && openChannelSubscribe(channel.id);
+
+  const imgUnlocked = !channelLocked && (linkedPostIds.has(post.id) || post.visiblePercent === 100);
   const visibleImgCount = post.kind === 'image'
-    ? (imgUnlocked ? totalImgs : Math.floor(post.visiblePercent / 100 * totalImgs))
+    ? (channelLocked ? 0 : imgUnlocked ? totalImgs : Math.floor(post.visiblePercent / 100 * totalImgs))
     : totalImgs;
   return (
     <>
@@ -250,7 +260,10 @@ export function PostCard({
       <div className="author-row">
         <Avatar index={index} seed={avatarSeed} onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} />
         <div className="author-meta" onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') navigate({ page: 'P6', authorName: post.author }); }}>
-          <AuthorName name={displayName} as="h2" />
+          <span className="post-author-name-row">
+            <AuthorName name={displayName} as="h2" />
+            {genesisTier && <GenesisBadge tier={genesisTier} />}
+          </span>
           <div className="author-meta-row">
             <span className="author-time">{localizeTime(post.time, language)}</span>
             {isOwn && post.isNode && (
@@ -296,24 +309,32 @@ export function PostCard({
         )}
       </div>
       {post.kind === 'article' ? (
-        <ArticleFeedCard post={post} onClick={() => openArticleReader(post)} />
+        <ArticleFeedCard post={post} onClick={() => (channelLocked ? openChannelGate() : openArticleReader(post))} />
       ) : (
         <>
-          <PostContent post={post} collapseLines={4} />
+          <PostContent
+            post={post}
+            collapseLines={4}
+            forceLocked={channelLocked}
+            lockLabel={channelLocked ? t(`订阅『${requiredTier!.name}』解锁`, `Subscribe "${requiredTier!.name}" to unlock`) : undefined}
+            onUnlockOverride={channelLocked ? openChannelGate : undefined}
+          />
           <MediaPlaceholder
             kind={post.kind}
             articleHasCover={post.articleHasCover}
             imageCount={totalImgs}
             visibleImgCount={visibleImgCount}
-            visiblePercent={post.visiblePercent}
+            visiblePercent={channelLocked ? 0 : post.visiblePercent}
             onImageClick={post.kind === 'image' ? (idx) => {
-              if (idx >= visibleImgCount) {
+              if (channelLocked) {
+                openChannelGate();
+              } else if (idx >= visibleImgCount) {
                 openLink(post.id, 'unlock');
               } else {
                 openImageLightbox(post, idx, visibleImgCount);
               }
             } : undefined}
-            onVideoClick={post.kind === 'video' ? () => openVideoPlayer(post) : undefined}
+            onVideoClick={post.kind === 'video' ? () => (channelLocked ? openChannelGate() : openVideoPlayer(post)) : undefined}
           />
         </>
       )}
@@ -333,7 +354,7 @@ export function PostCard({
             className="post-tip-received"
             aria-label={t(`已收到打赏 ${post.tipsReceived ?? 0} PB`, `Received ${post.tipsReceived ?? 0} PB in tips`)}
           >
-            <Gift size={18} strokeWidth={2.25} />
+            <HandCoins size={18} strokeWidth={2.25} />
             {post.tipsReceived ?? 0} PB
           </span>
         ) : (
@@ -343,7 +364,7 @@ export function PostCard({
             onClick={(e) => { e.stopPropagation(); setShowTip(true); }}
             aria-label={t('打赏此帖', 'Tip this post')}
           >
-            <Gift size={18} strokeWidth={2.25} />
+            <HandCoins size={18} strokeWidth={2.25} />
             {t('打赏', 'Tip')}
           </button>
         )}

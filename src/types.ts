@@ -21,6 +21,10 @@ export type Post = {
   likes: number;
   videoUrl?: string;
   tipsReceived?: number; // 该帖累计收到的打赏（PB），仅在自己主页展示
+  channelId?: string; // 归属频道；未设置=不属于任何频道
+  // 该频道下需订阅达到 channel.tiers[minTierIndex] 及以上档位才可见；未设置=频道内全员免费公开
+  // "会员专属再付费"场景：已满足 minTierIndex 后，仍复用现有 stakeTier/visiblePercent 付费解锁机制，无需额外字段
+  minTierIndex?: number;
 };
 
 
@@ -36,10 +40,11 @@ export type Reply = {
   text: string;
   avatarIdx: number;
   likes: number;
+  channelTierName?: string; // 若该评论作者是所在频道的订阅会员，展示对应档位名小标
 };
 
 export type Route =
-  | { page: 'P0'; tab: 0 | 1 }
+  | { page: 'P0'; tab: 0 | 1 | 2 }
   | { page: 'P2'; postId: string; scrollToComments?: boolean }
   | { page: 'P6'; authorName: string }
   | { page: 'P7' }
@@ -47,6 +52,32 @@ export type Route =
   | { page: 'P_PLANET' }
   | { page: 'P_DM' }
   | { page: 'P_DM_CHAT'; peerId: string };
+
+// ── 频道 / 会员档位 ──────────────────────────────────────────────
+export type ChannelTier = {
+  id: string;
+  name: string; // 频道主自定义，默认建议编号制 Lv.1/Lv.2/Lv.3…（不用贵金属命名，避免与创世节点银/金徽章混淆）
+  price: number; // PB/月
+};
+
+export type Channel = {
+  id: string;
+  ownerName: string;
+  name: string;
+  description: string;
+  avatarSeed: string;
+  category: string;
+  tiers: ChannelTier[]; // 最多 5 档；空数组=不开启订阅（纯免费频道）
+  subscriberCount: number;
+  createdAt: string;
+};
+
+export type NewChannelData = {
+  name: string;
+  description: string;
+  category: string;
+  tiers: ChannelTier[];
+};
 
 export type DmMessage = {
   id: string;
@@ -114,7 +145,7 @@ export type Draft = {
 };
 export type InteractionAction = PostAction | 'comment' | 'unlock';
 export type PayCtx = {
-  ctx: 'post' | 'chain' | 'repost' | 'interaction';
+  ctx: 'post' | 'chain' | 'repost' | 'interaction' | 'channel';
   postId?: string;
   action?: InteractionAction;
   stakeTier: StakeTier;
@@ -130,6 +161,8 @@ export type NewPostData = {
   stakeTier: StakeTier;
   articleHasCover?: boolean;
   imageCount?: number;
+  channelId?: string;
+  minTierIndex?: number;
 };
 
 export type StakeModalRequest = {

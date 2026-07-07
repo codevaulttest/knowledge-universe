@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
-import { ACTIVITY_GROUPS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY } from './mockData';
-import type { Draft, InteractionAction, Language, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, UserProfile } from './types';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY } from './mockData';
+import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, UserProfile } from './types';
 import { postHasStake } from './stakeConfig';
 import { BottomNav } from './components/BottomNav';
-import { ArticleReader, CheckInModal, ConfirmDeleteModal, ConfirmUnfollowModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
+import { ArticleReader, ChannelSubscribeModal, CheckInModal, ConfirmDeleteModal, ConfirmUnfollowModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { commitClaim, getClaimPreview, CHECK_IN_REWARD, type ClaimPreview } from './checkInConfig';
 import { Toast } from './components/shared';
 import { ComposePage } from './pages/ComposePage';
@@ -45,6 +45,16 @@ export default function App() {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [checkInPreview, setCheckInPreview] = useState<ClaimPreview | null>(null);
   const [checkInClaimable, setCheckInClaimable] = useState(false);
+
+  const [supBalance, setSupBalance] = useState(13);
+  const rechargeSup = (amount: number) => setSupBalance(b => b + amount);
+  const deductSup = (amount: number) => setSupBalance(b => Math.max(0, b - amount));
+
+  const [channels, setChannels] = useState<Channel[]>(ALL_CHANNELS);
+  const [subscribedChannelTiers, setSubscribedChannelTiers] = useState<Record<string, number>>({});
+  const [createChannelOpen, setCreateChannelOpen] = useState(false);
+  const [pendingNewChannel, setPendingNewChannel] = useState<NewChannelData | null>(null);
+  const [channelSubscribeId, setChannelSubscribeId] = useState<string | null>(null);
 
   const MOCK_DRAFTS: Draft[] = [
     {
@@ -142,7 +152,7 @@ export default function App() {
   const navigate = (r: Route) => setStack(s => [...s, r]);
   const navigateRoot = (r: Route) => setStack([r]);
   const goBack = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
-  const setTab = (t: 0 | 1) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
+  const setTab = (t: 0 | 1 | 2) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
 
   const [posts, setPosts] = useState<Post[]>(ALL_POSTS.filter(p => p.kind !== 'article'));
 
@@ -278,12 +288,58 @@ export default function App() {
     setConfirmDelete(null);
   };
 
+  const openCreateChannel = () => setCreateChannelOpen(true);
+  const closeCreateChannel = () => setCreateChannelOpen(false);
+
+  const stagePendingChannel = (data: NewChannelData) => {
+    setPendingNewChannel(data);
+    setCreateChannelOpen(false);
+    setPaySheet({ ctx: 'channel', stakeTier: 1000 });
+  };
+
+  const updateChannel = (channelId: string, data: NewChannelData) => {
+    setChannels(prev => prev.map(c => c.id === channelId
+      ? { ...c, name: data.name, description: data.description, category: data.category, tiers: data.tiers }
+      : c));
+    showToast(t('频道信息已更新', 'Channel updated'));
+  };
+
+  const openChannelSubscribe = (channelId: string) => setChannelSubscribeId(channelId);
+
+  const subscribeToChannelTier = (channelId: string, tierIndex: number) => {
+    const isNewSubscriber = subscribedChannelTiers[channelId] == null;
+    setSubscribedChannelTiers(prev => ({ ...prev, [channelId]: tierIndex }));
+    setChannels(prev => prev.map(c => c.id === channelId && isNewSubscriber
+      ? { ...c, subscriberCount: c.subscriberCount + 1 }
+      : c));
+    const channel = channels.find(c => c.id === channelId);
+    const tierName = channel?.tiers[tierIndex]?.name ?? '';
+    showToast(t(`订阅成功！已解锁「${tierName}」专属内容`, `Subscribed! "${tierName}" content unlocked`));
+  };
+
   const handlePaySuccess = () => {
     if (!paySheet) return;
     const { ctx, postId } = paySheet;
     setPaySheet(null);
     if (ctx === 'chain' && postId) {
       performLink(postId);
+    } else if (ctx === 'channel') {
+      if (pendingNewChannel) {
+        const newChannel: Channel = {
+          id: `channel-${Date.now()}`,
+          ownerName: CURRENT_USER,
+          name: pendingNewChannel.name,
+          description: pendingNewChannel.description,
+          avatarSeed: userProfile.avatarSeed,
+          category: pendingNewChannel.category,
+          tiers: pendingNewChannel.tiers,
+          subscriberCount: 0,
+          createdAt: new Date().toISOString().slice(0, 10),
+        };
+        setChannels(prev => [...prev, newChannel]);
+        setPendingNewChannel(null);
+      }
+      showToast(t('开通成功！频道已创建', 'Channel created!'));
     } else if (ctx === 'post') {
       if (pendingNewPost) {
         const newPost: Post = {
@@ -298,6 +354,8 @@ export default function App() {
           isNode: true,
           stakeTier: pendingNewPost.stakeTier,
           nodeId: Math.random().toString(36).slice(2, 8).toUpperCase(),
+          channelId: pendingNewPost.channelId,
+          minTierIndex: pendingNewPost.minTierIndex,
           rating: 0,
           replies: 0,
           links: 0,
@@ -385,6 +443,8 @@ export default function App() {
       isNode: data.isNode,
       stakeTier: data.stakeTier,
       nodeId: data.isNode ? Math.random().toString(36).slice(2, 8).toUpperCase() : undefined,
+      channelId: data.channelId,
+      minTierIndex: data.minTierIndex,
       rating: 0,
       replies: 0,
       links: 0,
@@ -416,6 +476,11 @@ export default function App() {
     recentSearches, saveRecentSearch, removeRecentSearch, clearRecentSearches,
     drafts, saveDraft, updateDraft, deleteDraft,
     userProfile, updateUserProfile,
+    channels, subscribedChannelTiers,
+    openChannelSubscribe, subscribeToChannelTier,
+    stagePendingChannel, updateChannel,
+    openCreateChannel, createChannelOpen, closeCreateChannel,
+    supBalance, rechargeSup, deductSup,
   };
 
 
@@ -555,6 +620,19 @@ export default function App() {
             />
           );
         })()}
+
+        {/* 覆盖层：开通频道 */}
+        {createChannelOpen && (
+          <CreateChannelModal onClose={closeCreateChannel} />
+        )}
+
+        {/* 覆盖层：频道订阅（多档选择） */}
+        {channelSubscribeId && (
+          <ChannelSubscribeModal
+            channelId={channelSubscribeId}
+            onClose={() => setChannelSubscribeId(null)}
+          />
+        )}
 
         {/* 覆盖层：每日签到领取空投 */}
         {checkInPreview && (

@@ -1,13 +1,13 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
-import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Gift, Sparkles, CalendarCheck, Flame } from 'lucide-react';
+import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, HandCoins, Gift, CalendarCheck, Flame } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 import { Avatar, AuthorName, Rating, GeminiNodeBadge } from './shared';
 import { Actions } from './PostCard';
 import { localizeTime } from '../i18n';
-import type { InteractionAction, PayCtx, Post, PostAction } from '../types';
-import { formatSuperAmount, stakeTierDescription, SUPER_BY_TIER } from '../stakeConfig';
+import type { Channel, ChannelTier, InteractionAction, PayCtx, Post, PostAction } from '../types';
+import { formatSuperAmount, formatSupAmount, stakeTierDescription, SUPER_BY_TIER, SUP_COST_BY_TIER } from '../stakeConfig';
 import type { StakeTier } from '../types';
 import { CHECK_IN_MAX_DAILY, CHECK_IN_REWARD, type ClaimPreview } from '../checkInConfig';
 
@@ -123,18 +123,21 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
 export function PaymentSheet({ payCtx, onSuccess, onClose }: {
   payCtx: PayCtx; onSuccess: () => void; onClose: () => void;
 }) {
-  const { t, posts } = useApp();
+  const { t, posts, deductSup } = useApp();
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'failed'>('idle');
   const [failReason, setFailReason] = useState('');
   const tier = payCtx.stakeTier;
   const relatedPost = payCtx.postId ? posts.find(p => p.id === payCtx.postId) : null;
   const superAmount = tier > 0 ? SUPER_BY_TIER[tier as Exclude<StakeTier, 0>] : 0;
+  // 产生节点时同步扣除 SUP（SUP 链原生代币，千分之一比例）
+  const supCost = tier > 0 ? SUP_COST_BY_TIER[tier as Exclude<StakeTier, 0>] : 0;
 
   const titles: Record<PayCtx['ctx'], string> = {
     post:   t('发布知识星球节点', 'Publish Knowledge Planet Node'),
     chain:  t('解锁全文', 'Unlock full content'),
     repost: t('转发并创建子节点', 'Repost and create child node'),
     interaction: t('参与知识星球', 'Join Gemini'),
+    channel: t('开通频道', 'Create Channel'),
   };
 
   const interactionLabels: Record<InteractionAction, [string, string]> = {
@@ -157,6 +160,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
         setFailReason(t('余额不足，请充值后重试', 'Insufficient balance, please top up and retry'));
         setStatus('failed');
       } else {
+        if (supCost > 0) deductSup(supCost);
         setStatus('done');
         setTimeout(onSuccess, 700);
       }
@@ -196,8 +200,12 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
               <span className="pay-combo-label">{t('码库 PB', 'CodeVault PB')}</span>
               <span className="pay-combo-value">{formatSuperAmount(superAmount)} PB</span>
             </div>
+            <div className="pay-combo-row">
+              <span className="pay-combo-label">{t('SUP 消耗', 'SUP cost')}</span>
+              <span className="pay-combo-value">{formatSupAmount(supCost)} SUP</span>
+            </div>
             <p className="pay-combo-hint">
-              {t('将从 P客扣除 PB，同时通过码库支付 PB', 'Deducts PB from P-Pay and pays PB via CodeVault')}
+              {t('将从 P客扣除 PB，同时通过码库支付 PB，并同步扣除站内 SUP', 'Deducts PB from P-Pay, pays PB via CodeVault, and deducts SUP from your in-app balance')}
             </p>
           </div>
         )}
@@ -209,7 +217,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
                 <span className="pay-option-name">{t('组合支付', 'Combo payment')}</span>
                 <span className="pay-option-sub">
                   {tier > 0
-                    ? `${tier} PB + ${formatSuperAmount(superAmount)} PB`
+                    ? `${tier} PB + ${formatSuperAmount(superAmount)} PB + ${formatSupAmount(supCost)} SUP`
                     : t('确认支付', 'Confirm payment')}
                 </span>
               </div>
@@ -846,7 +854,7 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
                 onClick={() => setShowTip(true)}
                 aria-label={t('打赏此文章', 'Tip this article')}
               >
-                <Gift size={15} strokeWidth={2} />
+                <HandCoins size={15} strokeWidth={2} />
                 {t('打赏', 'Tip')}
               </button>
             ) : undefined}
@@ -1117,7 +1125,7 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
                   onClick={(e) => { e.stopPropagation(); setShowTip(true); }}
                   aria-label={t('打赏', 'Tip')}
                 >
-                  <Gift size={16} strokeWidth={2} />
+                  <HandCoins size={16} strokeWidth={2} />
                 </button>
               )}
             </div>
@@ -1380,7 +1388,7 @@ export function TipModal({
     return (
       <PaymentConfirmPage
         pageStep={step}
-        icon={<div className="pay-page-brand-icon"><Gift size={28} strokeWidth={2} /></div>}
+        icon={<div className="pay-page-brand-icon"><HandCoins size={28} strokeWidth={2} /></div>}
         productName={t('知识宇宙', 'Knowledge Universe')}
         remark={tipRemark}
         amountText={`${selected} PB`}
@@ -1521,7 +1529,7 @@ export function CheckInModal({
                   {isCap ? t(`第${day}天起`, `Day ${day}+`) : t(`第${day}天`, `Day ${day}`)}
                 </span>
                 <span className="checkin-day-token" aria-hidden="true">
-                  {claimed ? <Check size={15} strokeWidth={2.6} /> : <Sparkles size={14} strokeWidth={1.9} />}
+                  {claimed ? <Check size={15} strokeWidth={2.6} /> : <Gift size={14} strokeWidth={1.9} />}
                 </span>
                 <span className="checkin-day-amount">
                   +{day}
@@ -1574,6 +1582,223 @@ export function CheckInModal({
         <span className="checkin-balance">
           {t(`累计已领 ${shownBalance} ${symbol}`, `Total earned: ${shownBalance} ${symbol}`)}
         </span>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ChannelSubscribeModal — 频道订阅（多档选择）
+// ═══════════════════════════════════════════════════════════════
+
+export function ChannelSubscribeModal({ channelId, onClose }: { channelId: string; onClose: () => void }) {
+  const { t, channels, subscribedChannelTiers, subscribeToChannelTier } = useApp();
+  const channel = channels.find(c => c.id === channelId);
+  const currentTierIndex = subscribedChannelTiers[channelId];
+  const [selected, setSelected] = useState<number | null>(currentTierIndex ?? null);
+  const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done'>('select');
+
+  if (!channel) return null;
+  const selectedTier = selected !== null ? channel.tiers[selected] : null;
+
+  const handlePay = () => {
+    setStep('paying');
+    setTimeout(() => {
+      setStep('done');
+      setTimeout(() => {
+        if (selected !== null) subscribeToChannelTier(channelId, selected);
+        onClose();
+      }, 800);
+    }, 1300);
+  };
+
+  if (step !== 'select' && selectedTier) {
+    return (
+      <PaymentConfirmPage
+        pageStep={step}
+        icon={<div className="pay-page-brand-icon"><KnowledgePlanetIcon className="gemini-icon" /></div>}
+        productName={t('知识宇宙', 'Knowledge Universe')}
+        remark={t(`订阅《${channel.name}》· ${selectedTier.name}`, `Subscribe to "${channel.name}" · ${selectedTier.name}`)}
+        amountText={`${selectedTier.price} PB`}
+        networkFee="1 PB"
+        tokenFee={`${selectedTier.price} PB`}
+        onConfirm={handlePay}
+        onRetry={() => setStep('confirm')}
+        onBack={() => setStep('select')}
+      />
+    );
+  }
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="payment-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div className="sheet-header">
+          <span className="sheet-title">{t(`订阅《${channel.name}》`, `Subscribe to "${channel.name}"`)}</span>
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+
+        <div className="stake-tier-list" style={{ marginBottom: 16 }}>
+          {channel.tiers.map((tier, idx) => {
+            const isCurrent = currentTierIndex === idx;
+            const isDowngrade = currentTierIndex != null && idx < currentTierIndex;
+            return (
+              <button
+                key={tier.id}
+                type="button"
+                disabled={isDowngrade}
+                className={`stake-tier-option${selected === idx ? ' stake-tier-option--active' : ''}`}
+                onClick={() => setSelected(idx)}
+              >
+                <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月', 'mo')}</span>
+                <span className="stake-tier-option__desc">
+                  {isCurrent
+                    ? t('当前档位', 'Current tier')
+                    : t(`可看全部 ${tier.name} 及以下档位专属内容`, `Access all content for ${tier.name} and below`)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          type="button"
+          className="planet-confirm-btn"
+          disabled={selected === null}
+          onClick={() => selected !== null && setStep('confirm')}
+        >
+          {selected !== null
+            ? (currentTierIndex != null && selected > currentTierIndex
+              ? t(`升级订阅 · ${channel.tiers[selected].price} PB/月`, `Upgrade · ${channel.tiers[selected].price} PB/mo`)
+              : t(`订阅 · ${channel.tiers[selected].price} PB/月`, `Subscribe · ${channel.tiers[selected].price} PB/mo`))
+            : t('请选择档位', 'Select a tier')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CreateChannelModal — 开通频道 / 管理会员档位
+// ═══════════════════════════════════════════════════════════════
+
+const MAX_CHANNEL_TIERS = 5;
+const CHANNEL_CATEGORY_OPTIONS = ['AI / 大模型', '产品 / 运营', '科技资讯', '人文', '时事', '影评', '旅游'];
+
+function nextTierName(count: number) {
+  return `Lv.${count + 1}`;
+}
+
+export function CreateChannelModal({ existingChannel, onClose }: { existingChannel?: Channel; onClose: () => void }) {
+  const { t, stagePendingChannel, updateChannel } = useApp();
+  const [name, setName] = useState(existingChannel?.name ?? '');
+  const [description, setDescription] = useState(existingChannel?.description ?? '');
+  const [category, setCategory] = useState(existingChannel?.category ?? CHANNEL_CATEGORY_OPTIONS[0]);
+  const [tiers, setTiers] = useState<ChannelTier[]>(existingChannel?.tiers ?? []);
+  const isEdit = !!existingChannel;
+
+  const addTier = () => {
+    if (tiers.length >= MAX_CHANNEL_TIERS) return;
+    setTiers(prev => [...prev, { id: `tier-${Date.now()}`, name: nextTierName(prev.length), price: 0 }]);
+  };
+  const updateTier = (idx: number, patch: Partial<ChannelTier>) => {
+    setTiers(prev => prev.map((tr, i) => i === idx ? { ...tr, ...patch } : tr));
+  };
+  const removeTier = (idx: number) => {
+    setTiers(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const canSubmit = name.trim().length > 0;
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    if (isEdit && existingChannel) {
+      updateChannel(existingChannel.id, { name: name.trim(), description: description.trim(), category, tiers });
+    } else {
+      stagePendingChannel({ name: name.trim(), description: description.trim(), category, tiers });
+    }
+    onClose();
+  };
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="edit-profile-sheet" role="dialog" aria-label={t('开通频道', 'Create Channel')} onClick={e => e.stopPropagation()}>
+        <div className="edit-profile-header">
+          <button type="button" className="edit-profile-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+          <span className="edit-profile-title">{isEdit ? t('管理频道', 'Manage Channel') : t('开通频道', 'Create Channel')}</span>
+          <button type="button" className="edit-profile-save" disabled={!canSubmit} onClick={handleSubmit}>
+            {isEdit ? t('保存', 'Save') : t('支付 1000 PB 开通', 'Pay 1000 PB')}
+          </button>
+        </div>
+
+        <div className="edit-profile-body">
+          <div className="edit-profile-field">
+            <label className="edit-profile-label" htmlFor="channel-name">{t('频道名称', 'Channel Name')}</label>
+            <input
+              id="channel-name" className="edit-profile-input" value={name} maxLength={24}
+              onChange={e => setName(e.target.value)}
+              placeholder={t('给频道起个名字', 'Name your channel')}
+              autoComplete="off"
+            />
+          </div>
+          <div className="edit-profile-field">
+            <label className="edit-profile-label" htmlFor="channel-desc">{t('简介', 'Description')}</label>
+            <input
+              id="channel-desc" className="edit-profile-input" value={description} maxLength={60}
+              onChange={e => setDescription(e.target.value)}
+              placeholder={t('一句话介绍频道内容', 'Describe your channel')}
+              autoComplete="off"
+            />
+          </div>
+          <div className="edit-profile-field">
+            <span className="edit-profile-label">{t('分类', 'Category')}</span>
+            <div className="tip-amounts">
+              {CHANNEL_CATEGORY_OPTIONS.map(cat => (
+                <button
+                  key={cat} type="button"
+                  className={`tip-amount-chip${category === cat ? ' tip-amount-chip--active' : ''}`}
+                  onClick={() => setCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="edit-profile-field">
+            <span className="edit-profile-label">
+              {t(`会员档位（最多 ${MAX_CHANNEL_TIERS} 档，可不设=纯免费频道）`, `Membership tiers (up to ${MAX_CHANNEL_TIERS}; leave empty for a free channel)`)}
+            </span>
+            {tiers.map((tier, idx) => (
+              <div key={tier.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                <input
+                  className="edit-profile-input" style={{ flex: 1 }}
+                  value={tier.name} maxLength={12}
+                  onChange={e => updateTier(idx, { name: e.target.value })}
+                  autoComplete="off"
+                />
+                <input
+                  className="edit-profile-input" style={{ width: 90 }}
+                  type="number" min={0}
+                  value={tier.price}
+                  onChange={e => updateTier(idx, { price: Math.max(0, Number(e.target.value)) })}
+                  placeholder="PB/月"
+                />
+                <button type="button" className="draft-item-delete" onClick={() => removeTier(idx)} aria-label={t('删除档位', 'Remove tier')}>
+                  <X size={14} strokeWidth={2} />
+                </button>
+              </div>
+            ))}
+            {tiers.length < MAX_CHANNEL_TIERS && (
+              <button type="button" className="checkin-ghost-btn" onClick={addTier}>
+                {t('+ 新增档位', '+ Add tier')}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, FileText, Link, Lock, Star } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, Crown, FileText, Link, Lock, Medal, Star } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { isVerifiedAuthor } from '../mockData';
@@ -17,6 +17,38 @@ export function VerifiedBadge({ size = 14 }: { size?: number }) {
       strokeWidth={2.25}
       aria-label={t('已认证', 'Verified')}
     />
+  );
+}
+
+// ── GenesisBadge（创世节点持有者身份标记：银=1000 档 / 金=10000 档）──
+// 与频道会员小标（ChannelMemberBadge）视觉上刻意区分：不同图标 + 不同 token 色，避免用户混淆两套身份体系
+export function GenesisBadge({ tier, size = 12 }: { tier: 'silver' | 'gold'; size?: number }) {
+  const { t } = useApp();
+  const label = t('创世', 'Genesis');
+  return (
+    <span
+      className={`genesis-owner-badge genesis-owner-badge--${tier}`}
+      aria-label={tier === 'gold' ? t('创世节点·金（10000 档）', 'Genesis Node · Gold (10000)') : t('创世节点·银（1000 档）', 'Genesis Node · Silver (1000)')}
+      title={tier === 'gold' ? t('创世节点·金', 'Genesis Node · Gold') : t('创世节点·银', 'Genesis Node · Silver')}
+    >
+      <Crown size={size} strokeWidth={0} fill="currentColor" />
+      <span className="genesis-owner-badge-text">{label}</span>
+    </span>
+  );
+}
+
+// ── ChannelMemberBadge（频道会员身份小标，YouTube Membership 式）──
+export function ChannelMemberBadge({ tierName, size = 12 }: { tierName: string; size?: number }) {
+  const { t } = useApp();
+  return (
+    <span
+      className="channel-member-badge"
+      aria-label={t(`频道会员 · ${tierName}`, `Channel member · ${tierName}`)}
+      title={t(`频道会员 · ${tierName}`, `Channel member · ${tierName}`)}
+    >
+      <Medal size={size} strokeWidth={2.4} />
+      <span className="channel-member-badge-text">{tierName}</span>
+    </span>
   );
 }
 
@@ -291,14 +323,23 @@ export function PostContent({
   post,
   alwaysExpand = false,
   collapseLines = 0,
+  forceLocked = false,
+  lockLabel,
+  onUnlockOverride,
 }: {
   post: Post;
   alwaysExpand?: boolean;
   /** Max lines to show in feed; 0 = no clamp (detail page). Default 0. */
   collapseLines?: number;
+  /** 频道会员门槛未达标时强制锁定，无视 visiblePercent（频道锁优先于按比例解锁）*/
+  forceLocked?: boolean;
+  /** 锁定提示文案覆盖，如"订阅『Lv.2』解锁" */
+  lockLabel?: string;
+  /** 解锁点击行为覆盖，如跳转频道订阅弹窗而非常规按次付费解锁 */
+  onUnlockOverride?: () => void;
 }) {
   const { openLink, linkedPostIds, t } = useApp();
-  const isPaid = post.visiblePercent < 100 && !alwaysExpand && !linkedPostIds.has(post.id);
+  const isPaid = forceLocked || (post.visiblePercent < 100 && !alwaysExpand && !linkedPostIds.has(post.id));
   const [clamped, setClamped] = useState(true);
   const [overflowing, setOverflowing] = useState(false);
   const textRef = useRef<HTMLParagraphElement>(null);
@@ -344,10 +385,10 @@ export function PostContent({
             data-layer="unlock-hint"
             role="button"
             tabIndex={0}
-            onClick={(e) => { e.stopPropagation(); openLink(post.id, 'unlock'); }}
+            onClick={(e) => { e.stopPropagation(); onUnlockOverride ? onUnlockOverride() : openLink(post.id, 'unlock'); }}
           >
             <Lock size={11} strokeWidth={2.5} />
-            <span>{t('解锁全部内容', 'Unlock full content')}</span>
+            <span>{lockLabel ?? t('解锁全部内容', 'Unlock full content')}</span>
           </div>
         </>
       )}

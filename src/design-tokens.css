@@ -53,6 +53,12 @@
   --ku-color-text-danger:      #e74c3c;  /* 危险操作文字（删除等） */
   --ku-color-verified:         #1B6BFF;  /* 用户蓝 V 认证标识 */
   --ku-color-verified-check:   #ffffff;  /* 蓝 V 内勾色 */
+  --ku-color-genesis-silver:      #94a3b8;  /* 创世节点·银（1000 档持有者）*/
+  --ku-color-genesis-silver-bg:   #eef2f7;
+  --ku-color-genesis-gold:        #d69e2e;  /* 创世节点·金（10000 档持有者）*/
+  --ku-color-genesis-gold-bg:     #fdf3d9;
+  --ku-color-member-badge:        #7C3AED;  /* 频道会员身份小标——与创世节点金/银色系区分，避免混淆 */
+  --ku-color-member-badge-bg:     #efe6ff;
 
   /* ═══════════════════════════════════════════════════
      背景色 (Surface)

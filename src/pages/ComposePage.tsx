@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { FileText, Image, Plus, Save, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
+import { FileText, Image, Plus, Radio, Save, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
+import { CURRENT_USER } from '../mockData';
 import type { Draft, Post, StakeTier } from '../types';
 import { STAKE_TIERS, stakeTierDescription, stakeTierLabel } from '../stakeConfig';
 
@@ -18,8 +19,9 @@ export function ComposePage({
   draft?: Draft | null;
   onRegisterCloseHandler?: (handler: () => void) => void;
 }) {
-  const { openPay, showToast, updatePost, saveDraft, updateDraft, stagePendingPost, publishPost, t, language } = useApp();
+  const { openPay, showToast, updatePost, saveDraft, updateDraft, stagePendingPost, publishPost, t, language, channels } = useApp();
   const isEditMode = !!editPost;
+  const myChannel = channels.find(c => c.ownerName === CURRENT_USER);
 
   const initialStakeTier = (): StakeTier => {
     if (draft?.stakeTier !== undefined) return draft.stakeTier;
@@ -30,6 +32,8 @@ export function ComposePage({
   const [text, setText] = useState(editPost?.title ?? draft?.title ?? '');
   const [stakeTier, setStakeTier] = useState<StakeTier>(initialStakeTier);
   const [visibility, setVisibility] = useState(draft?.visibility ?? 30);
+  const [publishToChannel, setPublishToChannel] = useState(false);
+  const [minTierIndex, setMinTierIndex] = useState<number | undefined>(undefined);
   const [imgCount, setImgCount] = useState(draft?.imgCount ?? 0);
   const [hasVideo, setHasVideo] = useState(draft?.hasVideo ?? false);
   const [articleMode, setArticleMode] = useState(draft?.kind === 'article');
@@ -133,6 +137,8 @@ export function ComposePage({
       stakeTier,
       articleHasCover: articleMode ? hasCover : undefined,
       imageCount: imgCount > 0 ? imgCount : undefined,
+      channelId: publishToChannel && myChannel ? myChannel.id : undefined,
+      minTierIndex: publishToChannel && myChannel ? minTierIndex : undefined,
     };
     if (joinNode) {
       stagePendingPost(postData);
@@ -546,6 +552,63 @@ export function ComposePage({
                 ))}
               </div>
             </div>
+            {publishToChannel && stakeTier > 0 && (
+              <p className="compose-stake-hint">
+                {t('建议单条解锁价为该档月费的 2–10 倍', 'Suggested unlock price: 2–10× the tier’s monthly fee')}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* 发布至我的频道（仅频道主可见）*/}
+        {!isEditMode && myChannel && (
+          <div className="compose-section compose-stake-section">
+            <div className="compose-stake-heading">
+              <Radio size={16} strokeWidth={2} />
+              <span>{t(`发布至我的频道《${myChannel.name}》`, `Publish to my channel "${myChannel.name}"`)}</span>
+              <button
+                type="button"
+                className={`toggle-switch${publishToChannel ? ' toggle-switch--on' : ''}`}
+                onClick={() => setPublishToChannel(v => !v)}
+                role="switch"
+                aria-checked={publishToChannel}
+                style={{ marginLeft: 'auto' }}
+              >
+                <span className="toggle-thumb" />
+              </button>
+            </div>
+            {publishToChannel && myChannel.tiers.length > 0 && (
+              <>
+                <p className="compose-stake-hint">
+                  {t('选择可见的最低会员档位，不选则全员免费公开', 'Choose the minimum tier required to view; leave unselected for a fully public post')}
+                </p>
+                <div className="stake-tier-list" role="radiogroup" aria-label={t('可见档位', 'Visible tier')}>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={minTierIndex === undefined}
+                    className={`stake-tier-option${minTierIndex === undefined ? ' stake-tier-option--active' : ''}`}
+                    onClick={() => setMinTierIndex(undefined)}
+                  >
+                    <span className="stake-tier-option__amount">{t('全员免费', 'Public')}</span>
+                    <span className="stake-tier-option__desc">{t('不限档位，所有人可见', 'Visible to everyone, no subscription needed')}</span>
+                  </button>
+                  {myChannel.tiers.map((tier, idx) => (
+                    <button
+                      key={tier.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={minTierIndex === idx}
+                      className={`stake-tier-option${minTierIndex === idx ? ' stake-tier-option--active' : ''}`}
+                      onClick={() => setMinTierIndex(idx)}
+                    >
+                      <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月', 'mo')}</span>
+                      <span className="stake-tier-option__desc">{t(`需订阅达到 ${tier.name} 及以上`, `Requires ${tier.name} subscription or above`)}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

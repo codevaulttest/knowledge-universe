@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, Draft, InteractionAction, Language, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, UserProfile } from './types';
+import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, UserProfile } from './types';
 
 export type AppContextValue = {
   navigate: (route: Route) => void;
@@ -54,6 +54,20 @@ export type AppContextValue = {
   deleteDraft: (draftId: string) => void;
   userProfile: UserProfile;
   updateUserProfile: (profile: UserProfile) => void;
+  channels: Channel[];
+  // 频道 id → 当前订阅的档位下标（未订阅则不在此 map 中）
+  subscribedChannelTiers: Record<string, number>;
+  openChannelSubscribe: (channelId: string) => void;
+  subscribeToChannelTier: (channelId: string, tierIndex: number) => void;
+  stagePendingChannel: (data: NewChannelData) => void;
+  updateChannel: (channelId: string, data: NewChannelData) => void;
+  openCreateChannel: () => void;
+  createChannelOpen: boolean;
+  closeCreateChannel: () => void;
+  // SUP（SUP 链原生代币）：用户中心可充值站内 SUP 资产，产生节点时与 PB 同步扣除
+  supBalance: number;
+  rechargeSup: (amount: number) => void;
+  deductSup: (amount: number) => void;
 };
 
 

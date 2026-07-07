@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Ellipsis, Gift, Heart, Trash2 } from 'lucide-react';
+import { Ellipsis, HandCoins, Heart, Trash2 } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { CURRENT_USER, POST_REPLIES, replyLikesStore, likedReplyIdsStore } from '../mockData';
+import { CURRENT_USER, getGenesisTier, POST_REPLIES, replyLikesStore, likedReplyIdsStore } from '../mockData';
 import type { Reply } from '../types';
 import { Actions } from '../components/PostCard';
 import { TipModal } from '../components/Overlays';
-import { Avatar, AuthorName, GeminiNodeBadge, MediaPlaceholder, PageHeader, PostContent } from '../components/shared';
+import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, GeminiNodeBadge, MediaPlaceholder, PageHeader, PostContent } from '../components/shared';
 import { postHasStake } from '../stakeConfig';
 import { localizeTime } from '../i18n';
 
@@ -34,6 +34,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const {
     goBack, navigate, showToast, openLink, linkedPostIds, posts, requestDeletePost,
     openImageLightbox, incrementReplies, language, t, requestPostInteraction,
+    channels, subscribedChannelTiers,
   } = useApp();
   const post = posts.find(p => p.id === postId);
   const [replyText, setReplyText] = useState('');
@@ -114,7 +115,10 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
             onClick={() => navigate({ page: 'P6', authorName: post.author })}
           />
           <div className="author-meta">
-            <AuthorName name={post.author} as="h2" />
+            <span className="post-author-name-row">
+              <AuthorName name={post.author} as="h2" />
+              {getGenesisTier(post.author) && <GenesisBadge tier={getGenesisTier(post.author)!} />}
+            </span>
             <span className="author-time">{localizeTime(post.time, language)}</span>
           </div>
           {isOwn && (
@@ -174,7 +178,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
                 onClick={() => setShowTip(true)}
                 aria-label={t('打赏此帖', 'Tip this post')}
               >
-                <Gift size={15} strokeWidth={2} />
+                <HandCoins size={15} strokeWidth={2} />
                 {t('打赏', 'Tip')}
               </button>
             ) : undefined}
@@ -195,12 +199,19 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
           {displayReplies.map((r) => {
             const liked = likedReplyIds.has(r.id);
             const likeCount = replyLikes[r.id] ?? r.likes;
+            // 评论作者若是该频道的订阅会员，展示会员档位小标（mock 数据里预置的 channelTierName，
+            // 或当前用户本人在自己已订阅的频道帖子下评论时动态计算）
+            const myTierName = post.channelId && r.author === CURRENT_USER
+              ? channels.find(c => c.id === post.channelId)?.tiers[subscribedChannelTiers[post.channelId] ?? -1]?.name
+              : undefined;
+            const channelTierName = r.channelTierName ?? myTierName;
             return (
               <div key={r.id} className="detail-reply-item">
                 <Avatar index={r.avatarIdx} />
                 <div className="detail-reply-content">
                   <div className="detail-reply-header">
                     <AuthorName name={r.author} className="detail-reply-author" />
+                    {channelTierName && <ChannelMemberBadge tierName={channelTierName} />}
                     <span className="detail-reply-time">{localizeTime(r.time, language)}</span>
                     <button
                       type="button"

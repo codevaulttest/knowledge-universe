@@ -1,11 +1,15 @@
 import { useState } from 'react';
-import { ArrowDownToLine, ArrowUp, Check, ChevronRight, Copy, Gift, Loader2, Search, Star, Wallet, X } from 'lucide-react';
+import { ArrowDownToLine, ArrowUp, ArrowUpToLine, Check, ChevronRight, Copy, Gift, Loader2, Search, Star, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader, Rating } from '../components/shared';
-import { MOCK_WALLET_ADDRESS } from '../mockData';
+import { CURRENT_USER, MOCK_WALLET_ADDRESS } from '../mockData';
+import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
 
 // 面额（PB）：仅 1000 档支持五星升级；100 / 10 档不支持升级
 type NodeTier = 10 | 100 | 1000;
+
+// 节点来源：产生该节点的具体行为，便于用户筛选、了解自己节点的构成
+type NodeSource = '发帖' | '回帖' | '转发' | '解锁' | '开通频道' | '创世认购';
 
 type KnowledgeNode = {
   id: string;
@@ -13,6 +17,7 @@ type KnowledgeNode = {
   tier: NodeTier;
   stars: number;
   createdAt: string;
+  source: NodeSource;
 };
 
 type RedPacketRecord = {
@@ -29,16 +34,16 @@ type WithdrawRecord = {
 
 const INITIAL_NODES: KnowledgeNode[] = [
   // 1000 PB —— 支持五星升级、红包无上限
-  { id: 'n1', nodeCode: 'A1B2C3', tier: 1000, stars: 5, createdAt: '2025-12-10 09:32' },
-  { id: 'n2', nodeCode: 'D4E5F6', tier: 1000, stars: 4, createdAt: '2026-01-05 14:17' },
-  { id: 'n3', nodeCode: 'G7H8I9', tier: 1000, stars: 3, createdAt: '2026-01-20 08:55' },
-  { id: 'n4', nodeCode: 'J0K1L2', tier: 1000, stars: 2, createdAt: '2026-02-01 21:03' },
-  { id: 'n5', nodeCode: 'M3N4O5', tier: 1000, stars: 1, createdAt: '2026-02-15 11:44' },
+  { id: 'n1', nodeCode: 'A1B2C3', tier: 1000, stars: 5, createdAt: '2025-12-10 09:32', source: '发帖' },
+  { id: 'n2', nodeCode: 'D4E5F6', tier: 1000, stars: 4, createdAt: '2026-01-05 14:17', source: '发帖' },
+  { id: 'n3', nodeCode: 'G7H8I9', tier: 1000, stars: 3, createdAt: '2026-01-20 08:55', source: '转发' },
+  { id: 'n4', nodeCode: 'J0K1L2', tier: 1000, stars: 2, createdAt: '2026-02-01 21:03', source: '解锁' },
+  { id: 'n5', nodeCode: 'M3N4O5', tier: 1000, stars: 1, createdAt: '2026-02-15 11:44', source: '创世认购' },
   // 100 PB —— 不支持升级，红包上限 500 PB（5 倍）
-  { id: 'n6', nodeCode: 'P6Q7R8', tier: 100, stars: 1, createdAt: '2026-03-01 16:28' },
-  { id: 'n7', nodeCode: 'S9T0U1', tier: 100, stars: 1, createdAt: '2026-03-10 07:19' },
+  { id: 'n6', nodeCode: 'P6Q7R8', tier: 100, stars: 1, createdAt: '2026-03-01 16:28', source: '回帖' },
+  { id: 'n7', nodeCode: 'S9T0U1', tier: 100, stars: 1, createdAt: '2026-03-10 07:19', source: '发帖' },
   // 10 PB —— 不支持升级，红包上限 10 PB（1 倍）
-  { id: 'n8', nodeCode: 'V2W3X4', tier: 10, stars: 1, createdAt: '2026-04-01 13:50' },
+  { id: 'n8', nodeCode: 'V2W3X4', tier: 10, stars: 1, createdAt: '2026-04-01 13:50', source: '回帖' },
 ];
 
 const RED_PACKET_HISTORY: RedPacketRecord[] = [
@@ -107,10 +112,28 @@ function StarDisplay({ level }: { level: number }) {
   );
 }
 
+// 用户开通的频道会同步产生一个来源为"开通频道"的 1000 PB 双子星节点（懒初始化，每次进入本页时依据最新 channels 状态重新推导）
+function seedNodesWithChannel(channels: { ownerName: string; id: string; createdAt: string }[]): KnowledgeNode[] {
+  const ownChannel = channels.find(c => c.ownerName === CURRENT_USER);
+  if (!ownChannel) return INITIAL_NODES;
+  return [
+    {
+      id: `channel-node-${ownChannel.id}`,
+      nodeCode: ownChannel.id.slice(-6).toUpperCase(),
+      tier: 1000,
+      stars: 1,
+      createdAt: ownChannel.createdAt,
+      source: '开通频道',
+    },
+    ...INITIAL_NODES,
+  ];
+}
+
 export function KnowledgePlanetPage() {
-  const { goBack, canGoBack, showToast, t, language } = useApp();
+  const { goBack, canGoBack, showToast, t, language, channels, supBalance, rechargeSup } = useApp();
   const zh = language === 'zh-CN';
-  const [nodes, setNodes] = useState<KnowledgeNode[]>(INITIAL_NODES);
+  const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
+  const [sourceFilter, setSourceFilter] = useState<NodeSource | null>(null);
   const [pendingAmount, setPendingAmount] = useState(PENDING_RED_PACKET);
   const [chainCredit, setChainCredit] = useState(INITIAL_CHAIN_CREDIT);
   const [claiming, setClaiming] = useState(false);
@@ -124,6 +147,9 @@ export function KnowledgePlanetPage() {
   const [showWithdrawSheet, setShowWithdrawSheet] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawHistory, setWithdrawHistory] = useState<WithdrawRecord[]>([]);
+  const [showRechargeSheet, setShowRechargeSheet] = useState(false);
+  const [rechargeAmount, setRechargeAmount] = useState(1);
+  const [recharging, setRecharging] = useState(false);
 
   const maskedWallet = `${MOCK_WALLET_ADDRESS.slice(0, 6)}...${MOCK_WALLET_ADDRESS.slice(-6)}`;
 
@@ -135,9 +161,11 @@ export function KnowledgePlanetPage() {
   };
 
   const starCounts = [0, 1, 2, 3, 4, 5].map(s => nodes.filter(n => n.stars === s).length);
+  const nodeSources = Array.from(new Set(nodes.map(n => n.source)));
   const search = nodeSearch.trim().toLowerCase();
   const filteredNodes = nodes.filter(n => {
     if (starFilter !== null && n.stars !== starFilter) return false;
+    if (sourceFilter !== null && n.source !== sourceFilter) return false;
     if (search && !n.nodeCode.toLowerCase().includes(search)) return false;
     return true;
   });
@@ -152,8 +180,8 @@ export function KnowledgePlanetPage() {
       setChainCredit(c => c + claimedAmount);
       setPendingAmount(0);
       showToast(t(
-        `红包已领取，上链额度 +${claimedAmount.toFixed(0)} PB`,
-        `Red packet claimed — on-chain credit +${claimedAmount.toFixed(0)} PB`,
+        `红包已领取，上链额度 +${formatTokenAmount(claimedAmount)} PB`,
+        `Red packet claimed — on-chain credit +${formatTokenAmount(claimedAmount)} PB`,
       ));
     }, 1500);
   };
@@ -171,8 +199,22 @@ export function KnowledgePlanetPage() {
         ...prev,
       ]);
       showToast(t(
-        `提取成功，${withdrawAmount.toFixed(0)} PB 已提取上链`,
-        `Withdrawal successful — ${withdrawAmount.toFixed(0)} PB sent on-chain`,
+        `提取成功，${formatTokenAmount(withdrawAmount)} PB 已提取上链`,
+        `Withdrawal successful — ${formatTokenAmount(withdrawAmount)} PB sent on-chain`,
+      ));
+    }, 1500);
+  };
+
+  const handleRechargeConfirm = () => {
+    if (recharging || rechargeAmount <= 0) return;
+    setRecharging(true);
+    setTimeout(() => {
+      setRecharging(false);
+      setShowRechargeSheet(false);
+      rechargeSup(rechargeAmount);
+      showToast(t(
+        `充值成功，+${rechargeAmount} SUP 已到账`,
+        `Recharge successful — +${rechargeAmount} SUP credited`,
       ));
     }, 1500);
   };
@@ -212,7 +254,7 @@ export function KnowledgePlanetPage() {
                     <div className="planet-claimed-badge">{t('今日已领取', 'Claimed today')}</div>
                   ) : (
                     <div className="planet-airdrop-amount">
-                      {pendingAmount.toFixed(0)}
+                      {formatTokenAmount(pendingAmount)}
                       <span className="planet-airdrop-unit"> PB</span>
                     </div>
                   )}
@@ -241,7 +283,7 @@ export function KnowledgePlanetPage() {
               </div>
               <div className="planet-history-toggle-right">
                 <span className="planet-history-toggle-balance-label">{t('可提取', 'Withdrawable')}</span>
-                <span className="planet-history-toggle-balance">{chainCredit.toFixed(0)} PB</span>
+                <span className="planet-history-toggle-balance">{formatTokenAmount(chainCredit)} PB</span>
                 <ChevronRight size={14} strokeWidth={2} className="planet-history-toggle-chevron" />
               </div>
             </button>
@@ -277,6 +319,24 @@ export function KnowledgePlanetPage() {
             </div>
           </div>
 
+          {/* ── Source Filter（按来源筛选：发帖/回帖/转发/解锁/开通频道/创世认购）── */}
+          <div className="planet-source-filter-row">
+            {nodeSources.map(source => {
+              const active = sourceFilter === source;
+              return (
+                <button
+                  key={source}
+                  type="button"
+                  className={`planet-source-chip${active ? ' planet-source-chip--active' : ''}`}
+                  onClick={() => setSourceFilter(active ? null : source)}
+                  aria-pressed={active}
+                >
+                  {source}
+                </button>
+              );
+            })}
+          </div>
+
           {/* ── Node Search ── */}
           <div className="planet-node-search-wrap">
             <Search size={15} strokeWidth={2} className="planet-node-search-icon" />
@@ -294,16 +354,30 @@ export function KnowledgePlanetPage() {
             )}
           </div>
 
-          {/* ── 等级筛选状态 ── */}
-          {starFilter !== null && (
-            <button
-              className="planet-filter-chip"
-              onClick={() => setStarFilter(null)}
-              aria-label={t('清除等级筛选', 'Clear star filter')}
-            >
-              <span>{t(`${starFilter} 星节点`, `${starFilter}-star nodes`)}</span>
-              <X size={13} strokeWidth={2.5} />
-            </button>
+          {/* ── 等级 / 来源筛选状态 ── */}
+          {(starFilter !== null || sourceFilter !== null) && (
+            <div className="planet-filter-chip-row">
+              {starFilter !== null && (
+                <button
+                  className="planet-filter-chip"
+                  onClick={() => setStarFilter(null)}
+                  aria-label={t('清除等级筛选', 'Clear star filter')}
+                >
+                  <span>{t(`${starFilter} 星节点`, `${starFilter}-star nodes`)}</span>
+                  <X size={13} strokeWidth={2.5} />
+                </button>
+              )}
+              {sourceFilter !== null && (
+                <button
+                  className="planet-filter-chip"
+                  onClick={() => setSourceFilter(null)}
+                  aria-label={t('清除来源筛选', 'Clear source filter')}
+                >
+                  <span>{t(`来源：${sourceFilter}`, `Source: ${sourceFilter}`)}</span>
+                  <X size={13} strokeWidth={2.5} />
+                </button>
+              )}
+            </div>
           )}
 
           {/* ── Node List ── */}
@@ -334,6 +408,7 @@ export function KnowledgePlanetPage() {
                   </div>
                   <div className="planet-node-badges">
                     <span className={`planet-node-tier planet-node-tier--t${node.tier}`}>{t(`质押 ${node.tier} PB`, `Stake ${node.tier} PB`)}</span>
+                    <span className="planet-node-source">{node.source}</span>
                     <span className="planet-node-cap">{redPacketCapLabel(node.tier, zh)}</span>
                   </div>
                   <span className="planet-node-meta">{node.createdAt}</span>
@@ -372,7 +447,7 @@ export function KnowledgePlanetPage() {
             <div className="planet-credit-row planet-credit-row--modal">
               <div>
                 <span className="planet-credit-label">{t('可提取余额', 'Withdrawable balance')}</span>
-                <div className="planet-credit-value">{chainCredit.toFixed(0)} PB</div>
+                <div className="planet-credit-value">{formatTokenAmount(chainCredit)} PB</div>
               </div>
               <button
                 className="planet-withdraw-btn"
@@ -383,6 +458,19 @@ export function KnowledgePlanetPage() {
                 {t('提取', 'Withdraw')}
               </button>
             </div>
+            <div className="planet-credit-row planet-credit-row--modal">
+              <div>
+                <span className="planet-credit-label">{t('SUP 余额', 'SUP balance')}</span>
+                <div className="planet-credit-value">{formatSupAmount(supBalance)} SUP</div>
+              </div>
+              <button
+                className="planet-withdraw-btn"
+                onClick={() => setShowRechargeSheet(true)}
+              >
+                <ArrowUpToLine size={13} strokeWidth={2.2} />
+                {t('充值', 'Recharge')}
+              </button>
+            </div>
             <div className="planet-history-list">
               {withdrawHistory.map(w => (
                 <div key={w.id} className="planet-history-item">
@@ -390,7 +478,7 @@ export function KnowledgePlanetPage() {
                     <ArrowDownToLine size={16} strokeWidth={1.8} />
                   </div>
                   <span className="planet-history-time">{t(`${w.time} · 提取至链上`, `${w.time} · Withdrawn on-chain`)}</span>
-                  <span className="planet-history-amount planet-history-amount--withdraw">-{w.amount.toFixed(0)} PB</span>
+                  <span className="planet-history-amount planet-history-amount--withdraw">-{formatTokenAmount(w.amount)} PB</span>
                 </div>
               ))}
               {RED_PACKET_HISTORY.map(r => (
@@ -399,7 +487,7 @@ export function KnowledgePlanetPage() {
                     <Gift size={16} strokeWidth={1.8} />
                   </div>
                   <span className="planet-history-time">{r.time}</span>
-                  <span className="planet-history-amount">+{r.amount.toFixed(0)} PB</span>
+                  <span className="planet-history-amount">+{formatTokenAmount(r.amount)} PB</span>
                 </div>
               ))}
             </div>
@@ -434,7 +522,7 @@ export function KnowledgePlanetPage() {
             <div className="planet-upgrade-row">
               <span className="planet-upgrade-row-label">{t('提取金额', 'Withdraw Amount')}</span>
               <div className="planet-upgrade-cost">
-                <span className="planet-upgrade-cost-num">{chainCredit.toFixed(0)}</span>
+                <span className="planet-upgrade-cost-num">{formatTokenAmount(chainCredit)}</span>
                 <span className="planet-upgrade-cost-unit"> PB</span>
               </div>
             </div>
@@ -452,6 +540,71 @@ export function KnowledgePlanetPage() {
               {withdrawing
                 ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
                 : t('确认提取', 'Confirm Withdrawal')
+              }
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Recharge SUP Sheet ── */}
+      {showRechargeSheet && (
+        <div
+          className="sheet-backdrop"
+          onClick={() => { if (!recharging) setShowRechargeSheet(false); }}
+        >
+          <div
+            className="payment-sheet planet-upgrade-sheet"
+            role="dialog"
+            aria-modal="true"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="sheet-header">
+              <span className="sheet-title">{t('充值 SUP', 'Recharge SUP')}</span>
+              <button
+                className="back-btn"
+                style={{ marginLeft: 'auto' }}
+                onClick={() => { if (!recharging) setShowRechargeSheet(false); }}
+                aria-label={t('关闭', 'Close')}
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+
+            <p className="gemini-stake-lead">
+              {t('充值后将自动计入你的 SUP 余额', 'Your deposit will be added to your SUP balance')}
+            </p>
+
+            <div className="stake-tier-list" style={{ marginBottom: 16 }}>
+              {[1, 5, 10, 50].map(amount => (
+                <button
+                  key={amount}
+                  type="button"
+                  className={`stake-tier-option${rechargeAmount === amount ? ' stake-tier-option--active' : ''}`}
+                  onClick={() => setRechargeAmount(amount)}
+                >
+                  <span className="stake-tier-option__amount">{amount} SUP</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="planet-upgrade-row">
+              <span className="planet-upgrade-row-label">{t('从', 'From')}</span>
+              <span className="planet-upgrade-row-value">{maskedWallet}</span>
+            </div>
+            <div className="planet-upgrade-sep" />
+            <div className="planet-upgrade-row">
+              <span className="planet-upgrade-row-label">{t('到', 'To')}</span>
+              <span className="planet-upgrade-row-value">{t('SUP 余额', 'SUP balance')}</span>
+            </div>
+
+            <button
+              className="planet-confirm-btn"
+              onClick={handleRechargeConfirm}
+              disabled={recharging}
+            >
+              {recharging
+                ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
+                : t(`确认充值 ${rechargeAmount} SUP`, `Confirm recharge ${rechargeAmount} SUP`)
               }
             </button>
           </div>

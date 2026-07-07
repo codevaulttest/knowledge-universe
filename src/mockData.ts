@@ -1,4 +1,4 @@
-import type { ActivityGroup, DmConversation, Post, PostActors, Reply } from './types';
+import type { ActivityGroup, Channel, DmConversation, Post, PostActors, Reply } from './types';
 
 export type UserListItem = {
   name: string;
@@ -28,6 +28,50 @@ export function isVerifiedAuthor(name: string): boolean {
   return VERIFIED_AUTHORS.has(name);
 }
 
+/** 创世节点持有者身份标记（1000/10000 两档，对应银/金徽章）——链上认购项目独立于本项目，此处仅 mock 展示 */
+export const GENESIS_NODE_OWNERS: Record<string, 'silver' | 'gold'> = {
+  '极客前沿': 'silver',
+  '产品大叔严磊': 'gold',
+};
+
+export function getGenesisTier(name: string): 'silver' | 'gold' | null {
+  return GENESIS_NODE_OWNERS[name] ?? null;
+}
+
+// ── 频道 ───────────────────────────────────────────────────────
+export const ALL_CHANNELS: Channel[] = [
+  {
+    id: 'channel-amay', ownerName: '阿May的研究笔记', name: '阿May的AI研究站',
+    description: 'RAG、大模型应用与工程实践，每周更新深度拆解。',
+    avatarSeed: '阿May的研究笔记', category: 'AI / 大模型',
+    tiers: [
+      { id: 'amay-1', name: 'Lv.1', price: 100 },
+      { id: 'amay-2', name: 'Lv.2', price: 500 },
+    ],
+    subscriberCount: 86, createdAt: '2026-05-10',
+  },
+  {
+    id: 'channel-yanlei', ownerName: '产品大叔严磊', name: '产品大叔的方法论频道',
+    description: 'B 端产品与数据方法论，10 年一线经验复盘。',
+    avatarSeed: '产品大叔严磊', category: '产品 / 运营',
+    tiers: [
+      { id: 'yanlei-1', name: 'Lv.1', price: 50 },
+    ],
+    subscriberCount: 42, createdAt: '2026-06-01',
+  },
+  {
+    id: 'channel-jike', ownerName: '极客前沿', name: '极客前沿·深度追踪',
+    description: 'LLM / Agent 业界最前沿动态，独家一手信息。',
+    avatarSeed: '极客前沿', category: '科技资讯',
+    tiers: [
+      { id: 'jike-1', name: 'Lv.1', price: 30 },
+      { id: 'jike-2', name: 'Lv.2', price: 150 },
+      { id: 'jike-3', name: 'Lv.3', price: 400 },
+    ],
+    subscriberCount: 215, createdAt: '2026-04-22',
+  },
+];
+
 export const ALL_POSTS: Post[] = [
   {
     id: 'p1', author: 'AI 效率研究所', time: '2 小时前',
@@ -41,6 +85,7 @@ export const ALL_POSTS: Post[] = [
     kind: 'video', visiblePercent: 30, isNode: true, stakeTier: 100, nodeId: 'nM4gJs',
     rating: 1, replies: 58, links: 21, shares: 44, saves: 117, likes: 261,
     videoUrl: '/mock-video-2.mp4',
+    channelId: 'channel-yanlei', minTierIndex: 0,
   },
   {
     id: 'p2', author: '阿May的研究笔记', time: '5 小时前',
@@ -55,6 +100,7 @@ export const ALL_POSTS: Post[] = [
     title: '2025 年最值得精读的 10 本技术书单（完整版）\n涵盖系统设计、AI 工程、产品思维三大方向，附每本核心摘要。',
     kind: 'image', imageCount: 4, visiblePercent: 0, isNode: true, stakeTier: 1000, nodeId: 'Rk3mP9',
     rating: 3, replies: 31, links: 24, shares: 19, saves: 88, likes: 245,
+    channelId: 'channel-jike', minTierIndex: 2,
   },
   {
     id: 'lock-i25', author: '深海鱼炸弹', time: '2 小时前',
@@ -67,6 +113,7 @@ export const ALL_POSTS: Post[] = [
     title: 'Prompt 工程师成长路径：从入门到精通的完整地图\n附 50 个实战场景模板与评测方法论。',
     kind: 'image', imageCount: 4, visiblePercent: 50, isNode: true, stakeTier: 10, nodeId: 'Jn8vQ4',
     rating: 4, replies: 56, links: 31, shares: 27, saves: 136, likes: 402,
+    channelId: 'channel-amay', minTierIndex: 0,
   },
   {
     id: 'lock-i75', author: '游牧开发者', time: '8 小时前',
@@ -92,6 +139,7 @@ export const ALL_POSTS: Post[] = [
     title: '三种远程工作桌面布局实测：哪种最护腰？高度 / 光线 / 显示器距离全记录。',
     kind: 'image', imageCount: 3, visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 22, links: 0, shares: 17, saves: 68, likes: 204,
+    channelId: 'channel-jike',
   },
   {
     id: 'im4', author: 'AI 效率研究所', time: '3 小时前',
@@ -104,6 +152,7 @@ export const ALL_POSTS: Post[] = [
     title: '横评五款 AI 写作工具：Claude / GPT-4o / Gemini / Kimi / 文心，真实输出截图对比。',
     kind: 'image', imageCount: 5, visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 41, links: 0, shares: 28, saves: 119, likes: 367,
+    channelId: 'channel-amay',
   },
   {
     id: 'im6', author: '深海鱼炸弹', time: '5 小时前',
@@ -116,6 +165,7 @@ export const ALL_POSTS: Post[] = [
     title: '七天读完《原则》精华：每天最触动我的一页，附思维导图片段。',
     kind: 'image', imageCount: 7, visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 28, links: 0, shares: 16, saves: 74, likes: 221,
+    channelId: 'channel-yanlei',
   },
   {
     id: 'im8', author: '游牧开发者', time: '8 小时前',
@@ -153,6 +203,7 @@ export const ALL_POSTS: Post[] = [
     kind: 'video', visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 24, links: 0, shares: 31, saves: 74, likes: 209,
     videoUrl: '/mock-video.mp4',
+    channelId: 'channel-jike', minTierIndex: 1,
   },
   {
     id: 'p8', author: '阿May的研究笔记', time: '3 天前',
@@ -223,7 +274,7 @@ export const POST_REPLIES: Record<string, Reply[]> = {
   p5: [{ id: 'r5a', author: '游牧开发者', time: '1 天前', text: '设计 token 系统这套工作流学到了，下个项目试试。', avatarIdx: 1, likes: 4 }],
   p6: [
     { id: 'r6a', author: '林知远', time: '2 天前', text: 'tool-use 那段讲得非常清楚，有没有开源版本？', avatarIdx: 0, likes: 22 },
-    { id: 'r6b', author: '深海鱼炸弹', time: '2 天前', text: 'Demo 链接能分享出来吗？', avatarIdx: 2, likes: 6 },
+    { id: 'r6b', author: '深海鱼炸弹', time: '2 天前', text: 'Demo 链接能分享出来吗？', avatarIdx: 2, likes: 6, channelTierName: 'Lv.2' },
   ],
   p7: [
     { id: 'r7a', author: '林知远', time: '2 天前', text: '12% 到 67%，这个增幅太惊人了，方法论帖子什么时候出？', avatarIdx: 0, likes: 31 },
