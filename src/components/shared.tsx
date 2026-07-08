@@ -397,11 +397,11 @@ export function PostContent({
 }
 
 // ── GeminiNodeBadge ────────────────────────────────────────────
-export function GeminiNodeBadge({ post, showChain = true }: { post: Post; showChain?: boolean }) {
+export function GeminiNodeBadge({ post, showChain = true, onViewLinks }: { post: Post; showChain?: boolean; onViewLinks?: () => void }) {
   const { openLink, linkedPostIds, t } = useApp();
   const isLinked = linkedPostIds.has(post.id);
 
-  const handleLink = () => openLink(post.id);
+  const handleLink = () => (onViewLinks ? onViewLinks() : openLink(post.id));
   return (
     <div
       className="gemini-badge"
@@ -434,8 +434,10 @@ export function GeminiNodeBadge({ post, showChain = true }: { post: Post; showCh
           </div>
         ) : (
           <button type="button" className="gemini-chain"
-            onClick={(e) => { e.stopPropagation(); openLink(post.id); }}
-            aria-label={t(`链接此节点，当前 ${post.links} 人已链接`, `Link this node, ${post.links} people linked`)}>
+            onClick={(e) => { e.stopPropagation(); handleLink(); }}
+            aria-label={onViewLinks
+              ? t(`查看 ${post.links} 人链接了此节点`, `View ${post.links} people who linked this node`)
+              : t(`链接此节点，当前 ${post.links} 人已链接`, `Link this node, ${post.links} people linked`)}>
             <Link size={14} strokeWidth={2.5} />{post.links}
             <ChevronRight size={12} strokeWidth={2.5} />
           </button>

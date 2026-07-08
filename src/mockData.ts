@@ -421,6 +421,53 @@ export const POST_ACTORS: Record<string, PostActors> = {
       { user: '设计师刘然', avatarIdx: 0, time: '4 天前', amount: 20 },
     ],
   },
+  'own-10': {
+    links: [
+      { user: '阿May的研究笔记', avatarIdx: 1, time: '30 分钟前' },
+      { user: '游牧开发者', avatarIdx: 2, time: '45 分钟前' },
+      { user: '设计师刘然', avatarIdx: 0, time: '1 小时前' },
+    ],
+    likes: [
+      { user: '阿May的研究笔记', avatarIdx: 1, time: '20 分钟前' },
+      { user: '游牧开发者', avatarIdx: 2, time: '40 分钟前' },
+      { user: '设计师刘然', avatarIdx: 0, time: '50 分钟前' },
+    ],
+    shares: [
+      { user: '深海鱼炸弹', avatarIdx: 0, time: '1 小时前' },
+    ],
+    saves: [
+      { user: '极客前沿', avatarIdx: 1, time: '1 小时前' },
+    ],
+    tips: [
+      { user: '阿May的研究笔记', avatarIdx: 1, time: '30 分钟前', amount: 20 },
+      { user: '游牧开发者', avatarIdx: 2, time: '1 小时前', amount: 10 },
+    ],
+  },
+  'own-50': {
+    links: [
+      { user: '产品大叔严磊', avatarIdx: 2, time: '1 小时前' },
+      { user: '阿May的研究笔记', avatarIdx: 1, time: '1 小时前' },
+      { user: '极客前沿', avatarIdx: 1, time: '1.5 小时前' },
+      { user: '游牧开发者', avatarIdx: 2, time: '1.5 小时前' },
+      { user: '深海鱼炸弹', avatarIdx: 0, time: '2 小时前' },
+      { user: '设计师刘然', avatarIdx: 0, time: '2 小时前' },
+      { user: 'AI 效率研究所', avatarIdx: 0, time: '2 小时前' },
+    ],
+    likes: [
+      { user: '产品大叔严磊', avatarIdx: 2, time: '1 小时前' },
+      { user: '阿May的研究笔记', avatarIdx: 1, time: '1.5 小时前' },
+    ],
+    shares: [
+      { user: '游牧开发者', avatarIdx: 2, time: '2 小时前' },
+    ],
+    saves: [
+      { user: '极客前沿', avatarIdx: 1, time: '2 小时前' },
+    ],
+    tips: [
+      { user: '产品大叔严磊', avatarIdx: 2, time: '1 小时前', amount: 80 },
+      { user: '阿May的研究笔记', avatarIdx: 1, time: '2 小时前', amount: 40 },
+    ],
+  },
 };
 
 export const DM_CONVERSATIONS: DmConversation[] = [

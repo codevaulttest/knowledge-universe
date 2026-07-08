@@ -3,7 +3,7 @@ import { Ellipsis, HandCoins, Heart, Trash2 } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_REPLIES, replyLikesStore, likedReplyIdsStore } from '../mockData';
 import type { Reply } from '../types';
-import { Actions } from '../components/PostCard';
+import { Actions, ActorsSheet } from '../components/PostCard';
 import { TipModal } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, GeminiNodeBadge, MediaPlaceholder, PageHeader, PostContent } from '../components/shared';
 import { postHasStake } from '../stakeConfig';
@@ -41,6 +41,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const [repostOpen, setRepostOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [showTip, setShowTip] = useState(false);
+  const [actorsTab, setActorsTab] = useState<'link' | null>(null);
   // 快照排序：进入页面时按持久化的赞数排一次，会话内点赞不触发重排
   const [snapshotReplies] = useState<Reply[]>(() => sortReplies(POST_REPLIES[postId] ?? [], replyLikesStore));
   const [newReplies, setNewReplies] = useState<Reply[]>([]);
@@ -163,7 +164,13 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
           />
 
           {/* 知识星球节点标识 → 点击打开链接弹窗（onClick 由 GeminiNodeBadge 自身处理）*/}
-          {post.isNode && <GeminiNodeBadge post={post} showChain />}
+          {post.isNode && (
+            <GeminiNodeBadge
+              post={post}
+              showChain
+              onViewLinks={isOwn ? () => setActorsTab('link') : undefined}
+            />
+          )}
         </div>
 
         {/* 操作行（复用 feed 样式）*/}
@@ -257,6 +264,10 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
           {t('发送', 'Send')}
         </button>
       </div>
+
+      {actorsTab && (
+        <ActorsSheet postId={post.id} initialTab={actorsTab} onClose={() => setActorsTab(null)} />
+      )}
     </div>
   );
 }

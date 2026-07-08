@@ -8,9 +8,9 @@ import { TipModal, Ios26Alert } from './Overlays';
 import { localizeTime } from '../i18n';
 
 // ── ActorsSheet（帖子互动名单浮层）────────────────────────────
-function ActorsSheet({ postId, initialTab, onClose }: {
+export function ActorsSheet({ postId, initialTab, onClose }: {
   postId: string;
-  initialTab: PostAction;
+  initialTab: PostAction | 'link' | 'tip';
   onClose: () => void;
 }) {
   const { navigate, followedAuthors, toggleFollow, t } = useApp();
@@ -208,7 +208,7 @@ export function PostCard({
 }) {
   const { navigate, followedAuthors, toggleFollow, requestDeletePost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, openChannelSubscribe } = useApp();
   const [moreOpen, setMoreOpen] = useState(false);
-  const [actorsTab, setActorsTab] = useState<PostAction | null>(null);
+  const [actorsTab, setActorsTab] = useState<PostAction | 'link' | 'tip' | null>(null);
   const [showTip, setShowTip] = useState(false);
   const isOwn = post.author === CURRENT_USER;
   const displayName = isOwn ? userProfile.nickname : post.author;
@@ -223,10 +223,11 @@ export function PostCard({
   const requiredTier = channel && post.minTierIndex != null ? channel.tiers[post.minTierIndex] : undefined;
   const mySubTierIdx = channel ? subscribedChannelTiers[channel.id] : undefined;
   const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= post.minTierIndex!);
-  const channelLocked = !!requiredTier && !meetsChannelGate;
+  const channelLocked = !!requiredTier && !meetsChannelGate && !isOwn;
   const openChannelGate = () => channel && openChannelSubscribe(channel.id);
 
-  const imgUnlocked = !channelLocked && (linkedPostIds.has(post.id) || post.visiblePercent === 100);
+  const contentUnlocked = isOwn || linkedPostIds.has(post.id) || post.visiblePercent === 100;
+  const imgUnlocked = !channelLocked && contentUnlocked;
   const visibleImgCount = post.kind === 'image'
     ? (channelLocked ? 0 : imgUnlocked ? totalImgs : Math.floor(post.visiblePercent / 100 * totalImgs))
     : totalImgs;
@@ -268,7 +269,11 @@ export function PostCard({
             <span className="author-time">{localizeTime(post.time, language)}</span>
             {isOwn && post.isNode && (
               <span className="post-visibility-badge">
-                {post.visiblePercent === 100 ? t('公开', 'Public') : t(`${post.visiblePercent}% 可见`, `${post.visiblePercent}% visible`)}
+                {post.visiblePercent === 100
+                  ? t('公开', 'Public')
+                  : post.visiblePercent === 0
+                    ? t('完全隐藏', 'Hidden')
+                    : t(`${post.visiblePercent}% 可见`, `${post.visiblePercent}% visible`)}
               </span>
             )}
           </div>
@@ -315,6 +320,7 @@ export function PostCard({
           <PostContent
             post={post}
             collapseLines={4}
+            alwaysExpand={isOwn}
             forceLocked={channelLocked}
             lockLabel={channelLocked ? t(`订阅『${requiredTier!.name}』解锁`, `Subscribe "${requiredTier!.name}" to unlock`) : undefined}
             onUnlockOverride={channelLocked ? openChannelGate : undefined}
@@ -340,7 +346,11 @@ export function PostCard({
       )}
       {post.isNode && (
         <div onClick={e => e.stopPropagation()}>
-          <GeminiNodeBadge post={post} showChain />
+          <GeminiNodeBadge
+            post={post}
+            showChain
+            onViewLinks={isOwn ? () => setActorsTab('link') : undefined}
+          />
         </div>
       )}
       <Actions
