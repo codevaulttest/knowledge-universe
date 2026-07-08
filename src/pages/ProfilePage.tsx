@@ -5,19 +5,18 @@ import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
 import type { Draft, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
-import { ConfirmDeleteDraftModal, CreateChannelModal, TipModal } from '../components/Overlays';
+import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
 import { Avatar, AuthorName, GenesisBadge, PageHeader } from '../components/shared';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, repostedPostIds, unreadActivityCount, t, userProfile, updateUserProfile, channels, subscribedChannelTiers, openChannelSubscribe, openCreateChannel } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, repostedPostIds, unreadActivityCount, t, userProfile, updateUserProfile, channels, subscribedChannelTiers, openChannelSubscribe, openCreateChannel, openManageChannel } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   const channel = channels.find(c => c.ownerName === authorName);
   const genesisTier = getGenesisTier(authorName);
   const mySubscribedTierIndex = channel ? subscribedChannelTiers[channel.id] : undefined;
-  const [manageChannelOpen, setManageChannelOpen] = useState(false);
   // 我的主页隐藏长文（article）类型的 mock 帖子
   const myPosts = allPosts.filter(p => p.author === authorName && !(isOwn && p.kind === 'article'));
   const savedPosts = allPosts.filter(p => savedPostIds.has(p.id));
@@ -74,7 +73,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           </span>
         </div>
         {isOwn ? (
-          <button type="button" className="channel-manage-btn" onClick={() => setManageChannelOpen(true)}>
+          <button type="button" className="channel-manage-btn" onClick={() => openManageChannel(channel.id)}>
             <Settings size={13} strokeWidth={2.2} />
             {t('管理频道', 'Manage')}
           </button>
@@ -372,9 +371,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         />
       )}
 
-      {manageChannelOpen && channel && (
-        <CreateChannelModal existingChannel={channel} onClose={() => setManageChannelOpen(false)} />
-      )}
     </div>
   );
 }

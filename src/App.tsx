@@ -5,7 +5,7 @@ import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_
 import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, UserProfile } from './types';
 import { postHasStake } from './stakeConfig';
 import { BottomNav } from './components/BottomNav';
-import { ArticleReader, ChannelSubscribeModal, CheckInModal, ConfirmDeleteModal, ConfirmUnfollowModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
+import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, CheckInModal, ConfirmDeleteModal, ConfirmUnfollowModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { commitClaim, getClaimPreview, CHECK_IN_REWARD, type ClaimPreview } from './checkInConfig';
 import { Toast } from './components/shared';
 import { ComposePage } from './pages/ComposePage';
@@ -53,6 +53,8 @@ export default function App() {
   const [channels, setChannels] = useState<Channel[]>(ALL_CHANNELS);
   const [subscribedChannelTiers, setSubscribedChannelTiers] = useState<Record<string, number>>({});
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
+  const [manageChannelId, setManageChannelId] = useState<string | null>(null);
+  const [channelCreatedPromptId, setChannelCreatedPromptId] = useState<string | null>(null);
   const [channelSubscribeId, setChannelSubscribeId] = useState<string | null>(null);
 
   const MOCK_DRAFTS: Draft[] = [
@@ -289,11 +291,14 @@ export default function App() {
 
   const openCreateChannel = () => setCreateChannelOpen(true);
   const closeCreateChannel = () => setCreateChannelOpen(false);
+  const openManageChannel = (channelId: string) => setManageChannelId(channelId);
+  const closeManageChannel = () => setManageChannelId(null);
 
   // 开通频道是一步流程：CreateChannelModal 自己跑完支付动画（1000 PB + 100 PB + 0.1 SUP）后直接调用此函数建号
   const createChannel = (data: NewChannelData) => {
+    const channelId = `channel-${Date.now()}`;
     const newChannel: Channel = {
-      id: `channel-${Date.now()}`,
+      id: channelId,
       ownerName: CURRENT_USER,
       name: data.name,
       description: data.description,
@@ -304,7 +309,8 @@ export default function App() {
       createdAt: new Date().toISOString().slice(0, 10),
     };
     setChannels(prev => [...prev, newChannel]);
-    showToast(t('开通成功！频道已创建', 'Channel created!'));
+    setChannelCreatedPromptId(channelId);
+    return channelId;
   };
 
   const updateChannel = (channelId: string, data: NewChannelData) => {
@@ -473,6 +479,7 @@ export default function App() {
     openChannelSubscribe, subscribeToChannelTier,
     createChannel, updateChannel,
     openCreateChannel, createChannelOpen, closeCreateChannel,
+    openManageChannel, closeManageChannel,
     supBalance, rechargeSup, deductSup,
   };
 
@@ -617,6 +624,24 @@ export default function App() {
         {/* 覆盖层：开通频道 */}
         {createChannelOpen && (
           <CreateChannelModal onClose={closeCreateChannel} />
+        )}
+
+        {/* 覆盖层：管理频道 */}
+        {manageChannelId && (() => {
+          const channel = channels.find(c => c.id === manageChannelId);
+          if (!channel) return null;
+          return <CreateChannelModal existingChannel={channel} onClose={closeManageChannel} />;
+        })()}
+
+        {/* 覆盖层：开通成功 → 引导设置会员档位 */}
+        {channelCreatedPromptId && (
+          <ChannelCreatedSuccessModal
+            onSetTiers={() => {
+              openManageChannel(channelCreatedPromptId);
+              setChannelCreatedPromptId(null);
+            }}
+            onDismiss={() => setChannelCreatedPromptId(null)}
+          />
         )}
 
         {/* 覆盖层：频道订阅（多档选择） */}

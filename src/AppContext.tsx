@@ -60,11 +60,13 @@ export type AppContextValue = {
   openChannelSubscribe: (channelId: string) => void;
   subscribeToChannelTier: (channelId: string, tierIndex: number) => void;
   // 开通频道：一步完成——校验通过后直接建号（1000 PB + 100 PB + 0.1 SUP 由弹窗自身走支付动画后调用）
-  createChannel: (data: NewChannelData) => void;
+  createChannel: (data: NewChannelData) => string;
   updateChannel: (channelId: string, data: NewChannelData) => void;
   openCreateChannel: () => void;
   createChannelOpen: boolean;
   closeCreateChannel: () => void;
+  openManageChannel: (channelId: string) => void;
+  closeManageChannel: () => void;
   // SUP（SUP 链原生代币）：用户中心可充值站内 SUP 资产，产生节点时与 PB 同步扣除
   supBalance: number;
   rechargeSup: (amount: number) => void;

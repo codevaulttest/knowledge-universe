@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
-import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, HandCoins, Gift, CalendarCheck, Flame } from 'lucide-react';
+import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, HandCoins, Gift, CalendarCheck, Flame, Plus, Save } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
@@ -1341,6 +1341,45 @@ export function ConfirmDeleteDraftModal({ onConfirm, onCancel }: {
   );
 }
 
+export function ChannelCreatedSuccessModal({ onSetTiers, onDismiss }: {
+  onSetTiers: () => void;
+  onDismiss: () => void;
+}) {
+  const { t } = useApp();
+  return (
+    <div className="sheet-backdrop" onClick={onDismiss}>
+      <div
+        className="channel-success-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="channel-success-title"
+        aria-describedby="channel-success-message"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="channel-success-hero">
+          <div className="channel-success-icon" aria-hidden="true">
+            <Check size={28} strokeWidth={2.2} />
+          </div>
+          <h2 className="channel-success-title" id="channel-success-title">
+            {t('频道开通成功', 'Channel created')}
+          </h2>
+          <p className="channel-success-message" id="channel-success-message">
+            {t('你可以为频道设置会员档位，发布专属内容', 'You can set membership tiers to share exclusive content')}
+          </p>
+        </div>
+        <div className="channel-success-actions">
+          <button type="button" className="planet-confirm-btn" onClick={onSetTiers}>
+            {t('设置会员档位', 'Set up tiers')}
+          </button>
+          <button type="button" className="gemini-stake-btn gemini-stake-btn--ghost" onClick={onDismiss}>
+            {t('暂不设置', 'Not now')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
 // TipModal — 打赏弹窗（帖子 / 博主）
 // ═══════════════════════════════════════════════════════════════
@@ -1803,13 +1842,26 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
 
   return (
     <div className="sheet-backdrop" onClick={closeIfIdle}>
-      <div className="edit-profile-sheet" role="dialog" aria-label={t('开通频道', 'Create Channel')} onClick={e => e.stopPropagation()}>
+      <div className={`edit-profile-sheet${!isEdit ? ' edit-profile-sheet--channel' : ''}`} role="dialog" aria-label={t('开通频道', 'Create Channel')} onClick={e => e.stopPropagation()}>
         <div className="edit-profile-header">
           <button type="button" className="edit-profile-close" onClick={closeIfIdle} disabled={paying === 'loading'} aria-label={t('关闭', 'Close')}>
             <X size={18} strokeWidth={2} />
           </button>
           <span className="edit-profile-title">{isEdit ? t('管理频道', 'Manage Channel') : t('开通频道', 'Create Channel')}</span>
-          <div className="edit-profile-header-spacer" aria-hidden />
+          {isEdit ? (
+            <button
+              type="button"
+              className="edit-profile-save edit-profile-save--icon"
+              disabled={!canSubmit || paying === 'loading'}
+              onClick={handleSubmit}
+              aria-label={t('保存', 'Save')}
+            >
+              <Save size={16} strokeWidth={2.25} aria-hidden />
+              {t('保存', 'Save')}
+            </button>
+          ) : (
+            <div className="edit-profile-header-spacer" aria-hidden />
+          )}
         </div>
 
         <div className="edit-profile-body">
@@ -1835,8 +1887,11 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
           {isEdit && (
           <div className="edit-profile-field">
             <span className="edit-profile-label">
-              {t(`会员档位（最多 ${MAX_CHANNEL_TIERS} 档，可不设=纯免费频道）`, `Membership tiers (up to ${MAX_CHANNEL_TIERS}; leave empty for a free channel)`)}
+              {t(`会员档位（最多 ${MAX_CHANNEL_TIERS} 档）`, `Membership tiers (up to ${MAX_CHANNEL_TIERS})`)}
             </span>
+            <p className="channel-tier-section-hint">
+              {t('不添加档位时，频道内容对所有人免费开放', 'Without tiers, your channel stays free for everyone')}
+            </p>
             {tiers.length > 0 && (
               <div className="channel-tier-row channel-tier-row--head" aria-hidden>
                 <span className="channel-tier-col-label">{t('档位', 'Tier')}</span>
@@ -1876,55 +1931,60 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               );
             })}
             {tiers.length < MAX_CHANNEL_TIERS && (
-              <button type="button" className="checkin-ghost-btn" onClick={addTier}>
-                {t('+ 新增档位', '+ Add tier')}
+              <button type="button" className="channel-tier-add-btn" onClick={addTier}>
+                <Plus size={16} strokeWidth={2.5} aria-hidden />
+                {t('新增档位', 'Add tier')}
               </button>
             )}
           </div>
           )}
 
           {!isEdit && (
-            <div className="pay-combo-breakdown">
-              <div className="pay-combo-row">
-                <span className="pay-combo-label">{t('P客 PB', 'P-Pay PB')}</span>
-                <span className="pay-combo-value">1000 PB</span>
+            <div className="edit-profile-field">
+              <span className="edit-profile-label">{t('费用明细', 'Fee breakdown')}</span>
+              <div className="pay-combo-breakdown">
+                <div className="pay-combo-row">
+                  <span className="pay-combo-label">{t('P客 PB', 'P-Pay PB')}</span>
+                  <span className="pay-combo-value">1000 PB</span>
+                </div>
+                <div className="pay-combo-row">
+                  <span className="pay-combo-label">{t('码库 PB', 'CodeVault PB')}</span>
+                  <span className="pay-combo-value">{formatSuperAmount(channelSuperAmount)} PB</span>
+                </div>
+                <div className="pay-combo-row">
+                  <span className="pay-combo-label">{t('SUP 消耗', 'SUP cost')}</span>
+                  <span className="pay-combo-value">{formatSupAmount(channelSupCost)} SUP</span>
+                </div>
+                {paying === 'failed' && (
+                  <p className="pay-fail-reason">{failReason}</p>
+                )}
               </div>
-              <div className="pay-combo-row">
-                <span className="pay-combo-label">{t('码库 PB', 'CodeVault PB')}</span>
-                <span className="pay-combo-value">{formatSuperAmount(channelSuperAmount)} PB</span>
-              </div>
-              <div className="pay-combo-row">
-                <span className="pay-combo-label">{t('SUP 消耗', 'SUP cost')}</span>
-                <span className="pay-combo-value">{formatSupAmount(channelSupCost)} SUP</span>
-              </div>
-              {paying === 'failed' && (
-                <p className="pay-fail-reason">{failReason}</p>
-              )}
             </div>
           )}
 
-          <div className="channel-create-footer">
-            <button
-              type="button"
-              className="planet-confirm-btn"
-              disabled={!canSubmit || paying === 'loading'}
-              onClick={handleSubmit}
-            >
-              {isEdit
-                ? t('保存', 'Save')
-                : paying === 'loading'
-                  ? <span className="spinner" />
-                  : paying === 'failed'
-                    ? t('重试', 'Retry')
-                    : t(`组合支付 1000 PB + ${formatSuperAmount(channelSuperAmount)} PB + ${formatSupAmount(channelSupCost)} SUP`, `Pay 1000 PB + ${formatSuperAmount(channelSuperAmount)} PB + ${formatSupAmount(channelSupCost)} SUP`)}
-            </button>
-            {!isEdit && paying === 'idle' && (
-              <p className="channel-create-footer-hint">
-                {t('开通后默认全员免费，会员档位与定价可稍后在"管理频道"里再设置', 'Your channel starts fully free — you can add paid membership tiers anytime later in "Manage Channel"')}
-              </p>
-            )}
-          </div>
         </div>
+
+        {!isEdit && (
+        <div className="channel-create-footer">
+          <button
+            type="button"
+            className="planet-confirm-btn"
+            disabled={!canSubmit || paying === 'loading'}
+            onClick={handleSubmit}
+          >
+            {paying === 'loading'
+              ? <span className="spinner" />
+              : paying === 'failed'
+                ? t('重试', 'Retry')
+                : t('开通频道', 'Create Channel')}
+          </button>
+          {paying === 'idle' && (
+            <p className="channel-create-footer-hint">
+              {t('开通后免费产生一个知识星球节点', 'A Knowledge Planet node is created for free when you open a channel')}
+            </p>
+          )}
+        </div>
+        )}
       </div>
     </div>
   );
