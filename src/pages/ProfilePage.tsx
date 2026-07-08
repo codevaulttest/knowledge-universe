@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Check, ChevronRight, Edit3, Eye, FileText, HandCoins, Languages, LayoutGrid, Lock, MessageCircle, Radio, Repeat2, Settings, Trash2, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Check, ChevronRight, CircleCheck, Edit3, Eye, FileText, Gem, HandCoins, Languages, LayoutGrid, Lock, MessageCircle, Radio, Repeat2, Settings, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -109,9 +109,17 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           </button>
         ) : channel.tiers.length > 0 ? (
           <button type="button" className="channel-manage-btn" onClick={() => openChannelSubscribe(channel.id)}>
-            {mySubscribedTierIndex != null
-              ? t(`已订阅 · ${channel.tiers[mySubscribedTierIndex].name}`, `Subscribed · ${channel.tiers[mySubscribedTierIndex].name}`)
-              : t('订阅', 'Subscribe')}
+            {mySubscribedTierIndex != null ? (
+              <>
+                <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
+                {t(`已订阅 · ${channel.tiers[mySubscribedTierIndex].name}`, `Subscribed · ${channel.tiers[mySubscribedTierIndex].name}`)}
+              </>
+            ) : (
+              <>
+                <Gem size={13} strokeWidth={2.2} aria-hidden="true" />
+                {t('订阅', 'Subscribe')}
+              </>
+            )}
           </button>
         ) : null}
       </div>

@@ -268,12 +268,15 @@ export function MediaPlaceholder({
             aria-label={clickable ? (locked ? t('点击解锁查看图片', 'Unlock to view image') : t('查看大图', 'View full image')) : undefined}
             onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') onImageClick!(i); } : undefined}
           >
-            {locked && clickable && (
-              <div className="img-lock-overlay">
-                <div className="img-lock-badge">
-                  <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
-                  <span>{t('解锁', 'Unlock')}</span>
-                </div>
+            {locked && (
+              <div className="img-lock-overlay" aria-hidden="true">
+                <KnowledgePlanetIcon className="img-lock-pattern" />
+                {clickable && (
+                  <div className="img-lock-badge">
+                    <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
+                    <span>{t('解锁', 'Unlock')}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

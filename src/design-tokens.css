@@ -277,23 +277,27 @@
   --ku-text-unlock:            500 12px/1 var(--ku-font-family);
   --ku-lightbox-lock-overlay:  rgba(0, 0, 0, 0.62);
   --ku-lightbox-locked-filter: brightness(0.42) saturate(0.55);
-  --ku-locked-media-scrim:     rgba(231, 244, 242, 0.74);
-  --ku-locked-media-scrim-hover: rgba(219, 241, 237, 0.68);
-  --ku-locked-media-filter:    blur(8px) saturate(0.72) brightness(1.04);
-  --ku-locked-media-filter-hover: blur(6px) saturate(0.82) brightness(1.02);
-  --ku-locked-media-placeholder-bg: #bcc3cf;
-  --ku-locked-media-placeholder-bg-hover: #b3bac7;
+  /* 锁定图：不透明中性遮罩 + 星球图标铺底图案 + 解锁按钮（主题无关） */
+  --ku-locked-media-placeholder-bg: #c7cdd8;
+  --ku-locked-media-placeholder-bg-hover: #bec5d1;
   --ku-locked-media-placeholder-text: #616a7b;
-  --ku-locked-media-callout-bg: rgba(255, 255, 255, 0.88);
+  --ku-locked-media-scrim:     var(--ku-locked-media-placeholder-bg);
+  --ku-locked-media-scrim-hover: var(--ku-locked-media-placeholder-bg-hover);
+  --ku-locked-media-filter:    none;
+  --ku-locked-media-filter-hover: none;
+  --ku-locked-media-pattern-color: #8f98a8;
+  --ku-locked-media-pattern-opacity: 0.22;
+  --ku-locked-media-callout-bg: rgba(255, 255, 255, 0.92);
+  --ku-locked-media-callout-bg-hover: rgba(255, 255, 255, 0.98);
   --ku-locked-media-callout-border: 1px solid rgba(255, 255, 255, 0.82);
-  --ku-locked-media-callout-text: #587276;
+  --ku-locked-media-callout-text: var(--ku-locked-media-placeholder-text);
   --ku-locked-media-callout-height: 34px;
-  --ku-locked-media-callout-padding-y: 5px;
-  --ku-locked-media-callout-padding-x: 10px;
-  --ku-locked-media-callout-gap: 6px;
-  --ku-locked-media-icon-size: 22px;
-  --ku-locked-media-icon-bg:   rgba(0, 205, 184, 0.12);
-  --ku-locked-media-icon-color:#009e8e;
+  --ku-locked-media-callout-padding-y: 6px;
+  --ku-locked-media-callout-padding-x: 13px;
+  --ku-locked-media-callout-gap: 5px;
+  --ku-locked-media-icon-size: 28px;
+  --ku-locked-media-icon-bg:   transparent;
+  --ku-locked-media-icon-color: var(--ku-locked-media-placeholder-text);
 
   /* ═══════════════════════════════════════════════════
      知识星球节点页 (KnowledgePlanetPage)
@@ -361,16 +365,11 @@
   --ku-gemini-id:              #7ba0e0;
   --ku-gemini-icon:            #1B6BFF;
 
-  /* 付费内容遮罩 / 解锁区块 */
+  /* 付费内容遮罩 / 解锁区块（锁定图遮罩保持中性，不随主题变色） */
   --ku-unlock-bg:              #f0f5ff;
   --ku-unlock-bg-hover:        #e8efff;
   --ku-unlock-border:          #c8daff;
   --ku-unlock-text:            #1259EE;
-  --ku-locked-media-scrim:     rgba(224, 234, 255, 0.74);
-  --ku-locked-media-scrim-hover: rgba(210, 225, 255, 0.68);
-  --ku-locked-media-icon-bg:   rgba(27, 107, 255, 0.12);
-  --ku-locked-media-icon-color:#1259EE;
-  --ku-locked-media-callout-text: #3d5a8a;
 
   /* 知识星球节点页 */
   --ku-planet-airdrop-bg:      #f0f5ff;

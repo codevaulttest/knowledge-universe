@@ -765,8 +765,7 @@ button {
   width: 100%;
   display: grid;
   gap: var(--ku-media-grid-gap);
-  overflow: hidden;
-  border-radius: var(--ku-radius-media);
+  overflow: visible;
 }
 .img-grid--1 { aspect-ratio: var(--ku-media-image-ratio); }
 .img-grid--2 { grid-template-columns: repeat(3, 1fr); }
@@ -774,7 +773,11 @@ button {
 .img-grid--4 { grid-template-columns: repeat(3, 1fr); }
 .img-grid--multi { grid-template-columns: repeat(3, 1fr); }
 
-.img-grid-cell { position: relative; }
+.img-grid-cell {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--ku-radius-badge);
+}
 .img-grid:not(.img-grid--1) .img-grid-cell { aspect-ratio: 1 / 1; }
 .img-grid--1 .img-grid-cell { width: 100%; height: 100%; }
 
@@ -797,24 +800,20 @@ button {
 .img-grid-cell--clickable { cursor: pointer; transition: filter 0.15s; }
 .img-grid-cell--clickable:hover { filter: brightness(0.88); }
 
-.img-grid-cell--locked { cursor: pointer; overflow: hidden; }
+.img-grid-cell--locked { cursor: pointer; }
 .img-grid-cell--locked::before {
   content: '';
   position: absolute;
   inset: 0;
-  backdrop-filter: blur(10px) saturate(0.5) brightness(1.06);
-  -webkit-backdrop-filter: blur(10px) saturate(0.5) brightness(1.06);
   background: var(--ku-locked-media-scrim);
-  transition: backdrop-filter var(--ku-motion-fast), background var(--ku-motion-fast);
+  transition: background var(--ku-motion-fast);
   z-index: 1;
 }
 .img-grid-cell--locked:hover::before {
   background: var(--ku-locked-media-scrim-hover);
-  backdrop-filter: blur(7px) saturate(0.62) brightness(1.08);
-  -webkit-backdrop-filter: blur(7px) saturate(0.62) brightness(1.08);
 }
 
-/* 付费锁图遮罩 */
+/* 付费锁图遮罩：中性实色 + 星球图标铺满背景 + 解锁按钮 */
 .img-lock-overlay {
   position: absolute;
   inset: 0;
@@ -823,28 +822,41 @@ button {
   justify-content: center;
   pointer-events: none;
   z-index: 2;
+  overflow: hidden;
+}
+
+.img-lock-pattern {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--ku-locked-media-pattern-color);
+  opacity: var(--ku-locked-media-pattern-opacity);
+  pointer-events: none;
 }
 
 .img-lock-badge {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 13px;
-  background: rgba(255, 255, 255, 0.88);
+  gap: var(--ku-locked-media-callout-gap);
+  padding: var(--ku-locked-media-callout-padding-y) var(--ku-locked-media-callout-padding-x);
+  min-height: var(--ku-locked-media-callout-height);
+  box-sizing: border-box;
+  background: var(--ku-locked-media-callout-bg);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  box-shadow: 0 2px 12px rgba(14, 22, 44, 0.14), inset 0 1px 0 rgba(255,255,255,0.9);
-  color: var(--ku-locked-media-icon-color);
-  font-size: 12px;
-  font-weight: 600;
+  border-radius: var(--ku-radius-pill);
+  border: var(--ku-locked-media-callout-border);
+  box-shadow: var(--ku-shadow-locked-media-callout);
+  color: var(--ku-locked-media-callout-text);
+  font: var(--ku-text-locked-media);
   letter-spacing: 0.01em;
   transition: background var(--ku-motion-fast), box-shadow var(--ku-motion-fast);
 }
 .img-grid-cell--locked:hover .img-lock-badge {
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 3px 16px rgba(14, 22, 44, 0.18), inset 0 1px 0 rgba(255,255,255,1);
+  background: var(--ku-locked-media-callout-bg-hover);
 }
 
 /* ── 图片查看器（Lightbox）────────────────────────────────────── */
@@ -3645,14 +3657,19 @@ button {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 14px;
   border: none;
   border-radius: var(--ku-radius-reward-chip);
   background: var(--ku-color-primary);
   color: var(--ku-color-on-primary);
   font: var(--ku-text-action-cta);
+  white-space: nowrap;
   cursor: pointer;
+}
+.channel-manage-btn svg {
+  flex-shrink: 0;
 }
 .channel-create-entry {
   margin: 0 var(--ku-feed-padding-x) 14px;
