@@ -3617,6 +3617,25 @@ button {
   font: var(--ku-text-meta);
   color: var(--ku-color-text-secondary);
 }
+.channel-info-bar-sub--btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta);
+}
+.channel-info-bar-sub--btn svg {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+.channel-info-bar-sub--btn:active {
+  opacity: 0.72;
+}
 .channel-manage-btn {
   flex-shrink: 0;
   display: inline-flex;
@@ -3969,6 +3988,33 @@ button {
   padding: 10px 0;
 }
 
+.follow-list-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta);
+}
+
+.subscriber-tier-group + .subscriber-tier-group {
+  margin-top: 4px;
+}
+
+.subscriber-tier-group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 20px 4px;
+  font: 600 12px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
+
+.subscriber-tier-group-meta {
+  font: 400 11px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+  font-weight: 400;
+}
+
 .follow-list-item {
   display: flex;
   align-items: center;
@@ -3985,6 +4031,18 @@ button {
 .follow-item-info {
   flex: 1;
   min-width: 0;
+}
+
+.follow-item-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-bottom: 2px;
+}
+
+.follow-item-name-row .follow-item-name {
+  margin-bottom: 0;
 }
 
 .follow-item-name {

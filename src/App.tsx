@@ -111,7 +111,15 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     try {
       const saved = localStorage.getItem('ku-profile');
-      return saved ? JSON.parse(saved) : { nickname: DEFAULT_WALLET_DISPLAY, avatarSeed: AVATAR_PRESET_SEEDS[0] };
+      const profile: UserProfile = saved
+        ? JSON.parse(saved)
+        : { nickname: DEFAULT_WALLET_DISPLAY, avatarSeed: AVATAR_PRESET_SEEDS[0] };
+      // 旧演示人格「林知远」已废弃，统一落到钱包短名
+      if (profile.nickname === '林知远') {
+        profile.nickname = DEFAULT_WALLET_DISPLAY;
+        localStorage.setItem('ku-profile', JSON.stringify(profile));
+      }
+      return profile;
     } catch { return { nickname: DEFAULT_WALLET_DISPLAY, avatarSeed: AVATAR_PRESET_SEEDS[0] }; }
   });
 

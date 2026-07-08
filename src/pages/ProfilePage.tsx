@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Bell, Bookmark, Camera, Check, Edit3, Eye, FileText, HandCoins, Languages, LayoutGrid, Lock, MessageCircle, Radio, Repeat2, Settings, Trash2, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Check, ChevronRight, Edit3, Eye, FileText, HandCoins, Languages, LayoutGrid, Lock, MessageCircle, Radio, Repeat2, Settings, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
-import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
-import type { Draft, RepostedBy } from '../types';
+import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
+import type { Channel, ChannelSubscriber, Draft, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
-import { Avatar, AuthorName, GenesisBadge, PageHeader } from '../components/shared';
+import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, PageHeader } from '../components/shared';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
@@ -14,7 +14,10 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, repostedPostIds, unreadActivityCount, t, userProfile, updateUserProfile, channels, subscribedChannelTiers, openChannelSubscribe, openCreateChannel, openManageChannel } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
-  const channel = channels.find(c => c.ownerName === authorName);
+  // 自己主页优先用预置 channel-lin（含订阅 mock），避免会话里临时开通的空频道盖住演示数据
+  const channel = isOwn
+    ? (channels.find(c => c.id === 'channel-lin') ?? channels.find(c => c.ownerName === authorName))
+    : channels.find(c => c.ownerName === authorName);
   const genesisTier = getGenesisTier(authorName);
   const mySubscribedTierIndex = channel ? subscribedChannelTiers[channel.id] : undefined;
   // 我的主页隐藏长文（article）类型的 mock 帖子
@@ -39,6 +42,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   // 他人主页内容筛选：'all' | 'free' | 'sub'
   const [contentFilter, setContentFilter] = useState<'all' | 'free' | 'sub'>('all');
   const [followListType, setFollowListType] = useState<'following' | 'followers' | null>(null);
+  const [showSubscribers, setShowSubscribers] = useState(false);
   const [confirmDeleteDraftId, setConfirmDeleteDraftId] = useState<string | null>(null);
   const [tipTarget, setTipTarget] = useState<{ context: 'post' | 'author'; postTitle?: string } | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -82,9 +86,21 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             <Radio size={13} strokeWidth={2.2} />
             {channel.name}
           </span>
-          <span className="channel-info-bar-sub">
-            {t(`${channel.subscriberCount} 人已订阅`, `${channel.subscriberCount} subscribers`)}
-          </span>
+          {isOwn ? (
+            <button
+              type="button"
+              className="channel-info-bar-sub channel-info-bar-sub--btn"
+              onClick={() => setShowSubscribers(true)}
+              aria-label={t(`查看 ${channel.subscriberCount} 位订阅用户`, `View ${channel.subscriberCount} subscribers`)}
+            >
+              {t(`${channel.subscriberCount} 人已订阅`, `${channel.subscriberCount} subscribers`)}
+              <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
+            </button>
+          ) : (
+            <span className="channel-info-bar-sub">
+              {t(`${channel.subscriberCount} 人已订阅`, `${channel.subscriberCount} subscribers`)}
+            </span>
+          )}
         </div>
         {isOwn ? (
           <button type="button" className="channel-manage-btn" onClick={() => openManageChannel(channel.id)}>
@@ -112,11 +128,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
       {!isOwn && <PageHeader title={authorName} onBack={canGoBack ? goBack : undefined} />}
       <div className="scroll-area">
         <div className="profile-header">
-          {isOwn && canGoBack ? (
-            <button type="button" className="profile-back-btn" onClick={goBack} aria-label={t('返回', 'Back')}>
-              <ArrowLeft size={20} strokeWidth={1.8} />
-            </button>
-          ) : null}
+          {/* 自己的主页视为底栏 Tab 根页面，不展示返回（即便从头像 navigate 进来也不出现） */}
           {isOwn ? (
             <div className="avatar">
               {userProfile.avatarUrl
@@ -384,6 +396,12 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         />
       )}
 
+      {showSubscribers && channel && (
+        <SubscriberListModal
+          channel={channel}
+          onClose={() => setShowSubscribers(false)}
+        />
+      )}
 
       {tipTarget && (
         <TipModal
@@ -595,6 +613,116 @@ function FollowListModal({
                   </button>
                 )}
                 </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SubscriberListModal({
+  channel,
+  onClose,
+}: {
+  channel: Channel;
+  onClose: () => void;
+}) {
+  const { navigate, followedAuthors, toggleFollow, t } = useApp();
+  const subscribers = getChannelSubscribers(channel);
+  const displayCount = Math.max(channel.subscriberCount, subscribers.length);
+
+  // 分组：档位从高到低；组内沿用 mock 顺序（已按订阅时间从新到旧排好）
+  const tierRank = (tierName: string) => {
+    const idx = channel.tiers.findIndex(tr => tr.name === tierName);
+    return idx >= 0 ? idx : -1;
+  };
+  const groups: { tierName: string; users: ChannelSubscriber[] }[] = [];
+  const sorted = [...subscribers].sort((a, b) => {
+    const byTier = tierRank(b.tierName) - tierRank(a.tierName);
+    if (byTier !== 0) return byTier;
+    return 0; // 同档保持 mock 原序（新→旧）
+  });
+  for (const user of sorted) {
+    const last = groups[groups.length - 1];
+    if (last && last.tierName === user.tierName) last.users.push(user);
+    else groups.push({ tierName: user.tierName, users: [user] });
+  }
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="follow-list-modal" onClick={e => e.stopPropagation()}>
+        <div className="follow-list-header">
+          <span className="follow-list-title">
+            {t(`订阅用户 · ${displayCount}`, `Subscribers · ${displayCount}`)}
+          </span>
+          <button type="button" className="follow-list-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+        <div className="follow-list-content">
+          {groups.length === 0 ? (
+            <div className="follow-list-empty">
+              {t('还没有订阅用户', 'No subscribers yet')}
+            </div>
+          ) : (
+            groups.map(group => {
+              const tier = channel.tiers.find(tr => tr.name === group.tierName);
+              return (
+                <section key={group.tierName} className="subscriber-tier-group">
+                  <h3 className="subscriber-tier-group-title">
+                    {group.tierName}
+                    {tier ? (
+                      <span className="subscriber-tier-group-meta">
+                        {t(`${tier.price} PB/月 · ${group.users.length} 人`, `${tier.price} PB/mo · ${group.users.length}`)}
+                      </span>
+                    ) : (
+                      <span className="subscriber-tier-group-meta">
+                        {t(`${group.users.length} 人`, `${group.users.length}`)}
+                      </span>
+                    )}
+                  </h3>
+                  {group.users.map(user => {
+                    const isUserFollowing = followedAuthors.has(user.name);
+                    const isSelf = user.name === CURRENT_USER;
+                    return (
+                      <div
+                        key={user.name}
+                        className="follow-list-item"
+                        onClick={() => {
+                          navigate({ page: 'P6', authorName: user.name });
+                          onClose();
+                        }}
+                      >
+                        <Avatar index={user.avatarIdx} />
+                        <div className="follow-item-info">
+                          <div className="follow-item-name-row">
+                            <AuthorName name={user.name} className="follow-item-name" />
+                            <ChannelMemberBadge tierName={user.tierName} />
+                          </div>
+                          <div className="follow-item-desc">
+                            {t(`订阅于 ${user.subscribedAt}`, `Joined ${user.subscribedAt}`)}
+                          </div>
+                        </div>
+                        {!isSelf && (
+                          <button
+                            type="button"
+                            className={`follow-btn follow-btn--sm${isUserFollowing ? ' follow-btn--following' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFollow(user.name);
+                            }}
+                          >
+                            {isUserFollowing
+                              ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注', 'Following')}</span>
+                              : t('关注', 'Follow')}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </section>
               );
             })
           )}

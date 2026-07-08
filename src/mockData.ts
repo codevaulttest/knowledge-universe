@@ -1,4 +1,4 @@
-import type { ActivityGroup, Channel, DmConversation, Post, PostActors, Reply } from './types';
+import type { ActivityGroup, Channel, ChannelSubscriber, DmConversation, Post, PostActors, Reply } from './types';
 
 export type UserListItem = {
   name: string;
@@ -6,11 +6,12 @@ export type UserListItem = {
   avatarIdx: number;
 };
 
-export const CURRENT_USER = '林知远';
 export const BATCH_SIZE = 3;
 
 export const MOCK_WALLET_ADDRESS = '0x7a3fb8e2d1c94f6a5b3e0d9c8f2a7e1b4d6c3e8';
 export const DEFAULT_WALLET_DISPLAY = MOCK_WALLET_ADDRESS.slice(-6);
+/** 演示登录用户：与钱包短名一致，避免与中文昵称人格混用 */
+export const CURRENT_USER = DEFAULT_WALLET_DISPLAY;
 
 export const AVATAR_PRESET_SEEDS = [
   'nova-7a3f', 'zenith-e2d1', 'prism-c94f', 'cipher-6a5b',
@@ -84,7 +85,69 @@ export const ALL_CHANNELS: Channel[] = [
     ],
     subscriberCount: 124, createdAt: '2026-03-15',
   },
+  {
+    id: 'channel-lin', ownerName: CURRENT_USER, name: `${DEFAULT_WALLET_DISPLAY}的频道`,
+    description: '知识管理、可视化笔记与独立创作心得。',
+    avatarSeed: CURRENT_USER, category: '知识管理',
+    tiers: [
+      { id: 'lin-1', name: 'Lv.1', price: 100 },
+      { id: 'lin-2', name: 'Lv.2', price: 500 },
+      { id: 'lin-3', name: 'Lv.3', price: 2000 },
+      { id: 'lin-4', name: 'Lv.4', price: 5000 },
+    ],
+    subscriberCount: 37, createdAt: '2026-06-20',
+  },
 ];
+
+/** 频道订阅者名单（频道主从个人页「X 人已订阅」进入查看；UI demo 用局部名单，数量可不等于 subscriberCount） */
+export const CHANNEL_SUBSCRIBERS: Record<string, ChannelSubscriber[]> = {
+  'channel-amay': [
+    { name: '游牧开发者', avatarIdx: 2, tierName: 'Lv.2', subscribedAt: '2 天前' },
+    { name: '设计师刘然', avatarIdx: 0, tierName: 'Lv.1', subscribedAt: '5 天前' },
+    { name: '深海鱼炸弹', avatarIdx: 0, tierName: 'Lv.1', subscribedAt: '1 周前' },
+    { name: '极客前沿', avatarIdx: 1, tierName: 'Lv.2', subscribedAt: '2 周前' },
+    { name: '产品大叔严磊', avatarIdx: 2, tierName: 'Lv.1', subscribedAt: '3 周前' },
+  ],
+  'channel-yanlei': [
+    { name: '游牧开发者', avatarIdx: 2, tierName: 'Lv.1', subscribedAt: '1 天前' },
+    { name: '阿May的研究笔记', avatarIdx: 1, tierName: 'Lv.1', subscribedAt: '4 天前' },
+    { name: '设计师刘然', avatarIdx: 0, tierName: 'Lv.1', subscribedAt: '1 周前' },
+  ],
+  'channel-jike': [
+    { name: 'AI 效率研究所', avatarIdx: 0, tierName: 'Lv.3', subscribedAt: '3 小时前' },
+    { name: '阿May的研究笔记', avatarIdx: 1, tierName: 'Lv.2', subscribedAt: '昨天' },
+    { name: '游牧开发者', avatarIdx: 2, tierName: 'Lv.1', subscribedAt: '3 天前' },
+    { name: '深海鱼炸弹', avatarIdx: 0, tierName: 'Lv.2', subscribedAt: '1 周前' },
+    { name: '设计师刘然', avatarIdx: 0, tierName: 'Lv.1', subscribedAt: '2 周前' },
+    { name: '产品大叔严磊', avatarIdx: 2, tierName: 'Lv.3', subscribedAt: '1 个月前' },
+  ],
+  'channel-aieff': [
+    { name: '阿May的研究笔记', avatarIdx: 1, tierName: 'Lv.5', subscribedAt: '1 小时前' },
+    { name: '游牧开发者', avatarIdx: 2, tierName: 'Lv.2', subscribedAt: '昨天' },
+    { name: '设计师刘然', avatarIdx: 0, tierName: 'Lv.1', subscribedAt: '2 天前' },
+    { name: '极客前沿', avatarIdx: 1, tierName: 'Lv.4', subscribedAt: '5 天前' },
+    { name: '深海鱼炸弹', avatarIdx: 0, tierName: 'Lv.3', subscribedAt: '1 周前' },
+    { name: '产品大叔严磊', avatarIdx: 2, tierName: 'Lv.1', subscribedAt: '2 周前' },
+  ],
+  // 分组展示用：同档位按订阅时间从新到旧排列
+  'channel-lin': [
+    { name: '阿May的研究笔记', avatarIdx: 1, tierName: 'Lv.4', subscribedAt: '2 小时前' },
+    { name: 'AI 效率研究所', avatarIdx: 0, tierName: 'Lv.3', subscribedAt: '昨天' },
+    { name: '极客前沿', avatarIdx: 1, tierName: 'Lv.3', subscribedAt: '5 天前' },
+    { name: '游牧开发者', avatarIdx: 2, tierName: 'Lv.2', subscribedAt: '2 天前' },
+    { name: '深海鱼炸弹', avatarIdx: 0, tierName: 'Lv.2', subscribedAt: '1 周前' },
+    { name: '设计师刘然', avatarIdx: 0, tierName: 'Lv.1', subscribedAt: '4 天前' },
+    { name: '产品大叔严磊', avatarIdx: 2, tierName: 'Lv.1', subscribedAt: '2 周前' },
+  ],
+};
+
+/** 解析订阅者名单：优先按频道 id；当前用户若只有运行时新建的空频道，回落到 channel-lin 演示数据 */
+export function getChannelSubscribers(channel: Channel): ChannelSubscriber[] {
+  const byId = CHANNEL_SUBSCRIBERS[channel.id];
+  if (byId && byId.length > 0) return byId;
+  if (channel.ownerName === CURRENT_USER) return CHANNEL_SUBSCRIBERS['channel-lin'] ?? [];
+  return byId ?? [];
+}
 
 export const ALL_POSTS: Post[] = [
   {
@@ -227,7 +290,7 @@ export const ALL_POSTS: Post[] = [
     rating: 0, replies: 19, links: 0, shares: 9, saves: 43, likes: 88,
   },
   {
-    id: 'p9', author: '林知远', time: '4 天前',
+    id: 'p9', author: CURRENT_USER, time: '4 天前',
     title: '读书笔记 × 可视化：把《思考，快与慢》画成一张图\n用概念图梳理双系统理论，附可下载的模板文件。',
     articlePreview: '丹尼尔·卡尼曼在《思考，快与慢》中提出了双系统理论：系统 1 负责自动、直觉、快速的判断，系统 2 负责理性、分析、缓慢的思考。把这些概念画成图之后，会更容易看清启发式、偏见、前景理论和峰终定律之间的关系。',
     kind: 'article', visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Zd0Hk5',
@@ -240,15 +303,15 @@ export const ALL_POSTS: Post[] = [
     kind: 'article', articleHasCover: false, visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 16, links: 0, shares: 12, saves: 57, likes: 143,
   },
-  // ── 林知远自己发布的节点帖子（演示可见百分比标签）──────────────────
+  // ── 当前用户自己发布的节点帖子（演示可见百分比标签）──────────────────
   {
-    id: 'own-10', author: '林知远', time: '1 小时前',
+    id: 'own-10', author: CURRENT_USER, time: '1 小时前',
     title: '这才是做笔记的正确姿势：卡片笔记法实战指南\n跟着做了一周，信息整理效率提高了一倍。',
     kind: 'text', visiblePercent: 10, isNode: true, stakeTier: 10, nodeId: 'Vx8mK3',
     rating: 2, replies: 8, links: 3, shares: 5, saves: 23, likes: 67, tipsReceived: 30,
   },
   {
-    id: 'own-50', author: '林知远', time: '2 小时前',
+    id: 'own-50', author: CURRENT_USER, time: '2 小时前',
     title: '2025 年个人阅读 Top 5 书单\n每一本都值得反复读，附精读笔记链接。',
     kind: 'image', imageCount: 3, visiblePercent: 50, isNode: true, stakeTier: 100, nodeId: 'Jn9pQ2',
     rating: 1, replies: 12, links: 7, shares: 9, saves: 41, likes: 103, tipsReceived: 120,
@@ -281,18 +344,18 @@ export const POST_REPLIES: Record<string, Reply[]> = {
     { id: 'r2a', author: '设计师刘然', time: '4 小时前', text: 'RAG 配合私有知识库效果翻倍，推荐哪个向量数据库？', avatarIdx: 2, likes: 14 },
     { id: 'r2b', author: '产品大叔严磊', time: '5 小时前', text: '讲得比之前看过的都清楚，已转发给团队。', avatarIdx: 1, likes: 5 },
   ],
-  p3: [{ id: 'r3a', author: '林知远', time: '22 小时前', text: '内容节奏这块感同身受，节奏一乱全盘皆输。', avatarIdx: 0, likes: 3 }],
+  p3: [{ id: 'r3a', author: CURRENT_USER, time: '22 小时前', text: '内容节奏这块感同身受，节奏一乱全盘皆输。', avatarIdx: 0, likes: 3 }],
   p4: [
     { id: 'r4a', author: '设计师刘然', time: '23 小时前', text: '之前就踩了功能堆砌的坑，这个规律太扎心了。', avatarIdx: 2, likes: 18 },
     { id: 'r4b', author: '阿May的研究笔记', time: '1 天前', text: '「把一件事做到极好」赞同，做产品的北极星。', avatarIdx: 1, likes: 7 },
   ],
   p5: [{ id: 'r5a', author: '游牧开发者', time: '1 天前', text: '设计 token 系统这套工作流学到了，下个项目试试。', avatarIdx: 1, likes: 4 }],
   p6: [
-    { id: 'r6a', author: '林知远', time: '2 天前', text: 'tool-use 那段讲得非常清楚，有没有开源版本？', avatarIdx: 0, likes: 22 },
+    { id: 'r6a', author: CURRENT_USER, time: '2 天前', text: 'tool-use 那段讲得非常清楚，有没有开源版本？', avatarIdx: 0, likes: 22 },
     { id: 'r6b', author: '深海鱼炸弹', time: '2 天前', text: 'Demo 链接能分享出来吗？', avatarIdx: 2, likes: 6, channelTierName: 'Lv.2' },
   ],
   p7: [
-    { id: 'r7a', author: '林知远', time: '2 天前', text: '12% 到 67%，这个增幅太惊人了，方法论帖子什么时候出？', avatarIdx: 0, likes: 31 },
+    { id: 'r7a', author: CURRENT_USER, time: '2 天前', text: '12% 到 67%，这个增幅太惊人了，方法论帖子什么时候出？', avatarIdx: 0, likes: 31 },
     { id: 'r7b', author: '深海鱼炸弹', time: '3 天前', text: '纯视频复盘形式很好，配合数据说服力更强。', avatarIdx: 2, likes: 9 },
   ],
   p8: [{ id: 'r8a', author: '游牧开发者', time: '3 天前', text: '「工具是思维的外化」——记下来了，深刻。', avatarIdx: 1, likes: 16 }],
@@ -310,7 +373,7 @@ export const POST_REPLIES: Record<string, Reply[]> = {
 export const replyLikesStore: Record<string, number> = {};
 export const likedReplyIdsStore = new Set<string>();
 
-// ── 互动通知（针对 林知远 的帖子 p9）──────────────────────────────
+// ── 互动通知（针对当前用户帖子 p9）──────────────────────────────
 export const ACTIVITY_GROUPS: ActivityGroup[] = [
   {
     id: 'agt1', type: 'tip', postId: 'p9', time: '1 小时前', isRead: false,
@@ -388,7 +451,7 @@ export const ALL_USERS_MOCK: UserListItem[] = [
   { name: '极客前沿', desc: '追踪 LLM / Agent 业界最前沿动态', avatarIdx: 1 },
   { name: '产品大叔严磊', desc: '10 年 B 端产品经理，分享数据方法论', avatarIdx: 2 },
   { name: '深海鱼炸弹', desc: 'Web3 社区运营，精通流量变现逻辑', avatarIdx: 0 },
-  { name: '林知远', desc: '独立创作者，关注知识管理与可视化表达', avatarIdx: 1 },
+  { name: CURRENT_USER, desc: '独立创作者，关注知识管理与可视化表达', avatarIdx: 1 },
 ];
 
 // ── 其他用户的转发记录（author → 转发的帖子 id 列表）──────────────

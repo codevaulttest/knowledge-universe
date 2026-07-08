@@ -72,6 +72,14 @@ export type Channel = {
   createdAt: string;
 };
 
+/** 频道订阅者（频道主从个人页查看） */
+export type ChannelSubscriber = {
+  name: string;
+  avatarIdx: number;
+  tierName: string;
+  subscribedAt: string;
+};
+
 export type NewChannelData = {
   name: string;
   description: string;

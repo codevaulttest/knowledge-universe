@@ -34,7 +34,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const {
     goBack, navigate, showToast, openLink, linkedPostIds, posts, requestDeletePost,
     openImageLightbox, incrementReplies, language, t, requestPostInteraction,
-    channels, subscribedChannelTiers,
+    channels, subscribedChannelTiers, userProfile,
   } = useApp();
   const post = posts.find(p => p.id === postId);
   const [replyText, setReplyText] = useState('');
@@ -58,6 +58,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   if (!post) return <div className="page"><PageHeader onBack={goBack} /><div className="empty-state">{t('帖子不存在', 'Post not found')}</div></div>;
 
   const isOwn = post.author === CURRENT_USER;
+  const displayName = isOwn ? userProfile.nickname : post.author;
   const isLinked = linkedPostIds.has(post.id);
   const unlocked = isOwn || isLinked || post.visiblePercent === 100;
 
@@ -112,12 +113,12 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
         <div className="detail-author-row">
           <Avatar
             index={0}
-            seed={post.author}
+            seed={isOwn ? userProfile.avatarSeed : post.author}
             onClick={() => navigate({ page: 'P6', authorName: post.author })}
           />
           <div className="author-meta">
             <span className="post-author-name-row">
-              <AuthorName name={post.author} as="h2" />
+              <AuthorName name={displayName} as="h2" />
               {getGenesisTier(post.author) && <GenesisBadge tier={getGenesisTier(post.author)!} />}
             </span>
             <span className="author-time">{localizeTime(post.time, language)}</span>

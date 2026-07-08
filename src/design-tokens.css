@@ -5,7 +5,6 @@
  * 所有 UI 实现必须从此处消费变量，禁止在组件或页面中出现硬编码
  * 颜色值、字体名、间距数值、圆角、阴影等。
  *
- * 品牌色系：Mint / Teal（区别于 CodeVAULT 主 App 的 #526CFF 蓝紫色系）
  * 更新时间：2026-05-27
  * ============================================================
  */
@@ -13,7 +12,7 @@
 :root {
 
   /* ═══════════════════════════════════════════════════
-     品牌色 (Brand — Mint / Teal)
+     品牌色 (Brand)
      ═══════════════════════════════════════════════════ */
 
   --ku-color-primary:          #00cdb8;
@@ -28,7 +27,7 @@
   --ku-color-primary-alpha-06: rgba(0, 205, 184, 0.06);  /* 按钮 hover 底色 */
   --ku-color-primary-alpha-14: rgba(0, 205, 184, 0.14);  /* 按钮 active 底色 */
 
-  /* Badge（薄荷浅色）*/
+  /* Badge */
   --ku-color-badge-bg:         #d6fff6;
   --ku-color-badge-text:       #00bda9;
 
@@ -306,11 +305,11 @@
   --ku-planet-node-upgrade-border: rgba(0, 205, 184, 0.35);
   --ku-planet-node-upgrade-text:   var(--ku-color-primary);
 
-  /* 节点面额标签（10 / 100 / 1000 PB），层级：金(最高) > 薄荷(中) > 灰(基础) */
+  /* 节点面额标签（10 / 100 / 1000 PB），层级：金(最高) > 品牌主色(中) > 灰(基础) */
   --ku-planet-tier-prem-bg:    #ffedcc;                          /* 1000 PB —— 金，最高档 */
   --ku-planet-tier-prem-text:  #a05e00;
   --ku-planet-tier-prem-ring:  rgba(160, 94, 0, 0.28);
-  --ku-planet-tier-mid-bg:     var(--ku-color-primary-alpha-14); /* 100 PB —— 品牌薄荷，中档 */
+  --ku-planet-tier-mid-bg:     var(--ku-color-primary-alpha-14); /* 100 PB —— 品牌主色，中档 */
   --ku-planet-tier-mid-text:   var(--ku-color-primary-dark);
   --ku-planet-tier-base-bg:    #eef1f6;                          /* 10 PB —— 灰，基础档 */
   --ku-planet-tier-base-text:  #6b788e;
@@ -329,7 +328,7 @@
 
 /* ════════════════════════════════════════════════════════════
    蓝色主题覆盖（星云蓝 #1B6BFF）
-   用法：<html data-theme="blue"> 切换；移除属性恢复青绿
+   用法：<html data-theme="blue"> 切换；移除属性恢复 :root 默认色
    ════════════════════════════════════════════════════════════ */
 [data-theme="blue"] {
 
@@ -351,7 +350,7 @@
   --ku-color-nav-active-bg:    rgba(27, 107, 255, 0.12);
   --ku-shadow-nav-active:      inset 0 0 0 1px rgba(255, 255, 255, 0.56), 0 2px 8px rgba(27, 107, 255, 0.10);
 
-  /* 知识图谱连线（青绿淡蓝色 → 星空蓝淡色） */
+  /* 知识图谱连线 */
   --ku-color-graph-line:       #ccd8f5;
 
   /* 知识星球节点徽标 */

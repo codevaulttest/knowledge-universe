@@ -535,12 +535,12 @@ export function ComposePage({
           </>
         )}
 
-        {/* 发布至我的频道（仅频道主可见）—— 频道门槛优先于知识星球单条付费生效，所以放在前面 */}
+        {/* 同步至我的频道（仅频道主可见）—— 频道门槛优先于知识星球单条付费生效，所以放在前面 */}
         {!isEditMode && myChannel && (
           <div className="compose-section compose-stake-section compose-stake-section--channel">
             <div className="compose-stake-heading">
               <Radio size={16} strokeWidth={2} />
-              <span>{t(`发布至我的频道《${myChannel.name}》`, `Publish to my channel "${myChannel.name}"`)}</span>
+              <span>{t(`同步至我的频道《${myChannel.name}》`, `Sync to my channel "${myChannel.name}"`)}</span>
               <button
                 type="button"
                 className={`toggle-switch${publishToChannel ? ' toggle-switch--on' : ''}`}
