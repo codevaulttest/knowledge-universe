@@ -402,20 +402,23 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
   const isLinked = linkedPostIds.has(post.id);
 
   const handleLink = () => (onViewLinks ? onViewLinks() : openLink(post.id));
+  const handleBadgeClick = () => (onGoToPlanet ? onGoToPlanet() : handleLink());
   return (
     <div
       className="gemini-badge"
       data-layer="gemini-node-badge"
       role="button"
       tabIndex={0}
-      onClick={handleLink}
+      onClick={handleBadgeClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          handleLink();
+          handleBadgeClick();
         }
       }}
-      aria-label={t(`链接节点 ${post.nodeId}，${post.rating} 星`, `Link node ${post.nodeId}, ${post.rating} ${post.rating === 1 ? 'star' : 'stars'}`)}
+      aria-label={onGoToPlanet
+        ? t(`查看知识星球节点 ${post.nodeId}，${post.rating} 星`, `View Knowledge Planet node ${post.nodeId}, ${post.rating} ${post.rating === 1 ? 'star' : 'stars'}`)
+        : t(`链接节点 ${post.nodeId}，${post.rating} 星`, `Link node ${post.nodeId}, ${post.rating} ${post.rating === 1 ? 'star' : 'stars'}`)}
     >
       <div className="gemini-left">
         <KnowledgePlanetIcon className="gemini-icon" />
