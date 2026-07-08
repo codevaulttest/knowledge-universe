@@ -56,8 +56,8 @@ export type Route =
 // ── 频道 / 会员档位 ──────────────────────────────────────────────
 export type ChannelTier = {
   id: string;
-  name: string; // 频道主自定义，默认建议编号制 Lv.1/Lv.2/Lv.3…（不用贵金属命名，避免与创世节点银/金徽章混淆）
-  price: number; // PB/月
+  name: string; // 固定编号 Lv.1/Lv.2/Lv.3…（按档位顺序自动生成，不可自定义）
+  price: number; // PB/月，须 > 0，且高于上一档
 };
 
 export type Channel = {
@@ -145,7 +145,7 @@ export type Draft = {
 };
 export type InteractionAction = PostAction | 'comment' | 'unlock';
 export type PayCtx = {
-  ctx: 'post' | 'chain' | 'repost' | 'interaction' | 'channel';
+  ctx: 'post' | 'chain' | 'repost' | 'interaction';
   postId?: string;
   action?: InteractionAction;
   stakeTier: StakeTier;

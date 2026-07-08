@@ -90,7 +90,12 @@ function FollowFeed({ followedAuthors }: { followedAuthors: Set<string> }) {
 
 // ── ChannelDiscoverFeed（频道发现：类似 YouTube 频道推荐）──────────
 function ChannelDiscoverFeed() {
-  const { channels, navigate, t } = useApp();
+  const { channels, subscribedChannelTiers, navigate, t } = useApp();
+  const [scope, setScope] = useState<'all' | 'subscribed'>('all');
+  const displayedChannels = scope === 'subscribed'
+    ? channels.filter(c => subscribedChannelTiers[c.id] != null)
+    : channels;
+
   if (channels.length === 0) {
     return (
       <div className="empty-state">
@@ -100,7 +105,28 @@ function ChannelDiscoverFeed() {
   }
   return (
     <section className="channel-discover-list">
-      {channels.map((channel, i) => (
+      <div className="channel-scope-tabs">
+        <button
+          type="button"
+          className={`channel-scope-tab${scope === 'all' ? ' channel-scope-tab--active' : ''}`}
+          onClick={() => setScope('all')}
+        >
+          {t('发现', 'Discover')}
+        </button>
+        <button
+          type="button"
+          className={`channel-scope-tab${scope === 'subscribed' ? ' channel-scope-tab--active' : ''}`}
+          onClick={() => setScope('subscribed')}
+        >
+          {t('已订阅', 'Subscribed')}
+        </button>
+      </div>
+      {displayedChannels.length === 0 ? (
+        <div className="empty-state">
+          <p>{t('还没有订阅任何频道', "You haven't subscribed to any channels yet")}</p>
+          <p className="empty-sub">{t('去"发现"里看看有没有喜欢的频道', 'Check out "Discover" to find channels you like')}</p>
+        </div>
+      ) : displayedChannels.map((channel, i) => (
         <button
           key={channel.id}
           type="button"
@@ -115,7 +141,6 @@ function ChannelDiscoverFeed() {
             </span>
             <span className="channel-discover-desc">{channel.description}</span>
             <div className="channel-discover-meta">
-              <span className="channel-discover-category">{channel.category}</span>
               <span className="channel-discover-subs">{t(`${channel.subscriberCount} 人已订阅`, `${channel.subscriberCount} subscribers`)}</span>
             </div>
           </div>

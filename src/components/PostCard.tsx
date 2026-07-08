@@ -362,7 +362,13 @@ export function PostCard({
         extra={isOwn ? (
           <span
             className="post-tip-received"
-            aria-label={t(`已收到打赏 ${post.tipsReceived ?? 0} PB`, `Received ${post.tipsReceived ?? 0} PB in tips`)}
+            role={hasActors ? 'button' : undefined}
+            tabIndex={hasActors ? 0 : undefined}
+            onClick={hasActors ? (e) => { e.stopPropagation(); setActorsTab('tip'); } : undefined}
+            onKeyDown={hasActors ? (e) => { if (e.key === 'Enter' || e.key === ' ') setActorsTab('tip'); } : undefined}
+            aria-label={hasActors
+              ? t(`查看打赏详情，已收到 ${post.tipsReceived ?? 0} PB`, `View tip details, received ${post.tipsReceived ?? 0} PB`)
+              : t(`已收到打赏 ${post.tipsReceived ?? 0} PB`, `Received ${post.tipsReceived ?? 0} PB in tips`)}
           >
             <HandCoins size={18} strokeWidth={2.25} />
             {post.tipsReceived ?? 0} PB

@@ -53,7 +53,6 @@ export default function App() {
   const [channels, setChannels] = useState<Channel[]>(ALL_CHANNELS);
   const [subscribedChannelTiers, setSubscribedChannelTiers] = useState<Record<string, number>>({});
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
-  const [pendingNewChannel, setPendingNewChannel] = useState<NewChannelData | null>(null);
   const [channelSubscribeId, setChannelSubscribeId] = useState<string | null>(null);
 
   const MOCK_DRAFTS: Draft[] = [
@@ -291,10 +290,21 @@ export default function App() {
   const openCreateChannel = () => setCreateChannelOpen(true);
   const closeCreateChannel = () => setCreateChannelOpen(false);
 
-  const stagePendingChannel = (data: NewChannelData) => {
-    setPendingNewChannel(data);
-    setCreateChannelOpen(false);
-    setPaySheet({ ctx: 'channel', stakeTier: 1000 });
+  // 开通频道是一步流程：CreateChannelModal 自己跑完支付动画（1000 PB + 100 PB + 0.1 SUP）后直接调用此函数建号
+  const createChannel = (data: NewChannelData) => {
+    const newChannel: Channel = {
+      id: `channel-${Date.now()}`,
+      ownerName: CURRENT_USER,
+      name: data.name,
+      description: data.description,
+      avatarSeed: userProfile.avatarSeed,
+      category: data.category,
+      tiers: data.tiers,
+      subscriberCount: 0,
+      createdAt: new Date().toISOString().slice(0, 10),
+    };
+    setChannels(prev => [...prev, newChannel]);
+    showToast(t('开通成功！频道已创建', 'Channel created!'));
   };
 
   const updateChannel = (channelId: string, data: NewChannelData) => {
@@ -323,23 +333,6 @@ export default function App() {
     setPaySheet(null);
     if (ctx === 'chain' && postId) {
       performLink(postId);
-    } else if (ctx === 'channel') {
-      if (pendingNewChannel) {
-        const newChannel: Channel = {
-          id: `channel-${Date.now()}`,
-          ownerName: CURRENT_USER,
-          name: pendingNewChannel.name,
-          description: pendingNewChannel.description,
-          avatarSeed: userProfile.avatarSeed,
-          category: pendingNewChannel.category,
-          tiers: pendingNewChannel.tiers,
-          subscriberCount: 0,
-          createdAt: new Date().toISOString().slice(0, 10),
-        };
-        setChannels(prev => [...prev, newChannel]);
-        setPendingNewChannel(null);
-      }
-      showToast(t('开通成功！频道已创建', 'Channel created!'));
     } else if (ctx === 'post') {
       if (pendingNewPost) {
         const newPost: Post = {
@@ -478,7 +471,7 @@ export default function App() {
     userProfile, updateUserProfile,
     channels, subscribedChannelTiers,
     openChannelSubscribe, subscribeToChannelTier,
-    stagePendingChannel, updateChannel,
+    createChannel, updateChannel,
     openCreateChannel, createChannelOpen, closeCreateChannel,
     supBalance, rechargeSup, deductSup,
   };

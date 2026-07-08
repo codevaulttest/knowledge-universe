@@ -137,7 +137,6 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
     chain:  t('解锁全文', 'Unlock full content'),
     repost: t('转发并创建子节点', 'Repost and create child node'),
     interaction: t('参与知识星球', 'Join Gemini'),
-    channel: t('开通频道', 'Create Channel'),
   };
 
   const interactionLabels: Record<InteractionAction, [string, string]> = {
@@ -538,7 +537,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
       <div className="gemini-stake-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">
-            {mode === 'unlock' ? t('解锁全部内容', 'Unlock full content') : t('创建子节点', 'Create child node')}
+            {mode === 'unlock' ? t('解锁全部内容', 'Unlock full content') : t('创建子节点并链接', 'Create child node and link')}
           </span>
           <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
             <X size={18} strokeWidth={2} />
@@ -579,7 +578,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
         <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" onClick={() => setStep('confirm')}>
           {mode === 'unlock'
             ? t(`解锁并创建子节点 · ${selected} PB`, `Unlock & create child node · ${selected} PB`)
-            : t(`创建子节点 · ${selected} PB`, `Create child node · ${selected} PB`)}
+            : t(`创建子节点并链接 · ${selected} PB`, `Create child node and link · ${selected} PB`)}
         </button>
       </div>
     </div>
@@ -1684,54 +1683,133 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
 // ═══════════════════════════════════════════════════════════════
 
 const MAX_CHANNEL_TIERS = 5;
-const CHANNEL_CATEGORY_OPTIONS = ['AI / 大模型', '产品 / 运营', '科技资讯', '人文', '时事', '影评', '旅游'];
+const DEFAULT_CHANNEL_CATEGORY = 'AI / 大模型';
+const DEFAULT_TIER_PRICES = [100, 500, 2000, 5000, 10000] as const;
 
-function nextTierName(count: number) {
-  return `Lv.${count + 1}`;
+function nextTierName(index: number) {
+  return `Lv.${index + 1}`;
+}
+
+function defaultTierPreset(index: number): number {
+  return DEFAULT_TIER_PRICES[index] ?? DEFAULT_TIER_PRICES[DEFAULT_TIER_PRICES.length - 1];
+}
+
+function defaultTierPrice(index: number, tiers: ChannelTier[]): number {
+  const preset = defaultTierPreset(index);
+  if (index === 0) return preset;
+  return Math.max(preset, tiers[index - 1].price + 1);
+}
+
+function normalizeTierNames(tiers: ChannelTier[]): ChannelTier[] {
+  return tiers.map((tier, index) => ({ ...tier, name: nextTierName(index) }));
+}
+
+function sanitizeTierPrices(tiers: ChannelTier[]): ChannelTier[] {
+  return tiers.map((tier, index) => ({
+    ...tier,
+    price: tier.price > 0 ? tier.price : defaultTierPreset(index),
+  }));
+}
+
+function isChannelTierPriceInvalid(tiers: ChannelTier[], idx: number): boolean {
+  const price = tiers[idx].price;
+  if (price <= 0) return true;
+  if (idx <= 0) return false;
+  return price <= tiers[idx - 1].price;
+}
+
+function channelTierPriceError(
+  tiers: ChannelTier[],
+  idx: number,
+  t: (zh: string, en: string) => string,
+): string | null {
+  const price = tiers[idx].price;
+  if (price <= 0) {
+    return t('月费不可为 0', 'Price cannot be 0');
+  }
+  if (idx > 0 && price <= tiers[idx - 1].price) {
+    const prevPrice = tiers[idx - 1].price;
+    return t(
+      `须高于 ${nextTierName(idx - 1)}（${prevPrice} PB）`,
+      `Must be higher than ${nextTierName(idx - 1)} (${prevPrice} PB)`,
+    );
+  }
+  return null;
 }
 
 export function CreateChannelModal({ existingChannel, onClose }: { existingChannel?: Channel; onClose: () => void }) {
-  const { t, stagePendingChannel, updateChannel } = useApp();
-  const [name, setName] = useState(existingChannel?.name ?? '');
+  const { t, createChannel, updateChannel, userProfile, deductSup } = useApp();
+  const defaultChannelName = t(`${userProfile.nickname}的频道`, `${userProfile.nickname}'s Channel`);
+  const [paying, setPaying] = useState<'idle' | 'loading' | 'failed'>('idle');
+  const [failReason, setFailReason] = useState('');
+  const channelSuperAmount = SUPER_BY_TIER[1000];
+  const channelSupCost = SUP_COST_BY_TIER[1000];
+  const [name, setName] = useState(existingChannel?.name ?? defaultChannelName);
   const [description, setDescription] = useState(existingChannel?.description ?? '');
-  const [category, setCategory] = useState(existingChannel?.category ?? CHANNEL_CATEGORY_OPTIONS[0]);
-  const [tiers, setTiers] = useState<ChannelTier[]>(existingChannel?.tiers ?? []);
+  const category = existingChannel?.category ?? DEFAULT_CHANNEL_CATEGORY;
   const isEdit = !!existingChannel;
+  // 开通频道（未 isEdit）只收集基本信息，不设会员档位——开通与定价拆成两步，
+  // 避免用户在"要不要付钱开通"和"怎么设计收费档位"两件事上同时纠结
+  const [tiers, setTiers] = useState<ChannelTier[]>(() =>
+    isEdit ? normalizeTierNames(sanitizeTierPrices(existingChannel?.tiers ?? [])) : [],
+  );
 
   const addTier = () => {
     if (tiers.length >= MAX_CHANNEL_TIERS) return;
-    setTiers(prev => [...prev, { id: `tier-${Date.now()}`, name: nextTierName(prev.length), price: 0 }]);
+    const nextIndex = tiers.length;
+    setTiers(prev => normalizeTierNames([
+      ...prev,
+      {
+        id: `tier-${Date.now()}`,
+        name: nextTierName(nextIndex),
+        price: defaultTierPrice(nextIndex, prev),
+      },
+    ]));
   };
-  const updateTier = (idx: number, patch: Partial<ChannelTier>) => {
-    setTiers(prev => prev.map((tr, i) => i === idx ? { ...tr, ...patch } : tr));
+  const updateTierPrice = (idx: number, price: number) => {
+    setTiers(prev => prev.map((tr, i) => i === idx ? { ...tr, price } : tr));
   };
   const removeTier = (idx: number) => {
-    setTiers(prev => prev.filter((_, i) => i !== idx));
+    setTiers(prev => normalizeTierNames(prev.filter((_, i) => i !== idx)));
   };
 
-  const canSubmit = name.trim().length > 0;
+  const canSubmit = name.trim().length > 0
+    && !tiers.some((_, idx) => isChannelTierPriceInvalid(tiers, idx));
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
+    if (!canSubmit || paying === 'loading') return;
+    const normalizedTiers = normalizeTierNames(tiers);
     if (isEdit && existingChannel) {
-      updateChannel(existingChannel.id, { name: name.trim(), description: description.trim(), category, tiers });
-    } else {
-      stagePendingChannel({ name: name.trim(), description: description.trim(), category, tiers });
+      updateChannel(existingChannel.id, { name: name.trim(), description: description.trim(), category, tiers: normalizedTiers });
+      onClose();
+      return;
     }
-    onClose();
+    // 一步完成：同一屏内直接跑支付动画，成功后立即建号，不再跳到独立的支付弹窗
+    setPaying('loading');
+    setTimeout(() => {
+      const shouldFail = Math.random() < 0.12;
+      if (shouldFail) {
+        setFailReason(t('余额不足，请充值后重试', 'Insufficient balance, please top up and retry'));
+        setPaying('failed');
+        return;
+      }
+      deductSup(channelSupCost);
+      createChannel({ name: name.trim(), description: description.trim(), category, tiers: normalizedTiers });
+      onClose();
+    }, 1300);
   };
 
+  const closeIfIdle = () => { if (paying !== 'loading') onClose(); };
+
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div className="sheet-backdrop" onClick={closeIfIdle}>
       <div className="edit-profile-sheet" role="dialog" aria-label={t('开通频道', 'Create Channel')} onClick={e => e.stopPropagation()}>
         <div className="edit-profile-header">
-          <button type="button" className="edit-profile-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+          <button type="button" className="edit-profile-close" onClick={closeIfIdle} disabled={paying === 'loading'} aria-label={t('关闭', 'Close')}>
             <X size={18} strokeWidth={2} />
           </button>
           <span className="edit-profile-title">{isEdit ? t('管理频道', 'Manage Channel') : t('开通频道', 'Create Channel')}</span>
-          <button type="button" className="edit-profile-save" disabled={!canSubmit} onClick={handleSubmit}>
-            {isEdit ? t('保存', 'Save') : t('支付 1000 PB 开通', 'Pay 1000 PB')}
-          </button>
+          <div className="edit-profile-header-spacer" aria-hidden />
         </div>
 
         <div className="edit-profile-body">
@@ -1753,49 +1831,97 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               autoComplete="off"
             />
           </div>
-          <div className="edit-profile-field">
-            <span className="edit-profile-label">{t('分类', 'Category')}</span>
-            <div className="tip-amounts">
-              {CHANNEL_CATEGORY_OPTIONS.map(cat => (
-                <button
-                  key={cat} type="button"
-                  className={`tip-amount-chip${category === cat ? ' tip-amount-chip--active' : ''}`}
-                  onClick={() => setCategory(cat)}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
 
+          {isEdit && (
           <div className="edit-profile-field">
             <span className="edit-profile-label">
               {t(`会员档位（最多 ${MAX_CHANNEL_TIERS} 档，可不设=纯免费频道）`, `Membership tiers (up to ${MAX_CHANNEL_TIERS}; leave empty for a free channel)`)}
             </span>
-            {tiers.map((tier, idx) => (
-              <div key={tier.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                <input
-                  className="edit-profile-input" style={{ flex: 1 }}
-                  value={tier.name} maxLength={12}
-                  onChange={e => updateTier(idx, { name: e.target.value })}
-                  autoComplete="off"
-                />
-                <input
-                  className="edit-profile-input" style={{ width: 90 }}
-                  type="number" min={0}
-                  value={tier.price}
-                  onChange={e => updateTier(idx, { price: Math.max(0, Number(e.target.value)) })}
-                  placeholder="PB/月"
-                />
-                <button type="button" className="draft-item-delete" onClick={() => removeTier(idx)} aria-label={t('删除档位', 'Remove tier')}>
-                  <X size={14} strokeWidth={2} />
-                </button>
+            {tiers.length > 0 && (
+              <div className="channel-tier-row channel-tier-row--head" aria-hidden>
+                <span className="channel-tier-col-label">{t('档位', 'Tier')}</span>
+                <span className="channel-tier-col-label channel-tier-col-label--price">{t('月订阅费', 'Monthly fee')}</span>
+                <span className="channel-tier-col-label channel-tier-col-label--action" />
               </div>
-            ))}
+            )}
+            {tiers.map((tier, idx) => {
+              const priceError = channelTierPriceError(tiers, idx, t);
+              return (
+                <div key={tier.id} className="channel-tier-block">
+                  <div className="channel-tier-row">
+                    <span className="channel-tier-name-label">{nextTierName(idx)}</span>
+                    <div className="channel-tier-price-wrap">
+                      <input
+                        className={`edit-profile-input channel-tier-price-input${priceError ? ' edit-profile-input--error' : ''}`}
+                        type="number" min={1}
+                        value={tier.price}
+                        onChange={e => {
+                          const raw = Number(e.target.value);
+                          updateTierPrice(idx, Number.isFinite(raw) ? Math.max(0, raw) : 0);
+                        }}
+                        placeholder={t('月费', 'Fee')}
+                        aria-label={t(`${nextTierName(idx)} 月订阅费（PB）`, `${nextTierName(idx)} monthly subscription fee (PB)`)}
+                        aria-invalid={priceError ? true : undefined}
+                      />
+                      <span className="channel-tier-price-unit">PB/{t('月', 'mo')}</span>
+                    </div>
+                    <button type="button" className="draft-item-delete channel-tier-delete" onClick={() => removeTier(idx)} aria-label={t('删除档位', 'Remove tier')}>
+                      <X size={14} strokeWidth={2} />
+                    </button>
+                  </div>
+                  {priceError && (
+                    <p className="channel-tier-error" role="alert">{priceError}</p>
+                  )}
+                </div>
+              );
+            })}
             {tiers.length < MAX_CHANNEL_TIERS && (
               <button type="button" className="checkin-ghost-btn" onClick={addTier}>
                 {t('+ 新增档位', '+ Add tier')}
               </button>
+            )}
+          </div>
+          )}
+
+          {!isEdit && (
+            <div className="pay-combo-breakdown">
+              <div className="pay-combo-row">
+                <span className="pay-combo-label">{t('P客 PB', 'P-Pay PB')}</span>
+                <span className="pay-combo-value">1000 PB</span>
+              </div>
+              <div className="pay-combo-row">
+                <span className="pay-combo-label">{t('码库 PB', 'CodeVault PB')}</span>
+                <span className="pay-combo-value">{formatSuperAmount(channelSuperAmount)} PB</span>
+              </div>
+              <div className="pay-combo-row">
+                <span className="pay-combo-label">{t('SUP 消耗', 'SUP cost')}</span>
+                <span className="pay-combo-value">{formatSupAmount(channelSupCost)} SUP</span>
+              </div>
+              {paying === 'failed' && (
+                <p className="pay-fail-reason">{failReason}</p>
+              )}
+            </div>
+          )}
+
+          <div className="channel-create-footer">
+            <button
+              type="button"
+              className="planet-confirm-btn"
+              disabled={!canSubmit || paying === 'loading'}
+              onClick={handleSubmit}
+            >
+              {isEdit
+                ? t('保存', 'Save')
+                : paying === 'loading'
+                  ? <span className="spinner" />
+                  : paying === 'failed'
+                    ? t('重试', 'Retry')
+                    : t(`组合支付 1000 PB + ${formatSuperAmount(channelSuperAmount)} PB + ${formatSupAmount(channelSupCost)} SUP`, `Pay 1000 PB + ${formatSuperAmount(channelSuperAmount)} PB + ${formatSupAmount(channelSupCost)} SUP`)}
+            </button>
+            {!isEdit && paying === 'idle' && (
+              <p className="channel-create-footer-hint">
+                {t('开通后默认全员免费，会员档位与定价可稍后在"管理频道"里再设置', 'Your channel starts fully free — you can add paid membership tiers anytime later in "Manage Channel"')}
+              </p>
             )}
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowDownToLine, ArrowUp, ArrowUpToLine, Check, ChevronDown, ChevronRight, Copy, Crown, FileText, Gift, LayoutGrid, Loader2, Lock, MessageCircle, Radio, Repeat2, Search, Star, Wallet, X } from 'lucide-react';
+import { ArrowDownToLine, ArrowUp, ArrowUpToLine, Check, ChevronDown, ChevronRight, Copy, Crown, FileText, Gift, LayoutGrid, Link, Loader2, Lock, MessageCircle, Radio, Repeat2, Search, Star, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader, Rating } from '../components/shared';
 import { CURRENT_USER, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -10,9 +10,9 @@ import type { LucideIcon } from 'lucide-react';
 type NodeTier = 10 | 100 | 1000;
 
 // 节点来源：产生该节点的具体行为，便于用户筛选、了解自己节点的构成
-type NodeSource = '发帖' | '回帖' | '转发' | '解锁' | '频道开通' | '创世认购';
+type NodeSource = '发帖' | '评论' | '转发' | '链接' | '解锁' | '频道开通' | '创世认购';
 
-const ALL_NODE_SOURCES: NodeSource[] = ['发帖', '回帖', '转发', '解锁', '频道开通', '创世认购'];
+const ALL_NODE_SOURCES: NodeSource[] = ['发帖', '评论', '转发', '链接', '解锁', '频道开通', '创世认购'];
 
 type KnowledgeNode = {
   id: string;
@@ -37,8 +37,9 @@ type WithdrawRecord = {
 
 const NODE_SOURCE_ICONS: Record<NodeSource, LucideIcon> = {
   '发帖': FileText,
-  '回帖': MessageCircle,
+  '评论': MessageCircle,
   '转发': Repeat2,
+  '链接': Link,
   '解锁': Lock,
   '频道开通': Radio,
   '创世认购': Crown,
@@ -63,10 +64,11 @@ const INITIAL_NODES: KnowledgeNode[] = [
   { id: 'n4', nodeCode: 'J0K1L2', tier: 1000, stars: 2, createdAt: '2026-02-01 21:03', source: '解锁' },
   { id: 'n5', nodeCode: 'M3N4O5', tier: 1000, stars: 1, createdAt: '2026-02-15 11:44', source: '创世认购' },
   // 100 PB —— 不支持升级，红包上限 500 PB（5 倍）
-  { id: 'n6', nodeCode: 'P6Q7R8', tier: 100, stars: 1, createdAt: '2026-03-01 16:28', source: '回帖' },
+  { id: 'n6', nodeCode: 'P6Q7R8', tier: 100, stars: 1, createdAt: '2026-03-01 16:28', source: '评论' },
   { id: 'n7', nodeCode: 'S9T0U1', tier: 100, stars: 1, createdAt: '2026-03-10 07:19', source: '发帖' },
   // 10 PB —— 不支持升级，红包上限 10 PB（1 倍）
-  { id: 'n8', nodeCode: 'V2W3X4', tier: 10, stars: 1, createdAt: '2026-04-01 13:50', source: '回帖' },
+  { id: 'n8', nodeCode: 'V2W3X4', tier: 10, stars: 1, createdAt: '2026-04-01 13:50', source: '评论' },
+  { id: 'n9', nodeCode: 'Y5Z6A7', tier: 100, stars: 1, createdAt: '2026-04-12 09:15', source: '链接' },
 ];
 
 const RED_PACKET_HISTORY: RedPacketRecord[] = [
@@ -432,7 +434,7 @@ export function KnowledgePlanetPage() {
                 <ChevronDown size={14} strokeWidth={2} className={`planet-node-dropdown-chevron${openDropdown === 'source' ? ' planet-node-dropdown-chevron--open' : ''}`} />
               </button>
               {openDropdown === 'source' && (
-                <div className="planet-node-dropdown-menu" role="listbox">
+                <div className="planet-node-dropdown-menu planet-node-dropdown-menu--fit" role="listbox">
                   <button
                     type="button"
                     role="option"
@@ -522,7 +524,10 @@ export function KnowledgePlanetPage() {
                     <span className={`planet-node-attrs planet-node-attrs--t${node.tier}`}>
                       {redPacketCapLabel(node.tier, zh)}
                     </span>
-                    <span className="planet-node-source">{node.source}</span>
+                    <span className="planet-node-source">
+                      <NodeSourceIcon source={node.source} size={12} />
+                      {node.source}
+                    </span>
                   </div>
                   <span className="planet-node-meta">{node.createdAt}</span>
                 </div>

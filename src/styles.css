@@ -212,6 +212,24 @@ button {
   flex-direction: column;
   gap: 10px;
 }
+.channel-scope-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.channel-scope-tab {
+  padding: 6px 14px;
+  border-radius: 99px;
+  border: none;
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-caption-strong);
+  cursor: pointer;
+}
+.channel-scope-tab--active {
+  background: var(--ku-color-primary-alpha-14);
+  color: var(--ku-color-primary-dark);
+}
 .channel-discover-card {
   display: flex;
   align-items: flex-start;
@@ -245,13 +263,6 @@ button {
   align-items: center;
   gap: 8px;
   margin-top: 2px;
-}
-.channel-discover-category {
-  font: var(--ku-text-caption);
-  color: var(--ku-color-primary-dark);
-  background: var(--ku-color-badge-bg);
-  border-radius: var(--ku-radius-badge);
-  padding: 1px 6px;
 }
 .channel-discover-subs {
   font: var(--ku-text-caption);
@@ -3546,19 +3557,6 @@ button {
   font: var(--ku-text-action-cta);
   cursor: pointer;
 }
-.channel-info-bar-tiers { display: flex; flex-wrap: wrap; gap: 6px; }
-.channel-tier-chip {
-  padding: 3px 8px;
-  border-radius: var(--ku-radius-badge);
-  background: var(--ku-color-bg-phone);
-  color: var(--ku-color-text-secondary);
-  font: var(--ku-text-caption);
-}
-.channel-tier-chip--active {
-  background: var(--ku-color-primary-alpha-14);
-  color: var(--ku-color-primary-dark);
-  font-weight: 700;
-}
 .channel-create-entry {
   margin: 0 var(--ku-feed-padding-x) 14px;
   padding: 10px 14px;
@@ -3575,6 +3573,11 @@ button {
   justify-content: center;
 }
 
+/* 自己主页：频道 CTA 排在核心社交数据之后 */
+.channel-create-entry--subtle {
+  margin: 12px var(--ku-feed-padding-x) 14px;
+}
+
 .profile-mini-stats {
   display: flex;
   align-items: center;
@@ -3582,9 +3585,6 @@ button {
   padding: 0 var(--ku-feed-padding-x) 14px;
 }
 
-.profile-mini-stats--bordered {
-  border-bottom: 1px solid var(--ku-color-border);
-}
 
 .profile-mini-stat {
   display: flex;
@@ -5134,7 +5134,7 @@ button {
 }
 .planet-node-attrs {
   font: var(--ku-text-caption);
-  padding: 1px 6px;
+  padding: 4px 6px;
   border-radius: var(--ku-radius-badge);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -5146,12 +5146,18 @@ button {
 .planet-node-attrs--t100  { background: var(--ku-planet-tier-mid-bg);  color: var(--ku-planet-tier-mid-text); }
 .planet-node-attrs--t10   { background: var(--ku-planet-tier-base-bg); color: var(--ku-planet-tier-base-text); }
 .planet-node-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   font: var(--ku-text-caption);
   color: var(--ku-color-text-secondary);
   background: var(--ku-color-badge-bg);
   border-radius: var(--ku-radius-badge);
-  padding: 1px 6px;
+  padding: 4px 6px;
   white-space: nowrap;
+}
+.planet-node-source svg {
+  flex-shrink: 0;
 }
 
 .planet-node-locked-tag {
@@ -5851,7 +5857,7 @@ button {
 }
 .detail-tip-btn:active { transform: scale(0.92); }
 
-/* 自己主页帖子：展示该帖已收到的打赏金额（只读） */
+/* 自己主页帖子：展示该帖已收到的打赏金额，点击可查看打赏详情 */
 .post-tip-received {
   display: inline-flex;
   align-items: center;
@@ -5861,6 +5867,12 @@ button {
   font: var(--ku-text-action);
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
+}
+.post-tip-received[role="button"] {
+  cursor: pointer;
+}
+.post-tip-received[role="button"]:active {
+  transform: scale(0.92);
 }
 .post-tip-received svg {
   color: var(--ku-color-primary);

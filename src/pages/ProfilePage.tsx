@@ -60,6 +60,40 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     : filteredOtherPosts.map(post => ({ post }));
   const displayedPosts = displayedEntries.map(e => e.post);
 
+  // 频道信息条 / 开通频道入口：他人主页展示在身份区下方；自己主页降级为次优先级，排在核心社交数据之后
+  const channelSection = channel ? (
+    <div className="channel-info-bar">
+      <div className="channel-info-bar-top">
+        <div className="channel-info-bar-left">
+          <span className="channel-info-bar-name">
+            <Radio size={13} strokeWidth={2.2} />
+            {channel.name}
+          </span>
+          <span className="channel-info-bar-sub">
+            {t(`${channel.subscriberCount} 人已订阅`, `${channel.subscriberCount} subscribers`)}
+          </span>
+        </div>
+        {isOwn ? (
+          <button type="button" className="channel-manage-btn" onClick={() => setManageChannelOpen(true)}>
+            <Settings size={13} strokeWidth={2.2} />
+            {t('管理频道', 'Manage')}
+          </button>
+        ) : channel.tiers.length > 0 ? (
+          <button type="button" className="channel-manage-btn" onClick={() => openChannelSubscribe(channel.id)}>
+            {mySubscribedTierIndex != null
+              ? t(`已订阅 · ${channel.tiers[mySubscribedTierIndex].name}`, `Subscribed · ${channel.tiers[mySubscribedTierIndex].name}`)
+              : t('订阅', 'Subscribe')}
+          </button>
+        ) : null}
+      </div>
+    </div>
+  ) : isOwn ? (
+    <button type="button" className="channel-create-entry channel-create-entry--subtle" onClick={openCreateChannel}>
+      <Radio size={14} strokeWidth={2.2} />
+      {t('开通频道 · 发布专属内容', 'Create a channel · Share exclusive content')}
+    </button>
+  ) : null;
+
   return (
     <div className="page">
       {!isOwn && <PageHeader title={authorName} onBack={canGoBack ? goBack : undefined} />}
@@ -128,48 +162,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           ) : null}
         </div>
 
-        {/* ── 频道信息条 ── */}
-        {channel ? (
-          <div className="channel-info-bar">
-            <div className="channel-info-bar-top">
-              <div className="channel-info-bar-left">
-                <span className="channel-info-bar-name">
-                  <Radio size={13} strokeWidth={2.2} />
-                  {channel.name}
-                </span>
-                <span className="channel-info-bar-sub">
-                  {t(`${channel.subscriberCount} 人已订阅 · ${channel.category}`, `${channel.subscriberCount} subscribers · ${channel.category}`)}
-                </span>
-              </div>
-              {isOwn ? (
-                <button type="button" className="channel-manage-btn" onClick={() => setManageChannelOpen(true)}>
-                  <Settings size={13} strokeWidth={2.2} />
-                  {t('管理频道', 'Manage')}
-                </button>
-              ) : channel.tiers.length > 0 ? (
-                <button type="button" className="channel-manage-btn" onClick={() => openChannelSubscribe(channel.id)}>
-                  {mySubscribedTierIndex != null
-                    ? t(`已订阅 · ${channel.tiers[mySubscribedTierIndex].name}`, `Subscribed · ${channel.tiers[mySubscribedTierIndex].name}`)
-                    : t('订阅', 'Subscribe')}
-                </button>
-              ) : null}
-            </div>
-            {channel.tiers.length > 0 && (
-              <div className="channel-info-bar-tiers">
-                {channel.tiers.map((tier, idx) => (
-                  <span key={tier.id} className={`channel-tier-chip${mySubscribedTierIndex === idx ? ' channel-tier-chip--active' : ''}`}>
-                    {tier.name} · {tier.price} PB/{t('月', 'mo')}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : isOwn ? (
-          <button type="button" className="channel-create-entry" onClick={openCreateChannel}>
-            <Radio size={14} strokeWidth={2.2} />
-            {t('开通频道 · 支付 1000 PB', 'Create a channel · Pay 1000 PB')}
-          </button>
-        ) : null}
+        {/* 他人主页：频道信息条 → 关注数据 → 关注/打赏/私信 操作 */}
+        {!isOwn && channelSection}
 
         {!isOwn && (
           <div className="profile-mini-stats">
@@ -214,8 +208,9 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           </div>
         )}
 
+        {/* 自己主页：身份之后先展示核心社交数据，频道入口作为次优先级弱化展示 */}
         {isOwn && (
-          <div className="profile-mini-stats profile-mini-stats--bordered">
+          <div className="profile-mini-stats">
             <button type="button" className="profile-mini-stat profile-mini-stat--btn" onClick={() => setFollowListType('following')}>
               <span className="profile-mini-stat-num">{followedAuthors.size}</span>
               <span className="profile-mini-stat-label">{t('关注', 'Following')}</span>
@@ -226,6 +221,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             </button>
           </div>
         )}
+
+        {isOwn && channelSection}
 
         {/* 自己主页显示帖子/收藏 tab；他人主页只显示标签 */}
         {isOwn ? (
@@ -238,7 +235,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               aria-selected={profileTab === 0}
             >
               <FileText size={14} strokeWidth={2} />
-              {t('我的帖子', 'My Posts')}
+              {t('帖子', 'Posts')}
             </button>
             <button
               type="button"
@@ -282,10 +279,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 onClick={() => setContentFilter(f)}
               >
                 {f === 'all' ? <LayoutGrid size={14} strokeWidth={2} /> : f === 'free' ? <Eye size={14} strokeWidth={2} /> : <Lock size={14} strokeWidth={2} />}
-                {f === 'all' ? t('全部', 'All') : f === 'free' ? t('全员免费', 'Free') : t('会员专属', 'Members')}
-                <span className="profile-content-tab-badge" style={{ background: contentFilter === f ? 'var(--ku-color-primary)' : 'var(--ku-color-text-secondary)' }}>
-                  {f === 'all' ? myPosts.length : f === 'free' ? myPosts.filter(p => !isChannelExclusive(p)).length : myPosts.filter(isChannelExclusive).length}
-                </span>
+                {f === 'all' ? t('全部', 'All') : f === 'free' ? t('免费', 'Free') : t('会员', 'Members')}
               </button>
             ))}
           </nav>

@@ -59,7 +59,8 @@ export type AppContextValue = {
   subscribedChannelTiers: Record<string, number>;
   openChannelSubscribe: (channelId: string) => void;
   subscribeToChannelTier: (channelId: string, tierIndex: number) => void;
-  stagePendingChannel: (data: NewChannelData) => void;
+  // 开通频道：一步完成——校验通过后直接建号（1000 PB + 100 PB + 0.1 SUP 由弹窗自身走支付动画后调用）
+  createChannel: (data: NewChannelData) => void;
   updateChannel: (channelId: string, data: NewChannelData) => void;
   openCreateChannel: () => void;
   createChannelOpen: boolean;

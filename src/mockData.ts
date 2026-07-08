@@ -31,7 +31,8 @@ export function isVerifiedAuthor(name: string): boolean {
 /** 创世节点持有者身份标记（1000/10000 两档，对应银/金徽章）——链上认购项目独立于本项目，此处仅 mock 展示 */
 export const GENESIS_NODE_OWNERS: Record<string, 'silver' | 'gold'> = {
   '极客前沿': 'silver',
-  '产品大叔严磊': 'gold',
+  '产品大叔严磊': 'silver',
+  'AI 效率研究所': 'gold',
 };
 
 export function getGenesisTier(name: string): 'silver' | 'gold' | null {
@@ -69,6 +70,19 @@ export const ALL_CHANNELS: Channel[] = [
       { id: 'jike-3', name: 'Lv.3', price: 400 },
     ],
     subscriberCount: 215, createdAt: '2026-04-22',
+  },
+  {
+    id: 'channel-aieff', ownerName: 'AI 效率研究所', name: 'AI 效率研究所·工具箱',
+    description: 'AI 工具评测、提示词模板与效率工作流，五档订阅覆盖轻度到深度用户。',
+    avatarSeed: 'AI 效率研究所', category: 'AI / 大模型',
+    tiers: [
+      { id: 'aieff-1', name: 'Lv.1', price: 20 },
+      { id: 'aieff-2', name: 'Lv.2', price: 60 },
+      { id: 'aieff-3', name: 'Lv.3', price: 150 },
+      { id: 'aieff-4', name: 'Lv.4', price: 350 },
+      { id: 'aieff-5', name: 'Lv.5', price: 800 },
+    ],
+    subscriberCount: 124, createdAt: '2026-03-15',
   },
 ];
 
