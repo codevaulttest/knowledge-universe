@@ -5383,7 +5383,7 @@ button {
   height: 56px;
   margin-bottom: 4px;
   border-radius: var(--ku-radius-circle);
-  background: var(--ku-color-success-text);
+  background: var(--ku-color-primary);
   color: var(--ku-color-on-primary);
 }
 .channel-success-title {
