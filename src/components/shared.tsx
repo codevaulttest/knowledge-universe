@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, Crown, FileText, Link, Lock, Medal, Star } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, Crown, FileText, Gem, Link, Lock, Star } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { isVerifiedAuthor } from '../mockData';
@@ -46,7 +46,7 @@ export function ChannelMemberBadge({ tierName, size = 12 }: { tierName: string; 
       aria-label={t(`频道会员 · ${tierName}`, `Channel member · ${tierName}`)}
       title={t(`频道会员 · ${tierName}`, `Channel member · ${tierName}`)}
     >
-      <Medal size={size} strokeWidth={2.4} />
+      <Gem size={size} strokeWidth={2.4} />
       <span className="channel-member-badge-text">{tierName}</span>
     </span>
   );

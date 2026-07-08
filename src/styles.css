@@ -2626,9 +2626,10 @@ button {
   margin-bottom: 4px;
 }
 .detail-reply-author {
-  font: 600 13px/1 var(--ku-font-family);
+  font: 600 13px/1.3 var(--ku-font-family);
   color: var(--ku-color-text-primary);
 }
+/* AuthorName 会同时带上 .author-name-row；这里显式保留场景字重，避免被 inherit 打回正文样式 */
 .detail-reply-author.author-name-row,
 .profile-name.author-name-row,
 .follow-item-name.author-name-row,
@@ -2637,13 +2638,17 @@ button {
   font: inherit;
   color: inherit;
 }
+.detail-reply-author.author-name-row {
+  font: 600 13px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
 .detail-reply-time {
   font: var(--ku-text-meta);
   color: var(--ku-color-text-meta);
 }
 .detail-reply-text {
   margin: 0;
-  font: var(--ku-text-post-body);
+  font: var(--ku-text-body-sm);
   color: var(--ku-color-text-primary);
 }
 .reply-like-btn {
