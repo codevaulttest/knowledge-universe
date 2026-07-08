@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bookmark, Check, Ellipsis, HandCoins, MessageCircle, Repeat2, ThumbsUp, Trash2, Users } from 'lucide-react';
+import { Bookmark, Check, Ellipsis, HandCoins, MessageCircle, Radio, Repeat2, ThumbsUp, Trash2, Users } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
@@ -267,6 +267,12 @@ export function PostCard({
           </span>
           <div className="author-meta-row">
             <span className="author-time">{localizeTime(post.time, language)}</span>
+            {channel && (
+              <span className="post-channel-badge" aria-label={t(`归属频道《${channel.name}》`, `Published to channel "${channel.name}"`)}>
+                <Radio size={11} strokeWidth={2.2} />
+                {channel.name}
+              </span>
+            )}
             {isOwn && post.isNode && (
               <span className="post-visibility-badge">
                 {post.visiblePercent === 100
