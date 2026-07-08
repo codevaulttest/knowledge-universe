@@ -1054,6 +1054,16 @@ button {
 .gemini-label { color: var(--ku-gemini-text); font-weight: 700; letter-spacing: 0.01em; }
 .gemini-sep   { color: var(--ku-gemini-border); font-size: 13px; line-height: 1; }
 .gemini-id    { color: var(--ku-gemini-id); font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.04em; }
+.gemini-id-goto {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  color: var(--ku-gemini-id);
+  opacity: 0.7;
+}
+.gemini-id-goto:active { opacity: 1; }
 /* 链接 CTA */
 .gemini-chain {
   display: flex;
@@ -2079,6 +2089,17 @@ button {
 .stake-tier-option--active {
   border-color: var(--ku-color-primary);
   background: var(--ku-color-primary-alpha-06);
+}
+/* 频道会员档位卡片：用会员小标同色系区分于知识星球的质押档位卡片，避免两组视觉雷同 */
+.compose-stake-section--channel .compose-stake-heading {
+  color: var(--ku-color-member-badge);
+}
+.compose-stake-section--channel .toggle-switch--on {
+  background: var(--ku-color-member-badge);
+}
+.stake-tier-option--channel.stake-tier-option--active {
+  border-color: var(--ku-color-member-badge);
+  background: var(--ku-color-member-badge-bg);
 }
 .stake-tier-option__amount {
   font: 600 13px/1 var(--ku-font-family);
@@ -3777,6 +3798,10 @@ button {
 }
 
 /* ─── 个人主页内容 tab（帖子 / 收藏）─── */
+.profile-content-tabs-wrap {
+  position: relative;
+}
+
 .profile-content-tabs {
   display: flex;
   border-bottom: 1px solid var(--ku-color-border);
@@ -3791,6 +3816,28 @@ button {
   display: none;
 }
 
+.profile-content-tabs-fade {
+  position: absolute;
+  top: 0;
+  bottom: 1px;
+  width: 28px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 1;
+}
+.profile-content-tabs-fade--left {
+  left: 0;
+  background: linear-gradient(to right, var(--ku-color-bg-phone), transparent);
+}
+.profile-content-tabs-fade--right {
+  right: 0;
+  background: linear-gradient(to left, var(--ku-color-bg-phone), transparent);
+}
+.profile-content-tabs-fade--visible {
+  opacity: 1;
+}
+
 .profile-content-tab {
   position: relative;
   display: flex;
@@ -3803,6 +3850,8 @@ button {
   border: none;
   background: none;
   cursor: pointer;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .profile-content-tab:hover {

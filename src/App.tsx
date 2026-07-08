@@ -493,7 +493,7 @@ export default function App() {
         {route.page === 'P6' && <ProfilePage authorName={route.authorName} />}
         {route.page === 'P7' && <ActivityPage />}
         {route.page === 'P_SEARCH' && <SearchPage />}
-        {route.page === 'P_PLANET' && <KnowledgePlanetPage />}
+        {route.page === 'P_PLANET' && <KnowledgePlanetPage initialSearch={route.searchNodeCode} />}
         {route.page === 'P_DM' && <DmListPage />}
         {route.page === 'P_DM_CHAT' && <DmChatPage peerId={route.peerId} />}
 

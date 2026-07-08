@@ -397,7 +397,7 @@ export function PostContent({
 }
 
 // ── GeminiNodeBadge ────────────────────────────────────────────
-export function GeminiNodeBadge({ post, showChain = true, onViewLinks }: { post: Post; showChain?: boolean; onViewLinks?: () => void }) {
+export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPlanet }: { post: Post; showChain?: boolean; onViewLinks?: () => void; onGoToPlanet?: () => void }) {
   const { openLink, linkedPostIds, t } = useApp();
   const isLinked = linkedPostIds.has(post.id);
 
@@ -424,6 +424,16 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks }: { post:
         <Rating value={post.rating} />
         <span className="gemini-sep">·</span>
         <span className="gemini-id">{post.nodeId}</span>
+        {onGoToPlanet && (
+          <button
+            type="button"
+            className="gemini-id-goto"
+            onClick={(e) => { e.stopPropagation(); onGoToPlanet(); }}
+            aria-label={t(`在知识星球中查看节点 ${post.nodeId}`, `View node ${post.nodeId} in Knowledge Planet`)}
+          >
+            <ChevronRight size={14} strokeWidth={2.5} />
+          </button>
+        )}
       </div>
       {showChain && (
         isLinked ? (

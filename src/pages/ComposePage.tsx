@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { FileText, Image, Plus, Radio, Save, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react';
+import { Camera, FileText, Image, Plus, Radio, Save, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { CURRENT_USER } from '../mockData';
@@ -35,6 +35,9 @@ export function ComposePage({
   const [publishToChannel, setPublishToChannel] = useState(false);
   const [minTierIndex, setMinTierIndex] = useState<number | undefined>(undefined);
   const [imgCount, setImgCount] = useState(draft?.imgCount ?? 0);
+  // 用户通过系统相册/拍照选中的图片，生成本地预览用的 object URL（草稿里已有的旧图没有真实文件，仅按数量占位展示）
+  const [imgUrls, setImgUrls] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [hasVideo, setHasVideo] = useState(draft?.hasVideo ?? false);
   const [articleMode, setArticleMode] = useState(draft?.kind === 'article');
   const [articleTitle, setArticleTitle] = useState(draft?.articleTitle ?? '');
@@ -76,6 +79,11 @@ export function ComposePage({
     } catch { /* ignore */ }
     setActiveFormats(fmts);
   };
+
+  // 卸载时释放所有本地图片预览的 object URL，避免内存泄漏（用 ref 拿最新值，避免每次 imgUrls 变化都误触发清理）
+  const imgUrlsRef = useRef<string[]>([]);
+  useEffect(() => { imgUrlsRef.current = imgUrls; }, [imgUrls]);
+  useEffect(() => () => { imgUrlsRef.current.forEach(url => URL.revokeObjectURL(url)); }, []);
 
   useEffect(() => {
     if (!articleMode) return;
@@ -172,8 +180,27 @@ export function ComposePage({
   };
 
   const handleAddImage = () => {
-    if (hasVideo || articleMode) return;
-    setImgCount(c => Math.min(c + 1, 9));
+    if (hasVideo || articleMode || imgCount >= 9) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleFilesSelected = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ''; // 允许连续选中同一张图也能重新触发 change
+    if (!files.length) return;
+    const picked = files.slice(0, Math.max(0, 9 - imgCount));
+    if (!picked.length) return;
+    setImgUrls(prev => [...prev, ...picked.map(f => URL.createObjectURL(f))]);
+    setImgCount(c => Math.min(c + picked.length, 9));
+  };
+
+  const handleRemoveImage = (idx: number) => {
+    setImgUrls(prev => {
+      const url = prev[idx];
+      if (url) URL.revokeObjectURL(url);
+      return prev.filter((_, i) => i !== idx);
+    });
+    setImgCount(c => Math.max(0, c - 1));
   };
 
   const handleToggleVideo = () => {
@@ -445,12 +472,24 @@ export function ComposePage({
             {/* 图片添加 & 已选图片（编辑模式隐藏）*/}
             {!isEditMode && !hasVideo && (
               <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFilesSelected}
+                  style={{ display: 'none' }}
+                />
                 <div className="compose-img-grid">
                   {Array.from({ length: imgCount }, (_, i) => (
-                    <div key={i} className="compose-img-thumb">
+                    <div
+                      key={i}
+                      className="compose-img-thumb"
+                      style={imgUrls[i] ? { backgroundImage: `url(${imgUrls[i]})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                    >
                       <button
                         className="compose-img-remove"
-                        onClick={() => setImgCount(c => Math.max(0, c - 1))}
+                        onClick={() => handleRemoveImage(i)}
                         aria-label={t('移除图片', 'Remove image')}
                       >
                         <X size={10} strokeWidth={2.5} />
@@ -462,9 +501,9 @@ export function ComposePage({
                       type="button"
                       className="compose-img-add"
                       onClick={handleAddImage}
-                      aria-label={t('添加图片', 'Add image')}
+                      aria-label={t('拍照或从相册选择图片', 'Take a photo or choose from your library')}
                     >
-                      <Plus size={18} strokeWidth={2} />
+                      <Camera size={18} strokeWidth={2} />
                     </button>
                   )}
                 </div>
@@ -494,6 +533,58 @@ export function ComposePage({
               </div>
             )}
           </>
+        )}
+
+        {/* 发布至我的频道（仅频道主可见）—— 频道门槛优先于知识星球单条付费生效，所以放在前面 */}
+        {!isEditMode && myChannel && (
+          <div className="compose-section compose-stake-section compose-stake-section--channel">
+            <div className="compose-stake-heading">
+              <Radio size={16} strokeWidth={2} />
+              <span>{t(`发布至我的频道《${myChannel.name}》`, `Publish to my channel "${myChannel.name}"`)}</span>
+              <button
+                type="button"
+                className={`toggle-switch${publishToChannel ? ' toggle-switch--on' : ''}`}
+                onClick={() => setPublishToChannel(v => !v)}
+                role="switch"
+                aria-checked={publishToChannel}
+                style={{ marginLeft: 'auto' }}
+              >
+                <span className="toggle-thumb" />
+              </button>
+            </div>
+            {publishToChannel && myChannel.tiers.length > 0 && (
+              <>
+                <p className="compose-stake-hint">
+                  {t('选择可见的最低会员档位', 'Choose the minimum tier required to view')}
+                </p>
+                <div className="stake-tier-list" role="radiogroup" aria-label={t('可见档位', 'Visible tier')}>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={minTierIndex === undefined}
+                    className={`stake-tier-option stake-tier-option--channel${minTierIndex === undefined ? ' stake-tier-option--active' : ''}`}
+                    onClick={() => setMinTierIndex(undefined)}
+                  >
+                    <span className="stake-tier-option__amount">{t('不限档位', 'No tier restriction')}</span>
+                    <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子', 'No channel subscription needed to see this post')}</span>
+                  </button>
+                  {myChannel.tiers.map((tier, idx) => (
+                    <button
+                      key={tier.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={minTierIndex === idx}
+                      className={`stake-tier-option stake-tier-option--channel${minTierIndex === idx ? ' stake-tier-option--active' : ''}`}
+                      onClick={() => setMinTierIndex(idx)}
+                    >
+                      <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月', 'mo')}</span>
+                      <span className="stake-tier-option__desc">{t(`需订阅达到 ${tier.name} 及以上`, `Requires ${tier.name} subscription or above`)}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         )}
 
         {/* 参与知识星球面额（编辑模式隐藏；长文 / 普通帖均可选择，非强制）*/}
@@ -562,58 +653,6 @@ export function ComposePage({
               <p className="compose-stake-hint">
                 {t('建议单条解锁价为该档月费的 2–10 倍', 'Suggested unlock price: 2–10× the tier’s monthly fee')}
               </p>
-            )}
-          </div>
-        )}
-
-        {/* 发布至我的频道（仅频道主可见）*/}
-        {!isEditMode && myChannel && (
-          <div className="compose-section compose-stake-section">
-            <div className="compose-stake-heading">
-              <Radio size={16} strokeWidth={2} />
-              <span>{t(`发布至我的频道《${myChannel.name}》`, `Publish to my channel "${myChannel.name}"`)}</span>
-              <button
-                type="button"
-                className={`toggle-switch${publishToChannel ? ' toggle-switch--on' : ''}`}
-                onClick={() => setPublishToChannel(v => !v)}
-                role="switch"
-                aria-checked={publishToChannel}
-                style={{ marginLeft: 'auto' }}
-              >
-                <span className="toggle-thumb" />
-              </button>
-            </div>
-            {publishToChannel && myChannel.tiers.length > 0 && (
-              <>
-                <p className="compose-stake-hint">
-                  {t('选择可见的最低会员档位，不选则全员免费公开', 'Choose the minimum tier required to view; leave unselected for a fully public post')}
-                </p>
-                <div className="stake-tier-list" role="radiogroup" aria-label={t('可见档位', 'Visible tier')}>
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={minTierIndex === undefined}
-                    className={`stake-tier-option${minTierIndex === undefined ? ' stake-tier-option--active' : ''}`}
-                    onClick={() => setMinTierIndex(undefined)}
-                  >
-                    <span className="stake-tier-option__amount">{t('全员免费', 'Public')}</span>
-                    <span className="stake-tier-option__desc">{t('不限档位，所有人可见', 'Visible to everyone, no subscription needed')}</span>
-                  </button>
-                  {myChannel.tiers.map((tier, idx) => (
-                    <button
-                      key={tier.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={minTierIndex === idx}
-                      className={`stake-tier-option${minTierIndex === idx ? ' stake-tier-option--active' : ''}`}
-                      onClick={() => setMinTierIndex(idx)}
-                    >
-                      <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月', 'mo')}</span>
-                      <span className="stake-tier-option__desc">{t(`需订阅达到 ${tier.name} 及以上`, `Requires ${tier.name} subscription or above`)}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
             )}
           </div>
         )}

@@ -92,6 +92,7 @@ export const ALL_POSTS: Post[] = [
     title: 'AI 产品截图 × 提示词模板合集。精选 12 款工具的实测截图，附 3 个月高频使用总结的提示词模板，拿来即用。',
     kind: 'image', imageCount: 3, visiblePercent: 50, isNode: true, stakeTier: 1000, nodeId: 'Kx7mR2',
     rating: 4, replies: 18, links: 42, shares: 36, saves: 152, likes: 306,
+    channelId: 'channel-aieff',
   },
   {
     id: 'p7', author: '产品大叔严磊', time: '3 天前',
@@ -258,10 +259,10 @@ export const ALL_POSTS: Post[] = [
 export const POST_REPLIES: Record<string, Reply[]> = {
   p1: [
     { id: 'r1a', author: '游牧开发者', time: '1 小时前', text: '这个模板真的太有用了，拿来即用！', avatarIdx: 1, likes: 12 },
-    { id: 'r1b', author: '深海鱼炸弹', time: '2 小时前', text: '哪个工具最好用？最近在对比 Claude 和 GPT-4o。', avatarIdx: 2, likes: 8 },
-    { id: 'r1c', author: '极客前沿', time: '2 小时前', text: '提示词模板那部分很有价值，已收藏。', avatarIdx: 0, likes: 15 },
+    { id: 'r1b', author: '深海鱼炸弹', time: '2 小时前', text: '哪个工具最好用？最近在对比 Claude 和 GPT-4o。', avatarIdx: 2, likes: 8, channelTierName: 'Lv.3' },
+    { id: 'r1c', author: '极客前沿', time: '2 小时前', text: '提示词模板那部分很有价值，已收藏。', avatarIdx: 0, likes: 15, channelTierName: 'Lv.5' },
     { id: 'r1d', author: '设计师刘然', time: '2 小时前', text: '我也整理过类似的合集，感觉你总结的更系统一些。', avatarIdx: 0, likes: 6 },
-    { id: 'r1e', author: '产品大叔严磊', time: '3 小时前', text: '对 B 端产品设计有很好的借鉴作用，马住！', avatarIdx: 1, likes: 3 },
+    { id: 'r1e', author: '产品大叔严磊', time: '3 小时前', text: '对 B 端产品设计有很好的借鉴作用，马住！', avatarIdx: 1, likes: 3, channelTierName: 'Lv.1' },
     { id: 'r1f', author: '阿May的研究笔记', time: '3 小时前', text: '实测了几个模板，效果确实比自己瞎写的要好。', avatarIdx: 1, likes: 7 },
     { id: 'r1g', author: '游牧开发者', time: '4 小时前', text: '太强了！正好在写项目文档，太需要这个了。', avatarIdx: 2, likes: 0 },
     { id: 'r1h', author: '深海鱼炸弹', time: '4 小时前', text: '已经转发给同事，大家都说总结得很接地气。', avatarIdx: 2, likes: 2 },

@@ -49,7 +49,7 @@ export type Route =
   | { page: 'P6'; authorName: string }
   | { page: 'P7' }
   | { page: 'P_SEARCH' }
-  | { page: 'P_PLANET' }
+  | { page: 'P_PLANET'; searchNodeCode?: string }
   | { page: 'P_DM' }
   | { page: 'P_DM_CHAT'; peerId: string };
 

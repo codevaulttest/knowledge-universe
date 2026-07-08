@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Bell, Bookmark, Camera, Check, Edit3, Eye, FileText, HandCoins, Languages, LayoutGrid, Lock, MessageCircle, Radio, Repeat2, Settings, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
@@ -42,8 +42,22 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const [confirmDeleteDraftId, setConfirmDeleteDraftId] = useState<string | null>(null);
   const [tipTarget, setTipTarget] = useState<{ context: 'post' | 'author'; postTitle?: string } | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const tabsScrollRef = useRef<HTMLElement | null>(null);
+  const [tabsCanScrollLeft, setTabsCanScrollLeft] = useState(false);
+  const [tabsCanScrollRight, setTabsCanScrollRight] = useState(false);
+  const updateTabsScrollState = () => {
+    const el = tabsScrollRef.current;
+    if (!el) return;
+    setTabsCanScrollLeft(el.scrollLeft > 4);
+    setTabsCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+  useEffect(() => {
+    updateTabsScrollState();
+    window.addEventListener('resize', updateTabsScrollState);
+    return () => window.removeEventListener('resize', updateTabsScrollState);
+  }, [isOwn, language]);
 
-  // 频道三级可见性：全员免费（无 minTierIndex）/ 会员专属（设了 minTierIndex，需订阅达标才可见）
+  // 频道订阅门槛：不限档位（无 minTierIndex，无需订阅即可看到）/ 会员专属（设了 minTierIndex，需订阅达标才可见；是否收费另由知识星球单条付费决定）
   const isChannelExclusive = (p: (typeof allPosts)[number]) => !!channel && p.channelId === channel.id && p.minTierIndex != null;
   const filteredOtherPosts = (() => {
     if (contentFilter === 'free') return myPosts.filter(p => !isChannelExclusive(p));
@@ -225,7 +239,13 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
         {/* 自己主页显示帖子/收藏 tab；他人主页只显示标签 */}
         {isOwn ? (
-          <nav className="profile-content-tabs" aria-label={t('内容分类', 'Content categories')}>
+          <div className="profile-content-tabs-wrap">
+          <nav
+            className="profile-content-tabs"
+            aria-label={t('内容分类', 'Content categories')}
+            ref={tabsScrollRef as React.RefObject<HTMLElement>}
+            onScroll={updateTabsScrollState}
+          >
             <button
               type="button"
               id="profile-tab-posts"
@@ -268,8 +288,17 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               {t('收藏', 'Saved')}
             </button>
           </nav>
+          <div className={`profile-content-tabs-fade profile-content-tabs-fade--left${tabsCanScrollLeft ? ' profile-content-tabs-fade--visible' : ''}`} aria-hidden="true" />
+          <div className={`profile-content-tabs-fade profile-content-tabs-fade--right${tabsCanScrollRight ? ' profile-content-tabs-fade--visible' : ''}`} aria-hidden="true" />
+          </div>
         ) : (
-          <nav className="profile-content-tabs" aria-label={t('内容筛选', 'Content filter')}>
+          <div className="profile-content-tabs-wrap">
+          <nav
+            className="profile-content-tabs"
+            aria-label={t('内容筛选', 'Content filter')}
+            ref={tabsScrollRef as React.RefObject<HTMLElement>}
+            onScroll={updateTabsScrollState}
+          >
             {(['all', 'free', 'sub'] as const).map(f => (
               <button
                 key={f}
@@ -278,10 +307,13 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 onClick={() => setContentFilter(f)}
               >
                 {f === 'all' ? <LayoutGrid size={14} strokeWidth={2} /> : f === 'free' ? <Eye size={14} strokeWidth={2} /> : <Lock size={14} strokeWidth={2} />}
-                {f === 'all' ? t('全部', 'All') : f === 'free' ? t('免费', 'Free') : t('会员', 'Members')}
+                {f === 'all' ? t('全部', 'All') : f === 'free' ? t('不限档位', 'No tier') : t('会员', 'Members')}
               </button>
             ))}
           </nav>
+          <div className={`profile-content-tabs-fade profile-content-tabs-fade--left${tabsCanScrollLeft ? ' profile-content-tabs-fade--visible' : ''}`} aria-hidden="true" />
+          <div className={`profile-content-tabs-fade profile-content-tabs-fade--right${tabsCanScrollRight ? ' profile-content-tabs-fade--visible' : ''}`} aria-hidden="true" />
+          </div>
         )}
 
         {profileTab === 1 ? (

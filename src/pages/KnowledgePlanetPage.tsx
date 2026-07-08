@@ -153,7 +153,7 @@ function seedNodesWithChannel(channels: { ownerName: string; id: string; created
   ];
 }
 
-export function KnowledgePlanetPage() {
+export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string } = {}) {
   const { goBack, canGoBack, showToast, t, language, channels, supBalance, rechargeSup } = useApp();
   const zh = language === 'zh-CN';
   const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
@@ -165,7 +165,7 @@ export function KnowledgePlanetPage() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [upgradeTarget, setUpgradeTarget] = useState<KnowledgeNode | null>(null);
   const [upgrading, setUpgrading] = useState(false);
-  const [nodeSearch, setNodeSearch] = useState('');
+  const [nodeSearch, setNodeSearch] = useState(initialSearch ?? '');
   const [starFilter, setStarFilter] = useState<number | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showWithdrawSheet, setShowWithdrawSheet] = useState(false);
