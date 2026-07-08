@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Bell, CalendarCheck, Radio } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Bell, CalendarCheck, Radio, RefreshCw } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
-import type { Post, RepostedBy } from '../types';
+import type { Channel, Post, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { GenesisBanner } from '../components/GenesisBanner';
 import { Avatar } from '../components/shared';
@@ -89,12 +89,30 @@ function FollowFeed({ followedAuthors }: { followedAuthors: Set<string> }) {
 }
 
 // ── ChannelDiscoverFeed（频道发现：类似 YouTube 频道推荐）──────────
+const CHANNEL_DISCOVER_BATCH = 3;
+
+function pickDiscoverBatch(pool: Channel[], batchIndex: number): Channel[] {
+  if (pool.length <= CHANNEL_DISCOVER_BATCH) return pool;
+  const start = (batchIndex * CHANNEL_DISCOVER_BATCH) % pool.length;
+  const batch: Channel[] = [];
+  for (let i = 0; i < CHANNEL_DISCOVER_BATCH; i++) {
+    batch.push(pool[(start + i) % pool.length]);
+  }
+  return batch;
+}
+
 function ChannelDiscoverFeed() {
   const { channels, subscribedChannelTiers, navigate, t } = useApp();
   const [scope, setScope] = useState<'all' | 'subscribed'>('all');
+  const [batchIndex, setBatchIndex] = useState(0);
+  const subscribedChannels = useMemo(
+    () => channels.filter(c => subscribedChannelTiers[c.id] != null),
+    [channels, subscribedChannelTiers],
+  );
   const displayedChannels = scope === 'subscribed'
-    ? channels.filter(c => subscribedChannelTiers[c.id] != null)
-    : channels;
+    ? subscribedChannels
+    : pickDiscoverBatch(channels, batchIndex);
+  const canRefresh = scope === 'all' && channels.length > CHANNEL_DISCOVER_BATCH;
 
   if (channels.length === 0) {
     return (
@@ -105,11 +123,12 @@ function ChannelDiscoverFeed() {
   }
   return (
     <section className="channel-discover-list">
-      <div className="channel-scope-tabs">
+      <nav className="channel-scope-nav" aria-label={t('频道范围', 'Channel scope')}>
         <button
           type="button"
           className={`channel-scope-tab${scope === 'all' ? ' channel-scope-tab--active' : ''}`}
           onClick={() => setScope('all')}
+          aria-selected={scope === 'all'}
         >
           {t('发现', 'Discover')}
         </button>
@@ -117,10 +136,30 @@ function ChannelDiscoverFeed() {
           type="button"
           className={`channel-scope-tab${scope === 'subscribed' ? ' channel-scope-tab--active' : ''}`}
           onClick={() => setScope('subscribed')}
+          aria-selected={scope === 'subscribed'}
         >
           {t('已订阅', 'Subscribed')}
         </button>
-      </div>
+      </nav>
+
+      {displayedChannels.length > 0 && (
+        <div className="channel-discover-section-head">
+          <span className="channel-discover-section-label">
+            {scope === 'all' ? t('为你推荐', 'Recommended for you') : t('我的订阅', 'My subscriptions')}
+          </span>
+          {canRefresh && (
+            <button
+              type="button"
+              className="channel-refresh-btn"
+              onClick={() => setBatchIndex(i => i + 1)}
+              aria-label={t('换一批频道推荐', 'Refresh channel recommendations')}
+            >
+              <RefreshCw size={13} strokeWidth={2.2} />
+              {t('换一批', 'Refresh')}
+            </button>
+          )}
+        </div>
+      )}
       {displayedChannels.length === 0 ? (
         <div className="empty-state">
           <p>{t('还没有订阅任何频道', "You haven't subscribed to any channels yet")}</p>

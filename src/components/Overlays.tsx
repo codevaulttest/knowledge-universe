@@ -1364,7 +1364,7 @@ export function ChannelCreatedSuccessModal({ onSetTiers, onDismiss }: {
             {t('频道开通成功', 'Channel created')}
           </h2>
           <p className="channel-success-message" id="channel-success-message">
-            {t('你可以为频道设置会员档位，发布专属内容', 'You can set membership tiers to share exclusive content')}
+            {t('设置会员档位后，用户订阅即可为你带来收益', 'Set membership tiers — earn when users subscribe')}
           </p>
         </div>
         <div className="channel-success-actions">

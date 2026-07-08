@@ -212,23 +212,57 @@ button {
   flex-direction: column;
   gap: 10px;
 }
-.channel-scope-tabs {
+.channel-scope-nav {
   display: flex;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-bg-page);
 }
 .channel-scope-tab {
-  padding: 6px 14px;
-  border-radius: 99px;
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: var(--ku-radius-pill);
   border: none;
-  background: var(--ku-color-bg-page);
+  background: transparent;
   color: var(--ku-color-text-secondary);
-  font: var(--ku-text-caption-strong);
+  font: 600 13px/1 var(--ku-font-family);
   cursor: pointer;
+  transition: background var(--ku-motion-fast), color var(--ku-motion-fast);
 }
 .channel-scope-tab--active {
-  background: var(--ku-color-primary-alpha-14);
+  background: var(--ku-color-bg-phone);
   color: var(--ku-color-primary-dark);
+  box-shadow: var(--ku-shadow-card);
+}
+.channel-discover-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+}
+.channel-discover-section-label {
+  font: 600 12px/1 var(--ku-font-family);
+  color: var(--ku-color-text-meta);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.channel-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 2px;
+  border: none;
+  background: transparent;
+  color: var(--ku-color-primary-dark);
+  font: var(--ku-text-caption-strong);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.channel-refresh-btn:active {
+  opacity: 0.72;
 }
 .channel-discover-card {
   display: flex;
@@ -5331,9 +5365,8 @@ button {
   height: 56px;
   margin-bottom: 4px;
   border-radius: var(--ku-radius-circle);
-  background: var(--ku-gradient-primary);
+  background: var(--ku-color-success-text);
   color: var(--ku-color-on-primary);
-  box-shadow: var(--ku-shadow-primary);
 }
 .channel-success-title {
   margin: 0;
