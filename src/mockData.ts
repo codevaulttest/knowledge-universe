@@ -10,6 +10,8 @@ export const BATCH_SIZE = 3;
 
 export const MOCK_WALLET_ADDRESS = '0x7a3fb8e2d1c94f6a5b3e0d9c8f2a7e1b4d6c3e8';
 export const DEFAULT_WALLET_DISPLAY = MOCK_WALLET_ADDRESS.slice(-6);
+/** 演示用外部钱包可充值余额，用于「充值 SUP」输入框的"全部"快捷按钮 */
+export const MOCK_WALLET_SUP_BALANCE = 68;
 /** 演示登录用户：与钱包短名一致，避免与中文昵称人格混用 */
 export const CURRENT_USER = DEFAULT_WALLET_DISPLAY;
 
@@ -375,6 +377,18 @@ export const likedReplyIdsStore = new Set<string>();
 
 // ── 互动通知（针对当前用户帖子 p9）──────────────────────────────
 export const ACTIVITY_GROUPS: ActivityGroup[] = [
+  {
+    id: 'ags1', type: 'subscribe', time: '30 分钟前', isRead: false,
+    actors: [{ user: '游牧开发者', avatarIdx: 2 }],
+    channelName: `${DEFAULT_WALLET_DISPLAY}的频道`,
+    tierName: 'Lv.2',
+  },
+  {
+    id: 'ags2', type: 'subscribe', time: '5 小时前', isRead: false,
+    actors: [{ user: '产品大叔严磊', avatarIdx: 2 }, { user: '设计师刘然', avatarIdx: 0 }],
+    channelName: `${DEFAULT_WALLET_DISPLAY}的频道`,
+    tierName: 'Lv.1',
+  },
   {
     id: 'agt1', type: 'tip', postId: 'p9', time: '1 小时前', isRead: false,
     actors: [{ user: '阿May的研究笔记', avatarIdx: 1 }],

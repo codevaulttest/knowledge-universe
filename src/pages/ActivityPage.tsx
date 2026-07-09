@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bookmark, HandCoins, Link, MessageCircle, Repeat2, ThumbsUp } from 'lucide-react';
+import { Bookmark, HandCoins, Link, MessageCircle, Radio, Repeat2, ThumbsUp } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS } from '../mockData';
 import { Avatar, PageHeader } from '../components/shared';
@@ -14,6 +14,7 @@ const ACTION_LABEL: Record<ActivityType, { zh: string; en: string }> = {
   comment: { zh: '评论', en: 'commented on' },
   link:    { zh: '链接', en: 'linked' },
   tip:     { zh: '打赏', en: 'tipped' },
+  subscribe: { zh: '订阅', en: 'subscribed to' },
 };
 
 const ACTION_ICON: Record<ActivityType, React.ReactNode> = {
@@ -23,11 +24,29 @@ const ACTION_ICON: Record<ActivityType, React.ReactNode> = {
   comment: <MessageCircle size={13} strokeWidth={2.2} />,
   link:    <Link size={13} strokeWidth={2.2} />,
   tip:     <HandCoins size={13} strokeWidth={2.2} />,
+  subscribe: <Radio size={13} strokeWidth={2.2} />,
 };
 
 function groupText(group: ActivityGroup, zh: boolean): string {
-  const label = zh ? ACTION_LABEL[group.type].zh : ACTION_LABEL[group.type].en;
   const actors = group.actors;
+  if (group.type === 'subscribe') {
+    const channel = group.channelName ?? (zh ? '你的频道' : 'your channel');
+    const tier = group.tierName ? (zh ? ` · ${group.tierName}` : ` · ${group.tierName}`) : '';
+    if (actors.length === 1) {
+      return zh
+        ? `${actors[0].user} 订阅了你的频道「${channel}」${tier}`
+        : `${actors[0].user} subscribed to your channel "${channel}"${tier}`;
+    }
+    if (actors.length === 2) {
+      return zh
+        ? `${actors[0].user}、${actors[1].user} 订阅了你的频道「${channel}」${tier}`
+        : `${actors[0].user} and ${actors[1].user} subscribed to your channel "${channel}"${tier}`;
+    }
+    return zh
+      ? `${actors[0].user}、${actors[1].user} 等 ${actors.length} 人订阅了你的频道「${channel}」${tier}`
+      : `${actors[0].user}, ${actors[1].user} and ${actors.length - 2} others subscribed to your channel "${channel}"${tier}`;
+  }
+  const label = zh ? ACTION_LABEL[group.type].zh : ACTION_LABEL[group.type].en;
   if (group.type === 'comment') {
     return zh ? `${actors[0].user} 评论了你的帖子` : `${actors[0].user} commented on your post`;
   }
@@ -134,6 +153,15 @@ export function ActivityPage() {
     return raw.length > 36 ? raw.slice(0, 36) + '…' : raw;
   };
 
+  const getActivitySummary = (group: ActivityGroup) => {
+    if (group.type === 'subscribe') {
+      return group.tierName
+        ? t(`频道会员 · ${group.tierName}`, `Channel member · ${group.tierName}`)
+        : t('频道订阅', 'Channel subscription');
+    }
+    return group.postId ? getPostTitle(group.postId) : t('（帖子已删除）', '(Post deleted)');
+  };
+
   const tabs: { key: FilterTab; zh: string; en: string }[] = [
     { key: 'all',     zh: '全部',   en: 'All' },
     { key: 'link',    zh: '链接',   en: 'Links' },
@@ -142,6 +170,7 @@ export function ActivityPage() {
     { key: 'share',   zh: '转发',   en: 'Reposts' },
     { key: 'save',    zh: '收藏',   en: 'Saves' },
     { key: 'tip',     zh: '打赏',   en: 'Tips' },
+    { key: 'subscribe', zh: '订阅', en: 'Subscriptions' },
   ];
 
   return (
@@ -173,9 +202,15 @@ export function ActivityPage() {
             <ActivityItem
               key={group.id}
               group={group}
-              postTitle={getPostTitle(group.postId)}
+              postTitle={getActivitySummary(group)}
               isRead={group.isRead}
-              onNavigatePost={() => navigate({ page: 'P2', postId: group.postId })}
+              onNavigatePost={() => {
+                if (group.type === 'subscribe') {
+                  navigate({ page: 'P6', authorName: group.actors[0].user });
+                } else if (group.postId) {
+                  navigate({ page: 'P2', postId: group.postId });
+                }
+              }}
               onNavigateUser={(user) => navigate({ page: 'P6', authorName: user })}
             />
           ))

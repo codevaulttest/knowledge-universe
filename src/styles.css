@@ -3976,6 +3976,22 @@ button {
   flex-direction: column;
   max-height: 480px;
 }
+.follow-list-modal .follow-btn.follow-btn--sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.follow-list-modal .follow-btn.follow-btn--sm:not(.follow-btn--following) {
+  background: transparent;
+  color: var(--ku-color-primary);
+  box-shadow: none;
+}
+.follow-list-modal .follow-btn.follow-btn--sm:not(.follow-btn--following):active {
+  background: var(--ku-color-primary-alpha-06);
+}
+.follow-list-modal .follow-btn.follow-btn--sm svg {
+  flex-shrink: 0;
+}
 
 .follow-list-header {
   display: flex;
@@ -4894,7 +4910,7 @@ button {
 .planet-claim-btn {
   flex-shrink: 0;
   padding: 10px 16px;
-  border-radius: var(--ku-radius-card);
+  border-radius: var(--ku-radius-pill);
   background: var(--ku-gradient-primary);
   color: var(--ku-color-on-primary);
   font: var(--ku-text-action-cta);
@@ -4943,7 +4959,7 @@ button {
   align-items: center;
   gap: 6px;
   padding: 9px 14px;
-  border-radius: var(--ku-radius-card);
+  border-radius: var(--ku-radius-pill);
   background: var(--ku-gradient-primary);
   color: var(--ku-color-on-primary);
   font: var(--ku-text-action-cta);
@@ -4999,6 +5015,79 @@ button {
 .planet-history-toggle-chevron {
   color: var(--ku-color-text-secondary);
   opacity: 0.5;
+}
+.planet-sup-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 0 2px;
+  border-top: 1px solid var(--ku-color-border-cell);
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-secondary);
+}
+.planet-sup-row-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: opacity 0.15s;
+}
+.planet-sup-row-toggle:active {
+  opacity: 0.6;
+}
+.planet-sup-recharge-btn--modal {
+  padding: 9px 14px;
+}
+.planet-history-empty {
+  margin: 0;
+  padding: 24px 0;
+  text-align: center;
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-secondary);
+}
+.planet-sup-recharge-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: var(--ku-radius-pill);
+  border: 1.5px solid var(--ku-color-primary);
+  background: transparent;
+  color: var(--ku-color-primary);
+  font: var(--ku-text-action-cta);
+  transition: background var(--ku-motion-fast), opacity var(--ku-motion-fast);
+  white-space: nowrap;
+}
+.planet-sup-recharge-btn svg {
+  flex-shrink: 0;
+}
+.planet-sup-recharge-btn:active {
+  background: var(--ku-color-primary-alpha-06);
+}
+.planet-sup-recharge-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.planet-sup-recharge-btn--modal {
+  border: none;
+  background: var(--ku-gradient-primary);
+  color: var(--ku-color-on-primary);
+  box-shadow: var(--ku-shadow-primary);
+}
+.planet-sup-recharge-btn--modal:active {
+  background: var(--ku-gradient-primary);
+  opacity: 0.8;
 }
 .planet-history-sheet { display: flex; flex-direction: column; }
 .planet-history-list {
@@ -5340,6 +5429,12 @@ button {
 .planet-node-source svg {
   flex-shrink: 0;
 }
+.planet-node-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
 
 .planet-node-locked-tag {
   font: var(--ku-text-caption-strong);
@@ -5356,7 +5451,7 @@ button {
   align-items: center;
   gap: 2px;
   padding: 7px 12px;
-  border-radius: 99px;
+  border-radius: var(--ku-radius-pill);
   background: var(--ku-planet-node-upgrade-bg);
   border: 1px solid var(--ku-planet-node-upgrade-border);
   color: var(--ku-planet-node-upgrade-text);
@@ -5370,7 +5465,7 @@ button {
   color: var(--ku-color-text-secondary);
   background: var(--ku-color-border);
   padding: 4px 10px;
-  border-radius: 99px;
+  border-radius: var(--ku-radius-pill);
 }
 
 /* ── Upgrade Sheet ── */
@@ -6478,6 +6573,40 @@ button {
   transition: border-color var(--ku-motion-fast);
 }
 .edit-profile-input:focus { border-color: var(--ku-color-primary); }
+.recharge-amount-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.recharge-amount-input {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+  background: var(--ku-color-bg-root);
+  border-color: var(--ku-color-border);
+}
+.recharge-amount-max-btn {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: var(--ku-radius-pill);
+  border: 1.5px solid var(--ku-color-primary);
+  background: transparent;
+  color: var(--ku-color-primary);
+  font: var(--ku-text-action-cta);
+  white-space: nowrap;
+  transition: background var(--ku-motion-fast);
+}
+.recharge-amount-max-btn:active { background: var(--ku-color-primary-alpha-06); }
+.recharge-amount-balance-hint {
+  margin: 0 0 16px;
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-secondary);
+}
+.recharge-amount-unit {
+  flex-shrink: 0;
+  font: var(--ku-text-caption-strong);
+  color: var(--ku-color-text-secondary);
+}
 .channel-tier-block {
   margin-bottom: 8px;
 }

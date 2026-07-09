@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY } from './mockData';
-import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, UserProfile } from './types';
+import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import { postHasStake } from './stakeConfig';
 import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, CheckInModal, ConfirmDeleteModal, ConfirmUnfollowModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
@@ -47,8 +47,26 @@ export default function App() {
   const [checkInClaimable, setCheckInClaimable] = useState(false);
 
   const [supBalance, setSupBalance] = useState(13);
-  const rechargeSup = (amount: number) => setSupBalance(b => b + amount);
-  const deductSup = (amount: number) => setSupBalance(b => Math.max(0, b - amount));
+  const INITIAL_SUP_HISTORY: SupTransaction[] = [
+    { id: 's1', direction: 'in', amount: 10, time: '2026-06-01 09:00', reason: 'recharge' },
+    { id: 's2', direction: 'in', amount: 3.1, time: '2026-06-12 16:20', reason: 'recharge' },
+    { id: 's3', direction: 'out', amount: 0.1, time: '2026-06-20 10:15', reason: 'channel_open' },
+  ];
+  const [supHistory, setSupHistory] = useState<SupTransaction[]>(INITIAL_SUP_HISTORY);
+
+  const appendSupTransaction = (tx: Omit<SupTransaction, 'id' | 'time'> & { time?: string }) => {
+    const time = tx.time ?? new Date().toISOString().slice(0, 16).replace('T', ' ');
+    setSupHistory(prev => [{ ...tx, id: `s${Date.now()}`, time }, ...prev]);
+  };
+
+  const rechargeSup = (amount: number) => {
+    setSupBalance(b => b + amount);
+    appendSupTransaction({ direction: 'in', amount, reason: 'recharge' });
+  };
+  const deductSup = (amount: number, reason: SupTransactionReason) => {
+    setSupBalance(b => Math.max(0, b - amount));
+    appendSupTransaction({ direction: 'out', amount, reason });
+  };
 
   const [channels, setChannels] = useState<Channel[]>(ALL_CHANNELS);
   const [subscribedChannelTiers, setSubscribedChannelTiers] = useState<Record<string, number>>({});
@@ -488,7 +506,7 @@ export default function App() {
     createChannel, updateChannel,
     openCreateChannel, createChannelOpen, closeCreateChannel,
     openManageChannel, closeManageChannel,
-    supBalance, rechargeSup, deductSup,
+    supBalance, supHistory, rechargeSup, deductSup,
   };
 
 

@@ -2,9 +2,23 @@ import { useState } from 'react';
 import { ArrowDownToLine, ArrowUp, ArrowUpToLine, Check, ChevronDown, ChevronRight, Copy, Crown, FileText, Gift, LayoutGrid, Link, Loader2, Lock, MessageCircle, Radio, Repeat2, Search, Star, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader, Rating } from '../components/shared';
-import { CURRENT_USER, MOCK_WALLET_ADDRESS } from '../mockData';
+import { CURRENT_USER, MOCK_WALLET_ADDRESS, MOCK_WALLET_SUP_BALANCE } from '../mockData';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import type { LucideIcon } from 'lucide-react';
+import type { SupTransactionReason } from '../types';
+
+const SUP_REASON_LABELS: Record<SupTransactionReason, [string, string]> = {
+  recharge: ['充值', 'Recharge'],
+  channel_open: ['开通频道', 'Open channel'],
+  post: ['发布知识星球节点', 'Publish Knowledge Planet Node'],
+  chain_unlock: ['解锁全文', 'Unlock full content'],
+  repost: ['转发并创建子节点', 'Repost and create child node'],
+  comment: ['评论并创建子节点', 'Comment and create child node'],
+  share: ['转发并创建子节点', 'Repost and create child node'],
+  like: ['点赞并创建子节点', 'Like and create child node'],
+  save: ['收藏并创建子节点', 'Save and create child node'],
+  unlock: ['解锁并创建子节点', 'Unlock and create child node'],
+};
 
 // 面额（PB）：仅 1000 档支持五星升级；100 / 10 档不支持升级
 type NodeTier = 10 | 100 | 1000;
@@ -154,7 +168,7 @@ function seedNodesWithChannel(channels: { ownerName: string; id: string; created
 }
 
 export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string } = {}) {
-  const { goBack, canGoBack, showToast, t, language, channels, supBalance, rechargeSup } = useApp();
+  const { goBack, canGoBack, showToast, t, language, channels, supBalance, supHistory, rechargeSup } = useApp();
   const zh = language === 'zh-CN';
   const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
   const [sourceFilter, setSourceFilter] = useState<NodeSource | null>(null);
@@ -163,6 +177,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showSupHistoryModal, setShowSupHistoryModal] = useState(false);
   const [upgradeTarget, setUpgradeTarget] = useState<KnowledgeNode | null>(null);
   const [upgrading, setUpgrading] = useState(false);
   const [nodeSearch, setNodeSearch] = useState(initialSearch ?? '');
@@ -309,19 +324,62 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               </button>
             </div>
 
-            <button className="planet-history-toggle" onClick={() => setShowHistoryModal(true)}>
-              <div className="planet-history-toggle-left">
-                <div className="planet-history-toggle-icon">
-                  <Wallet size={14} strokeWidth={2} />
+            <div className="planet-sup-row">
+              <button
+                type="button"
+                className="planet-sup-row-toggle"
+                onClick={() => setShowHistoryModal(true)}
+                aria-label={t('查看资产明细', 'View asset details')}
+              >
+                <div className="planet-history-toggle-left">
+                  <div className="planet-history-toggle-icon">
+                    <Wallet size={14} strokeWidth={2} />
+                  </div>
+                  <span>{t('可提取 PB：', 'Withdrawable PB:')}</span>
                 </div>
-                <span>{t('资产明细', 'Asset Details')}</span>
-              </div>
-              <div className="planet-history-toggle-right">
-                <span className="planet-history-toggle-balance-label">{t('可提取', 'Withdrawable')}</span>
-                <span className="planet-history-toggle-balance">{formatTokenAmount(chainCredit)} PB</span>
-                <ChevronRight size={14} strokeWidth={2} className="planet-history-toggle-chevron" />
-              </div>
-            </button>
+                <div className="planet-history-toggle-right">
+                  <span className="planet-history-toggle-balance">{formatTokenAmount(chainCredit)} PB</span>
+                  <ChevronRight size={14} strokeWidth={2} className="planet-history-toggle-chevron" />
+                </div>
+              </button>
+              <button
+                type="button"
+                className="planet-sup-recharge-btn"
+                disabled={chainCredit <= 0}
+                onClick={(e) => { e.stopPropagation(); setShowWithdrawSheet(true); }}
+              >
+                <ArrowUpToLine size={12} strokeWidth={2.2} aria-hidden="true" />
+                {t('提取', 'Withdraw')}
+              </button>
+            </div>
+
+            <div className="planet-sup-row">
+              <button
+                type="button"
+                className="planet-sup-row-toggle"
+                onClick={() => setShowSupHistoryModal(true)}
+                aria-label={t('查看 SUP 明细', 'View SUP details')}
+              >
+                <div className="planet-history-toggle-left">
+                  <div className="planet-history-toggle-icon">
+                    <Wallet size={14} strokeWidth={2} />
+                  </div>
+                  <span>{t('SUP 余额：', 'SUP balance:')}</span>
+                </div>
+                <div className="planet-history-toggle-right">
+                  <span className="planet-history-toggle-balance">{formatSupAmount(supBalance)} SUP</span>
+                  <ChevronRight size={14} strokeWidth={2} className="planet-history-toggle-chevron" />
+                </div>
+              </button>
+              <button
+                type="button"
+                className="planet-sup-recharge-btn"
+                onClick={(e) => { e.stopPropagation(); setShowRechargeSheet(true); }}
+              >
+                <ArrowDownToLine size={12} strokeWidth={2.2} aria-hidden="true" />
+                {t('充值', 'Recharge')}
+              </button>
+            </div>
           </div>
 
           {/* ── Node Section ── */}
@@ -524,12 +582,14 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     <span className={`planet-node-attrs planet-node-attrs--t${node.tier}`}>
                       {redPacketCapLabel(node.tier, zh)}
                     </span>
+                  </div>
+                  <div className="planet-node-meta-row">
+                    <span className="planet-node-meta">{node.createdAt}</span>
                     <span className="planet-node-source">
                       <NodeSourceIcon source={node.source} size={12} />
                       {node.source}
                     </span>
                   </div>
-                  <span className="planet-node-meta">{node.createdAt}</span>
                 </div>
                 <div className="planet-node-action">
                   {canUpgradeNode(node) ? (
@@ -572,28 +632,15 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 onClick={() => setShowWithdrawSheet(true)}
                 disabled={chainCredit <= 0}
               >
-                <ArrowDownToLine size={13} strokeWidth={2.2} />
-                {t('提取', 'Withdraw')}
-              </button>
-            </div>
-            <div className="planet-credit-row planet-credit-row--modal">
-              <div>
-                <span className="planet-credit-label">{t('SUP 余额', 'SUP balance')}</span>
-                <div className="planet-credit-value">{formatSupAmount(supBalance)} SUP</div>
-              </div>
-              <button
-                className="planet-withdraw-btn"
-                onClick={() => setShowRechargeSheet(true)}
-              >
                 <ArrowUpToLine size={13} strokeWidth={2.2} />
-                {t('充值', 'Recharge')}
+                {t('提取', 'Withdraw')}
               </button>
             </div>
             <div className="planet-history-list">
               {withdrawHistory.map(w => (
                 <div key={w.id} className="planet-history-item">
                   <div className="planet-history-icon planet-history-icon--withdraw">
-                    <ArrowDownToLine size={16} strokeWidth={1.8} />
+                    <ArrowUpToLine size={16} strokeWidth={1.8} />
                   </div>
                   <span className="planet-history-time">{t(`${w.time} · 提取至链上`, `${w.time} · Withdrawn on-chain`)}</span>
                   <span className="planet-history-amount planet-history-amount--withdraw">-{formatTokenAmount(w.amount)} PB</span>
@@ -664,6 +711,54 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
         </div>
       )}
 
+      {showSupHistoryModal && (
+        <div className="sheet-backdrop" onClick={() => setShowSupHistoryModal(false)}>
+          <div className="payment-sheet planet-history-sheet" onClick={e => e.stopPropagation()}>
+            <div className="sheet-header">
+              <span className="sheet-title">{t('SUP 明细', 'SUP Details')}</span>
+              <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={() => setShowSupHistoryModal(false)} aria-label={t('关闭', 'Close')}>
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+            <div className="planet-credit-row planet-credit-row--modal">
+              <div>
+                <span className="planet-credit-label">{t('SUP 余额', 'SUP balance')}</span>
+                <div className="planet-credit-value">{formatSupAmount(supBalance)} SUP</div>
+              </div>
+              <button
+                type="button"
+                className="planet-sup-recharge-btn planet-sup-recharge-btn--modal"
+                onClick={() => setShowRechargeSheet(true)}
+              >
+                <ArrowDownToLine size={12} strokeWidth={2.2} aria-hidden="true" />
+                {t('充值', 'Recharge')}
+              </button>
+            </div>
+            <div className="planet-history-list">
+              {supHistory.length === 0 ? (
+                <p className="planet-history-empty">{t('暂无 SUP 流水', 'No SUP transactions yet')}</p>
+              ) : (
+                supHistory.map(tx => {
+                  const isIn = tx.direction === 'in';
+                  const label = t(...SUP_REASON_LABELS[tx.reason]);
+                  return (
+                    <div key={tx.id} className="planet-history-item">
+                      <div className={`planet-history-icon${isIn ? '' : ' planet-history-icon--withdraw'}`}>
+                        {isIn ? <ArrowDownToLine size={16} strokeWidth={1.8} /> : <ArrowUpToLine size={16} strokeWidth={1.8} />}
+                      </div>
+                      <span className="planet-history-time">{`${tx.time} · ${label}`}</span>
+                      <span className={`planet-history-amount${isIn ? '' : ' planet-history-amount--withdraw'}`}>
+                        {isIn ? '+' : '-'}{formatSupAmount(tx.amount)} SUP
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Recharge SUP Sheet ── */}
       {showRechargeSheet && (
         <div
@@ -692,18 +787,31 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               {t('充值后将自动计入你的 SUP 余额', 'Your deposit will be added to your SUP balance')}
             </p>
 
-            <div className="stake-tier-list" style={{ marginBottom: 16 }}>
-              {[1, 5, 10, 50].map(amount => (
-                <button
-                  key={amount}
-                  type="button"
-                  className={`stake-tier-option${rechargeAmount === amount ? ' stake-tier-option--active' : ''}`}
-                  onClick={() => setRechargeAmount(amount)}
-                >
-                  <span className="stake-tier-option__amount">{amount} SUP</span>
-                </button>
-              ))}
+            <div className="recharge-amount-wrap">
+              <input
+                className="edit-profile-input recharge-amount-input"
+                type="number"
+                min={1}
+                value={rechargeAmount || ''}
+                onChange={e => {
+                  const raw = Number(e.target.value);
+                  setRechargeAmount(Number.isFinite(raw) ? Math.max(0, raw) : 0);
+                }}
+                placeholder={t('输入充值数量', 'Enter amount')}
+                aria-label={t('充值数量（SUP）', 'Recharge amount (SUP)')}
+              />
+              <span className="recharge-amount-unit">SUP</span>
+              <button
+                type="button"
+                className="recharge-amount-max-btn"
+                onClick={() => setRechargeAmount(MOCK_WALLET_SUP_BALANCE)}
+              >
+                {t('全部', 'Max')}
+              </button>
             </div>
+            <p className="recharge-amount-balance-hint">
+              {t(`钱包可用 ${formatSupAmount(MOCK_WALLET_SUP_BALANCE)} SUP`, `Wallet available: ${formatSupAmount(MOCK_WALLET_SUP_BALANCE)} SUP`)}
+            </p>
 
             <div className="planet-upgrade-row">
               <span className="planet-upgrade-row-label">{t('从', 'From')}</span>
@@ -712,7 +820,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             <div className="planet-upgrade-sep" />
             <div className="planet-upgrade-row">
               <span className="planet-upgrade-row-label">{t('到', 'To')}</span>
-              <span className="planet-upgrade-row-value">{t('SUP 余额', 'SUP balance')}</span>
+              <span className="planet-upgrade-row-value">{t('「知识宇宙」SUP 余额', 'Knowledge Universe SUP balance')}</span>
             </div>
 
             <button

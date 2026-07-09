@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, UserProfile } from './types';
+import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 
 export type AppContextValue = {
   navigate: (route: Route) => void;
@@ -69,8 +69,9 @@ export type AppContextValue = {
   closeManageChannel: () => void;
   // SUP（SUP 链原生代币）：用户中心可充值站内 SUP 资产，产生节点时与 PB 同步扣除
   supBalance: number;
+  supHistory: SupTransaction[];
   rechargeSup: (amount: number) => void;
-  deductSup: (amount: number) => void;
+  deductSup: (amount: number, reason: SupTransactionReason) => void;
 };
 
 

@@ -104,7 +104,7 @@ export type DmConversation = {
   messages: DmMessage[];
 };
 
-export type ActivityType = 'like' | 'share' | 'save' | 'comment' | 'link' | 'tip';
+export type ActivityType = 'like' | 'share' | 'save' | 'comment' | 'link' | 'tip' | 'subscribe';
 
 export type ActivityActor = {
   user: string;
@@ -114,12 +114,14 @@ export type ActivityActor = {
 export type ActivityGroup = {
   id: string;
   type: ActivityType;
-  postId: string;
+  postId?: string;
   actors: ActivityActor[];
   time: string;
   isRead: boolean;
   commentText?: string;
   tipAmount?: number; // type === 'tip' 时，该条打赏的金额（PB）
+  channelName?: string; // type === 'subscribe' 时，被订阅的频道名
+  tierName?: string;    // type === 'subscribe' 时，订阅档位（如 Lv.2）
 };
 
 export type PostActorEntry = {
@@ -159,6 +161,28 @@ export type PayCtx = {
   stakeTier: StakeTier;
 };
 export type Language = 'zh-CN' | 'en';
+
+/** 站内 SUP 流水原因（展示文案在页面层按语言映射） */
+export type SupTransactionReason =
+  | 'recharge'
+  | 'channel_open'
+  | 'post'
+  | 'chain_unlock'
+  | 'repost'
+  | 'comment'
+  | 'share'
+  | 'like'
+  | 'save'
+  | 'unlock';
+
+export type SupTransaction = {
+  id: string;
+  direction: 'in' | 'out';
+  amount: number;
+  time: string;
+  reason: SupTransactionReason;
+};
+
 export type PostAction = 'share' | 'like' | 'save';
 
 export type NewPostData = {

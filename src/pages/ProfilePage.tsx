@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Check, ChevronRight, CircleCheck, Edit3, Eye, FileText, Gem, HandCoins, Languages, LayoutGrid, Lock, MessageCircle, Radio, Repeat2, Settings, Trash2, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Check, ChevronRight, CircleCheck, Edit3, Eye, FileText, Gem, HandCoins, Languages, LayoutGrid, Lock, MessageCircle, Plus, Radio, Repeat2, Settings, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -617,7 +617,17 @@ function FollowListModal({
                       toggleFollow(user.name);
                     }}
                   >
-                      {isUserFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注', 'Following')}</span> : t('关注', 'Follow')}
+                    {isUserFollowing ? (
+                      <>
+                        <Check size={12} strokeWidth={2.5} aria-hidden="true" />
+                        {t('已关注', 'Following')}
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={12} strokeWidth={2.5} aria-hidden="true" />
+                        {t('关注', 'Follow')}
+                      </>
+                    )}
                   </button>
                 )}
                 </div>
@@ -722,9 +732,17 @@ function SubscriberListModal({
                               toggleFollow(user.name);
                             }}
                           >
-                            {isUserFollowing
-                              ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注', 'Following')}</span>
-                              : t('关注', 'Follow')}
+                            {isUserFollowing ? (
+                              <>
+                                <Check size={12} strokeWidth={2.5} aria-hidden="true" />
+                                {t('已关注', 'Following')}
+                              </>
+                            ) : (
+                              <>
+                                <Plus size={12} strokeWidth={2.5} aria-hidden="true" />
+                                {t('关注', 'Follow')}
+                              </>
+                            )}
                           </button>
                         )}
                       </div>

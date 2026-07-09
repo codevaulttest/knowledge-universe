@@ -6,7 +6,7 @@ import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 import { Avatar, AuthorName, Rating, GeminiNodeBadge } from './shared';
 import { Actions } from './PostCard';
 import { localizeTime } from '../i18n';
-import type { Channel, ChannelTier, InteractionAction, PayCtx, Post, PostAction } from '../types';
+import type { Channel, ChannelTier, InteractionAction, PayCtx, Post, PostAction, SupTransactionReason } from '../types';
 import { formatSuperAmount, formatSupAmount, stakeTierDescription, SUPER_BY_TIER, SUP_COST_BY_TIER } from '../stakeConfig';
 import type { StakeTier } from '../types';
 import { CHECK_IN_MAX_DAILY, CHECK_IN_REWARD, type ClaimPreview } from '../checkInConfig';
@@ -25,6 +25,13 @@ const IMG_GRADIENTS = [
   "#0e1a48 url('/img/p9.svg') center/cover no-repeat",
 ];
 const IMG_LABELS = ['图片 1', '图片 2', '图片 3', '图片 4', '图片 5', '图片 6', '图片 7', '图片 8', '图片 9'];
+
+function payCtxToSupReason(payCtx: PayCtx): SupTransactionReason {
+  if (payCtx.ctx === 'interaction' && payCtx.action) return payCtx.action;
+  if (payCtx.ctx === 'chain') return 'chain_unlock';
+  if (payCtx.ctx === 'repost') return 'repost';
+  return 'post';
+}
 
 export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: {
   post: Post;
@@ -159,7 +166,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
         setFailReason(t('余额不足，请充值后重试', 'Insufficient balance, please top up and retry'));
         setStatus('failed');
       } else {
-        if (supCost > 0) deductSup(supCost);
+        if (supCost > 0) deductSup(supCost, payCtxToSupReason(payCtx));
         setStatus('done');
         setTimeout(onSuccess, 700);
       }
@@ -1832,7 +1839,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
         setPaying('failed');
         return;
       }
-      deductSup(channelSupCost);
+      deductSup(channelSupCost, 'channel_open');
       createChannel({ name: name.trim(), description: description.trim(), category, tiers: normalizedTiers });
       onClose();
     }, 1300);
