@@ -568,19 +568,24 @@ export function ComposePage({
                     <span className="stake-tier-option__amount">{t('不限档位', 'No tier restriction')}</span>
                     <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子', 'No channel subscription needed to see this post')}</span>
                   </button>
-                  {myChannel.tiers.map((tier, idx) => (
-                    <button
-                      key={tier.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={minTierIndex === idx}
-                      className={`stake-tier-option stake-tier-option--channel${minTierIndex === idx ? ' stake-tier-option--active' : ''}`}
-                      onClick={() => setMinTierIndex(idx)}
-                    >
-                      <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月', 'mo')}</span>
-                      <span className="stake-tier-option__desc">{t(`需订阅达到 ${tier.name} 及以上`, `Requires ${tier.name} subscription or above`)}</span>
-                    </button>
-                  ))}
+                  {myChannel.tiers.map((tier, idx) => {
+                    // 已下架档位不再作为新内容的门槛可选项——新访客买不到这一档，
+                    // 拿它做门槛会导致内容永远没人能解锁
+                    if (tier.archived) return null;
+                    return (
+                      <button
+                        key={tier.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={minTierIndex === idx}
+                        className={`stake-tier-option stake-tier-option--channel${minTierIndex === idx ? ' stake-tier-option--active' : ''}`}
+                        onClick={() => setMinTierIndex(idx)}
+                      >
+                        <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月', 'mo')}</span>
+                        <span className="stake-tier-option__desc">{t(`需订阅达到 ${tier.name} 及以上`, `Requires ${tier.name} subscription or above`)}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             )}

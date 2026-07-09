@@ -4,9 +4,6 @@ import { useApp } from '../AppContext';
 
 const DISMISS_KEY = 'ku-genesis-banner-dismissed';
 
-// 创世节点总量来自原始需求：共 100 个（序号 1–100），按顺序抢占、抢完即止
-const TOTAL_NODES = 100;
-
 export function GenesisBanner() {
   const { t, showToast } = useApp();
   const [dismissed, setDismissed] = useState(() => {
@@ -38,7 +35,7 @@ export function GenesisBanner() {
         <span className="genesis-banner-eyebrow">{t('全新上线', 'Now Live')}</span>
         <span className="genesis-banner-title">{t('知识宇宙·创世节点', 'Genesis Node')}</span>
         <span className="genesis-banner-sub">
-          {t(`全球限量 ${TOTAL_NODES} 个`, `Only ${TOTAL_NODES} worldwide`)}
+          {t('全球限量发售', 'Limited worldwide supply')}
           <span className="genesis-banner-scarcity-left">{t('· 抢完即止', '· gone once claimed')}</span>
         </span>
         <span className="genesis-banner-cta">

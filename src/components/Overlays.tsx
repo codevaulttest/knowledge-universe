@@ -199,19 +199,15 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
         {tier > 0 && (
           <div className="pay-combo-breakdown">
             <div className="pay-combo-row">
-              <span className="pay-combo-label">{t('P客 PB', 'P-Pay PB')}</span>
-              <span className="pay-combo-value">{tier} PB</span>
-            </div>
-            <div className="pay-combo-row">
-              <span className="pay-combo-label">{t('码库 PB', 'CodeVault PB')}</span>
-              <span className="pay-combo-value">{formatSuperAmount(superAmount)} PB</span>
+              <span className="pay-combo-label">PB</span>
+              <span className="pay-combo-value">{formatSuperAmount(tier + superAmount)} PB</span>
             </div>
             <div className="pay-combo-row">
               <span className="pay-combo-label">{t('SUP 消耗', 'SUP cost')}</span>
               <span className="pay-combo-value">{formatSupAmount(supCost)} SUP</span>
             </div>
             <p className="pay-combo-hint">
-              {t('将从 P客扣除 PB，同时通过码库支付 PB，并同步扣除站内 SUP', 'Deducts PB from P-Pay, pays PB via CodeVault, and deducts SUP from your in-app balance')}
+              {t('将扣除 PB，并同步扣除站内 SUP', 'Deducts PB, and deducts SUP from your in-app balance')}
             </p>
           </div>
         )}
@@ -223,7 +219,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
                 <span className="pay-option-name">{t('组合支付', 'Combo payment')}</span>
                 <span className="pay-option-sub">
                   {tier > 0
-                    ? `${tier} PB + ${formatSuperAmount(superAmount)} PB + ${formatSupAmount(supCost)} SUP`
+                    ? `${formatSuperAmount(tier + superAmount)} PB + ${formatSupAmount(supCost)} SUP`
                     : t('确认支付', 'Confirm payment')}
                 </span>
               </div>
@@ -1637,11 +1633,12 @@ export function CheckInModal({
 // ═══════════════════════════════════════════════════════════════
 
 export function ChannelSubscribeModal({ channelId, onClose }: { channelId: string; onClose: () => void }) {
-  const { t, channels, subscribedChannelTiers, subscribeToChannelTier } = useApp();
+  const { t, channels, subscribedChannelTiers, subscribeToChannelTier, unsubscribeFromChannel } = useApp();
   const channel = channels.find(c => c.id === channelId);
   const currentTierIndex = subscribedChannelTiers[channelId];
   const [selected, setSelected] = useState<number | null>(currentTierIndex ?? null);
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done'>('select');
+  const [confirmUnsub, setConfirmUnsub] = useState(false);
 
   if (!channel) return null;
   const selectedTier = selected !== null ? channel.tiers[selected] : null;
@@ -1687,19 +1684,21 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
         <div className="stake-tier-list" style={{ marginBottom: 16 }}>
           {channel.tiers.map((tier, idx) => {
             const isCurrent = currentTierIndex === idx;
+            // 已下架档位不接受新订阅，只在是本人当前档位时保留展示（方便查看自己的订阅状态）
+            if (tier.archived && !isCurrent) return null;
             const isDowngrade = currentTierIndex != null && idx < currentTierIndex;
             return (
               <button
                 key={tier.id}
                 type="button"
-                disabled={isDowngrade}
+                disabled={isDowngrade || tier.archived}
                 className={`stake-tier-option${selected === idx ? ' stake-tier-option--active' : ''}`}
                 onClick={() => setSelected(idx)}
               >
                 <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月', 'mo')}</span>
                 <span className="stake-tier-option__desc">
                   {isCurrent
-                    ? t('当前档位', 'Current tier')
+                    ? (tier.archived ? t('当前档位（已下架，不影响你的权限）', 'Current tier (discontinued — your access is unaffected)') : t('当前档位', 'Current tier'))
                     : t(`可看全部 ${tier.name} 及以下档位专属内容`, `Access all content for ${tier.name} and below`)}
                 </span>
               </button>
@@ -1710,7 +1709,7 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
         <button
           type="button"
           className="planet-confirm-btn"
-          disabled={selected === null}
+          disabled={selected === null || selected === currentTierIndex}
           onClick={() => selected !== null && setStep('confirm')}
         >
           {selected !== null
@@ -1719,7 +1718,28 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
               : t(`订阅 · ${channel.tiers[selected].price} PB/月`, `Subscribe · ${channel.tiers[selected].price} PB/mo`))
             : t('请选择档位', 'Select a tier')}
         </button>
+
+        {currentTierIndex != null && (
+          <button
+            type="button"
+            className="channel-unsub-btn"
+            onClick={() => setConfirmUnsub(true)}
+          >
+            {t('取消订阅', 'Cancel subscription')}
+          </button>
+        )}
       </div>
+
+      {confirmUnsub && (
+        <Ios26Alert
+          title={t('取消订阅？', 'Cancel subscription?')}
+          message={t('取消后将立即失去该频道的会员专属内容访问权限。', 'You will immediately lose access to this channel’s member-only content.')}
+          cancelLabel={t('再想想', 'Keep it')}
+          confirmLabel={t('取消订阅', 'Cancel subscription')}
+          onCancel={() => setConfirmUnsub(false)}
+          onConfirm={() => { unsubscribeFromChannel(channelId); onClose(); }}
+        />
+      )}
     </div>
   );
 }
@@ -1746,8 +1766,10 @@ function defaultTierPrice(index: number, tiers: ChannelTier[]): number {
   return Math.max(preset, tiers[index - 1].price + 1);
 }
 
+// 已下架的档位名称/位置一律冻结，不随其他档位增删重新编号
+// （minTierIndex、订阅记录都按数组下标引用，下架档位绝不能被移动或改名）
 function normalizeTierNames(tiers: ChannelTier[]): ChannelTier[] {
-  return tiers.map((tier, index) => ({ ...tier, name: nextTierName(index) }));
+  return tiers.map((tier, index) => tier.archived ? tier : { ...tier, name: nextTierName(index) });
 }
 
 function sanitizeTierPrices(tiers: ChannelTier[]): ChannelTier[] {
@@ -1757,11 +1779,20 @@ function sanitizeTierPrices(tiers: ChannelTier[]): ChannelTier[] {
   }));
 }
 
+// 已下架档位不再对外销售，价格已冻结，不参与校验（也不作为后面档位排序校验的基准）
+function lastActivePrice(tiers: ChannelTier[], beforeIdx: number): number | null {
+  for (let i = beforeIdx - 1; i >= 0; i--) {
+    if (!tiers[i].archived) return tiers[i].price;
+  }
+  return null;
+}
+
 function isChannelTierPriceInvalid(tiers: ChannelTier[], idx: number): boolean {
+  if (tiers[idx].archived) return false;
   const price = tiers[idx].price;
   if (price <= 0) return true;
-  if (idx <= 0) return false;
-  return price <= tiers[idx - 1].price;
+  const prevPrice = lastActivePrice(tiers, idx);
+  return prevPrice != null && price <= prevPrice;
 }
 
 function channelTierPriceError(
@@ -1769,15 +1800,16 @@ function channelTierPriceError(
   idx: number,
   t: (zh: string, en: string) => string,
 ): string | null {
+  if (tiers[idx].archived) return null;
   const price = tiers[idx].price;
   if (price <= 0) {
     return t('月费不可为 0', 'Price cannot be 0');
   }
-  if (idx > 0 && price <= tiers[idx - 1].price) {
-    const prevPrice = tiers[idx - 1].price;
+  const prevPrice = lastActivePrice(tiers, idx);
+  if (prevPrice != null && price <= prevPrice) {
     return t(
-      `须高于 ${nextTierName(idx - 1)}（${prevPrice} PB）`,
-      `Must be higher than ${nextTierName(idx - 1)} (${prevPrice} PB)`,
+      `须高于上一档（${prevPrice} PB）`,
+      `Must be higher than the previous tier (${prevPrice} PB)`,
     );
   }
   return null;
@@ -1800,8 +1832,10 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
     isEdit ? normalizeTierNames(sanitizeTierPrices(existingChannel?.tiers ?? [])) : [],
   );
 
+  const activeTierCount = tiers.filter(tr => !tr.archived).length;
+
   const addTier = () => {
-    if (tiers.length >= MAX_CHANNEL_TIERS) return;
+    if (activeTierCount >= MAX_CHANNEL_TIERS) return;
     const nextIndex = tiers.length;
     setTiers(prev => normalizeTierNames([
       ...prev,
@@ -1815,8 +1849,18 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   const updateTierPrice = (idx: number, price: number) => {
     setTiers(prev => prev.map((tr, i) => i === idx ? { ...tr, price } : tr));
   };
+  // 下架而非删除：已保存过的档位一旦存在，就不能真的从数组里移除，
+  // 否则会导致 minTierIndex / 订阅记录里存的下标错位、指向别的档位。
+  // 本次编辑中新增、还没保存过的档位（existingChannel 里没有）可以直接移除。
   const removeTier = (idx: number) => {
-    setTiers(prev => normalizeTierNames(prev.filter((_, i) => i !== idx)));
+    setTiers(prev => {
+      const tier = prev[idx];
+      const wasPersisted = existingChannel?.tiers.some(t => t.id === tier.id) ?? false;
+      if (wasPersisted) {
+        return prev.map((tr, i) => i === idx ? { ...tr, archived: true } : tr);
+      }
+      return normalizeTierNames(prev.filter((_, i) => i !== idx));
+    });
   };
 
   const canSubmit = name.trim().length > 0
@@ -1907,11 +1951,25 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               </div>
             )}
             {tiers.map((tier, idx) => {
+              if (tier.archived) {
+                return (
+                  <div key={tier.id} className="channel-tier-block channel-tier-block--archived">
+                    <div className="channel-tier-row">
+                      <span className="channel-tier-name-label">{tier.name}</span>
+                      <span className="channel-tier-archived-price">{tier.price} PB/{t('月', 'mo')}</span>
+                      <span className="channel-tier-archived-badge">{t('已下架', 'Discontinued')}</span>
+                    </div>
+                    <p className="channel-tier-archived-hint">
+                      {t('不再接受新订阅，已订阅用户保留原价与权限', 'No new subscribers; existing members keep their price and access')}
+                    </p>
+                  </div>
+                );
+              }
               const priceError = channelTierPriceError(tiers, idx, t);
               return (
                 <div key={tier.id} className="channel-tier-block">
                   <div className="channel-tier-row">
-                    <span className="channel-tier-name-label">{nextTierName(idx)}</span>
+                    <span className="channel-tier-name-label">{tier.name}</span>
                     <div className="channel-tier-price-wrap">
                       <input
                         className={`edit-profile-input channel-tier-price-input${priceError ? ' edit-profile-input--error' : ''}`}
@@ -1922,12 +1980,12 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                           updateTierPrice(idx, Number.isFinite(raw) ? Math.max(0, raw) : 0);
                         }}
                         placeholder={t('月费', 'Fee')}
-                        aria-label={t(`${nextTierName(idx)} 月订阅费（PB）`, `${nextTierName(idx)} monthly subscription fee (PB)`)}
+                        aria-label={t(`${tier.name} 月订阅费（PB）`, `${tier.name} monthly subscription fee (PB)`)}
                         aria-invalid={priceError ? true : undefined}
                       />
                       <span className="channel-tier-price-unit">PB/{t('月', 'mo')}</span>
                     </div>
-                    <button type="button" className="draft-item-delete channel-tier-delete" onClick={() => removeTier(idx)} aria-label={t('删除档位', 'Remove tier')}>
+                    <button type="button" className="draft-item-delete channel-tier-delete" onClick={() => removeTier(idx)} aria-label={t('下架档位', 'Discontinue tier')}>
                       <X size={14} strokeWidth={2} />
                     </button>
                   </div>
@@ -1937,7 +1995,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                 </div>
               );
             })}
-            {tiers.length < MAX_CHANNEL_TIERS && (
+            {activeTierCount < MAX_CHANNEL_TIERS && (
               <button type="button" className="channel-tier-add-btn" onClick={addTier}>
                 <Plus size={16} strokeWidth={2.5} aria-hidden />
                 {t('新增档位', 'Add tier')}
@@ -1951,12 +2009,8 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               <span className="edit-profile-label">{t('费用明细', 'Fee breakdown')}</span>
               <div className="pay-combo-breakdown">
                 <div className="pay-combo-row">
-                  <span className="pay-combo-label">{t('P客 PB', 'P-Pay PB')}</span>
-                  <span className="pay-combo-value">1000 PB</span>
-                </div>
-                <div className="pay-combo-row">
-                  <span className="pay-combo-label">{t('码库 PB', 'CodeVault PB')}</span>
-                  <span className="pay-combo-value">{formatSuperAmount(channelSuperAmount)} PB</span>
+                  <span className="pay-combo-label">PB</span>
+                  <span className="pay-combo-value">{formatSuperAmount(1000 + channelSuperAmount)} PB</span>
                 </div>
                 <div className="pay-combo-row">
                   <span className="pay-combo-label">{t('SUP 消耗', 'SUP cost')}</span>

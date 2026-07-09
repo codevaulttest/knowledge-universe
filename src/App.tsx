@@ -359,6 +359,18 @@ export default function App() {
     showToast(t(`订阅成功！已解锁「${tierName}」专属内容`, `Subscribed! "${tierName}" content unlocked`));
   };
 
+  const unsubscribeFromChannel = (channelId: string) => {
+    setSubscribedChannelTiers(prev => {
+      const next = { ...prev };
+      delete next[channelId];
+      return next;
+    });
+    setChannels(prev => prev.map(c => c.id === channelId
+      ? { ...c, subscriberCount: Math.max(0, c.subscriberCount - 1) }
+      : c));
+    showToast(t('已取消订阅', 'Unsubscribed'));
+  };
+
   const handlePaySuccess = () => {
     if (!paySheet) return;
     const { ctx, postId } = paySheet;
@@ -502,7 +514,7 @@ export default function App() {
     drafts, saveDraft, updateDraft, deleteDraft,
     userProfile, updateUserProfile,
     channels, subscribedChannelTiers,
-    openChannelSubscribe, subscribeToChannelTier,
+    openChannelSubscribe, subscribeToChannelTier, unsubscribeFromChannel,
     createChannel, updateChannel,
     openCreateChannel, createChannelOpen, closeCreateChannel,
     openManageChannel, closeManageChannel,

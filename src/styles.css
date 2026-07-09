@@ -3671,6 +3671,25 @@ button {
 .channel-manage-btn svg {
   flex-shrink: 0;
 }
+/* 已订阅状态：弱化为描边样式，避免跟"订阅"主 CTA 一样显眼、误导用户误点取消 */
+.channel-manage-btn--subscribed {
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-secondary);
+  border: 1px solid var(--ku-color-border-control);
+}
+.channel-unsub-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  border: none;
+  background: none;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta);
+  text-align: center;
+  cursor: pointer;
+}
+.channel-unsub-btn:active { opacity: 0.6; }
 .channel-create-entry {
   margin: 0 var(--ku-feed-padding-x) 14px;
   padding: 10px 14px;
@@ -6670,6 +6689,38 @@ button {
   margin: 4px 0 0 52px;
   font: var(--ku-text-meta);
   color: var(--ku-color-text-danger);
+}
+.channel-tier-block--archived {
+  padding: 10px 0;
+  border-top: 1px dashed var(--ku-color-border-card);
+}
+.channel-tier-block--archived .channel-tier-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.channel-tier-block--archived .channel-tier-name-label {
+  min-height: 0;
+  color: var(--ku-color-text-secondary);
+}
+.channel-tier-archived-price {
+  flex: 1;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.channel-tier-archived-badge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: var(--ku-radius-badge);
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-caption);
+}
+.channel-tier-archived-hint {
+  margin: 4px 0 0;
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-meta);
 }
 .channel-tier-add-btn {
   width: 100%;

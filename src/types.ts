@@ -58,6 +58,9 @@ export type ChannelTier = {
   id: string;
   name: string; // 固定编号 Lv.1/Lv.2/Lv.3…（按档位顺序自动生成，不可自定义）
   price: number; // PB/月，须 > 0，且高于上一档
+  // 已下架：不再接受新订阅、不出现在发帖门槛/新用户订阅选择器里；但已订阅用户保留原价与权限，
+  // 且该档位不能真删除（避免 minTierIndex / 订阅记录的数组下标错位），只能下架
+  archived?: boolean;
 };
 
 export type Channel = {

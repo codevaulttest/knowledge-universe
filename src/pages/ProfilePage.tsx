@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Check, ChevronRight, CircleCheck, Edit3, Eye, FileText, Gem, HandCoins, Languages, LayoutGrid, Lock, MessageCircle, Plus, Radio, Repeat2, Settings, Trash2, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Check, ChevronRight, CircleCheck, Edit3, FileText, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, Plus, Radio, Repeat2, Settings, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -107,8 +107,12 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             <Settings size={13} strokeWidth={2.2} />
             {t('管理频道', 'Manage')}
           </button>
-        ) : channel.tiers.length > 0 ? (
-          <button type="button" className="channel-manage-btn" onClick={() => openChannelSubscribe(channel.id)}>
+        ) : (mySubscribedTierIndex != null || channel.tiers.some(tr => !tr.archived)) ? (
+          <button
+            type="button"
+            className={`channel-manage-btn${mySubscribedTierIndex != null ? ' channel-manage-btn--subscribed' : ''}`}
+            onClick={() => openChannelSubscribe(channel.id)}
+          >
             {mySubscribedTierIndex != null ? (
               <>
                 <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
@@ -319,15 +323,15 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             ref={tabsScrollRef as React.RefObject<HTMLElement>}
             onScroll={updateTabsScrollState}
           >
-            {(['all', 'free', 'sub'] as const).map(f => (
+            {(['all', 'sub'] as const).map(f => (
               <button
                 key={f}
                 type="button"
                 className={`profile-content-tab${contentFilter === f ? ' profile-content-tab--active' : ''}`}
                 onClick={() => setContentFilter(f)}
               >
-                {f === 'all' ? <LayoutGrid size={14} strokeWidth={2} /> : f === 'free' ? <Eye size={14} strokeWidth={2} /> : <Lock size={14} strokeWidth={2} />}
-                {f === 'all' ? t('全部', 'All') : f === 'free' ? t('不限档位', 'No tier') : t('会员', 'Members')}
+                {f === 'all' ? <LayoutGrid size={14} strokeWidth={2} /> : <Gem size={14} strokeWidth={2} />}
+                {f === 'all' ? t('全部', 'All') : t('会员', 'Members')}
               </button>
             ))}
           </nav>
