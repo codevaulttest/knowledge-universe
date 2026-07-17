@@ -859,7 +859,6 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
                 aria-label={t('打赏此文章', 'Tip this article')}
               >
                 <HandCoins size={15} strokeWidth={2} />
-                {t('打赏', 'Tip')}
               </button>
             ) : undefined}
           />
@@ -881,7 +880,7 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
 // VideoPlayer — 视频播放器（支持 N% 时长限制）
 // ═══════════════════════════════════════════════════════════════
 export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: number; onClose: () => void }) {
-  const { openLink, linkedPostIds, navigate, repostedPostIds, likedPostIds, savedPostIds, togglePostAction, t } = useApp();
+  const { openLink, linkedPostIds, navigate, repostedPostIds, likedPostIds, savedPostIds, togglePostAction, t, language } = useApp();
   const [showTip, setShowTip] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);

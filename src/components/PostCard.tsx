@@ -6,6 +6,7 @@ import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
 import { ArticleFeedCard, AuthorName, Avatar, GenesisBadge, GeminiNodeBadge, MediaPlaceholder, PostContent } from './shared';
 import { TipModal, Ios26Alert } from './Overlays';
 import { localizeTime } from '../i18n';
+import { formatCount } from '../formatCount';
 
 // ── ActorsSheet（帖子互动名单浮层）────────────────────────────
 export function ActorsSheet({ postId, initialTab, onClose }: {
@@ -98,7 +99,7 @@ export function Actions({ post, onComment, extra }: {
 }) {
   const {
     repostedPostIds, likedPostIds, savedPostIds, dislikedPostIds, togglePostAction, requestPostInteraction,
-    t,
+    t, language,
   } = useApp();
   const [confirmShare, setConfirmShare] = useState<'repost' | 'unrepost' | null>(null);
   const isOwn = post.author === CURRENT_USER;
@@ -107,7 +108,7 @@ export function Actions({ post, onComment, extra }: {
     <button
       key={action}
       type="button"
-      className={`post-action post-action--${action}${active ? ' post-action--active' : ''}${showCount ? '' : ' post-action--no-count'}`}
+      className={`post-action post-action--${action}${active ? ' post-action--active' : ''}`}
       onClick={(e) => {
         e.stopPropagation();
         togglePostAction(post.id, action);
@@ -115,7 +116,7 @@ export function Actions({ post, onComment, extra }: {
       aria-label={t(`${active ? '取消' : ''}${label}，当前 ${count}`, `${active ? 'Remove ' : ''}${label}, current count ${count}`)}
       aria-pressed={active}
     >
-      {icon}{showCount && count}
+      {icon}{showCount && formatCount(count, language)}
     </button>
   );
 
@@ -138,7 +139,6 @@ export function Actions({ post, onComment, extra }: {
         className="actions"
         data-layer="post-actions"
         onClick={e => e.stopPropagation()}
-        style={extra ? { gridTemplateColumns: '1fr 1fr 1fr auto 1fr auto' } : undefined}
       >
         <span
           className="reply-trigger"
@@ -150,7 +150,7 @@ export function Actions({ post, onComment, extra }: {
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onComment(e as unknown as React.MouseEvent); }}
           aria-label={t(`查看 ${post.replies} 条评论`, `View ${post.replies} comments`)}
         >
-          <MessageCircle size={18} strokeWidth={2.25} />{post.replies}
+          <MessageCircle size={18} strokeWidth={2.25} />{formatCount(post.replies, language)}
         </span>
         <button
           type="button"
@@ -162,7 +162,7 @@ export function Actions({ post, onComment, extra }: {
           aria-label={t(`${active ? '取消转发' : '转发'}，当前 ${post.shares}`, `${active ? 'Remove repost' : 'Repost'}, current count ${post.shares}`)}
           aria-pressed={active}
         >
-          <Repeat2 size={18} strokeWidth={2.25} />{post.shares}
+          <Repeat2 size={18} strokeWidth={2.25} />{formatCount(post.shares, language)}
         </button>
         {actionButton('like', likedPostIds.has(post.id), t('点赞', 'like'), post.likes, <ThumbsUp size={18} strokeWidth={2.25} />)}
         {actionButton('dislike', dislikedPostIds.has(post.id), t('踩', 'dislike'), post.dislikes ?? 0, <ThumbsDown size={18} strokeWidth={2.25} />, isOwn)}
@@ -402,7 +402,6 @@ export function PostCard({
             aria-label={t('打赏此帖', 'Tip this post')}
           >
             <HandCoins size={18} strokeWidth={2.25} />
-            {t('打赏', 'Tip')}
           </button>
         )}
       />
