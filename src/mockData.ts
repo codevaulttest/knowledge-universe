@@ -151,7 +151,7 @@ export const ALL_POSTS: Post[] = [
     id: 'p7', author: '产品大叔严磊', time: '3 天前',
     title: '我是如何把一个 B 端产品用户留存从 12% 提到 67% 的？\n18 个月的数据与方法论，视频完整复盘。',
     kind: 'video', visiblePercent: 30, isNode: true, stakeTier: 100, nodeId: 'nM4gJs',
-    rating: 1, replies: 58, links: 21, shares: 44, saves: 117, likes: 261,
+    rating: 1, replies: 58, links: 21, shares: 44, saves: 117, likes: 100000000000000,
     videoUrl: '/mock-video-2.mp4',
     channelId: 'channel-yanlei', minTierIndex: 0,
   },

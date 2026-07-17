@@ -6,6 +6,7 @@ import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 import { Avatar, AuthorName, Rating, GeminiNodeBadge } from './shared';
 import { Actions } from './PostCard';
 import { localizeTime } from '../i18n';
+import { formatCount } from '../formatCount';
 import type { Channel, ChannelTier, InteractionAction, PayCtx, Post, PostAction, SupTransactionReason } from '../types';
 import { formatSuperAmount, formatSupAmount, stakeTierDescription, SUPER_BY_TIER, SUP_COST_BY_TIER } from '../stakeConfig';
 import type { StakeTier } from '../types';
@@ -1098,28 +1099,28 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate({ page: 'P2', postId: post.id }); }}
                 aria-label={t(`查看 ${post.replies} 条评论`, `View ${post.replies} comments`)}
               >
-                <MessageCircle size={16} strokeWidth={2.25} />{post.replies}
+                <MessageCircle size={16} strokeWidth={2.25} />{formatCount(post.replies, language)}
               </span>
               <button
                 type="button"
                 className={`video-player-action-item${repostedPostIds.has(post.id) ? ' video-player-action-item--active' : ''}`}
                 onClick={(e) => { e.stopPropagation(); togglePostAction(post.id, 'share'); }}
               >
-                <Repeat2 size={16} strokeWidth={2.25} />{post.shares}
+                <Repeat2 size={16} strokeWidth={2.25} />{formatCount(post.shares, language)}
               </button>
               <button
                 type="button"
                 className={`video-player-action-item${likedPostIds.has(post.id) ? ' video-player-action-item--active' : ''}`}
                 onClick={(e) => { e.stopPropagation(); togglePostAction(post.id, 'like'); }}
               >
-                <ThumbsUp size={16} strokeWidth={2.25} />{post.likes}
+                <ThumbsUp size={16} strokeWidth={2.25} />{formatCount(post.likes, language)}
               </button>
               <button
                 type="button"
                 className={`video-player-action-item${savedPostIds.has(post.id) ? ' video-player-action-item--active' : ''}`}
                 onClick={(e) => { e.stopPropagation(); togglePostAction(post.id, 'save'); }}
               >
-                <Bookmark size={16} strokeWidth={2.25} />{post.saves}
+                <Bookmark size={16} strokeWidth={2.25} />{formatCount(post.saves, language)}
               </button>
               {!isOwn && (
                 <button
