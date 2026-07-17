@@ -19,6 +19,7 @@ export type Post = {
   shares: number;
   saves: number;
   likes: number;
+  dislikes?: number;
   videoUrl?: string;
   tipsReceived?: number; // 该帖累计收到的打赏（PB），仅在自己主页展示
   channelId?: string; // 归属频道；未设置=不属于任何频道
@@ -73,6 +74,9 @@ export type Channel = {
   tiers: ChannelTier[]; // 最多 5 档；空数组=不开启订阅（纯免费频道）
   subscriberCount: number;
   createdAt: string;
+  // 会员档位设置（涨价/降价/新增/下架档位）30 天内只能改一次；记录上次改动时间（ms 时间戳）
+  // 未改动过则为 undefined（可立即修改）；仅频道名称/简介的编辑不受此限制、不刷新该时间戳
+  tiersChangedAt?: number;
 };
 
 /** 频道订阅者（频道主从个人页查看） */
@@ -175,6 +179,7 @@ export type SupTransactionReason =
   | 'comment'
   | 'share'
   | 'like'
+  | 'dislike'
   | 'save'
   | 'unlock';
 
@@ -186,7 +191,7 @@ export type SupTransaction = {
   reason: SupTransactionReason;
 };
 
-export type PostAction = 'share' | 'like' | 'save';
+export type PostAction = 'share' | 'like' | 'save' | 'dislike';
 
 export type NewPostData = {
   title: string;

@@ -28,6 +28,7 @@ export default function App() {
   const [repostedPostIds, setRepostedPostIds] = useState<Set<string>>(new Set(['p1', 'p4', 'p6']));
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set(['p2', 'p5', 'im3']));
+  const [dislikedPostIds, setDislikedPostIds] = useState<Set<string>>(new Set());
   const [toastMsg, setToastMsg] = useState<{ msg: string; type?: 'demo' } | null>(null);
   const [paySheet, setPaySheet] = useState<PayCtx | null>(null);
   const [stakeModal, setStakeModal] = useState<StakeModalRequest | null>(null);
@@ -59,10 +60,6 @@ export default function App() {
     setSupHistory(prev => [{ ...tx, id: `s${Date.now()}`, time }, ...prev]);
   };
 
-  const rechargeSup = (amount: number) => {
-    setSupBalance(b => b + amount);
-    appendSupTransaction({ direction: 'in', amount, reason: 'recharge' });
-  };
   const deductSup = (amount: number, reason: SupTransactionReason) => {
     setSupBalance(b => Math.max(0, b - amount));
     appendSupTransaction({ direction: 'out', amount, reason });
@@ -266,15 +263,17 @@ export default function App() {
   };
 
   const togglePostAction = (postId: string, action: PostAction) => {
-    const actionState = action === 'share' ? repostedPostIds : action === 'like' ? likedPostIds : savedPostIds;
-    const setActionState = action === 'share' ? setRepostedPostIds : action === 'like' ? setLikedPostIds : setSavedPostIds;
-    const countKey: 'shares' | 'likes' | 'saves' = action === 'share' ? 'shares' : action === 'like' ? 'likes' : 'saves';
+    const actionState = action === 'share' ? repostedPostIds : action === 'like' ? likedPostIds : action === 'dislike' ? dislikedPostIds : savedPostIds;
+    const setActionState = action === 'share' ? setRepostedPostIds : action === 'like' ? setLikedPostIds : action === 'dislike' ? setDislikedPostIds : setSavedPostIds;
+    const countKey: 'shares' | 'likes' | 'dislikes' | 'saves' = action === 'share' ? 'shares' : action === 'like' ? 'likes' : action === 'dislike' ? 'dislikes' : 'saves';
     const active = actionState.has(postId);
     const labels = action === 'share'
       ? [t('已取消转发', 'Repost removed'), t('转发成功', 'Reposted')]
       : action === 'like'
         ? [t('已取消点赞', 'Like removed'), t('已点赞', 'Liked')]
-        : [t('已取消收藏', 'Removed from saved'), t('已收藏', 'Saved')];
+        : action === 'dislike'
+          ? [t('已取消踩', 'Dislike removed'), t('已踩', 'Disliked')]
+          : [t('已取消收藏', 'Removed from saved'), t('已收藏', 'Saved')];
 
     setActionState(previous => {
       const next = new Set(previous);
@@ -282,9 +281,9 @@ export default function App() {
       return next;
     });
     setPosts(previous => previous.map(post => post.id === postId
-      ? { ...post, [countKey]: Math.max(0, post[countKey] + (active ? -1 : 1)) }
+      ? { ...post, [countKey]: Math.max(0, (post[countKey] ?? 0) + (active ? -1 : 1)) }
       : post));
-    if (action !== 'like') showToast(active ? labels[0] : labels[1]);
+    if (action !== 'like' && action !== 'dislike') showToast(active ? labels[0] : labels[1]);
   };
 
   const deletePost = (postId: string) => {
@@ -298,8 +297,10 @@ export default function App() {
 
   const openEditPost = (postId: string) => setEditPostId(postId);
 
-  const updatePost = (postId: string, newTitle: string) => {
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, title: newTitle } : p));
+  const updatePost = (postId: string, newTitle: string, tierUpdate?: { minTierIndex: number | undefined }) => {
+    setPosts(prev => prev.map(p => p.id === postId
+      ? { ...p, title: newTitle, ...(tierUpdate ? { minTierIndex: tierUpdate.minTierIndex } : {}) }
+      : p));
     setEditPostId(null);
     showToast(t('已保存', 'Saved'));
   };
@@ -340,9 +341,21 @@ export default function App() {
   };
 
   const updateChannel = (channelId: string, data: NewChannelData) => {
-    setChannels(prev => prev.map(c => c.id === channelId
-      ? { ...c, name: data.name, description: data.description, category: data.category, tiers: data.tiers }
-      : c));
+    setChannels(prev => prev.map(c => {
+      if (c.id !== channelId) return c;
+      // 只有档位设置（价格/是否下架/档位数量）真的变了才刷新冷却计时；
+      // 单纯改频道名称、简介不受 30 天限制、不重置冷却
+      const tiersSignature = (tiers: typeof data.tiers) => JSON.stringify(tiers.map(tr => [tr.id, tr.price, !!tr.archived]));
+      const tiersChanged = tiersSignature(c.tiers) !== tiersSignature(data.tiers);
+      return {
+        ...c,
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        tiers: data.tiers,
+        tiersChangedAt: tiersChanged ? Date.now() : c.tiersChangedAt,
+      };
+    }));
     showToast(t('频道信息已更新', 'Channel updated'));
   };
 
@@ -502,7 +515,7 @@ export default function App() {
     navigate, navigateRoot, goBack, canGoBack: stack.length > 1, openCompose, openComposeWithDraft, showToast, openLink, openPay, openImageLightbox,
     linkedPostIds, followedAuthors, toggleFollow,
     language, setLanguage, t,
-    posts, repostedPostIds, likedPostIds, savedPostIds, togglePostAction,
+    posts, repostedPostIds, likedPostIds, savedPostIds, dislikedPostIds, togglePostAction,
     requestPostInteraction, beginPaidInteraction,
     deletePost, requestDeletePost,
     openEditPost, updatePost, incrementReplies,
@@ -518,7 +531,7 @@ export default function App() {
     createChannel, updateChannel,
     openCreateChannel, createChannelOpen, closeCreateChannel,
     openManageChannel, closeManageChannel,
-    supBalance, supHistory, rechargeSup, deductSup,
+    supBalance, supHistory, deductSup,
   };
 
 

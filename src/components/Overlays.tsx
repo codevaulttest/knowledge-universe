@@ -150,6 +150,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
     comment: [t('评论', 'Comment'), t('评论并创建子节点', 'Comment and create child node')],
     share: [t('转发', 'Repost'), t('转发并创建子节点', 'Repost and create child node')],
     like: [t('点赞', 'Like'), t('点赞并创建子节点', 'Like and create child node')],
+    dislike: [t('踩', 'Dislike'), t('踩并创建子节点', 'Dislike and create child node')],
     save: [t('收藏', 'Save'), t('收藏并创建子节点', 'Save and create child node')],
     unlock: [t('解锁', 'Unlock'), t('解锁并创建子节点', 'Unlock and create child node')],
   };
@@ -264,6 +265,7 @@ const INTERACTION_ACTION_LABEL: Record<InteractionAction, [string, string]> = {
   comment: ['评论', 'Comment'],
   share: ['转发', 'Repost'],
   like: ['点赞', 'Like'],
+  dislike: ['踩', 'Dislike'],
   save: ['收藏', 'Save'],
   unlock: ['解锁', 'Unlock'],
 };
@@ -1816,7 +1818,7 @@ function channelTierPriceError(
 }
 
 export function CreateChannelModal({ existingChannel, onClose }: { existingChannel?: Channel; onClose: () => void }) {
-  const { t, createChannel, updateChannel, userProfile, deductSup } = useApp();
+  const { t, createChannel, updateChannel, userProfile, deductSup, showToast } = useApp();
   const defaultChannelName = t(`${userProfile.nickname}的频道`, `${userProfile.nickname}'s Channel`);
   const [paying, setPaying] = useState<'idle' | 'loading' | 'failed'>('idle');
   const [failReason, setFailReason] = useState('');
@@ -1832,9 +1834,22 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
     isEdit ? normalizeTierNames(sanitizeTierPrices(existingChannel?.tiers ?? [])) : [],
   );
 
+  // 档位设置（涨价/降价/新增/下架）30 天内只能改一次；单纯改名称/简介不受此限制
+  const TIER_SETTINGS_COOLDOWN_DAYS = 30;
+  const tierSettingsCooldownRemainingDays = (() => {
+    if (!existingChannel?.tiersChangedAt) return 0;
+    const elapsedDays = (Date.now() - existingChannel.tiersChangedAt) / (24 * 60 * 60 * 1000);
+    return Math.max(0, Math.ceil(TIER_SETTINGS_COOLDOWN_DAYS - elapsedDays));
+  })();
+  const canEditTierSettings = tierSettingsCooldownRemainingDays <= 0;
+  const notifyTierSettingsLocked = () => {
+    showToast(t('档位设置 30 天内只能修改一次，请稍后再试', 'Tier settings can only be changed once every 30 days, please try again later'));
+  };
+
   const activeTierCount = tiers.filter(tr => !tr.archived).length;
 
   const addTier = () => {
+    if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
     if (activeTierCount >= MAX_CHANNEL_TIERS) return;
     const nextIndex = tiers.length;
     setTiers(prev => normalizeTierNames([
@@ -1847,12 +1862,14 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
     ]));
   };
   const updateTierPrice = (idx: number, price: number) => {
+    if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
     setTiers(prev => prev.map((tr, i) => i === idx ? { ...tr, price } : tr));
   };
   // 下架而非删除：已保存过的档位一旦存在，就不能真的从数组里移除，
   // 否则会导致 minTierIndex / 订阅记录里存的下标错位、指向别的档位。
   // 本次编辑中新增、还没保存过的档位（existingChannel 里没有）可以直接移除。
   const removeTier = (idx: number) => {
+    if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
     setTiers(prev => {
       const tier = prev[idx];
       const wasPersisted = existingChannel?.tiers.some(t => t.id === tier.id) ?? false;
@@ -1972,9 +1989,11 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                     <span className="channel-tier-name-label">{tier.name}</span>
                     <div className="channel-tier-price-wrap">
                       <input
-                        className={`edit-profile-input channel-tier-price-input${priceError ? ' edit-profile-input--error' : ''}`}
+                        className={`edit-profile-input channel-tier-price-input${priceError ? ' edit-profile-input--error' : ''}${!canEditTierSettings ? ' channel-tier-price-input--locked' : ''}`}
                         type="number" min={1}
                         value={tier.price}
+                        readOnly={!canEditTierSettings}
+                        onMouseDown={() => { if (!canEditTierSettings) notifyTierSettingsLocked(); }}
                         onChange={e => {
                           const raw = Number(e.target.value);
                           updateTierPrice(idx, Number.isFinite(raw) ? Math.max(0, raw) : 0);
@@ -1985,7 +2004,12 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                       />
                       <span className="channel-tier-price-unit">PB/{t('月', 'mo')}</span>
                     </div>
-                    <button type="button" className="draft-item-delete channel-tier-delete" onClick={() => removeTier(idx)} aria-label={t('下架档位', 'Discontinue tier')}>
+                    <button
+                      type="button"
+                      className={`draft-item-delete channel-tier-delete${!canEditTierSettings ? ' channel-tier-delete--locked' : ''}`}
+                      onClick={() => removeTier(idx)}
+                      aria-label={t('下架档位', 'Discontinue tier')}
+                    >
                       <X size={14} strokeWidth={2} />
                     </button>
                   </div>
@@ -1996,7 +2020,11 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               );
             })}
             {activeTierCount < MAX_CHANNEL_TIERS && (
-              <button type="button" className="channel-tier-add-btn" onClick={addTier}>
+              <button
+                type="button"
+                className={`channel-tier-add-btn${!canEditTierSettings ? ' channel-tier-add-btn--locked' : ''}`}
+                onClick={addTier}
+              >
                 <Plus size={16} strokeWidth={2.5} aria-hidden />
                 {t('新增档位', 'Add tier')}
               </button>

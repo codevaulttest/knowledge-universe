@@ -10,8 +10,8 @@ export const BATCH_SIZE = 3;
 
 export const MOCK_WALLET_ADDRESS = '0x7a3fb8e2d1c94f6a5b3e0d9c8f2a7e1b4d6c3e8';
 export const DEFAULT_WALLET_DISPLAY = MOCK_WALLET_ADDRESS.slice(-6);
-/** 演示用外部钱包可充值余额，用于「充值 SUP」输入框的"全部"快捷按钮 */
-export const MOCK_WALLET_SUP_BALANCE = 68;
+/** 「知识宇宙」SUP 充值专属地址——与用户自己的钱包地址不同，任意钱包均可转入 */
+export const MOCK_SUP_DEPOSIT_ADDRESS = '0x4f1a9c7e2b8d05f3a6c1e9b7d4f2a8c5e0b3d6f9';
 /** 演示登录用户：与钱包短名一致，避免与中文昵称人格混用 */
 export const CURRENT_USER = DEFAULT_WALLET_DISPLAY;
 
@@ -86,18 +86,6 @@ export const ALL_CHANNELS: Channel[] = [
       { id: 'aieff-5', name: 'Lv.5', price: 800 },
     ],
     subscriberCount: 124, createdAt: '2026-03-15',
-  },
-  {
-    id: 'channel-lin', ownerName: CURRENT_USER, name: `${DEFAULT_WALLET_DISPLAY}的频道`,
-    description: '知识管理、可视化笔记与独立创作心得。',
-    avatarSeed: CURRENT_USER, category: '知识管理',
-    tiers: [
-      { id: 'lin-1', name: 'Lv.1', price: 100 },
-      { id: 'lin-2', name: 'Lv.2', price: 500 },
-      { id: 'lin-3', name: 'Lv.3', price: 2000 },
-      { id: 'lin-4', name: 'Lv.4', price: 5000 },
-    ],
-    subscriberCount: 37, createdAt: '2026-06-20',
   },
 ];
 

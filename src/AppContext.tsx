@@ -22,6 +22,7 @@ export type AppContextValue = {
   repostedPostIds: Set<string>;
   likedPostIds: Set<string>;
   savedPostIds: Set<string>;
+  dislikedPostIds: Set<string>;
   togglePostAction: (postId: string, action: PostAction) => void;
   requestPostInteraction: (
     postId: string,
@@ -32,7 +33,8 @@ export type AppContextValue = {
   deletePost: (postId: string) => void;
   requestDeletePost: (postId: string, onAfterDelete?: () => void) => void;
   openEditPost: (postId: string) => void;
-  updatePost: (postId: string, newTitle: string) => void;
+  // tierUpdate 传入即代表本次连带修改了频道可见档位（30 天冷却期由调用方校验后才允许传入）
+  updatePost: (postId: string, newTitle: string, tierUpdate?: { minTierIndex: number | undefined }) => void;
   incrementReplies: (postId: string) => void;
   stagePendingPost: (data: NewPostData) => void;
   publishPost: (data: NewPostData) => void;
@@ -71,7 +73,6 @@ export type AppContextValue = {
   // SUP（SUP 链原生代币）：用户中心可充值站内 SUP 资产，产生节点时与 PB 同步扣除
   supBalance: number;
   supHistory: SupTransaction[];
-  rechargeSup: (amount: number) => void;
   deductSup: (amount: number, reason: SupTransactionReason) => void;
 };
 

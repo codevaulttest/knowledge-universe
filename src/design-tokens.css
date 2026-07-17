@@ -48,6 +48,9 @@
 
   --ku-color-success-bg:       #d9f7e6;
   --ku-color-success-text:     #19b750;
+  --ku-color-warning-bg:       #fdf3d9;  /* 风险提示条底色（充值网络提醒等） */
+  --ku-color-warning-text:     #92600a;
+  --ku-color-warning-icon:     #d69e2e;
   --ku-color-heat:             #ff4824;  /* 热度火焰图标 */
   --ku-color-text-danger:      #e74c3c;  /* 危险操作文字（删除等） */
   --ku-color-verified:         #1B6BFF;  /* 用户蓝 V 认证标识 */

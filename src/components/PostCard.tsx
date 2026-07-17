@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bookmark, Check, Ellipsis, HandCoins, MessageCircle, Radio, Repeat2, ThumbsUp, Trash2, Users } from 'lucide-react';
+import { Bookmark, Check, Ellipsis, Gem, HandCoins, MessageCircle, Pencil, Radio, Repeat2, ThumbsDown, ThumbsUp, Trash2, Users } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
@@ -96,12 +96,12 @@ export function Actions({ post, onComment, extra }: {
   post: Post; onComment: (e: React.MouseEvent) => void; extra?: React.ReactNode;
 }) {
   const {
-    repostedPostIds, likedPostIds, savedPostIds, togglePostAction, requestPostInteraction,
+    repostedPostIds, likedPostIds, savedPostIds, dislikedPostIds, togglePostAction, requestPostInteraction,
     t,
   } = useApp();
   const [confirmShare, setConfirmShare] = useState<'repost' | 'unrepost' | null>(null);
 
-  const actionButton = (action: PostAction, active: boolean, label: string, count: number, icon: React.ReactNode) => (
+  const actionButton = (action: PostAction, active: boolean, label: string, count: number, icon: React.ReactNode, showCount = true) => (
     <button
       key={action}
       type="button"
@@ -113,7 +113,7 @@ export function Actions({ post, onComment, extra }: {
       aria-label={t(`${active ? '取消' : ''}${label}，当前 ${count}`, `${active ? 'Remove ' : ''}${label}, current count ${count}`)}
       aria-pressed={active}
     >
-      {icon}{count}
+      {icon}{showCount && count}
     </button>
   );
 
@@ -136,7 +136,7 @@ export function Actions({ post, onComment, extra }: {
         className="actions"
         data-layer="post-actions"
         onClick={e => e.stopPropagation()}
-        style={extra ? { gridTemplateColumns: '1fr 1fr 1fr 1fr auto' } : undefined}
+        style={extra ? { gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr auto' } : undefined}
       >
         <span
           className="reply-trigger"
@@ -163,6 +163,7 @@ export function Actions({ post, onComment, extra }: {
           <Repeat2 size={18} strokeWidth={2.25} />{post.shares}
         </button>
         {actionButton('like', likedPostIds.has(post.id), t('点赞', 'like'), post.likes, <ThumbsUp size={18} strokeWidth={2.25} />)}
+        {actionButton('dislike', dislikedPostIds.has(post.id), t('踩', 'dislike'), post.dislikes ?? 0, <ThumbsDown size={18} strokeWidth={2.25} />, false)}
         {actionButton('save', savedPostIds.has(post.id), t('收藏', 'save'), post.saves, <Bookmark size={18} strokeWidth={2.25} />)}
         {extra && <div className="actions-extra" onClick={e => e.stopPropagation()}>{extra}</div>}
       </div>
@@ -206,7 +207,7 @@ export function PostCard({
   onOpen?: (post: Post) => void;
   repostedBy?: RepostedBy;
 }) {
-  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, openChannelSubscribe } = useApp();
+  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, openChannelSubscribe } = useApp();
   const [moreOpen, setMoreOpen] = useState(false);
   const [actorsTab, setActorsTab] = useState<PostAction | 'link' | 'tip' | null>(null);
   const [showTip, setShowTip] = useState(false);
@@ -273,6 +274,12 @@ export function PostCard({
                 {channel.name}
               </span>
             )}
+            {isOwn && requiredTier && (
+              <span className="post-tier-badge" aria-label={t(`需订阅达到 ${requiredTier.name} 及以上`, `Requires ${requiredTier.name} or above`)}>
+                <Gem size={11} strokeWidth={2.2} />
+                {requiredTier.name}
+              </span>
+            )}
             {isOwn && post.isNode && (
               <span className="post-visibility-badge">
                 {post.visiblePercent === 100
@@ -299,6 +306,11 @@ export function PostCard({
                 {hasActors && (
                   <button type="button" onClick={() => { setMoreOpen(false); setActorsTab('like'); }}>
                     <Users size={14} strokeWidth={2.2} /> {t('查看互动', 'View interactions')}
+                  </button>
+                )}
+                {post.channelId && (
+                  <button type="button" onClick={() => { setMoreOpen(false); openEditPost(post.id); }}>
+                    <Pencil size={14} strokeWidth={2.2} /> {t('编辑', 'Edit')}
                   </button>
                 )}
                 <button type="button" onClick={() => { setMoreOpen(false); requestDeletePost(post.id); }} className="more-dropdown__danger">

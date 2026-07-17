@@ -626,6 +626,19 @@ button {
   flex-shrink: 0;
 }
 
+/* ── Post Tier Badge（仅作者可见：这条帖子设置的可见档位门槛）── */
+.post-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: var(--ku-radius-badge);
+  background: var(--ku-color-member-badge-bg);
+  color: var(--ku-color-member-badge);
+  font: 600 11px/1.2 var(--ku-font-family);
+  white-space: nowrap;
+}
+
 /* ── Post Content（含付费内容遮罩）── */
 .post-content-wrap { position: relative; margin-bottom: 12px; }
 
@@ -1151,7 +1164,7 @@ button {
 /* ── Actions Bar（评论 / 转发 / 点赞 / 收藏）── */
 .actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   align-items: center;
   padding: 10px 0 14px;
   color: var(--ku-color-text-action);
@@ -1180,6 +1193,11 @@ button {
 }
 .post-action--active svg { fill: var(--ku-color-primary); }
 .post-action--share.post-action--active svg { fill: none; }
+.post-action--dislike.post-action--active,
+.post-action--dislike.post-action--active svg {
+  color: var(--ku-color-text-danger);
+  fill: var(--ku-color-text-danger);
+}
 
 /* 回复触发区 */
 .reply-trigger {
@@ -1641,6 +1659,9 @@ button {
   gap: 16px;
 }
 .publish-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font: var(--ku-text-action-cta);
   color: var(--ku-color-primary);
   padding: 6px 14px;
@@ -1759,6 +1780,17 @@ button {
 }
 .compose-input:focus { border-color: var(--ku-color-primary); }
 .compose-input::placeholder { color: var(--ku-color-text-secondary); }
+.compose-input--readonly {
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-secondary);
+  cursor: default;
+}
+.compose-input--readonly:focus { border-color: var(--ku-color-border-card); }
+.compose-readonly-hint {
+  margin: 6px 0 0;
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-meta);
+}
 /* Attached images */
 .compose-img-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .compose-img-thumb {
@@ -2101,6 +2133,10 @@ button {
 .stake-tier-option--active {
   border-color: var(--ku-color-primary);
   background: var(--ku-color-primary-alpha-06);
+}
+.stake-tier-option:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 /* 频道会员档位卡片：用会员小标同色系区分于知识星球的质押档位卡片，避免两组视觉雷同 */
 .compose-stake-section--channel .compose-stake-heading {
@@ -4368,14 +4404,21 @@ button {
   gap: 4px;
   padding: 10px 16px 0;
   border-bottom: 1px solid var(--ku-color-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.activity-filter-tabs::-webkit-scrollbar {
+  display: none;
 }
 .activity-filter-tab {
+  flex-shrink: 0;
   padding: 8px 14px 10px;
   border: none;
   background: none;
   cursor: pointer;
   font: 400 14px/1 var(--ku-font-family);
   color: var(--ku-color-text-secondary);
+  white-space: nowrap;
   position: relative;
   transition: color 0.15s;
 }
@@ -6592,39 +6635,53 @@ button {
   transition: border-color var(--ku-motion-fast);
 }
 .edit-profile-input:focus { border-color: var(--ku-color-primary); }
-.recharge-amount-wrap {
+.recharge-warning-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-warning-bg);
+  color: var(--ku-color-warning-text);
+  font: var(--ku-text-meta);
+  line-height: 1.4;
+}
+.recharge-warning-banner svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--ku-color-warning-icon);
+}
+.recharge-qr-box {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-.recharge-amount-input {
-  flex: 1;
-  font-variant-numeric: tabular-nums;
+  justify-content: center;
+  width: 168px;
+  height: 168px;
+  margin: 4px auto 16px;
+  border-radius: var(--ku-radius-card);
+  border: 1.5px dashed var(--ku-color-border);
   background: var(--ku-color-bg-root);
-  border-color: var(--ku-color-border);
-}
-.recharge-amount-max-btn {
-  flex-shrink: 0;
-  padding: 6px 10px;
-  border-radius: var(--ku-radius-pill);
-  border: 1.5px solid var(--ku-color-primary);
-  background: transparent;
-  color: var(--ku-color-primary);
-  font: var(--ku-text-action-cta);
-  white-space: nowrap;
-  transition: background var(--ku-motion-fast);
-}
-.recharge-amount-max-btn:active { background: var(--ku-color-primary-alpha-06); }
-.recharge-amount-balance-hint {
-  margin: 0 0 16px;
-  font: var(--ku-text-meta);
   color: var(--ku-color-text-secondary);
 }
-.recharge-amount-unit {
-  flex-shrink: 0;
-  font: var(--ku-text-caption-strong);
-  color: var(--ku-color-text-secondary);
+.planet-upgrade-row--address {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.recharge-address-copy {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  color: var(--ku-color-text-primary);
+  text-align: left;
+}
+.recharge-address-copy-text {
+  flex: 1;
+  font: 600 13px/1.4 var(--ku-font-family);
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
 }
 .channel-tier-block {
   margin-bottom: 8px;
@@ -6748,6 +6805,18 @@ button {
 }
 .channel-tier-add-btn svg {
   flex-shrink: 0;
+}
+.channel-tier-add-btn--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.channel-tier-delete--locked {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.channel-tier-price-input--locked {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .edit-profile-input--error {
   border-color: var(--ku-color-text-danger) !important;

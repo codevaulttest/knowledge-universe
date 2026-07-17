@@ -14,10 +14,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, repostedPostIds, unreadActivityCount, t, userProfile, updateUserProfile, channels, subscribedChannelTiers, openChannelSubscribe, openCreateChannel, openManageChannel } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
-  // 自己主页优先用预置 channel-lin（含订阅 mock），避免会话里临时开通的空频道盖住演示数据
-  const channel = isOwn
-    ? (channels.find(c => c.id === 'channel-lin') ?? channels.find(c => c.ownerName === authorName))
-    : channels.find(c => c.ownerName === authorName);
+  const channel = channels.find(c => c.ownerName === authorName);
   const genesisTier = getGenesisTier(authorName);
   const mySubscribedTierIndex = channel ? subscribedChannelTiers[channel.id] : undefined;
   // 我的主页隐藏长文（article）类型的 mock 帖子

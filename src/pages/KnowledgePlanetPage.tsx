@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { ArrowDownToLine, ArrowUp, ArrowUpToLine, Check, ChevronDown, ChevronRight, Copy, Crown, FileText, Gift, LayoutGrid, Link, Loader2, Lock, MessageCircle, Radio, Repeat2, Search, Star, Wallet, X } from 'lucide-react';
+import { ArrowDownToLine, ArrowUp, ArrowUpToLine, Check, ChevronDown, ChevronRight, Copy, Crown, FileText, Gift, LayoutGrid, Link, Loader2, Lock, MessageCircle, QrCode, Radio, Repeat2, Search, Star, TriangleAlert, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader, Rating } from '../components/shared';
-import { CURRENT_USER, MOCK_WALLET_ADDRESS, MOCK_WALLET_SUP_BALANCE } from '../mockData';
+import { CURRENT_USER, MOCK_SUP_DEPOSIT_ADDRESS, MOCK_WALLET_ADDRESS } from '../mockData';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import type { LucideIcon } from 'lucide-react';
 import type { SupTransactionReason } from '../types';
@@ -16,6 +16,7 @@ const SUP_REASON_LABELS: Record<SupTransactionReason, [string, string]> = {
   comment: ['评论并创建子节点', 'Comment and create child node'],
   share: ['转发并创建子节点', 'Repost and create child node'],
   like: ['点赞并创建子节点', 'Like and create child node'],
+  dislike: ['踩并创建子节点', 'Dislike and create child node'],
   save: ['收藏并创建子节点', 'Save and create child node'],
   unlock: ['解锁并创建子节点', 'Unlock and create child node'],
 };
@@ -168,7 +169,7 @@ function seedNodesWithChannel(channels: { ownerName: string; id: string; created
 }
 
 export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string } = {}) {
-  const { goBack, canGoBack, showToast, t, language, channels, supBalance, supHistory, rechargeSup } = useApp();
+  const { goBack, canGoBack, showToast, t, language, channels, supBalance, supHistory } = useApp();
   const zh = language === 'zh-CN';
   const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
   const [sourceFilter, setSourceFilter] = useState<NodeSource | null>(null);
@@ -187,11 +188,17 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawHistory, setWithdrawHistory] = useState<WithdrawRecord[]>([]);
   const [showRechargeSheet, setShowRechargeSheet] = useState(false);
-  const [rechargeAmount, setRechargeAmount] = useState(1);
-  const [recharging, setRecharging] = useState(false);
+  const [addressCopied, setAddressCopied] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<'star' | 'source' | null>(null);
 
   const maskedWallet = `${MOCK_WALLET_ADDRESS.slice(0, 6)}...${MOCK_WALLET_ADDRESS.slice(-6)}`;
+
+  const handleCopyDepositAddress = () => {
+    navigator.clipboard.writeText(MOCK_SUP_DEPOSIT_ADDRESS).then(() => {
+      setAddressCopied(true);
+      setTimeout(() => setAddressCopied(false), 1800);
+    });
+  };
 
   const copyNodeCode = (node: KnowledgeNode) => {
     navigator.clipboard.writeText(node.nodeCode).then(() => {
@@ -245,20 +252,6 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
       showToast(t(
         `提取成功，${formatTokenAmount(withdrawAmount)} PB 已提取上链`,
         `Withdrawal successful — ${formatTokenAmount(withdrawAmount)} PB sent on-chain`,
-      ));
-    }, 1500);
-  };
-
-  const handleRechargeConfirm = () => {
-    if (recharging || rechargeAmount <= 0) return;
-    setRecharging(true);
-    setTimeout(() => {
-      setRecharging(false);
-      setShowRechargeSheet(false);
-      rechargeSup(rechargeAmount);
-      showToast(t(
-        `充值成功，+${rechargeAmount} SUP 已到账`,
-        `Recharge successful — +${rechargeAmount} SUP credited`,
       ));
     }, 1500);
   };
@@ -763,7 +756,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
       {showRechargeSheet && (
         <div
           className="sheet-backdrop"
-          onClick={() => { if (!recharging) setShowRechargeSheet(false); }}
+          onClick={() => setShowRechargeSheet(false)}
         >
           <div
             className="payment-sheet planet-upgrade-sheet"
@@ -776,63 +769,43 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
-                onClick={() => { if (!recharging) setShowRechargeSheet(false); }}
+                onClick={() => setShowRechargeSheet(false)}
                 aria-label={t('关闭', 'Close')}
               >
                 <X size={18} strokeWidth={2} />
               </button>
             </div>
 
+            <div className="recharge-warning-banner">
+              <TriangleAlert size={16} strokeWidth={2.2} aria-hidden="true" />
+              <span>{t('请确认转账网络为 Super AI Chain，充错网络资产将无法找回', 'Make sure the network is Super AI Chain — assets sent on the wrong network cannot be recovered')}</span>
+            </div>
+
             <p className="gemini-stake-lead">
-              {t('充值后将自动计入你的 SUP 余额', 'Your deposit will be added to your SUP balance')}
+              {t('使用任意钱包向以下地址转入 SUP，链上到账后自动计入站内余额', 'Send SUP from any wallet to the address below — it credits your in-app balance once confirmed on-chain')}
             </p>
 
-            <div className="recharge-amount-wrap">
-              <input
-                className="edit-profile-input recharge-amount-input"
-                type="number"
-                min={1}
-                value={rechargeAmount || ''}
-                onChange={e => {
-                  const raw = Number(e.target.value);
-                  setRechargeAmount(Number.isFinite(raw) ? Math.max(0, raw) : 0);
-                }}
-                placeholder={t('输入充值数量', 'Enter amount')}
-                aria-label={t('充值数量（SUP）', 'Recharge amount (SUP)')}
-              />
-              <span className="recharge-amount-unit">SUP</span>
-              <button
-                type="button"
-                className="recharge-amount-max-btn"
-                onClick={() => setRechargeAmount(MOCK_WALLET_SUP_BALANCE)}
-              >
-                {t('全部', 'Max')}
-              </button>
+            <div className="recharge-qr-box" aria-hidden="true">
+              <QrCode size={104} strokeWidth={1.2} />
             </div>
-            <p className="recharge-amount-balance-hint">
-              {t(`钱包可用 ${formatSupAmount(MOCK_WALLET_SUP_BALANCE)} SUP`, `Wallet available: ${formatSupAmount(MOCK_WALLET_SUP_BALANCE)} SUP`)}
-            </p>
 
             <div className="planet-upgrade-row">
-              <span className="planet-upgrade-row-label">{t('从', 'From')}</span>
-              <span className="planet-upgrade-row-value">{maskedWallet}</span>
+              <span className="planet-upgrade-row-label">{t('网络', 'Network')}</span>
+              <span className="planet-upgrade-row-value">Super AI Chain</span>
             </div>
             <div className="planet-upgrade-sep" />
-            <div className="planet-upgrade-row">
-              <span className="planet-upgrade-row-label">{t('到', 'To')}</span>
-              <span className="planet-upgrade-row-value">{t('「知识宇宙」SUP 余额', 'Knowledge Universe SUP balance')}</span>
+            <div className="planet-upgrade-row planet-upgrade-row--address">
+              <span className="planet-upgrade-row-label">{t('充值地址', 'Deposit address')}</span>
+              <button
+                type="button"
+                className="recharge-address-copy"
+                onClick={handleCopyDepositAddress}
+                aria-label={t('复制充值地址', 'Copy deposit address')}
+              >
+                <span className="recharge-address-copy-text">{MOCK_SUP_DEPOSIT_ADDRESS}</span>
+                {addressCopied ? <Check size={14} strokeWidth={2.2} /> : <Copy size={14} strokeWidth={2} />}
+              </button>
             </div>
-
-            <button
-              className="planet-confirm-btn"
-              onClick={handleRechargeConfirm}
-              disabled={recharging}
-            >
-              {recharging
-                ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
-                : t(`确认充值 ${rechargeAmount} SUP`, `Confirm recharge ${rechargeAmount} SUP`)
-              }
-            </button>
           </div>
         </div>
       )}

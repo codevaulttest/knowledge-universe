@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react';
-import { Camera, FileText, Image, Plus, Radio, Save, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
+import { Camera, FileText, Image, Plus, Radio, Save, Send, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { CURRENT_USER } from '../mockData';
@@ -22,6 +22,17 @@ export function ComposePage({
   const { openPay, showToast, updatePost, saveDraft, updateDraft, stagePendingPost, publishPost, t, language, channels } = useApp();
   const isEditMode = !!editPost;
   const myChannel = channels.find(c => c.ownerName === CURRENT_USER);
+  // 编辑已发布的频道帖子时，可见档位允许调整，但只能单向放宽（降低门槛/改成不限档位），
+  // 不能收紧（提高门槛）——已经被看过的内容不能再收回去锁上，参考 YouTube 只支持
+  // "会员专属 → 公开"、不支持反向操作的惯例
+  const editPostChannel = isEditMode && editPost?.channelId === myChannel?.id ? myChannel : undefined;
+  const originalMinTierIndex = editPost?.minTierIndex;
+  const canLoosenTierTo = (candidateIdx: number | undefined) => {
+    if (candidateIdx === undefined) return true;
+    if (originalMinTierIndex === undefined) return false;
+    return candidateIdx <= originalMinTierIndex;
+  };
+  const [editMinTierIndex, setEditMinTierIndex] = useState<number | undefined>(editPost?.minTierIndex);
 
   const initialStakeTier = (): StakeTier => {
     if (draft?.stakeTier !== undefined) return draft.stakeTier;
@@ -110,7 +121,10 @@ export function ComposePage({
     ? articleTitle.trim().length > 0 || articleBodyHasContent || hasCover
     : text.trim().length > 0 || imgCount > 0 || hasVideo;
 
-  const hasEditChanges = isEditMode && text.trim() !== (editPost?.title ?? '');
+  const hasEditChanges = isEditMode && (
+    text.trim() !== (editPost?.title ?? '')
+    || (!!editPostChannel && editMinTierIndex !== editPost?.minTierIndex)
+  );
 
   const handleCloseAttempt = useCallback(() => {
     if (exitMenuOpen) {
@@ -133,7 +147,8 @@ export function ComposePage({
   const handlePublish = () => {
     if (!canPublish || publishing) return;
     if (isEditMode) {
-      updatePost(editPost.id, text.trim());
+      const tierChanged = editPostChannel && editMinTierIndex !== editPost.minTierIndex;
+      updatePost(editPost.id, text.trim(), tierChanged ? { minTierIndex: editMinTierIndex } : undefined);
       return;
     }
     const joinNode = stakeTier > 0;
@@ -284,6 +299,7 @@ export function ComposePage({
             onClick={handlePublish}
             disabled={!canPublish || publishing}
           >
+            {isEditMode ? <Save size={14} strokeWidth={2.2} /> : <Send size={14} strokeWidth={2.2} />}
             {publishing ? t('发布中…', 'Publishing…') : isEditMode ? t('保存', 'Save') : t('发布', 'Publish')}
           </button>
         </div>
@@ -451,21 +467,30 @@ export function ComposePage({
             {/* 主编辑框 */}
             <div className="compose-input-wrap">
               <textarea
-                className={`compose-input${isOverLimit ? ' compose-input--error' : ''}`}
+                className={`compose-input${isOverLimit ? ' compose-input--error' : ''}${isEditMode ? ' compose-input--readonly' : ''}`}
                 placeholder={t('分享你的知识…', 'Share your knowledge…')}
                 value={text}
-                onChange={e => setText(e.target.value)}
+                onChange={e => { if (!isEditMode) setText(e.target.value); }}
+                readOnly={isEditMode}
                 aria-label={t('帖子内容', 'Post content')}
               />
-              <div className={`compose-char-count${isOverLimit ? ' compose-char-count--error' : ''}`}>
-                <span>{text.length}</span>
-                <span className="compose-char-sep">/</span>
-                <span>{MAX_POST_CHARS}</span>
-              </div>
-              {isOverLimit && (
-                <p className="compose-char-error">
-                  {t(`超出字数限制 ${text.length - MAX_POST_CHARS} 字`, `${text.length - MAX_POST_CHARS} characters over limit`)}
+              {isEditMode ? (
+                <p className="compose-readonly-hint">
+                  {t('已发布内容不可修改，仅支持调整可见档位', 'Published content can’t be edited — only the visible tier can be adjusted')}
                 </p>
+              ) : (
+                <>
+                  <div className={`compose-char-count${isOverLimit ? ' compose-char-count--error' : ''}`}>
+                    <span>{text.length}</span>
+                    <span className="compose-char-sep">/</span>
+                    <span>{MAX_POST_CHARS}</span>
+                  </div>
+                  {isOverLimit && (
+                    <p className="compose-char-error">
+                      {t(`超出字数限制 ${text.length - MAX_POST_CHARS} 字`, `${text.length - MAX_POST_CHARS} characters over limit`)}
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
@@ -589,6 +614,51 @@ export function ComposePage({
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* 编辑已发布的频道帖子：可调整可见档位，但只能单向放宽（降低门槛/改成不限档位），
+            不能收紧（提高门槛）——已经被看过的内容不能再收回去锁上 */}
+        {isEditMode && editPostChannel && (
+          <div className="compose-section compose-stake-section compose-stake-section--channel">
+            <div className="compose-stake-heading">
+              <Radio size={16} strokeWidth={2} />
+              <span>{t(`可见档位《${editPostChannel.name}》`, `Visible tier — "${editPostChannel.name}"`)}</span>
+            </div>
+            <p className="compose-stake-hint">
+              {originalMinTierIndex === undefined
+                ? t('该帖已不限档位，无需订阅即可查看', 'This post already has no tier restriction')
+                : t('只能调整为更宽松的档位，不能提高门槛', 'You can only loosen the tier requirement, not raise it')}
+            </p>
+            <div className="stake-tier-list" role="radiogroup" aria-label={t('可见档位', 'Visible tier')}>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={editMinTierIndex === undefined}
+                className={`stake-tier-option stake-tier-option--channel${editMinTierIndex === undefined ? ' stake-tier-option--active' : ''}`}
+                onClick={() => setEditMinTierIndex(undefined)}
+              >
+                <span className="stake-tier-option__amount">{t('不限档位', 'No tier restriction')}</span>
+                <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子', 'No channel subscription needed to see this post')}</span>
+              </button>
+              {editPostChannel.tiers.map((tier, idx) => {
+                if (tier.archived && editMinTierIndex !== idx) return null;
+                return (
+                  <button
+                    key={tier.id}
+                    type="button"
+                    role="radio"
+                    disabled={!canLoosenTierTo(idx)}
+                    aria-checked={editMinTierIndex === idx}
+                    className={`stake-tier-option stake-tier-option--channel${editMinTierIndex === idx ? ' stake-tier-option--active' : ''}`}
+                    onClick={() => setEditMinTierIndex(idx)}
+                  >
+                    <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月', 'mo')}</span>
+                    <span className="stake-tier-option__desc">{t(`需订阅达到 ${tier.name} 及以上`, `Requires ${tier.name} subscription or above`)}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
