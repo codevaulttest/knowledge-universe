@@ -18,15 +18,16 @@ export function ActorsSheet({ postId, initialTab, onClose }: {
   const actors = POST_ACTORS[postId];
 
   const list: PostActorEntry[] = actors
-    ? (tab === 'link' ? actors.links : tab === 'like' ? actors.likes : tab === 'share' ? actors.shares : tab === 'tip' ? actors.tips : actors.saves)
+    ? (tab === 'link' ? actors.links : tab === 'like' ? actors.likes : tab === 'dislike' ? actors.dislikes : tab === 'share' ? actors.shares : tab === 'tip' ? actors.tips : actors.saves)
     : [];
 
   const tabs: { key: PostAction | 'link' | 'tip'; zh: string; en: string }[] = [
-    { key: 'link',  zh: '链接', en: 'Links' },
-    { key: 'like',  zh: '点赞', en: 'Likes' },
-    { key: 'share', zh: '转发', en: 'Reposts' },
-    { key: 'save',  zh: '收藏', en: 'Saves' },
-    { key: 'tip',   zh: '打赏', en: 'Tips' },
+    { key: 'link',    zh: '链接', en: 'Links' },
+    { key: 'like',    zh: '点赞', en: 'Likes' },
+    { key: 'dislike', zh: '踩',   en: 'Dislikes' },
+    { key: 'share',   zh: '转发', en: 'Reposts' },
+    { key: 'save',    zh: '收藏', en: 'Saves' },
+    { key: 'tip',     zh: '打赏', en: 'Tips' },
   ];
 
   return (
@@ -100,12 +101,13 @@ export function Actions({ post, onComment, extra }: {
     t,
   } = useApp();
   const [confirmShare, setConfirmShare] = useState<'repost' | 'unrepost' | null>(null);
+  const isOwn = post.author === CURRENT_USER;
 
   const actionButton = (action: PostAction, active: boolean, label: string, count: number, icon: React.ReactNode, showCount = true) => (
     <button
       key={action}
       type="button"
-      className={`post-action post-action--${action}${active ? ' post-action--active' : ''}`}
+      className={`post-action post-action--${action}${active ? ' post-action--active' : ''}${showCount ? '' : ' post-action--no-count'}`}
       onClick={(e) => {
         e.stopPropagation();
         togglePostAction(post.id, action);
@@ -136,7 +138,7 @@ export function Actions({ post, onComment, extra }: {
         className="actions"
         data-layer="post-actions"
         onClick={e => e.stopPropagation()}
-        style={extra ? { gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr auto' } : undefined}
+        style={extra ? { gridTemplateColumns: '1fr 1fr 1fr auto 1fr auto' } : undefined}
       >
         <span
           className="reply-trigger"
@@ -163,7 +165,7 @@ export function Actions({ post, onComment, extra }: {
           <Repeat2 size={18} strokeWidth={2.25} />{post.shares}
         </button>
         {actionButton('like', likedPostIds.has(post.id), t('点赞', 'like'), post.likes, <ThumbsUp size={18} strokeWidth={2.25} />)}
-        {actionButton('dislike', dislikedPostIds.has(post.id), t('踩', 'dislike'), post.dislikes ?? 0, <ThumbsDown size={18} strokeWidth={2.25} />, false)}
+        {actionButton('dislike', dislikedPostIds.has(post.id), t('踩', 'dislike'), post.dislikes ?? 0, <ThumbsDown size={18} strokeWidth={2.25} />, isOwn)}
         {actionButton('save', savedPostIds.has(post.id), t('收藏', 'save'), post.saves, <Bookmark size={18} strokeWidth={2.25} />)}
         {extra && <div className="actions-extra" onClick={e => e.stopPropagation()}>{extra}</div>}
       </div>

@@ -141,6 +141,7 @@ export type PostActorEntry = {
 export type PostActors = {
   links: PostActorEntry[];
   likes: PostActorEntry[];
+  dislikes: PostActorEntry[];
   shares: PostActorEntry[];
   saves: PostActorEntry[];
   tips: PostActorEntry[];

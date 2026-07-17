@@ -482,6 +482,9 @@ export const POST_ACTORS: Record<string, PostActors> = {
       { user: '阿May的研究笔记', avatarIdx: 1, time: '1 天前' },
       { user: '游牧开发者', avatarIdx: 2, time: '2 天前' },
     ],
+    dislikes: [
+      { user: '深海鱼炸弹', avatarIdx: 0, time: '7 小时前' },
+    ],
     shares: [
       { user: '游牧开发者', avatarIdx: 2, time: '8 小时前' },
       { user: '深海鱼炸弹', avatarIdx: 0, time: '2 天前' },
@@ -512,6 +515,7 @@ export const POST_ACTORS: Record<string, PostActors> = {
       { user: '游牧开发者', avatarIdx: 2, time: '40 分钟前' },
       { user: '设计师刘然', avatarIdx: 0, time: '50 分钟前' },
     ],
+    dislikes: [],
     shares: [
       { user: '深海鱼炸弹', avatarIdx: 0, time: '1 小时前' },
     ],
@@ -536,6 +540,9 @@ export const POST_ACTORS: Record<string, PostActors> = {
     likes: [
       { user: '产品大叔严磊', avatarIdx: 2, time: '1 小时前' },
       { user: '阿May的研究笔记', avatarIdx: 1, time: '1.5 小时前' },
+    ],
+    dislikes: [
+      { user: '设计师刘然', avatarIdx: 0, time: '1 小时前' },
     ],
     shares: [
       { user: '游牧开发者', avatarIdx: 2, time: '2 小时前' },

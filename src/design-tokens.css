@@ -189,6 +189,9 @@
   --ku-feed-padding-x:         22px;   /* feed 左右内边距 */
   --ku-feed-padding-top:       8px;    /* feed 顶部内边距 */
   --ku-post-gap:               14px;   /* 帖子间距 */
+  --ku-post-action-dislike-gap-base: 8px;   /* 操作栏"踩"按钮与下一个按钮的基础间距（无论是否显示计数） */
+  --ku-post-action-dislike-gap-extra: 12px; /* "踩"按钮无计数时的额外间距，叠加在基础间距之上 */
+  --ku-post-action-save-offset: 4px;   /* 操作栏"收藏"按钮相对默认网格位置的右移量 */
   --ku-author-meta-gap:        12px;   /* 头像 → 作者信息间距 */
   --ku-detail-composer-gap:    9px;    /* 详情页底部回复栏控件间距 */
   --ku-detail-composer-padding-bottom: 14px; /* 详情页底部回复栏底部留白 */

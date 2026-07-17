@@ -275,13 +275,31 @@ export default function App() {
           ? [t('已取消踩', 'Dislike removed'), t('已踩', 'Disliked')]
           : [t('已取消收藏', 'Removed from saved'), t('已收藏', 'Saved')];
 
+    // 点赞与踩互斥：激活其中一个时，若另一个已激活则一并取消
+    const opposite = action === 'like' ? 'dislike' : action === 'dislike' ? 'like' : undefined;
+    const oppositeState = opposite === 'like' ? likedPostIds : opposite === 'dislike' ? dislikedPostIds : undefined;
+    const setOppositeState = opposite === 'like' ? setLikedPostIds : opposite === 'dislike' ? setDislikedPostIds : undefined;
+    const oppositeCountKey: 'likes' | 'dislikes' | undefined = opposite === 'like' ? 'likes' : opposite === 'dislike' ? 'dislikes' : undefined;
+    const clearOpposite = !active && !!oppositeState && oppositeState.has(postId);
+
     setActionState(previous => {
       const next = new Set(previous);
       active ? next.delete(postId) : next.add(postId);
       return next;
     });
+    if (clearOpposite && setOppositeState) {
+      setOppositeState(previous => {
+        const next = new Set(previous);
+        next.delete(postId);
+        return next;
+      });
+    }
     setPosts(previous => previous.map(post => post.id === postId
-      ? { ...post, [countKey]: Math.max(0, (post[countKey] ?? 0) + (active ? -1 : 1)) }
+      ? {
+          ...post,
+          [countKey]: Math.max(0, (post[countKey] ?? 0) + (active ? -1 : 1)),
+          ...(clearOpposite && oppositeCountKey ? { [oppositeCountKey]: Math.max(0, (post[oppositeCountKey] ?? 0) - 1) } : {}),
+        }
       : post));
     if (action !== 'like' && action !== 'dislike') showToast(active ? labels[0] : labels[1]);
   };
