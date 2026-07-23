@@ -21,7 +21,7 @@ export type Post = {
   likes: number;
   dislikes?: number;
   videoUrl?: string;
-  tipsReceived?: number; // 该帖累计收到的打赏（PB），仅在自己主页展示
+  tipsReceived?: number; // 该帖累计收到的打赏（PB）
   channelId?: string; // 归属频道；未设置=不属于任何频道
   // 该频道下需订阅达到 channel.tiers[minTierIndex] 及以上档位才可见；未设置=频道内全员免费公开
   // "会员专属再付费"场景：已满足 minTierIndex 后，仍复用现有 stakeTier/visiblePercent 付费解锁机制，无需额外字段

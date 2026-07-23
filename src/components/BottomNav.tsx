@@ -31,7 +31,8 @@ export function BottomNav({ route, setTab }: {
         onClick={() => { if (!isHome) navigate({ page: 'P0', tab: 0 }); else setTab(0); }}
         aria-label={t('首页', 'Home')}
       >
-        <Home size={22} strokeWidth={2} />
+        <Home size={20} strokeWidth={2} />
+        <span className="nav-label">{t('首页', 'Home')}</span>
       </button>
       <button
         type="button"
@@ -40,6 +41,7 @@ export function BottomNav({ route, setTab }: {
         aria-label={t('知识星球', 'Knowledge Planet')}
       >
         <KnowledgePlanetIcon className="knowledge-planet-icon" />
+        <span className="nav-label">{t('知识星球', 'Planet')}</span>
       </button>
       <button
         type="button"
@@ -53,10 +55,11 @@ export function BottomNav({ route, setTab }: {
         type="button"
         className={`nav-item${isDm ? ' nav-item--active' : ''}`}
         onClick={() => navigate({ page: 'P_DM' })}
-        aria-label={t('私信', 'Messages')}
+        aria-label={t('消息', 'Messages')}
         style={{ position: 'relative' }}
       >
-        <MessageCircle size={22} strokeWidth={2} />
+        <MessageCircle size={20} strokeWidth={2} />
+        <span className="nav-label">{t('消息', 'Messages')}</span>
         {unreadDmCount > 0 && (
           <span className="nav-inbox-dot">{unreadDmCount > 9 ? '9+' : unreadDmCount}</span>
         )}
@@ -65,9 +68,10 @@ export function BottomNav({ route, setTab }: {
         type="button"
         className={`nav-item${isMine ? ' nav-item--active' : ''}`}
         onClick={() => navigateRoot({ page: 'P6', authorName: CURRENT_USER })}
-        aria-label={t('我的', 'Me')}
+        aria-label={t('我', 'Me')}
       >
-        <User size={22} strokeWidth={2} />
+        <User size={20} strokeWidth={2} />
+        <span className="nav-label">{t('我', 'Me')}</span>
       </button>
     </nav>
   );

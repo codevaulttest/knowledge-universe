@@ -399,9 +399,10 @@ export function PostCard({
             type="button"
             className="detail-tip-btn"
             onClick={(e) => { e.stopPropagation(); setShowTip(true); }}
-            aria-label={t('打赏此帖', 'Tip this post')}
+            aria-label={t(`打赏此帖，当前 ${post.tipsReceived ?? 0}`, `Tip this post, current count ${post.tipsReceived ?? 0}`)}
           >
             <HandCoins size={18} strokeWidth={2.25} />
+            {formatCount(post.tipsReceived ?? 0, language)}
           </button>
         )}
       />

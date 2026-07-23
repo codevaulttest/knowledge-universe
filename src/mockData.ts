@@ -144,7 +144,7 @@ export const ALL_POSTS: Post[] = [
     id: 'p1', author: 'AI 效率研究所', time: '2 小时前',
     title: 'AI 产品截图 × 提示词模板合集。精选 12 款工具的实测截图，附 3 个月高频使用总结的提示词模板，拿来即用。',
     kind: 'image', imageCount: 3, visiblePercent: 50, isNode: true, stakeTier: 1000, nodeId: 'Kx7mR2',
-    rating: 4, replies: 18, links: 42, shares: 36, saves: 152, likes: 306,
+    rating: 4, replies: 18, links: 42, shares: 36, saves: 152, likes: 306, tipsReceived: 89,
     channelId: 'channel-aieff',
   },
   {
