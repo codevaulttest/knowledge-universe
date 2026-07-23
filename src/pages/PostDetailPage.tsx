@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Ellipsis, HandCoins, Heart, Trash2 } from 'lucide-react';
+import { Ellipsis, HandCoins, Heart, Trash2, User } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_REPLIES, replyLikesStore, likedReplyIdsStore } from '../mockData';
 import type { Reply } from '../types';
@@ -34,7 +34,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const {
     goBack, navigate, showToast, openLink, linkedPostIds, posts, requestDeletePost,
     openImageLightbox, incrementReplies, language, t, requestPostInteraction,
-    channels, subscribedChannelTiers, userProfile,
+    channels, subscribedChannelTiers, userProfile, requireWallet, walletConnected,
   } = useApp();
   const post = posts.find(p => p.id === postId);
   const [replyText, setReplyText] = useState('');
@@ -78,14 +78,16 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
 
   const handleSendReply = () => {
     if (!replyText.trim()) return;
-    if (postHasStake(post)) {
-      requestPostInteraction(post.id, 'comment', {
-        onSkip: submitReply,
-        onPaid: submitReply,
-      });
-      return;
-    }
-    submitReply();
+    requireWallet(() => {
+      if (postHasStake(post)) {
+        requestPostInteraction(post.id, 'comment', {
+          onSkip: submitReply,
+          onPaid: submitReply,
+        });
+        return;
+      }
+      submitReply();
+    });
   };
 
   const handleReplyLike = (replyId: string, baseLikes: number) => {
@@ -184,7 +186,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
               <button
                 type="button"
                 className="detail-tip-btn"
-                onClick={() => setShowTip(true)}
+                onClick={() => requireWallet(() => setShowTip(true))}
                 aria-label={t('打赏此帖', 'Tip this post')}
               >
                 <HandCoins size={15} strokeWidth={2} />
@@ -253,13 +255,30 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
 
       {/* 固定在详情页底部的回复输入 */}
       <div className="detail-reply-compose">
-        <Avatar index={0} />
+        {walletConnected ? (
+          <Avatar index={0} seed={userProfile.avatarSeed} />
+        ) : (
+          <span className="avatar avatar--guest" aria-hidden="true">
+            <User size={16} strokeWidth={2} />
+          </span>
+        )}
         <input
           className="reply-input"
           placeholder={t(`回复 ${post.author}…`, `Reply to ${post.author}…`)}
           value={replyText}
           onChange={e => setReplyText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleSendReply(); }}
+          onMouseDown={(e) => {
+            // 游客态：输入前先引导连接钱包，避免打完一段字才被打断、造成内容丢失的挫败感
+            if (walletConnected) return;
+            e.preventDefault();
+            requireWallet(() => {});
+          }}
+          onFocus={(e) => {
+            if (walletConnected) return;
+            e.currentTarget.blur();
+            requireWallet(() => {});
+          }}
         />
         <button className="reply-send" type="button" onClick={handleSendReply} disabled={!replyText.trim()}>
           {t('发送', 'Send')}

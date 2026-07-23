@@ -5,7 +5,7 @@ import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_
 import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import { postHasStake } from './stakeConfig';
 import { BottomNav } from './components/BottomNav';
-import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, CheckInModal, ConfirmDeleteModal, ConfirmUnfollowModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
+import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, CheckInModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { commitClaim, getClaimPreview, CHECK_IN_REWARD, type ClaimPreview } from './checkInConfig';
 import { Toast } from './components/shared';
 import { ComposePage } from './pages/ComposePage';
@@ -34,6 +34,7 @@ export default function App() {
   const [stakeModal, setStakeModal] = useState<StakeModalRequest | null>(null);
   const [linkSheet, setLinkSheet] = useState<{ postId: string; mode: 'link' | 'unlock' } | null>(null);
   const pendingPaySuccessRef = useRef<(() => void) | null>(null);
+  const pendingWalletActionRef = useRef<(() => void) | null>(null);
 
   const [language, setLanguage] = useState<Language>('zh-CN');
   const [confirmDelete, setConfirmDelete] = useState<{ postId: string; onAfterDelete?: () => void } | null>(null);
@@ -46,6 +47,28 @@ export default function App() {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [checkInPreview, setCheckInPreview] = useState<ClaimPreview | null>(null);
   const [checkInClaimable, setCheckInClaimable] = useState(false);
+
+  // 游客模式：默认未连接钱包，可浏览帖子；触发需要身份/资产/链上能力的操作时先弹窗确认再连接
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [showConnectWallet, setShowConnectWallet] = useState(false);
+
+  // 显式的"连接钱包"入口（顶部快捷按钮、主页引导按钮）直接连接，无需二次确认；
+  // 若是从确认弹窗触发（携带被拦截的原操作），连接后继续执行该操作
+  const connectWallet = () => {
+    setWalletConnected(true);
+    setShowConnectWallet(false);
+    showToast(t('钱包已连接', 'Wallet connected'));
+    const pending = pendingWalletActionRef.current;
+    pendingWalletActionRef.current = null;
+    pending?.();
+  };
+
+  // 其余触发到需要身份/资产/链上能力操作的入口，先弹窗确认
+  const requireWallet = (action: () => void) => {
+    if (walletConnected) { action(); return; }
+    pendingWalletActionRef.current = action;
+    setShowConnectWallet(true);
+  };
 
   const [supBalance, setSupBalance] = useState(13);
   const INITIAL_SUP_HISTORY: SupTransaction[] = [
@@ -139,8 +162,10 @@ export default function App() {
   });
 
   const updateUserProfile = (profile: UserProfile) => {
-    setUserProfile(profile);
-    localStorage.setItem('ku-profile', JSON.stringify(profile));
+    requireWallet(() => {
+      setUserProfile(profile);
+      localStorage.setItem('ku-profile', JSON.stringify(profile));
+    });
   };
 
   const t = (zh: string, en: string) => language === 'zh-CN' ? zh : en;
@@ -156,18 +181,22 @@ export default function App() {
     if (preview.shouldShow) setCheckInPreview(preview);
   }, []);
 
-  // 常驻入口：随时打开签到（已领取则展示连签进度）
-  const openCheckIn = () => setCheckInPreview(getClaimPreview());
+  // 常驻入口：随时打开签到（已领取则展示连签进度）；未连接钱包时先引导连接
+  const openCheckIn = () => {
+    requireWallet(() => setCheckInPreview(getClaimPreview()));
+  };
 
   const handleClaimCheckIn = () => {
     if (!checkInPreview) return;
-    commitClaim(checkInPreview);
-    setCheckInClaimable(false);
-    const symbol = language === 'zh-CN' ? CHECK_IN_REWARD.symbol.zh : CHECK_IN_REWARD.symbol.en;
-    showToast(t(
-      `领取成功！+${checkInPreview.reward} ${symbol}`,
-      `Claimed! +${checkInPreview.reward} ${symbol}`,
-    ));
+    requireWallet(() => {
+      commitClaim(checkInPreview);
+      setCheckInClaimable(false);
+      const symbol = language === 'zh-CN' ? CHECK_IN_REWARD.symbol.zh : CHECK_IN_REWARD.symbol.en;
+      showToast(t(
+        `领取成功！+${checkInPreview.reward} ${symbol}`,
+        `Claimed! +${checkInPreview.reward} ${symbol}`,
+      ));
+    });
   };
 
 
@@ -186,13 +215,15 @@ export default function App() {
   };
 
   const openLink = (postId: string, mode: 'link' | 'unlock' = 'link') => {
-    if (linkedPostIds.has(postId)) {
-      showToast(t('已链接，无需重复操作', 'Already linked'));
-      return;
-    }
-    const post = posts.find(p => p.id === postId);
-    if (!post?.isNode) return;
-    setLinkSheet({ postId, mode });
+    requireWallet(() => {
+      if (linkedPostIds.has(postId)) {
+        showToast(t('已链接，无需重复操作', 'Already linked'));
+        return;
+      }
+      const post = posts.find(p => p.id === postId);
+      if (!post?.isNode) return;
+      setLinkSheet({ postId, mode });
+    });
   };
 
   const openPay = (p: PayCtx) => setPaySheet(p);
@@ -211,17 +242,19 @@ export default function App() {
   };
 
   const beginPaidInteraction = (postId: string, action: InteractionAction, onAfterPay: () => void) => {
-    const post = posts.find(p => p.id === postId);
-    if (!post || !postHasStake(post)) {
-      onAfterPay();
-      return;
-    }
-    pendingPaySuccessRef.current = onAfterPay;
-    setPaySheet({
-      ctx: action === 'unlock' ? 'chain' : 'interaction',
-      postId,
-      action,
-      stakeTier: post.stakeTier,
+    requireWallet(() => {
+      const post = posts.find(p => p.id === postId);
+      if (!post || !postHasStake(post)) {
+        onAfterPay();
+        return;
+      }
+      pendingPaySuccessRef.current = onAfterPay;
+      setPaySheet({
+        ctx: action === 'unlock' ? 'chain' : 'interaction',
+        postId,
+        action,
+        stakeTier: post.stakeTier,
+      });
     });
   };
 
@@ -230,25 +263,29 @@ export default function App() {
     action: InteractionAction,
     handlers: { onSkip: () => void; onPaid: () => void },
   ) => {
-    const post = posts.find(p => p.id === postId);
-    if (!post || !postHasStake(post)) {
-      handlers.onSkip();
-      return;
-    }
-    setStakeModal({
-      postId,
-      action,
-      onSkip: handlers.onSkip,
-      onAfterPay: handlers.onPaid,
+    requireWallet(() => {
+      const post = posts.find(p => p.id === postId);
+      if (!post || !postHasStake(post)) {
+        handlers.onSkip();
+        return;
+      }
+      setStakeModal({
+        postId,
+        action,
+        onSkip: handlers.onSkip,
+        onAfterPay: handlers.onPaid,
+      });
     });
   };
 
   const toggleFollow = (author: string) => {
-    if (followedAuthors.has(author)) {
-      setConfirmUnfollow(author);
-    } else {
-      setFollowedAuthors(s => new Set(s).add(author));
-    }
+    requireWallet(() => {
+      if (followedAuthors.has(author)) {
+        setConfirmUnfollow(author);
+      } else {
+        setFollowedAuthors(s => new Set(s).add(author));
+      }
+    });
   };
 
   const handleConfirmUnfollow = () => {
@@ -263,45 +300,47 @@ export default function App() {
   };
 
   const togglePostAction = (postId: string, action: PostAction) => {
-    const actionState = action === 'share' ? repostedPostIds : action === 'like' ? likedPostIds : action === 'dislike' ? dislikedPostIds : savedPostIds;
-    const setActionState = action === 'share' ? setRepostedPostIds : action === 'like' ? setLikedPostIds : action === 'dislike' ? setDislikedPostIds : setSavedPostIds;
-    const countKey: 'shares' | 'likes' | 'dislikes' | 'saves' = action === 'share' ? 'shares' : action === 'like' ? 'likes' : action === 'dislike' ? 'dislikes' : 'saves';
-    const active = actionState.has(postId);
-    const labels = action === 'share'
-      ? [t('已取消转发', 'Repost removed'), t('转发成功', 'Reposted')]
-      : action === 'like'
-        ? [t('已取消点赞', 'Like removed'), t('已点赞', 'Liked')]
-        : action === 'dislike'
-          ? [t('已取消踩', 'Dislike removed'), t('已踩', 'Disliked')]
-          : [t('已取消收藏', 'Removed from saved'), t('已收藏', 'Saved')];
+    requireWallet(() => {
+      const actionState = action === 'share' ? repostedPostIds : action === 'like' ? likedPostIds : action === 'dislike' ? dislikedPostIds : savedPostIds;
+      const setActionState = action === 'share' ? setRepostedPostIds : action === 'like' ? setLikedPostIds : action === 'dislike' ? setDislikedPostIds : setSavedPostIds;
+      const countKey: 'shares' | 'likes' | 'dislikes' | 'saves' = action === 'share' ? 'shares' : action === 'like' ? 'likes' : action === 'dislike' ? 'dislikes' : 'saves';
+      const active = actionState.has(postId);
+      const labels = action === 'share'
+        ? [t('已取消转发', 'Repost removed'), t('转发成功', 'Reposted')]
+        : action === 'like'
+          ? [t('已取消点赞', 'Like removed'), t('已点赞', 'Liked')]
+          : action === 'dislike'
+            ? [t('已取消踩', 'Dislike removed'), t('已踩', 'Disliked')]
+            : [t('已取消收藏', 'Removed from saved'), t('已收藏', 'Saved')];
 
-    // 点赞与踩互斥：激活其中一个时，若另一个已激活则一并取消
-    const opposite = action === 'like' ? 'dislike' : action === 'dislike' ? 'like' : undefined;
-    const oppositeState = opposite === 'like' ? likedPostIds : opposite === 'dislike' ? dislikedPostIds : undefined;
-    const setOppositeState = opposite === 'like' ? setLikedPostIds : opposite === 'dislike' ? setDislikedPostIds : undefined;
-    const oppositeCountKey: 'likes' | 'dislikes' | undefined = opposite === 'like' ? 'likes' : opposite === 'dislike' ? 'dislikes' : undefined;
-    const clearOpposite = !active && !!oppositeState && oppositeState.has(postId);
+      // 点赞与踩互斥：激活其中一个时，若另一个已激活则一并取消
+      const opposite = action === 'like' ? 'dislike' : action === 'dislike' ? 'like' : undefined;
+      const oppositeState = opposite === 'like' ? likedPostIds : opposite === 'dislike' ? dislikedPostIds : undefined;
+      const setOppositeState = opposite === 'like' ? setLikedPostIds : opposite === 'dislike' ? setDislikedPostIds : undefined;
+      const oppositeCountKey: 'likes' | 'dislikes' | undefined = opposite === 'like' ? 'likes' : opposite === 'dislike' ? 'dislikes' : undefined;
+      const clearOpposite = !active && !!oppositeState && oppositeState.has(postId);
 
-    setActionState(previous => {
-      const next = new Set(previous);
-      active ? next.delete(postId) : next.add(postId);
-      return next;
-    });
-    if (clearOpposite && setOppositeState) {
-      setOppositeState(previous => {
+      setActionState(previous => {
         const next = new Set(previous);
-        next.delete(postId);
+        active ? next.delete(postId) : next.add(postId);
         return next;
       });
-    }
-    setPosts(previous => previous.map(post => post.id === postId
-      ? {
-          ...post,
-          [countKey]: Math.max(0, (post[countKey] ?? 0) + (active ? -1 : 1)),
-          ...(clearOpposite && oppositeCountKey ? { [oppositeCountKey]: Math.max(0, (post[oppositeCountKey] ?? 0) - 1) } : {}),
-        }
-      : post));
-    if (action !== 'like' && action !== 'dislike') showToast(active ? labels[0] : labels[1]);
+      if (clearOpposite && setOppositeState) {
+        setOppositeState(previous => {
+          const next = new Set(previous);
+          next.delete(postId);
+          return next;
+        });
+      }
+      setPosts(previous => previous.map(post => post.id === postId
+        ? {
+            ...post,
+            [countKey]: Math.max(0, (post[countKey] ?? 0) + (active ? -1 : 1)),
+            ...(clearOpposite && oppositeCountKey ? { [oppositeCountKey]: Math.max(0, (post[oppositeCountKey] ?? 0) - 1) } : {}),
+          }
+        : post));
+      if (action !== 'like' && action !== 'dislike') showToast(active ? labels[0] : labels[1]);
+    });
   };
 
   const deletePost = (postId: string) => {
@@ -310,10 +349,12 @@ export default function App() {
   };
 
   const requestDeletePost = (postId: string, onAfterDelete?: () => void) => {
-    setConfirmDelete({ postId, onAfterDelete });
+    requireWallet(() => setConfirmDelete({ postId, onAfterDelete }));
   };
 
-  const openEditPost = (postId: string) => setEditPostId(postId);
+  const openEditPost = (postId: string) => {
+    requireWallet(() => setEditPostId(postId));
+  };
 
   const updatePost = (postId: string, newTitle: string, tierUpdate?: { minTierIndex: number | undefined }) => {
     setPosts(prev => prev.map(p => p.id === postId
@@ -334,9 +375,13 @@ export default function App() {
     setConfirmDelete(null);
   };
 
-  const openCreateChannel = () => setCreateChannelOpen(true);
+  const openCreateChannel = () => {
+    requireWallet(() => setCreateChannelOpen(true));
+  };
   const closeCreateChannel = () => setCreateChannelOpen(false);
-  const openManageChannel = (channelId: string) => setManageChannelId(channelId);
+  const openManageChannel = (channelId: string) => {
+    requireWallet(() => setManageChannelId(channelId));
+  };
   const closeManageChannel = () => setManageChannelId(null);
 
   // 开通频道是一步流程：CreateChannelModal 自己跑完支付动画（1000 PB + 100 PB + 0.1 SUP）后直接调用此函数建号
@@ -377,7 +422,9 @@ export default function App() {
     showToast(t('频道信息已更新', 'Channel updated'));
   };
 
-  const openChannelSubscribe = (channelId: string) => setChannelSubscribeId(channelId);
+  const openChannelSubscribe = (channelId: string) => {
+    requireWallet(() => setChannelSubscribeId(channelId));
+  };
 
   const subscribeToChannelTier = (channelId: string, tierIndex: number) => {
     const isNewSubscriber = subscribedChannelTiers[channelId] == null;
@@ -467,10 +514,14 @@ export default function App() {
   const [composeDraftId, setComposeDraftId] = useState<string | null>(null);
   const [pendingNewPost, setPendingNewPost] = useState<NewPostData | null>(null);
 
-  const openCompose = () => { setComposeDraftId(null); setComposeOpen(true); };
+  const openCompose = () => {
+    requireWallet(() => { setComposeDraftId(null); setComposeOpen(true); });
+  };
   const openComposeWithDraft = (draft: Draft) => {
-    setComposeDraftId(draft.id);
-    setComposeOpen(true);
+    requireWallet(() => {
+      setComposeDraftId(draft.id);
+      setComposeOpen(true);
+    });
   };
 
   const openImageLightbox = (post: Post, imgIdx: number, visibleImgCount: number) => setImageLightbox({ post, imgIdx, visibleImgCount });
@@ -550,6 +601,7 @@ export default function App() {
     openCreateChannel, createChannelOpen, closeCreateChannel,
     openManageChannel, closeManageChannel,
     supBalance, supHistory, deductSup,
+    walletConnected, connectWallet, requireWallet,
   };
 
 
@@ -731,6 +783,14 @@ export default function App() {
         )}
 
         {/* Toast */}
+        {/* 覆盖层：连接钱包二次确认（游客触发需身份/资产/链上能力的操作时弹出） */}
+        {showConnectWallet && (
+          <ConnectWalletModal
+            onConnect={connectWallet}
+            onClose={() => { setShowConnectWallet(false); pendingWalletActionRef.current = null; }}
+          />
+        )}
+
         {toastMsg && <Toast msg={toastMsg.msg} type={toastMsg.type} />}
 
       </div>

@@ -209,7 +209,7 @@ export function PostCard({
   onOpen?: (post: Post) => void;
   repostedBy?: RepostedBy;
 }) {
-  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, openChannelSubscribe } = useApp();
+  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, openChannelSubscribe, requireWallet } = useApp();
   const [moreOpen, setMoreOpen] = useState(false);
   const [actorsTab, setActorsTab] = useState<PostAction | 'link' | 'tip' | null>(null);
   const [showTip, setShowTip] = useState(false);
@@ -398,7 +398,7 @@ export function PostCard({
           <button
             type="button"
             className="detail-tip-btn"
-            onClick={(e) => { e.stopPropagation(); setShowTip(true); }}
+            onClick={(e) => { e.stopPropagation(); requireWallet(() => setShowTip(true)); }}
             aria-label={t(`打赏此帖，当前 ${post.tipsReceived ?? 0}`, `Tip this post, current count ${post.tipsReceived ?? 0}`)}
           >
             <HandCoins size={18} strokeWidth={2.25} />

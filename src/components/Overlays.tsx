@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
-import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, HandCoins, Gift, CalendarCheck, Flame, Plus, Save } from 'lucide-react';
+import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, HandCoins, Gift, CalendarCheck, Flame, Plus, Save, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
@@ -1327,6 +1327,50 @@ export function ConfirmUnfollowModal({ author, onConfirm, onCancel }: {
       onCancel={onCancel}
       onConfirm={onConfirm}
     />
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ConnectWalletModal — 游客触发需连接钱包的操作时弹出二次确认
+// ═══════════════════════════════════════════════════════════════
+
+export function ConnectWalletModal({ onConnect, onClose }: {
+  onConnect: () => void;
+  onClose: () => void;
+}) {
+  const { t } = useApp();
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div
+        className="connect-wallet-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="connect-wallet-title"
+        aria-describedby="connect-wallet-message"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="connect-wallet-modal-hero">
+          <div className="connect-wallet-modal-icon" aria-hidden="true">
+            <Wallet size={26} strokeWidth={2.2} />
+          </div>
+          <h2 className="connect-wallet-modal-title" id="connect-wallet-title">
+            {t('连接钱包以继续', 'Connect wallet to continue')}
+          </h2>
+          <p className="connect-wallet-modal-message" id="connect-wallet-message">
+            {t('就差一步，连接钱包即可继续', "Just one step away — connect your wallet to continue")}
+          </p>
+        </div>
+        <div className="connect-wallet-modal-actions">
+          <button type="button" className="planet-confirm-btn" onClick={onConnect}>
+            <Wallet size={16} strokeWidth={2} />
+            {t('连接钱包', 'Connect Wallet')}
+          </button>
+          <button type="button" className="gemini-stake-btn gemini-stake-btn--ghost" onClick={onClose}>
+            {t('再看一看', 'Maybe later')}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

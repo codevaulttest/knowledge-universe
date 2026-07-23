@@ -3,13 +3,26 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, CURRENT_USER, DM_CONVERSATIONS } from '../mockData';
 import type { DmConversation, DmMessage } from '../types';
-import { Avatar, AuthorName, PageHeader } from '../components/shared';
+import { Avatar, AuthorName, GuestConnectGate, PageHeader } from '../components/shared';
 
 // ─── 会话列表 ────────────────────────────────────────────────────
 export function DmListPage() {
-  const { navigate, goBack, canGoBack, t } = useApp();
+  const { navigate, goBack, canGoBack, t, walletConnected } = useApp();
   const [conversations, setConversations] = useState<DmConversation[]>(DM_CONVERSATIONS);
   const totalUnread = conversations.reduce((s, c) => s + c.unread, 0);
+
+  // 私信内容与钱包身份绑定，属于私有数据；未连接钱包时仅引导连接
+  if (!walletConnected) {
+    return (
+      <div className="page">
+        <PageHeader title={t('私信', 'Messages')} onBack={canGoBack ? goBack : undefined} />
+        <GuestConnectGate
+          title={t('连接钱包，查看我的私信', 'Connect your wallet to view your messages')}
+          message={t('连接钱包后，就能查看和回复私信啦', "Once you're connected, you can view and reply to your messages")}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="page">
@@ -67,7 +80,7 @@ function datePrefix(time: string): string {
 
 // ─── 单个会话 ────────────────────────────────────────────────────
 export function DmChatPage({ peerId }: { peerId: string }) {
-  const { goBack, navigate, t } = useApp();
+  const { goBack, navigate, t, requireWallet, walletConnected } = useApp();
   const found = DM_CONVERSATIONS.find(c => c.peer === peerId);
   const firstPost = ALL_POSTS.find(p => p.author === peerId);
   const conv: DmConversation = found ?? {
@@ -108,6 +121,19 @@ export function DmChatPage({ peerId }: { peerId: string }) {
       }]);
     }, 1200);
   };
+
+  // 会话内容与钱包身份绑定，属于私有数据；未连接钱包时仅引导连接
+  if (!walletConnected) {
+    return (
+      <div className="page">
+        <PageHeader title={t('私信', 'Messages')} onBack={goBack} />
+        <GuestConnectGate
+          title={t('连接钱包，查看这段对话', 'Connect your wallet to view this conversation')}
+          message={t('连接钱包后，就能查看和回复私信啦', "Once you're connected, you can view and reply to your messages")}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="page dm-chat-page">
@@ -155,12 +181,12 @@ export function DmChatPage({ peerId }: { peerId: string }) {
           placeholder={t('发送消息…', 'Send a message…')}
           value={text}
           onChange={e => setText(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') send(); }}
+          onKeyDown={e => { if (e.key === 'Enter') requireWallet(send); }}
         />
         <button
           type="button"
           className="dm-chat-send"
-          onClick={send}
+          onClick={() => requireWallet(send)}
           disabled={!text.trim()}
           aria-label={t('发送', 'Send')}
         >

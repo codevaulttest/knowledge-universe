@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowDownToLine, ArrowUp, ArrowUpToLine, Check, ChevronDown, ChevronRight, Copy, Crown, FileText, Gift, LayoutGrid, Link, Loader2, Lock, MessageCircle, QrCode, Radio, Repeat2, Search, Star, TriangleAlert, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { PageHeader, Rating } from '../components/shared';
+import { GuestConnectGate, PageHeader, Rating } from '../components/shared';
 import { CURRENT_USER, MOCK_SUP_DEPOSIT_ADDRESS, MOCK_WALLET_ADDRESS } from '../mockData';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import type { LucideIcon } from 'lucide-react';
@@ -169,7 +169,7 @@ function seedNodesWithChannel(channels: { ownerName: string; id: string; created
 }
 
 export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string } = {}) {
-  const { goBack, canGoBack, showToast, t, language, channels, supBalance, supHistory } = useApp();
+  const { goBack, canGoBack, showToast, t, language, channels, supBalance, supHistory, walletConnected } = useApp();
   const zh = language === 'zh-CN';
   const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
   const [sourceFilter, setSourceFilter] = useState<NodeSource | null>(null);
@@ -274,6 +274,19 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
     setSourceFilter(null);
     setOpenDropdown(null);
   };
+
+  // 知识星球展示的是「我的」红包、可提取余额与持有节点，属于与钱包身份绑定的资产数据；未连接钱包时仅引导连接
+  if (!walletConnected) {
+    return (
+      <div className="page">
+        <PageHeader title={t('我的知识星球', 'Knowledge Planet')} onBack={canGoBack ? goBack : undefined} />
+        <GuestConnectGate
+          title={t('连接钱包，查看我的知识星球', 'Connect your wallet to view your Knowledge Planet')}
+          message={t('连接钱包后，就能领取红包、查看持有节点、提取收益啦', "Once you're connected, you can claim red packets, view your nodes, and withdraw earnings")}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="page">

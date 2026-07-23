@@ -494,6 +494,14 @@ button {
   display: block;
   object-fit: cover;
 }
+/* 游客态（未连接钱包）占位头像：不展示任何身份信息 */
+.avatar--guest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-meta);
+}
 
 /* ── Author Meta（iOS 风格：姓名 · 时间 单行对齐）── */
 .author-meta {
@@ -2893,7 +2901,6 @@ button {
   color: var(--ku-ios26-system-red);
   font-weight: 600;
 }
-
 /* ═══════════════════════════════════════════════════════════════
    ArticleReader — 文章阅读器浮层
    ═══════════════════════════════════════════════════════════════ */
@@ -4014,6 +4021,41 @@ button {
   max-width: 240px;
 }
 
+/* ─── 身份/资产类页面游客态：未连接钱包时的引导页（「我」主页、知识星球、私信复用）─── */
+.guest-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px var(--ku-feed-padding-x);
+  text-align: center;
+  gap: 8px;
+}
+.guest-gate-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ku-radius-circle);
+  background: var(--ku-color-primary-alpha-14);
+  color: var(--ku-color-primary);
+  margin-bottom: 8px;
+}
+.guest-gate-title {
+  font: 600 16px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
+.guest-gate-sub {
+  font: 400 13px/1.5 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+  max-width: 280px;
+}
+.guest-gate-btn {
+  max-width: 220px;
+}
+
 /* ─── 关注和粉丝列表弹窗 ─── */
 .profile-stat--clickable {
   cursor: pointer;
@@ -4324,6 +4366,25 @@ button {
 }
 .feed-bell-btn:active {
   background: var(--ku-color-primary-alpha-06);
+}
+/* ─── 未连接钱包时的顶部快捷连接入口 ─── */
+.wallet-connect-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--ku-radius-pill);
+  border: none;
+  background: var(--ku-gradient-primary);
+  color: var(--ku-color-on-primary);
+  font: 600 12px/1 var(--ku-font-family);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity var(--ku-motion-fast);
+}
+.wallet-connect-pill:active {
+  opacity: 0.85;
 }
 /* ─── 私信 ↔ 通知 切换按钮 ─── */
 .inbox-switch-btn {
@@ -5691,6 +5752,54 @@ button {
   gap: 8px;
 }
 .channel-success-actions .planet-confirm-btn {
+  margin-top: 0;
+}
+
+/* ─── ConnectWalletModal — 连接钱包二次确认（产品原生弹窗样式，与频道开通成功弹窗同款）─── */
+.connect-wallet-modal {
+  width: 100%;
+  max-width: var(--ku-modal-width);
+  background: var(--ku-color-bg-phone);
+  border-radius: var(--ku-radius-modal);
+  padding: 28px 20px 20px;
+  box-shadow: var(--ku-shadow-modal);
+  text-align: center;
+  animation: ku-modal-pop 0.2s cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+.connect-wallet-modal-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.connect-wallet-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  border-radius: var(--ku-radius-circle);
+  background: var(--ku-color-primary);
+  color: var(--ku-color-on-primary);
+}
+.connect-wallet-modal-title {
+  margin: 0;
+  font: 700 18px/1.25 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
+.connect-wallet-modal-message {
+  margin: 0;
+  font: 400 14px/1.5 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+}
+.connect-wallet-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.connect-wallet-modal-actions .planet-confirm-btn {
   margin-top: 0;
 }
 

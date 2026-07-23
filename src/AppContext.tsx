@@ -74,6 +74,11 @@ export type AppContextValue = {
   supBalance: number;
   supHistory: SupTransaction[];
   deductSup: (amount: number, reason: SupTransactionReason) => void;
+  // 游客模式：未连接钱包时可浏览，涉及身份/资产/链上操作需先连接钱包
+  walletConnected: boolean;
+  connectWallet: () => void;
+  // 供无法直接改造成 context action 的本地交互（如私信发送、评论提交）复用同一套连接钱包拦截逻辑
+  requireWallet: (action: () => void) => void;
 };
 
 

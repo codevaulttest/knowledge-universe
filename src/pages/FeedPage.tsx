@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, CalendarCheck, Radio, RefreshCw } from 'lucide-react';
+import { Bell, CalendarCheck, Radio, RefreshCw, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
 import type { Channel, Post, RepostedBy } from '../types';
@@ -190,7 +190,7 @@ function ChannelDiscoverFeed() {
 }
 
 export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 2) => void }) {
-  const { followedAuthors, navigate, unreadActivityCount, openCheckIn, checkInClaimable, t } = useApp();
+  const { followedAuthors, navigate, unreadActivityCount, openCheckIn, checkInClaimable, t, walletConnected, connectWallet } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevTabRef = useRef(tab);
   const [slideClass, setSlideClass] = useState('');
@@ -224,6 +224,16 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
           <button className={tab === 2 ? 'active' : ''} type="button" onClick={() => setTab(2)}>{t('频道', 'Channels')}</button>
         </nav>
         <div className="feed-header-right">
+          {!walletConnected && (
+            <button
+              type="button"
+              className="wallet-connect-pill"
+              onClick={connectWallet}
+            >
+              <Wallet size={13} strokeWidth={2.2} />
+              {t('连接钱包', 'Connect Wallet')}
+            </button>
+          )}
           <button
             type="button"
             className="feed-bell-btn"

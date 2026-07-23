@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, Crown, FileText, Gem, Link, Lock, Star } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, Crown, FileText, Gem, Link, Lock, Star, Wallet } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { isVerifiedAuthor } from '../mockData';
@@ -160,6 +160,24 @@ export function PageHeader({ title, onBack, action }: { title?: string; onBack?:
       )}
       {title && <span className="page-title">{title}</span>}
       {action && <div className="page-header-action">{action}</div>}
+    </div>
+  );
+}
+
+// ── GuestConnectGate（未连接钱包时替代身份/资产类页面的引导页）───────
+export function GuestConnectGate({ title, message }: { title: string; message: string }) {
+  const { t, connectWallet } = useApp();
+  return (
+    <div className="guest-gate">
+      <div className="guest-gate-icon" aria-hidden="true">
+        <Wallet size={32} strokeWidth={1.8} />
+      </div>
+      <p className="guest-gate-title">{title}</p>
+      <p className="guest-gate-sub">{message}</p>
+      <button type="button" className="planet-confirm-btn guest-gate-btn" onClick={connectWallet}>
+        <Wallet size={16} strokeWidth={2} />
+        {t('连接钱包', 'Connect Wallet')}
+      </button>
     </div>
   );
 }
