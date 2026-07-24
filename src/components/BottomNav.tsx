@@ -8,7 +8,7 @@ export function BottomNav({ route, setTab }: {
   route: Route;
   setTab: (t: 0 | 1 | 2) => void;
 }) {
-  const { navigate, navigateRoot, openCompose, t } = useApp();
+  const { navigate, navigateRoot, openCompose, requireWallet, t } = useApp();
   const unreadDmCount = DM_CONVERSATIONS.reduce((s, c) => s + c.unread, 0);
 
   const isHome = route.page === 'P0';
@@ -37,7 +37,7 @@ export function BottomNav({ route, setTab }: {
       <button
         type="button"
         className={`nav-item nav-item--planet${isPlanet ? ' nav-item--active' : ''}`}
-        onClick={() => { if (!isPlanet) navigateRoot({ page: 'P_PLANET' }); }}
+        onClick={() => requireWallet(() => { if (!isPlanet) navigateRoot({ page: 'P_PLANET' }); })}
         aria-label={t('知识星球', 'Knowledge Planet')}
       >
         <KnowledgePlanetIcon className="knowledge-planet-icon" />
@@ -54,7 +54,7 @@ export function BottomNav({ route, setTab }: {
       <button
         type="button"
         className={`nav-item${isDm ? ' nav-item--active' : ''}`}
-        onClick={() => navigate({ page: 'P_DM' })}
+        onClick={() => requireWallet(() => navigate({ page: 'P_DM' }))}
         aria-label={t('消息', 'Messages')}
         style={{ position: 'relative' }}
       >
@@ -67,7 +67,7 @@ export function BottomNav({ route, setTab }: {
       <button
         type="button"
         className={`nav-item${isMine ? ' nav-item--active' : ''}`}
-        onClick={() => navigateRoot({ page: 'P6', authorName: CURRENT_USER })}
+        onClick={() => requireWallet(() => navigateRoot({ page: 'P6', authorName: CURRENT_USER }))}
         aria-label={t('我', 'Me')}
       >
         <User size={20} strokeWidth={2} />

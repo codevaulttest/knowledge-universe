@@ -1543,28 +1543,45 @@ export function CheckInModal({
   onClaim: () => void;
   onClose: () => void;
 }) {
-  const { t, language } = useApp();
+  const { t, language, walletConnected, connectWallet } = useApp();
   const zh = language === 'zh-CN';
   const [status, setStatus] = useState<'idle' | 'done'>('idle');
+  // 签到本身就是"连接钱包"的入口按钮，点击直接连接（不弹二次确认）；连接成功后自动补上领取
+  const [pendingGuestClaim, setPendingGuestClaim] = useState(false);
 
   const rewardName = zh ? CHECK_IN_REWARD.name.zh : CHECK_IN_REWARD.name.en;
   const symbol = zh ? CHECK_IN_REWARD.symbol.zh : CHECK_IN_REWARD.symbol.en;
 
-  // 今日已签到（从常驻入口打开）：仅展示连签进度，不再可领取
-  const alreadyClaimed = !preview.shouldShow;
+  // 今日已签到（从常驻入口打开）：仅展示连签进度，不再可领取；游客态没有身份，不适用这个状态
+  const alreadyClaimed = walletConnected && !preview.shouldShow;
   const showAsDone = status === 'done' || alreadyClaimed;
 
-  const displayDay = Math.min(preview.claimDay, CHECK_IN_MAX_DAILY);
+  // 游客态不知道真实连签天数，网格固定停在第 1 天作为福利预览
+  const displayDay = walletConnected ? Math.min(preview.claimDay, CHECK_IN_MAX_DAILY) : 1;
   const streakCount = preview.claimDay;
   const afterBalance = Math.max(0, preview.balance + preview.reward - preview.penalty);
   const shownBalance = status === 'done' ? afterBalance : preview.balance;
 
   const handleClaim = () => {
     if (status !== 'idle') return;
+    if (!walletConnected) {
+      setPendingGuestClaim(true);
+      connectWallet();
+      return;
+    }
     onClaim();
     setStatus('done');
     setTimeout(onClose, 1500);
   };
+
+  useEffect(() => {
+    if (pendingGuestClaim && walletConnected) {
+      setPendingGuestClaim(false);
+      onClaim();
+      setStatus('done');
+      setTimeout(onClose, 1500);
+    }
+  }, [pendingGuestClaim, walletConnected, onClaim]);
 
   return (
     <div className="sheet-backdrop" onClick={status === 'idle' ? onClose : undefined}>
@@ -1583,16 +1600,18 @@ export function CheckInModal({
           </span>
         </div>
 
-        <div className="checkin-streak">
-          <Flame size={13} strokeWidth={2.2} aria-hidden="true" />
-          <span>
-            {showAsDone
-              ? t(`已连续签到 ${streakCount} 天`, `${streakCount}-day check-in streak`)
-              : t(`连续签到第 ${streakCount} 天`, `Check-in streak: day ${streakCount}`)}
-          </span>
-        </div>
+        {walletConnected && (
+          <div className="checkin-streak">
+            <Flame size={13} strokeWidth={2.2} aria-hidden="true" />
+            <span>
+              {showAsDone
+                ? t(`已连续签到 ${streakCount} 天`, `${streakCount}-day check-in streak`)
+                : t(`连续签到第 ${streakCount} 天`, `Check-in streak: day ${streakCount}`)}
+            </span>
+          </div>
+        )}
 
-        {preview.isBroken && status === 'idle' && !alreadyClaimed && (
+        {walletConnected && preview.isBroken && status === 'idle' && !alreadyClaimed && (
           <div className="checkin-break" role="status">
             {t(
               `签到中断了，已扣除 ${preview.penalty} ${symbol}，今天起重新累积`,
@@ -1659,16 +1678,17 @@ export function CheckInModal({
           </>
         ) : (
           <button type="button" className="checkin-claim-btn" onClick={handleClaim}>
-            {t(
-              `领取今日奖励 +${preview.reward} ${symbol}`,
-              `Claim today's reward +${preview.reward} ${symbol}`,
-            )}
+            {walletConnected
+              ? t(`领取今日奖励 +${preview.reward} ${symbol}`, `Claim today's reward +${preview.reward} ${symbol}`)
+              : t('连接钱包，领取签到奖励', 'Connect wallet to claim your reward')}
           </button>
         )}
 
-        <span className="checkin-balance">
-          {t(`累计已领 ${shownBalance} ${symbol}`, `Total earned: ${shownBalance} ${symbol}`)}
-        </span>
+        {walletConnected && (
+          <span className="checkin-balance">
+            {t(`累计已领 ${shownBalance} ${symbol}`, `Total earned: ${shownBalance} ${symbol}`)}
+          </span>
+        )}
       </div>
     </div>
   );

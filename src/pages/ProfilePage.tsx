@@ -6,12 +6,12 @@ import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET
 import type { Channel, ChannelSubscriber, Draft, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
-import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, GuestConnectGate, PageHeader } from '../components/shared';
+import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, PageHeader } from '../components/shared';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, repostedPostIds, unreadActivityCount, t, userProfile, updateUserProfile, channels, subscribedChannelTiers, openChannelSubscribe, openCreateChannel, openManageChannel, walletConnected, requireWallet } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, repostedPostIds, unreadActivityCount, t, userProfile, updateUserProfile, channels, subscribedChannelTiers, openChannelSubscribe, openCreateChannel, openManageChannel, requireWallet } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   const channel = channels.find(c => c.ownerName === authorName);
@@ -132,18 +132,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     </button>
   ) : null;
 
-  // 「我」是与钱包身份绑定的主页；未连接钱包时不展示身份/资产相关内容，仅引导连接
-  if (isOwn && !walletConnected) {
-    return (
-      <div className="page">
-        <GuestConnectGate
-          title={t('连接钱包，开启你的主页', 'Connect your wallet to open your profile')}
-          message={t('连接钱包后，就能发帖创作、开通频道赚收益啦', "Once you're connected, you can post your own content and open a channel to earn")}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="page">
       {!isOwn && <PageHeader title={authorName} onBack={canGoBack ? goBack : undefined} />}
@@ -188,7 +176,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               <button
                 type="button"
                 className="feed-bell-btn"
-                onClick={() => navigate({ page: 'P7' })}
+                onClick={() => requireWallet(() => navigate({ page: 'P7' }))}
                 aria-label={t('互动通知', 'Activity')}
               >
                 <Bell size={20} strokeWidth={1.8} />
@@ -245,7 +233,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             <button
               type="button"
               className="profile-tip-btn"
-              onClick={() => navigate({ page: 'P_DM_CHAT', peerId: authorName })}
+              onClick={() => requireWallet(() => navigate({ page: 'P_DM_CHAT', peerId: authorName }))}
               aria-label={t('发私信', 'Send message')}
             >
               <MessageCircle size={14} strokeWidth={2} />

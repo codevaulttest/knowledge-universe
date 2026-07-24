@@ -4021,41 +4021,6 @@ button {
   max-width: 240px;
 }
 
-/* ─── 身份/资产类页面游客态：未连接钱包时的引导页（「我」主页、知识星球、私信复用）─── */
-.guest-gate {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  padding: 40px var(--ku-feed-padding-x);
-  text-align: center;
-  gap: 8px;
-}
-.guest-gate-icon {
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--ku-radius-circle);
-  background: var(--ku-color-primary-alpha-14);
-  color: var(--ku-color-primary);
-  margin-bottom: 8px;
-}
-.guest-gate-title {
-  font: 600 16px/1.4 var(--ku-font-family);
-  color: var(--ku-color-text-primary);
-}
-.guest-gate-sub {
-  font: 400 13px/1.5 var(--ku-font-family);
-  color: var(--ku-color-text-secondary);
-  max-width: 280px;
-}
-.guest-gate-btn {
-  max-width: 220px;
-}
-
 /* ─── 关注和粉丝列表弹窗 ─── */
 .profile-stat--clickable {
   cursor: pointer;
@@ -4366,6 +4331,17 @@ button {
 }
 .feed-bell-btn:active {
   background: var(--ku-color-primary-alpha-06);
+}
+/* ─── 签到入口：图标 + 文案，宽度自适应，不再是纯圆形图标按钮 ─── */
+.feed-checkin-btn {
+  width: auto;
+  border-radius: var(--ku-radius-pill);
+  gap: 4px;
+  padding: 0 10px 0 8px;
+}
+.feed-checkin-label {
+  font: 600 13px/1 var(--ku-font-family);
+  white-space: nowrap;
 }
 /* ─── 未连接钱包时的顶部快捷连接入口 ─── */
 .wallet-connect-pill {

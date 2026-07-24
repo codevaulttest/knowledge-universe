@@ -210,11 +210,12 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
         <div className="feed-header-left">
           <button
             type="button"
-            className="feed-bell-btn"
+            className="feed-bell-btn feed-checkin-btn"
             onClick={openCheckIn}
             aria-label={t('每日签到', 'Daily check-in')}
           >
             <CalendarCheck size={22} strokeWidth={2} />
+            <span className="feed-checkin-label">{t('签到', 'Check in')}</span>
             {checkInClaimable && <span className="feed-bell-dot feed-bell-dot--plain" aria-hidden="true" />}
           </button>
         </div>
@@ -234,17 +235,19 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
               {t('连接钱包', 'Connect Wallet')}
             </button>
           )}
-          <button
-            type="button"
-            className="feed-bell-btn"
-            onClick={() => navigate({ page: 'P7' })}
-            aria-label={t('通知', 'Notifications')}
-          >
-            <Bell size={22} strokeWidth={2} />
-            {unreadActivityCount > 0 && (
-              <span className="feed-bell-dot">{unreadActivityCount > 9 ? '9+' : unreadActivityCount}</span>
-            )}
-          </button>
+          {walletConnected && (
+            <button
+              type="button"
+              className="feed-bell-btn"
+              onClick={() => navigate({ page: 'P7' })}
+              aria-label={t('通知', 'Notifications')}
+            >
+              <Bell size={22} strokeWidth={2} />
+              {unreadActivityCount > 0 && (
+                <span className="feed-bell-dot">{unreadActivityCount > 9 ? '9+' : unreadActivityCount}</span>
+              )}
+            </button>
+          )}
         </div>
       </div>
       <div className={`scroll-area${slideClass ? ` ${slideClass}` : ''}`} ref={scrollRef}>

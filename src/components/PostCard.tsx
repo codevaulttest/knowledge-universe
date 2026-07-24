@@ -370,7 +370,7 @@ export function PostCard({
             post={post}
             showChain
             onViewLinks={isOwn ? () => setActorsTab('link') : undefined}
-            onGoToPlanet={isOwn ? () => navigate({ page: 'P_PLANET', searchNodeCode: post.nodeId }) : undefined}
+            onGoToPlanet={isOwn ? () => requireWallet(() => navigate({ page: 'P_PLANET', searchNodeCode: post.nodeId })) : undefined}
           />
         </div>
       )}
