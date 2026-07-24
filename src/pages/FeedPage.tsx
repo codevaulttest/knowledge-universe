@@ -190,7 +190,7 @@ function ChannelDiscoverFeed() {
 }
 
 export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 2) => void }) {
-  const { followedAuthors, navigate, unreadActivityCount, openCheckIn, checkInClaimable, t, walletConnected, connectWallet } = useApp();
+  const { followedAuthors, navigate, unreadActivityCount, openCheckIn, checkInClaimable, t, walletConnected, connectWallet, requireWallet } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevTabRef = useRef(tab);
   const [slideClass, setSlideClass] = useState('');
@@ -203,6 +203,12 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
     const t = setTimeout(() => setSlideClass(''), 280);
     return () => clearTimeout(t);
   }, [tab]);
+
+  // 关注 / 频道依赖身份数据，游客点击先引导连接钱包；连接成功后继续切到目标 tab
+  const goTab = (next: 0 | 1 | 2) => {
+    if (next === 0) { setTab(0); return; }
+    requireWallet(() => setTab(next));
+  };
 
   return (
     <>
@@ -220,9 +226,9 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
           </button>
         </div>
         <nav className="tabs" data-layer="top-tabs">
-          <button className={tab === 0 ? 'active' : ''} type="button" onClick={() => setTab(0)}>{t('推荐', 'For You')}</button>
-          <button className={tab === 1 ? 'active' : ''} type="button" onClick={() => setTab(1)}>{t('关注', 'Following')}</button>
-          <button className={tab === 2 ? 'active' : ''} type="button" onClick={() => setTab(2)}>{t('频道', 'Channels')}</button>
+          <button className={tab === 0 ? 'active' : ''} type="button" onClick={() => goTab(0)}>{t('推荐', 'For You')}</button>
+          <button className={tab === 1 ? 'active' : ''} type="button" onClick={() => goTab(1)}>{t('关注', 'Following')}</button>
+          <button className={tab === 2 ? 'active' : ''} type="button" onClick={() => goTab(2)}>{t('频道', 'Channels')}</button>
         </nav>
         <div className="feed-header-right">
           {!walletConnected && (
