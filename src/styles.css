@@ -4397,8 +4397,9 @@ button {
 
 .nav-inbox-dot {
   position: absolute;
-  top: 8px;
-  right: 6px;
+  /* 相对图标右上角，而非整颗 48px 按钮中心；有 label 后图标上移，top 需更贴顶 */
+  top: 2px;
+  right: 8px;
   z-index: 2;
   min-width: 16px;
   height: 16px;
