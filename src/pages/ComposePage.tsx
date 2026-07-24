@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react';
-import { Camera, FileText, Image, Plus, Radio, Save, Send, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
+import { Camera, Eye, FileText, Image, Plus, Radio, Save, Send, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { CURRENT_USER } from '../mockData';
@@ -703,6 +703,7 @@ export function ComposePage({
           <div className="compose-section">
             <div className="visibility-row">
               <span className="visibility-label">
+                <Eye size={16} strokeWidth={2} aria-hidden="true" />
                 {t('免费可见比例', 'Free preview')}
               </span>
               <div className="visibility-opts">

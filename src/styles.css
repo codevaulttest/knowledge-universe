@@ -2088,8 +2088,11 @@ button {
   padding: 10px 14px 14px;
 }
 .visibility-label {
-  font: var(--ku-text-action);
-  color: var(--ku-color-text-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 13px/1 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
   white-space: nowrap;
 }
 .visibility-opts { display: flex; gap: 7px; flex-wrap: wrap; }
@@ -2098,7 +2101,7 @@ button {
   border-radius: 16px;
   border: 1px solid var(--ku-color-border);
   font: var(--ku-text-action);
-  color: var(--ku-color-text-secondary);
+  color: var(--ku-color-text-primary);
   transition: all 0.12s;
 }
 .vis-btn--active {
