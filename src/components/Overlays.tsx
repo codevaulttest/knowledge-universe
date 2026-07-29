@@ -136,7 +136,6 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
   const [failReason, setFailReason] = useState('');
   const tier = payCtx.stakeTier;
   const relatedPost = payCtx.postId ? posts.find(p => p.id === payCtx.postId) : null;
-  const superAmount = tier > 0 ? SUPER_BY_TIER[tier as Exclude<StakeTier, 0>] : 0;
   // 产生节点时同步扣除 SUP（SUP 链原生代币，千分之一比例）
   const supCost = tier > 0 ? SUP_COST_BY_TIER[tier as Exclude<StakeTier, 0>] : 0;
 
@@ -202,7 +201,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
           <div className="pay-combo-breakdown">
             <div className="pay-combo-row">
               <span className="pay-combo-label">PB</span>
-              <span className="pay-combo-value">{formatSuperAmount(tier + superAmount)} PB</span>
+              <span className="pay-combo-value">{formatSuperAmount(tier)} PB</span>
             </div>
             <div className="pay-combo-row">
               <span className="pay-combo-label">{t('SUP 消耗', 'SUP cost')}</span>
@@ -221,7 +220,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
                 <span className="pay-option-name">{t('组合支付', 'Combo payment')}</span>
                 <span className="pay-option-sub">
                   {tier > 0
-                    ? `${formatSuperAmount(tier + superAmount)} PB + ${formatSupAmount(supCost)} SUP`
+                    ? `${formatSuperAmount(tier)} PB + ${formatSupAmount(supCost)} SUP`
                     : t('确认支付', 'Confirm payment')}
                 </span>
               </div>
@@ -1886,7 +1885,6 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   const defaultChannelName = t(`${userProfile.nickname}的频道`, `${userProfile.nickname}'s Channel`);
   const [paying, setPaying] = useState<'idle' | 'loading' | 'failed'>('idle');
   const [failReason, setFailReason] = useState('');
-  const channelSuperAmount = SUPER_BY_TIER[1000];
   const channelSupCost = SUP_COST_BY_TIER[1000];
   const [name, setName] = useState(existingChannel?.name ?? defaultChannelName);
   const [description, setDescription] = useState(existingChannel?.description ?? '');
@@ -2102,7 +2100,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               <div className="pay-combo-breakdown">
                 <div className="pay-combo-row">
                   <span className="pay-combo-label">PB</span>
-                  <span className="pay-combo-value">{formatSuperAmount(1000 + channelSuperAmount)} PB</span>
+                  <span className="pay-combo-value">{formatSuperAmount(1000)} PB</span>
                 </div>
                 <div className="pay-combo-row">
                   <span className="pay-combo-label">{t('SUP 消耗', 'SUP cost')}</span>
