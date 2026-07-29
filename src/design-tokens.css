@@ -219,7 +219,7 @@
   --ku-nav-item-size:          48px;
   --ku-nav-item-gap:           2px;
   --ku-nav-planet-icon-size:   24px;
-  --ku-nav-active-width:       56px;
+  --ku-nav-active-width:       68px;  /* 需覆盖「知识星球」等 4 字文案，比图标本身略宽 */
   --ku-nav-glass-filter:       blur(30px) saturate(180%);
   /* CodeVAULT 宿主底栏（复刻 Fast 虚拟卡原型） */
   --ku-host-nav-height:        82px;

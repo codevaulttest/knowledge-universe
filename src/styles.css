@@ -3616,6 +3616,79 @@ button {
   padding: 16px var(--ku-feed-padding-x);
 }
 .profile-header .avatar { width: 46px; height: 46px; }
+
+/* ── 我的页头部：创世大爆炸插画背景，覆盖身份行 + 关注/粉丝行，需保证浅色文字/图标对比度 ── */
+.profile-hero {
+  position: relative;
+  overflow: hidden;
+}
+.profile-hero .profile-header-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.profile-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 10, 20, 0.55) 0%, rgba(6, 10, 20, 0.4) 65%, rgba(6, 10, 20, 0.5) 100%);
+  z-index: 0;
+}
+.profile-hero > * { position: relative; z-index: 1; }
+.profile-header--hero {
+  padding: 22px var(--ku-feed-padding-x) 14px;
+}
+.profile-header--hero .profile-name .author-name-text,
+.profile-header--hero .profile-role {
+  color: var(--ku-color-on-primary);
+}
+.profile-header--hero .profile-edit-btn {
+  border-color: var(--ku-genesis-overlay-chip-ring);
+  background: var(--ku-genesis-overlay-chip);
+  color: var(--ku-color-on-primary);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.profile-header--hero .profile-edit-btn:hover {
+  background: var(--ku-genesis-overlay-chip-active);
+  color: var(--ku-color-on-primary);
+}
+.profile-header--hero .feed-bell-btn,
+.profile-header--hero .profile-settings-btn {
+  color: var(--ku-color-on-primary);
+}
+.profile-header--hero .feed-bell-btn:active,
+.profile-header--hero .profile-settings-btn:active {
+  background: var(--ku-genesis-overlay-chip);
+}
+.profile-mini-stats--hero {
+  padding: 0 var(--ku-feed-padding-x) 18px;
+}
+.profile-mini-stats--hero .profile-mini-stat-num,
+.profile-mini-stats--hero .profile-mini-stat-label {
+  color: var(--ku-color-on-primary);
+}
+.profile-hero .channel-create-entry--subtle {
+  margin: 0 var(--ku-feed-padding-x) 30px;
+  border: none;
+  background: var(--ku-color-on-primary);
+  color: var(--ku-color-primary);
+  font-weight: 700;
+}
+.profile-hero .channel-info-bar {
+  margin: 0 var(--ku-feed-padding-x) 30px;
+  background: var(--ku-color-on-primary);
+}
+.profile-hero .channel-info-bar-name {
+  color: var(--ku-color-text-primary);
+}
+.profile-hero .channel-info-bar-sub,
+.profile-hero .channel-info-bar-sub--btn {
+  color: var(--ku-color-text-secondary);
+}
 .profile-info { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
 .profile-name {
   font: 700 16px/1 var(--ku-font-family);
@@ -3911,6 +3984,14 @@ button {
   position: relative;
 }
 
+/* 我的页：标签栏作为圆角卡片叠在创世大爆炸插画底部之上 */
+.profile-content-tabs-wrap--hero {
+  z-index: 1;
+  margin-top: -12px;
+  background: var(--ku-color-bg-phone);
+  border-radius: var(--ku-radius-card) var(--ku-radius-card) 0 0;
+}
+
 .profile-content-tabs {
   display: flex;
   border-bottom: 1px solid var(--ku-color-border);
@@ -3951,6 +4032,7 @@ button {
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   padding: 12px 16px;
   font: 600 13px/1.2 var(--ku-font-family);
@@ -3959,7 +4041,7 @@ button {
   border: none;
   background: none;
   cursor: pointer;
-  flex: 0 0 auto;
+  flex: 1 1 0;
   white-space: nowrap;
 }
 
@@ -5151,9 +5233,6 @@ button {
 .planet-sup-row-toggle:active {
   opacity: 0.6;
 }
-.planet-sup-recharge-btn--modal {
-  padding: 9px 14px;
-}
 .planet-history-empty {
   margin: 0;
   padding: 24px 0;
@@ -5186,6 +5265,8 @@ button {
   cursor: not-allowed;
 }
 .planet-sup-recharge-btn--modal {
+  gap: 6px;
+  padding: 9px 14px;
   border: none;
   background: var(--ku-gradient-primary);
   color: var(--ku-color-on-primary);

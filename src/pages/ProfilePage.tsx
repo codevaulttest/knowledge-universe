@@ -136,7 +136,9 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     <div className="page">
       {!isOwn && <PageHeader title={authorName} onBack={canGoBack ? goBack : undefined} />}
       <div className="scroll-area">
-        <div className="profile-header">
+        <div className={isOwn ? 'profile-hero' : undefined}>
+        {isOwn && <img className="profile-header-bg" src="/img/genesis-bigbang.webp" alt="" aria-hidden="true" />}
+        <div className={`profile-header${isOwn ? ' profile-header--hero' : ''}`}>
           {/* 自己的主页视为底栏 Tab 根页面，不展示返回（即便从头像 navigate 进来也不出现） */}
           {isOwn ? (
             <div className="avatar">
@@ -196,6 +198,23 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           ) : null}
         </div>
 
+        {/* 自己主页：身份之后先展示核心社交数据，与头部背景插画同属一个视觉区块 */}
+        {isOwn && (
+          <div className="profile-mini-stats profile-mini-stats--hero">
+            <button type="button" className="profile-mini-stat profile-mini-stat--btn" onClick={() => setFollowListType('following')}>
+              <span className="profile-mini-stat-num">{followedAuthors.size}</span>
+              <span className="profile-mini-stat-label">{t('关注', 'Following')}</span>
+            </button>
+            <button type="button" className="profile-mini-stat profile-mini-stat--btn" onClick={() => setFollowListType('followers')}>
+              <span className="profile-mini-stat-num">49</span>
+              <span className="profile-mini-stat-label">{t('粉丝', 'Followers')}</span>
+            </button>
+          </div>
+        )}
+
+        {isOwn && channelSection}
+        </div>
+
         {/* 他人主页：频道信息条 → 关注数据 → 关注/打赏/私信 操作 */}
         {!isOwn && channelSection}
 
@@ -242,25 +261,9 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           </div>
         )}
 
-        {/* 自己主页：身份之后先展示核心社交数据，频道入口作为次优先级弱化展示 */}
-        {isOwn && (
-          <div className="profile-mini-stats">
-            <button type="button" className="profile-mini-stat profile-mini-stat--btn" onClick={() => setFollowListType('following')}>
-              <span className="profile-mini-stat-num">{followedAuthors.size}</span>
-              <span className="profile-mini-stat-label">{t('关注', 'Following')}</span>
-            </button>
-            <button type="button" className="profile-mini-stat profile-mini-stat--btn" onClick={() => setFollowListType('followers')}>
-              <span className="profile-mini-stat-num">49</span>
-              <span className="profile-mini-stat-label">{t('粉丝', 'Followers')}</span>
-            </button>
-          </div>
-        )}
-
-        {isOwn && channelSection}
-
         {/* 自己主页显示帖子/收藏 tab；他人主页只显示标签 */}
         {isOwn ? (
-          <div className="profile-content-tabs-wrap">
+          <div className="profile-content-tabs-wrap profile-content-tabs-wrap--hero">
           <nav
             className="profile-content-tabs"
             aria-label={t('内容分类', 'Content categories')}

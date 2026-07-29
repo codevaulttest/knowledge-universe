@@ -38,7 +38,7 @@ type KnowledgeNode = {
   source: NodeSource;
 };
 
-type RedPacketRecord = {
+type AirdropRecord = {
   id: string;
   amount: number;
   time: string;
@@ -72,30 +72,30 @@ function NodeSourceIcon({ source, size = 14 }: { source: NodeSource | null; size
 }
 
 const INITIAL_NODES: KnowledgeNode[] = [
-  // 1000 PB —— 支持五星升级、红包无上限
+  // 1000 PB —— 支持五星升级、空投无上限
   { id: 'n1', nodeCode: 'A1B2C3', tier: 1000, stars: 5, createdAt: '2025-12-10 09:32', source: '发帖' },
   { id: 'n2', nodeCode: 'D4E5F6', tier: 1000, stars: 4, createdAt: '2026-01-05 14:17', source: '发帖' },
   { id: 'n3', nodeCode: 'G7H8I9', tier: 1000, stars: 3, createdAt: '2026-01-20 08:55', source: '转发' },
   { id: 'n4', nodeCode: 'J0K1L2', tier: 1000, stars: 2, createdAt: '2026-02-01 21:03', source: '解锁' },
   { id: 'n5', nodeCode: 'M3N4O5', tier: 1000, stars: 1, createdAt: '2026-02-15 11:44', source: '创世认购' },
-  // 100 PB —— 不支持升级，红包上限 500 PB（5 倍）
+  // 100 PB —— 不支持升级，空投上限 500 PB（5 倍）
   { id: 'n6', nodeCode: 'P6Q7R8', tier: 100, stars: 1, createdAt: '2026-03-01 16:28', source: '评论' },
   { id: 'n7', nodeCode: 'S9T0U1', tier: 100, stars: 1, createdAt: '2026-03-10 07:19', source: '发帖' },
-  // 10 PB —— 不支持升级，红包上限 10 PB（1 倍）
+  // 10 PB —— 不支持升级，空投上限 10 PB（1 倍）
   { id: 'n8', nodeCode: 'V2W3X4', tier: 10, stars: 1, createdAt: '2026-04-01 13:50', source: '评论' },
   { id: 'n9', nodeCode: 'Y5Z6A7', tier: 100, stars: 1, createdAt: '2026-04-12 09:15', source: '链接' },
 ];
 
-const RED_PACKET_HISTORY: RedPacketRecord[] = [
+const AIRDROP_HISTORY: AirdropRecord[] = [
   { id: 'a1', amount: 126, time: '2026-06-22 10:00' },
   { id: 'a2', amount: 81,  time: '2026-06-21 10:00' },
   { id: 'a3', amount: 200, time: '2026-06-20 10:00' },
   { id: 'a4', amount: 150, time: '2026-06-19 10:00' },
 ];
 
-const PENDING_RED_PACKET = 239;
-// 已领取红包累计形成的「上链额度」（= 历史红包之和），领取后等额增加
-const INITIAL_CHAIN_CREDIT = RED_PACKET_HISTORY.reduce((sum, r) => sum + r.amount, 0);
+const PENDING_AIRDROP = 239;
+// 已领取空投累计形成的「上链额度」（= 历史空投之和），领取后等额增加
+const INITIAL_CHAIN_CREDIT = AIRDROP_HISTORY.reduce((sum, r) => sum + r.amount, 0);
 
 // 升级费用：1000 档升 5 级，前期写死（会议口径 1200 / 3000 / 4000 / 5000）
 // 键为「升级后的星级」（1000 档初始即 1 星，故仅 2~5 星可升）
@@ -105,10 +105,10 @@ function canUpgradeNode(node: KnowledgeNode): boolean {
   return node.tier === 1000 && node.stars < 5;
 }
 
-function redPacketCapLabel(tier: NodeTier, zh: boolean): string {
-  if (tier === 1000) return zh ? '红包无上限' : 'Unlimited red packet';
-  if (tier === 100) return zh ? '红包上限 500 PB' : 'Cap 500 PB';
-  return zh ? '红包上限 10 PB' : 'Cap 10 PB';
+function airdropCapLabel(tier: NodeTier, zh: boolean): string {
+  if (tier === 1000) return zh ? '空投无上限' : 'Unlimited airdrop';
+  if (tier === 100) return zh ? '空投上限 500 PB' : 'Cap 500 PB';
+  return zh ? '空投上限 10 PB' : 'Cap 10 PB';
 }
 
 const STAR_COLORS: Record<number, string> = {
@@ -173,7 +173,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
   const zh = language === 'zh-CN';
   const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
   const [sourceFilter, setSourceFilter] = useState<NodeSource | null>(null);
-  const [pendingAmount, setPendingAmount] = useState(PENDING_RED_PACKET);
+  const [pendingAmount, setPendingAmount] = useState(PENDING_AIRDROP);
   const [chainCredit, setChainCredit] = useState(INITIAL_CHAIN_CREDIT);
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
@@ -231,8 +231,8 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
       setChainCredit(c => c + claimedAmount);
       setPendingAmount(0);
       showToast(t(
-        `红包已领取，上链额度 +${formatTokenAmount(claimedAmount)} PB`,
-        `Red packet claimed — on-chain credit +${formatTokenAmount(claimedAmount)} PB`,
+        `空投已领取，上链额度 +${formatTokenAmount(claimedAmount)} PB`,
+        `Airdrop claimed — on-chain credit +${formatTokenAmount(claimedAmount)} PB`,
       ));
     }, 1500);
   };
@@ -282,7 +282,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
       <div className="scroll-area planet-scroll">
         <div className="planet-content">
 
-          {/* ── Red Packet → 上链额度 Card ── */}
+          {/* ── Airdrop → 上链额度 Card ── */}
           <div className="planet-airdrop-card">
             <div className="planet-airdrop-top">
               <div className="planet-airdrop-left">
@@ -291,7 +291,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 </div>
                 <div>
                   <div className="planet-airdrop-label">
-                    {t('待领取红包', 'Pending Red Packet')}
+                    {t('待领取空投', 'Pending Airdrop')}
                   </div>
                   {claimed ? (
                     <div className="planet-claimed-badge">{t('今日已领取', 'Claimed today')}</div>
@@ -573,7 +573,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                       {t(`质押 ${node.tier} PB`, `Stake ${node.tier} PB`)}
                     </span>
                     <span className={`planet-node-attrs planet-node-attrs--t${node.tier}`}>
-                      {redPacketCapLabel(node.tier, zh)}
+                      {airdropCapLabel(node.tier, zh)}
                     </span>
                   </div>
                   <div className="planet-node-meta-row">
@@ -639,7 +639,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                   <span className="planet-history-amount planet-history-amount--withdraw">-{formatTokenAmount(w.amount)} PB</span>
                 </div>
               ))}
-              {RED_PACKET_HISTORY.map(r => (
+              {AIRDROP_HISTORY.map(r => (
                 <div key={r.id} className="planet-history-item">
                   <div className="planet-history-icon">
                     <Gift size={16} strokeWidth={1.8} />
@@ -723,7 +723,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 className="planet-sup-recharge-btn planet-sup-recharge-btn--modal"
                 onClick={() => setShowRechargeSheet(true)}
               >
-                <ArrowDownToLine size={12} strokeWidth={2.2} aria-hidden="true" />
+                <ArrowDownToLine size={13} strokeWidth={2.2} aria-hidden="true" />
                 {t('充值', 'Recharge')}
               </button>
             </div>
@@ -840,7 +840,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             {/* Stars transition */}
             <div className="planet-upgrade-stars">
               <div className="planet-upgrade-star-item">
-                <Rating value={upgradeTarget.stars} />
+                <Rating value={upgradeTarget.stars} size={44} />
                 <span
                   className="planet-upgrade-star-label"
                   style={{ color: STAR_COLORS[upgradeTarget.stars] }}
@@ -850,7 +850,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               </div>
               <div className="planet-upgrade-arrow">→</div>
               <div className="planet-upgrade-star-item">
-                <Rating value={nextStars} />
+                <Rating value={nextStars} size={44} />
                 <span
                   className="planet-upgrade-star-label"
                   style={{ color: STAR_COLORS[nextStars] }}

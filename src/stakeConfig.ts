@@ -39,17 +39,17 @@ export function stakeTierDescription(tier: StakeTier, zh: boolean): string {
   }
   if (tier === 10) {
     return zh
-      ? '红包上限 10 PB · 不支持升级'
-      : 'Red packet cap 10 PB · No upgrade';
+      ? '空投上限 10 PB · 不支持升级'
+      : 'Airdrop cap 10 PB · No upgrade';
   }
   if (tier === 100) {
     return zh
-      ? '红包上限 500 PB · 不支持升级'
-      : 'Red packet cap 500 PB · No upgrade';
+      ? '空投上限 500 PB · 不支持升级'
+      : 'Airdrop cap 500 PB · No upgrade';
   }
   return zh
-    ? '红包无上限 · 支持升至 5 星'
-    : 'Unlimited red packet · Upgradable to 5 stars';
+    ? '空投无上限 · 支持升至 5 星'
+    : 'Unlimited airdrop · Upgradable to 5 stars';
 }
 
 export function stakeTierLabel(tier: StakeTier, zh: boolean): string {
