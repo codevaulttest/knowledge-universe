@@ -216,7 +216,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
         {status === 'idle' && (
           <button type="button" className="planet-confirm-btn" onClick={pay}>
             {tier > 0
-              ? `${t('组合支付', 'Combo payment')} · ${formatSuperAmount(tier)} PB + ${formatSupAmount(supCost)} SUP`
+              ? `${t('支付', 'Pay')} · ${formatSuperAmount(tier)} PB + ${formatSupAmount(supCost)} SUP`
               : t('确认支付', 'Confirm payment')}
           </button>
         )}
