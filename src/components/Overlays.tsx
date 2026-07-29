@@ -200,7 +200,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
         {tier > 0 && (
           <div className="pay-combo-breakdown">
             <div className="pay-combo-row">
-              <span className="pay-combo-label">PB</span>
+              <span className="pay-combo-label">{t('PB 消耗', 'PB cost')}</span>
               <span className="pay-combo-value">{formatSuperAmount(tier)} PB</span>
             </div>
             <div className="pay-combo-row">
@@ -214,19 +214,11 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
         )}
 
         {status === 'idle' && (
-          <div className="pay-options">
-            <button type="button" className="pay-option pay-option--primary" onClick={pay}>
-              <div className="pay-option-copy">
-                <span className="pay-option-name">{t('组合支付', 'Combo payment')}</span>
-                <span className="pay-option-sub">
-                  {tier > 0
-                    ? `${formatSuperAmount(tier)} PB + ${formatSupAmount(supCost)} SUP`
-                    : t('确认支付', 'Confirm payment')}
-                </span>
-              </div>
-              <span className="pay-option-tag">{t('推荐', 'Recommended')}</span>
-            </button>
-          </div>
+          <button type="button" className="planet-confirm-btn" onClick={pay}>
+            {tier > 0
+              ? `${t('组合支付', 'Combo payment')} · ${formatSuperAmount(tier)} PB + ${formatSupAmount(supCost)} SUP`
+              : t('确认支付', 'Confirm payment')}
+          </button>
         )}
 
         {status === 'loading' && (
@@ -2099,7 +2091,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               <span className="edit-profile-label">{t('费用明细', 'Fee breakdown')}</span>
               <div className="pay-combo-breakdown">
                 <div className="pay-combo-row">
-                  <span className="pay-combo-label">PB</span>
+                  <span className="pay-combo-label">{t('PB 消耗', 'PB cost')}</span>
                   <span className="pay-combo-value">{formatSuperAmount(1000)} PB</span>
                 </div>
                 <div className="pay-combo-row">
