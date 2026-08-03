@@ -7179,6 +7179,7 @@ button {
 }
 
 .asset-overview-toggle-row-inner {
+  container-type: inline-size;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -7243,6 +7244,14 @@ button {
   gap: 6px;
   flex-shrink: 0;
   margin-left: auto;
+}
+
+/* 充值按钮占据较多宽度时，让 SUP 数量独占下一行并从左侧开始，避免右对齐造成阅读跳跃。 */
+@container (max-width: 170px) {
+  .asset-overview-toggle-right--stackable {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
 }
 
 .asset-overview-toggle-balance {
@@ -7865,7 +7874,7 @@ button {
   gap: 4px;
   max-width: calc(100% - var(--ku-planet2-space-base));
   height: 24px;
-  padding: 0 10px 0 8px;
+  padding: 0 12px 0 8px;
   border-radius: var(--ku-planet2-radius-xl) 0 var(--ku-planet2-radius-pill) 0;
   font-size: 14px;
   font-weight: 700;
@@ -8843,7 +8852,7 @@ button {
   position: fixed;
   z-index: 80;
   right: max(0px, calc((100vw - var(--ku-layout-max-width)) / 2));
-  bottom: 80px;
+  bottom: var(--ku-planet2-dev-entry-bottom);
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -9403,7 +9412,7 @@ button {
 }
 
 .planet-node-origin-tag--bsp-self {
-  background: var(--ku-color-genesis-gold);
+  background: var(--ku-planet2-color-genesis-gold-light);
   color: var(--ku-color-text-primary);
 }
 
@@ -9533,4 +9542,37 @@ button {
   position: relative;
   z-index: 1;
   margin-top: calc(-1 * (var(--ku-planet2-space-lg) + 28px));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   桌面端滚动条改为贴浏览器窗口右边缘（而非贴 phone-shell 边缘）：
+   放弃 phone-shell 内部滚动，改用文档级滚动，phone-shell 随内容
+   自然增高；顶部栏 sticky、底部导航 fixed 以维持贴顶/贴底视觉。
+   置于文件末尾以保证在级联中覆盖前面同名选择器的基础规则。
+   ═══════════════════════════════════════════════════════════════ */
+@media (min-width: 600px) {
+  .phone-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+  .page {
+    overflow: visible;
+    min-height: 100vh;
+  }
+  .scroll-area,
+  .dm-chat-scroll {
+    overflow-y: visible;
+  }
+  .feed-header,
+  .page-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .bottom-nav {
+    position: fixed;
+    left: calc(max(0px, (100vw - var(--ku-layout-max-width)) / 2) + var(--ku-nav-inset-x));
+    right: calc(max(0px, (100vw - var(--ku-layout-max-width)) / 2) + var(--ku-nav-inset-x));
+  }
 }

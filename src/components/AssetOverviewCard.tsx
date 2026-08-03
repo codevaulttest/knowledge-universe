@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, ArrowDown, ArrowUp, Check, ChevronRight, Copy, Gift, Info, QrCode, Wallet, Wallet2, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT, MOCK_SUP_DEPOSIT_ADDRESS } from '../mockData';
@@ -51,9 +51,6 @@ export function AssetOverviewCard() {
   const [pbInfoOpen, setPbInfoOpen] = useState(false);
   const [airdropRuleOpen, setAirdropRuleOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const [deadlineStacked, setDeadlineStacked] = useState(false);
-  const labelRef = useRef<HTMLSpanElement>(null);
-  const deadlineRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -64,29 +61,6 @@ export function AssetOverviewCard() {
   const airdropMissed = !airdropClaimed && remainingMs <= 0;
   const airdropClaimable = !airdropClaimed && !airdropMissed;
   const countdownTone = getAirdropCountdownTone(remainingMs, airdropClaimable);
-
-  useEffect(() => {
-    if (!airdropClaimable) {
-      setDeadlineStacked(false);
-      return;
-    }
-
-    const checkWrap = () => {
-      const label = labelRef.current;
-      const deadline = deadlineRef.current;
-      if (!label || !deadline) return;
-      setDeadlineStacked(deadline.offsetTop > label.offsetTop);
-    };
-
-    checkWrap();
-    const observer = new ResizeObserver(checkWrap);
-    const row = labelRef.current?.parentElement;
-    if (row) observer.observe(row);
-    if (labelRef.current) observer.observe(labelRef.current);
-    if (deadlineRef.current) observer.observe(deadlineRef.current);
-
-    return () => observer.disconnect();
-  }, [airdropClaimable, remainingMs]);
 
   if (!walletConnected) return null;
 
@@ -107,16 +81,14 @@ export function AssetOverviewCard() {
             </span>
             <div className="asset-overview-airdrop-info">
               <div className="asset-overview-airdrop-label-row">
-                <span ref={labelRef} className="asset-overview-airdrop-label">
+                <span className="asset-overview-airdrop-label">
                   {t('待领取空投', 'Pending Airdrop')}
                 </span>
                 {airdropClaimable && (
                   <span
-                    ref={deadlineRef}
-                    className={`asset-overview-airdrop-deadline${deadlineStacked ? ' asset-overview-airdrop-deadline--stacked' : ''}${countdownTone === 'warning' ? ' asset-overview-airdrop-deadline--warning' : ''}${countdownTone === 'urgent' ? ' asset-overview-airdrop-deadline--urgent' : ''}`}
+                    className={`asset-overview-airdrop-deadline${countdownTone === 'warning' ? ' asset-overview-airdrop-deadline--warning' : ''}${countdownTone === 'urgent' ? ' asset-overview-airdrop-deadline--urgent' : ''}`}
                   >
-                    {!deadlineStacked && t('（剩 ', '(left ')}
-                    {deadlineStacked && t('剩 ', 'left ')}
+                    {t('剩 ', 'left ')}
                     <span className={`asset-overview-action-countdown-time${countdownTone === 'warning' ? ' asset-overview-action-countdown-time--warning' : ''}${countdownTone === 'urgent' ? ' asset-overview-action-countdown-time--urgent' : ''}`}>{formatCountdown(remainingMs)}</span>
                     <button
                       type="button"
@@ -126,7 +98,6 @@ export function AssetOverviewCard() {
                     >
                       <Info size={13} strokeWidth={2} />
                     </button>
-                    {!deadlineStacked && t('）', ')')}
                   </span>
                 )}
               </div>
@@ -193,7 +164,7 @@ export function AssetOverviewCard() {
             <span className="asset-overview-toggle-content">
               <span className="asset-overview-toggle-label-row">
                 <span className="asset-overview-toggle-label">{t('SUP 余额', 'SUP Balance')}</span>
-                <span className="asset-overview-toggle-right">
+                <span className="asset-overview-toggle-right asset-overview-toggle-right--stackable">
                   <span className="asset-overview-toggle-balance">{formatSupAmount(supBalance)} SUP</span>
                   <ChevronRight size={13} strokeWidth={2} className="asset-overview-toggle-chevron" />
                 </span>

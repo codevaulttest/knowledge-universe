@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Gem, Info, Loader2, Megaphone, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, Wrench, X } from 'lucide-react';
+import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Crown, Gem, Info, Loader2, Megaphone, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, Wrench, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { AssetOverviewCard } from '../components/AssetOverviewCard';
@@ -764,7 +764,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               onClick={handleOpenBsp}
             >
               <span className="planet-quick-action-icon">
-                <Megaphone size={20} strokeWidth={2} />
+                <Crown size={20} strokeWidth={2} />
               </span>
               <span className="planet-quick-action-label">{t('BSP 巨星投流', 'BSP Big Star Plan')}</span>
             </button>
