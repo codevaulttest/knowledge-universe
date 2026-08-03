@@ -36,7 +36,7 @@ export function GenesisBanner() {
         <span className="genesis-banner-title">{t('BSP 巨星投流计划', 'BSP Big Star Plan')}</span>
         <span className="genesis-banner-sub">
           {t('投流支持创作者', 'Back creators with traffic')}
-          <span className="genesis-banner-scarcity-left">{t('· 365 天长期扶持', '· 365-day support')}</span>
+          <span className="genesis-banner-scarcity-left">{t('· 1 年长期扶持', '· 1-year support')}</span>
         </span>
         <span className="genesis-banner-cta">
           {t('立即投流', 'Invest now')}

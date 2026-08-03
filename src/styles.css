@@ -8741,11 +8741,6 @@ button {
   padding-right: var(--ku-planet2-space-base);
 }
 
-.stake-code-caption {
-  font-size: 14px;
-  color: var(--ku-planet2-color-muted-soft);
-}
-
 .stake-code-row {
   display: flex;
   align-items: center;

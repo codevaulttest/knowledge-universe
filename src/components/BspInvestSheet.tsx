@@ -153,8 +153,8 @@ export function BspInvestSheet({
 
         <p className="stake-hint">
           {t(
-            '投放 PB 参与巨星计划，为自己或指定创作者换取 365 天流量扶持与每日打赏保底。',
-            'Invest PB in the Big Star Plan to buy 365 days of traffic support and a daily tip floor — for yourself or a creator you choose.'
+            '投放 PB 参与巨星计划，为自己或指定创作者换取 1 年流量扶持与每日打赏保底。',
+            'Invest PB in the Big Star Plan to buy 1 year of traffic support and a daily tip floor — for yourself or a creator you choose.'
           )}
         </p>
 
@@ -222,11 +222,6 @@ export function BspInvestSheet({
               <span className="stake-code-status stake-code-status--fail">
                 <ShieldX size={13} strokeWidth={2} />
                 {t("该地址未在知识宇宙注册，请确认地址是否正确", "This address isn't registered on Wisverse — please confirm it's correct")}
-              </span>
-            )}
-            {addressStatus === '1' && (
-              <span className="stake-code-caption">
-                {t('投给他人须先校验地址，校验通过后才可支付', 'Investing for someone else requires a verified address before payment')}
               </span>
             )}
           </div>
@@ -310,7 +305,7 @@ export function BspInvestSheet({
           <span className="create-confirm-label">{t('每日打赏保底', 'Daily tip floor')}</span>
           <span className="create-confirm-value">{t(`${formatTokenAmount(dailyGuarantee)} PB / 天`, `${formatTokenAmount(dailyGuarantee)} PB / day`)}</span>
           <span className="create-confirm-channel">
-            {t(`生效期 ${startDate} 起 365 天，至 ${endDate}`, `365 days from ${startDate} through ${endDate}`)}
+            {t('支付成功后，次日生效，为期 1 年', 'Effective the day after payment for 1 year')}
           </span>
         </div>
 
