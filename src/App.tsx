@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_PB_AIRDROP_AMOUNT, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
-import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_PB_AIRDROP_AMOUNT, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, PbTransactionReason, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import { postHasStake } from './stakeConfig';
 import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, CheckInModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
@@ -104,7 +104,11 @@ export default function App() {
     showToast(t(`领取成功，+${MOCK_PB_AIRDROP_AMOUNT} PB`, `Claimed +${MOCK_PB_AIRDROP_AMOUNT} PB`));
   };
 
-  const [supBalance, setSupBalance] = useState(13);
+  const deductPb = (amount: number, _reason: PbTransactionReason) => {
+    setPbBalance(b => Math.max(0, b - amount));
+  };
+
+  const [supBalance, setSupBalance] = useState(MOCK_WALLET_SUP_BALANCE);
   const INITIAL_SUP_HISTORY: SupTransaction[] = [
     { id: 's1', direction: 'in', amount: 10, time: '2026-06-01 09:00', reason: 'recharge' },
     { id: 's2', direction: 'in', amount: 3.1, time: '2026-06-12 16:20', reason: 'recharge' },
@@ -637,7 +641,7 @@ export default function App() {
     supBalance, supHistory, deductSup,
     walletConnected, connectWallet, requireWallet,
     walletAddress, walletConnecting, disconnectWallet,
-    pbBalance, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
+    pbBalance, deductPb, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
     airdropClaimed, claimAirdrop,
   };
 

@@ -17,6 +17,7 @@ const SUP_REASON_LABELS: Record<SupTransactionReason, [string, string]> = {
   dislike: ['踩并创建子节点', 'Dislike and create child node'],
   save: ['收藏并创建子节点', 'Save and create child node'],
   unlock: ['解锁并创建子节点', 'Unlock and create child node'],
+  bsp_invest: ['BSP 巨星投流', 'BSP Big Star Plan'],
 };
 
 function formatCountdown(ms: number): string {

@@ -5059,6 +5059,9 @@ button {
 .page:has(.planet-scroll) .page-header {
   background: var(--ku-color-bg-page);
 }
+.planet-scroll {
+  background: var(--ku-color-bg-page);
+}
 .planet-confirm-btn {
   margin-top: 20px;
   width: 100%;
@@ -8189,24 +8192,6 @@ button {
   font-weight: 500;
 }
 
-.sheet-header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  padding: var(--ku-planet2-space-lg) var(--ku-planet2-space-base) var(--ku-planet2-space-md);
-  background: var(--ku-color-bg-phone);
-  border-bottom: 1px solid var(--ku-color-border-card);
-}
-
-.sheet-title {
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.33;
-  color: var(--ku-color-text-primary);
-}
-
 .planet-upgrade-stars {
   display: flex;
   align-items: center;
@@ -8250,6 +8235,7 @@ button {
   font-size: 14px;
   font-weight: 500;
   color: var(--ku-color-text-primary);
+  word-break: break-all;
 }
 
 .planet-upgrade-sep {
@@ -9380,6 +9366,119 @@ button {
   margin-top: 2px;
   margin-right: 8px;
   color: var(--ku-color-primary);
+}
+
+/* ── BSP 巨星投流 ── */
+
+.bsp-invest-sheet {
+}
+
+/* 数量输入：与 .create-qty-value 同盒模型/字号，只重置 input 差量
+   —— <input> 没有 width 时会按浏览器默认 size(20) 撑开，必须显式给 width 覆盖，
+      否则 .create-qty-block 的 flex-wrap 会把 -/输入框/+ 挤到各自换行 */
+.bsp-qty-input {
+  width: 90px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  outline: none;
+  -webkit-appearance: none;
+  font-family: var(--ku-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.bsp-qty-input:disabled {
+  color: var(--ku-planet2-color-muted-soft);
+}
+
+.bsp-qty-unit {
+  font-size: 14px;
+  color: var(--ku-color-text-meta);
+}
+
+.bsp-record-card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ku-planet2-space-xs);
+}
+
+.planet-node-origin-tag--bsp-self {
+  background: var(--ku-color-genesis-gold);
+  color: var(--ku-color-text-primary);
+}
+
+.planet-node-origin-tag--bsp-proxy {
+  background: var(--ku-color-member-badge);
+  color: var(--ku-color-on-primary);
+}
+
+.bsp-record-headline {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ku-color-text-primary);
+}
+
+.bsp-record-target {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ku-color-text-secondary);
+}
+
+.bsp-record-period {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ku-planet2-space-xs);
+  font-size: 14px;
+  color: var(--ku-color-text-meta);
+}
+
+.bsp-record-guarantee {
+  font-size: 14px;
+  color: var(--ku-color-text-secondary);
+}
+
+.bsp-record-guarantee > b {
+  color: var(--ku-color-text-primary);
+  font-family: var(--ku-font-mono);
+  font-weight: 600;
+}
+
+.bsp-record-settle {
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-page);
+  overflow: hidden;
+}
+
+.bsp-record-settle .planet-upgrade-row {
+  padding-left: var(--ku-planet2-space-sm);
+  padding-right: var(--ku-planet2-space-sm);
+}
+
+.bsp-record-settle-title {
+  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-sm) 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ku-color-text-meta);
+}
+
+.bsp-record-posted {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ku-color-success-text);
+}
+
+.bsp-record-posted--missed {
+  color: var(--ku-color-text-meta);
+}
+
+.bsp-record-topup {
+  font-family: var(--ku-font-mono);
+  font-weight: 600;
+  color: var(--ku-color-success-text);
 }
 
 .planet-create-sheet .planet-confirm-btn {

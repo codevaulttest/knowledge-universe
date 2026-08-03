@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, PbTransactionReason, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 
 export type AppContextValue = {
   navigate: (route: Route) => void;
@@ -85,6 +85,8 @@ export type AppContextValue = {
   disconnectWallet: () => void;
   // 知识宇宙页：账户级 PB 余额（与 supBalance 平行的另一种代币余额）
   pbBalance: number;
+  // 与 deductSup 平行；暂不落流水，站内无 PB 历史视图
+  deductPb: (amount: number, reason: PbTransactionReason) => void;
   // 知识宇宙页：邀请码绑定
   myInviteCode: string;
   /** 已绑定邀请人的钱包地址；未绑定为 null */

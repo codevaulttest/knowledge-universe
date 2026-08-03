@@ -15,8 +15,10 @@ export const MOCK_SUP_DEPOSIT_ADDRESS = '0x4f1a9c7e2b8d05f3a6c1e9b7d4f2a8c5e0b3d
 /** 演示登录用户：与钱包短名一致，避免与中文昵称人格混用 */
 export const CURRENT_USER = DEFAULT_WALLET_DISPLAY;
 
-/** 演示钱包 PB 余额（连接后展示） */
-export const MOCK_WALLET_PB_BALANCE = 5000;
+/** 演示钱包 PB 余额（连接后展示）—— 数值取到能演示 BSP 巨星投流 1 万单位（1000 万 PB）的量级 */
+export const MOCK_WALLET_PB_BALANCE = 12000000;
+/** 演示钱包 SUP 余额（连接后展示） */
+export const MOCK_WALLET_SUP_BALANCE = 1050;
 /** 演示钱包对应的邀请码（固定随机六位数字） */
 export const MOCK_MY_INVITE_CODE = '482915';
 

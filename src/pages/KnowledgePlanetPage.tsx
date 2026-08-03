@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Gem, Info, Loader2, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, Wrench, X } from 'lucide-react';
+import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Gem, Info, Loader2, Megaphone, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, Wrench, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { AssetOverviewCard } from '../components/AssetOverviewCard';
 import { PlanetAnnouncementBanner } from '../components/PlanetAnnouncementBanner';
+import { BspInvestSheet } from '../components/BspInvestSheet';
+import { BspRecordList } from '../components/BspRecordList';
+import { BspRulesSheet } from '../components/BspRulesSheet';
 import { PageHeader, PullToRefresh } from '../components/shared';
-import { CURRENT_USER } from '../mockData';
+import { CURRENT_USER, MOCK_WALLET_ADDRESS } from '../mockData';
 import { SUP_COST_BY_TIER, formatSupAmount, formatTokenAmount } from '../stakeConfig';
+import { bspPbCost, bspSupCost, bspEffectivePeriod, type BspInvestment } from '../bspConfig';
+import { dayKey } from '../checkInConfig';
 
 // 面额（PB）：仅 1000 档支持五星升级；100 / 10 档不支持升级
 type NodeTier = 10 | 100 | 1000;
@@ -164,7 +169,7 @@ const INITIAL_NODES: KnowledgeNode[] = [
 const INITIAL_FAVORITE_NODE_IDS = ['n1', 'n3', 'n9'];
 
 // mock：模拟"注册表"里已存在的用户地址——转让校验通过分支用；demo 输入其中任意一个即可校验通过
-const REGISTERED_TRANSFER_ADDRESSES = new Set([
+export const REGISTERED_TRANSFER_ADDRESSES = new Set([
   '0x9c1a2b3d4e5f60718293a4b5c6d7e8f9a0b1c2d',
   '0x1f2e3d4c5b6a798877665544332211aabbccdde',
 ]);
@@ -177,6 +182,61 @@ function isTransferable(node: KnowledgeNode): boolean {
 // AGENTS.md 红线（费用类文案须有明确出处）在此处经用户明确豁免：真实转让价格尚未公布
 // （bobo 会另行在群里公布），这里按星级示意性递增，仅用于截图/演示，不代表最终定价
 const TRANSFER_PRICE_BY_STAR: Record<number, number> = { 1: 100, 2: 300, 3: 600, 4: 1000, 5: 2000 };
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** BSP 巨星投流种子数据：覆盖「补贴差额」「超保底不补」「未发帖无保底」三种形态 */
+function buildInitialBspInvestments(myAddress: string): BspInvestment[] {
+  const now = new Date();
+  const yesterday = dayKey(new Date(now.getTime() - DAY_MS));
+  const period1 = bspEffectivePeriod(new Date(now.getTime() - 30 * DAY_MS));
+  const period2 = bspEffectivePeriod(new Date(now.getTime() - 5 * DAY_MS));
+  const period3 = bspEffectivePeriod(new Date(now.getTime() - 350 * DAY_MS));
+  return [
+    {
+      id: 'bsp1',
+      investorAddress: myAddress,
+      beneficiaryAddress: '0x9c1a2b3d4e5f60718293a4b5c6d7e8f9a0b1c2d',
+      beneficiaryKind: 'address',
+      units: 10000,
+      paidPb: bspPbCost(10000),
+      paidSup: bspSupCost(10000),
+      createdAt: '2026-07-04 09:00',
+      startDate: period1.startDate,
+      endDate: period1.endDate,
+      status: 'paid',
+      lastSettlement: { date: yesterday, posted: true, tipsGross: 10000, tipsNet: 8000, topUp: 22000 },
+    },
+    {
+      id: 'bsp2',
+      investorAddress: myAddress,
+      beneficiaryAddress: myAddress,
+      beneficiaryKind: 'self',
+      units: 10000,
+      paidPb: bspPbCost(10000),
+      paidSup: bspSupCost(10000),
+      createdAt: '2026-07-29 09:00',
+      startDate: period2.startDate,
+      endDate: period2.endDate,
+      status: 'paid',
+      lastSettlement: { date: yesterday, posted: true, tipsGross: 100000, tipsNet: 80000, topUp: 0 },
+    },
+    {
+      id: 'bsp3',
+      investorAddress: myAddress,
+      beneficiaryAddress: myAddress,
+      beneficiaryKind: 'self',
+      units: 100,
+      paidPb: bspPbCost(100),
+      paidSup: bspSupCost(100),
+      createdAt: '2025-08-19 09:00',
+      startDate: period3.startDate,
+      endDate: period3.endDate,
+      status: 'paid',
+      lastSettlement: { date: yesterday, posted: false, tipsGross: 120, tipsNet: 96, topUp: 0 },
+    },
+  ];
+}
 
 // 演示用「有效节点码」名单：创建频道时输入的节点码需命中此集合才能校验通过
 const VALID_INVITE_CODES = new Set(INITIAL_NODES.map(n => n.nodeCode));
@@ -261,6 +321,9 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
   const { showToast, t, language, channels, walletAddress, walletConnecting, connectWallet, goBack, canGoBack } = useApp();
   const zh = language === 'zh-CN';
   const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
+  const [bspRecords, setBspRecords] = useState<BspInvestment[]>(() => buildInitialBspInvestments(MOCK_WALLET_ADDRESS));
+  const [bspSheetOpen, setBspSheetOpen] = useState(false);
+  const [bspRulesOpen, setBspRulesOpen] = useState(false);
   const [availableSerials, setAvailableSerials] = useState<Record<NodeOrigin, number[]>>(INITIAL_AVAILABLE_SERIALS);
   const [nodeSearch, setNodeSearch] = useState(initialSearch ?? '');
   const [starFilter, setStarFilter] = useState<number | null>(null);
@@ -286,6 +349,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
   const [verifying, setVerifying] = useState(false);
   const [creating, setCreating] = useState(false);
   const [devForceEmptyNodes, setDevForceEmptyNodes] = useState(false);
+  const [devBspInsufficient, setDevBspInsufficient] = useState(false);
   const [devMenuOpen, setDevMenuOpen] = useState(false);
   const [devPanelHidden, setDevPanelHidden] = useState(false);
   const [serialSheetOrigin, setSerialSheetOrigin] = useState<NodeOrigin | null>(null);
@@ -349,8 +413,16 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
 
   const createConfirmReady = step1Ready && step2Ready && !creating;
 
-  const handleGenesisNode = () => {
+  const handleClaimDiamondNode = () => {
     showToast(t('跳转「钻石节点」', 'Opening "Diamond Node"'), 'demo');
+  };
+
+  const handleOpenBsp = () => {
+    if (!walletAddress) {
+      setConnectWalletSheetOpen(true);
+      return;
+    }
+    setBspSheetOpen(true);
   };
 
   const resetCreateSheet = (preferFree = freeQuotaCount > 0) => {
@@ -658,6 +730,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
   const handleRefresh = async () => {
     await new Promise(resolve => setTimeout(resolve, 900));
     setNodes(seedNodesWithChannel(channels));
+    setBspRecords(buildInitialBspInvestments(MOCK_WALLET_ADDRESS));
     showToast(t('数据已刷新', 'Data refreshed'));
   };
 
@@ -683,17 +756,17 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
           {/* ── 资产概览：PB 余额 + 领取空投 / SUP 余额 + 充值（右上角为邀请入口） ── */}
           <AssetOverviewCard />
 
-          {/* ── Quick Actions: 钻石节点 / 创建频道 ── */}
+          {/* ── Quick Actions: BSP 巨星投流 / 创建频道 ── */}
           <div className="planet-quick-actions">
             <button
               type="button"
               className="planet-quick-action-btn planet-quick-action-btn--genesis"
-              onClick={handleGenesisNode}
+              onClick={handleOpenBsp}
             >
               <span className="planet-quick-action-icon">
-                <Gem size={20} strokeWidth={2} />
+                <Megaphone size={20} strokeWidth={2} />
               </span>
-              <span className="planet-quick-action-label">{t('抢占钻石节点', 'Claim Diamond Node')}</span>
+              <span className="planet-quick-action-label">{t('BSP 巨星投流', 'BSP Big Star Plan')}</span>
             </button>
             <button
               type="button"
@@ -729,6 +802,13 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             </div>
           ) : (
           <>
+
+          {/* ── BSP 巨星投流：我的投流记录 ── */}
+          <BspRecordList
+            investments={bspRecords}
+            onOpenRules={() => setBspRulesOpen(true)}
+            onOpenInvest={handleOpenBsp}
+          />
 
           {/* ── Node Section ── */}
           <div className="planet-section">
@@ -767,7 +847,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 {zh ? (
                   <>
                     点击「
-                    <button type="button" className="planet-nodes-empty-link" onClick={handleGenesisNode}>钻石节点</button>
+                    <button type="button" className="planet-nodes-empty-link" onClick={handleClaimDiamondNode}>钻石节点</button>
                     」或「
                     <button type="button" className="planet-nodes-empty-link" onClick={handleCreateChannel}>抢先开通频道</button>
                     」获得节点
@@ -775,7 +855,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 ) : (
                   <>
                     Tap{' '}
-                    <button type="button" className="planet-nodes-empty-link" onClick={handleGenesisNode}>Diamond Node</button>
+                    <button type="button" className="planet-nodes-empty-link" onClick={handleClaimDiamondNode}>Diamond Node</button>
                     {' '}or{' '}
                     <button type="button" className="planet-nodes-empty-link" onClick={handleCreateChannel}>Early Channel Access</button>
                     {' '}to get a node
@@ -1495,6 +1575,20 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
         </div>
       )}
 
+      {/* ── BSP 巨星投流：购买弹窗 ── */}
+      {bspSheetOpen && (
+        <BspInvestSheet
+          myAddress={walletAddress ?? MOCK_WALLET_ADDRESS}
+          forceInsufficient={devBspInsufficient}
+          onOpenRules={() => setBspRulesOpen(true)}
+          onClose={() => setBspSheetOpen(false)}
+          onConfirmed={record => setBspRecords(prev => [record, ...prev])}
+        />
+      )}
+
+      {/* ── BSP 巨星投流：保底规则说明 ── */}
+      {bspRulesOpen && <BspRulesSheet onClose={() => setBspRulesOpen(false)} />}
+
       {/* ── 收藏弹窗：选填备注，确认后收藏；有备注则展示在卡片上 ── */}
       {remarkSheetNode && (
         <div className="sheet-backdrop" onClick={closeFavoriteSheet}>
@@ -1829,7 +1923,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               <button
                 type="button"
                 className="planet-serial-sheet-cta"
-                onClick={() => { setSerialSheetOrigin(null); handleGenesisNode(); }}
+                onClick={() => { setSerialSheetOrigin(null); handleClaimDiamondNode(); }}
               >
                 <Gem size={15} strokeWidth={2.2} aria-hidden />
                 {t('抢占更多钻石节点', 'Claim more Diamond Nodes')}
@@ -1923,8 +2017,8 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               <p className="pb-info-sheet-para">
                 <strong className="pb-info-sheet-label">{t('BSP 权重放大：', 'BSP weight amplification: ')}</strong>
                 {t(
-                  '依托 BSP（Behavior Support Plan，行为支持计划）功能，高活跃度的定向广播将显著提升该频道的后续推流权重。权重越高，频道所获得的全局流量空投收益就越丰厚，从而实现"内容升级—流量反哺—收益倍增"的稳健闭环。',
-                  'Through the BSP (Behavior Support Plan) feature, high-activity Direction Broadcasting significantly raises a channel’s subsequent distribution weight. The higher the weight, the greater the channel’s global traffic airdrop rewards — forming a steady loop of "content upgrade → traffic feedback → reward multiplication."'
+                  '依托 BSP（Big Star Plan，巨星投流计划）功能，高活跃度的定向广播将显著提升该频道的后续推流权重。权重越高，频道所获得的全局流量空投收益就越丰厚，从而实现"内容升级—流量反哺—收益倍增"的稳健闭环。',
+                  'Through the BSP (Big Star Plan) feature, high-activity Direction Broadcasting significantly raises a channel’s subsequent distribution weight. The higher the weight, the greater the channel’s global traffic airdrop rewards — forming a steady loop of "content upgrade → traffic feedback → reward multiplication."'
                 )}
               </p>
             </div>
@@ -2045,6 +2139,18 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               <span>{t('无节点空状态', 'Empty nodes preview')}</span>
               <span className={`planet-dev-menu-toggle${devForceEmptyNodes ? ' planet-dev-menu-toggle--on' : ''}`}>
                 {devForceEmptyNodes ? t('开', 'On') : t('关', 'Off')}
+              </span>
+            </button>
+            <button
+              type="button"
+              className="planet-dev-menu-item"
+              role="menuitemcheckbox"
+              aria-checked={devBspInsufficient}
+              onClick={() => setDevBspInsufficient(v => !v)}
+            >
+              <span>{t('BSP 余额不足演示', 'BSP insufficient balance demo')}</span>
+              <span className={`planet-dev-menu-toggle${devBspInsufficient ? ' planet-dev-menu-toggle--on' : ''}`}>
+                {devBspInsufficient ? t('开', 'On') : t('关', 'Off')}
               </span>
             </button>
           </div>

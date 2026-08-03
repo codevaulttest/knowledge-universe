@@ -182,7 +182,11 @@ export type SupTransactionReason =
   | 'like'
   | 'dislike'
   | 'save'
-  | 'unlock';
+  | 'unlock'
+  | 'bsp_invest';
+
+/** PB 支出原因（与 SupTransactionReason 平行；PB 侧暂无流水视图，仅用于标注扣款来源）。 */
+export type PbTransactionReason = 'bsp_invest' | 'channel_open' | 'transfer';
 
 export type SupTransaction = {
   id: string;
