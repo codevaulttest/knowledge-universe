@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, Crown, FileText, Gem, Link, Lock, Star, Wallet } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, Crown, FileText, Gem, Link, Lock, RotateCcw, Star, Wallet } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { isVerifiedAuthor } from '../mockData';
@@ -148,11 +148,124 @@ export function Toast({ msg, type }: { msg: string; type?: 'demo' }) {
   );
 }
 
+// ── PullToRefresh（下拉刷新：触屏拖拽触发 onRefresh，用于重新拉取余额 / 空投 / 节点等 mock 数据；移植自 genesis-node-diamond）──
+const PTR_TRIGGER = 56;
+const PTR_MAX = 90;
+
+export function PullToRefresh({
+  className,
+  onRefresh,
+  disabled,
+  children,
+}: {
+  className?: string;
+  onRefresh: () => void | Promise<void>;
+  disabled?: boolean;
+  children: React.ReactNode;
+}) {
+  const { t } = useApp();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const startYRef = useRef<number | null>(null);
+  const pullingRef = useRef(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Pointer Events 统一处理触屏手指与桌面鼠标拖拽（PC Chrome 用鼠标下拉即可测试）
+    const handlePointerDown = (e: PointerEvent) => {
+      if (disabled || refreshing) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (el.scrollTop > 0) return;
+      startYRef.current = e.clientY;
+      pullingRef.current = false;
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (disabled || refreshing || startYRef.current === null) return;
+      const deltaY = e.clientY - startYRef.current;
+      if (deltaY <= 0 || el.scrollTop > 0) {
+        if (pullingRef.current) setPullDistance(0);
+        pullingRef.current = false;
+        return;
+      }
+      pullingRef.current = true;
+      e.preventDefault();
+      setPullDistance(Math.min(PTR_MAX, deltaY * 0.5));
+    };
+
+    const handlePointerUp = () => {
+      startYRef.current = null;
+      if (!pullingRef.current) return;
+      pullingRef.current = false;
+      setPullDistance(current => {
+        if (current >= PTR_TRIGGER && !disabled) {
+          setRefreshing(true);
+          Promise.resolve(onRefresh()).finally(() => {
+            setRefreshing(false);
+            setPullDistance(0);
+          });
+          return PTR_TRIGGER;
+        }
+        return 0;
+      });
+    };
+
+    el.addEventListener('pointerdown', handlePointerDown);
+    el.addEventListener('pointermove', handlePointerMove, { passive: false });
+    el.addEventListener('pointerup', handlePointerUp);
+    el.addEventListener('pointercancel', handlePointerUp);
+    el.addEventListener('pointerleave', handlePointerUp);
+    return () => {
+      el.removeEventListener('pointerdown', handlePointerDown);
+      el.removeEventListener('pointermove', handlePointerMove);
+      el.removeEventListener('pointerup', handlePointerUp);
+      el.removeEventListener('pointercancel', handlePointerUp);
+      el.removeEventListener('pointerleave', handlePointerUp);
+    };
+  }, [disabled, refreshing, onRefresh]);
+
+  const progress = Math.min(1, pullDistance / PTR_TRIGGER);
+  const visiblePull = refreshing ? PTR_TRIGGER : pullDistance;
+  const statusLabel = refreshing
+    ? t('刷新中…', 'Refreshing…')
+    : progress >= 1
+      ? t('松开刷新', 'Release to refresh')
+      : t('下拉刷新', 'Pull to refresh');
+
+  return (
+    <div className={className} ref={containerRef}>
+      {/* 正常文档流占位：高度随下拉距离增长，把下方内容自然推开，不覆盖顶部插画的圆角叠层 */}
+      <div
+        className="ptr-indicator"
+        style={{
+          height: visiblePull,
+          transition: refreshing || pullDistance === 0 ? 'height 0.25s ease' : 'none',
+        }}
+        aria-hidden={!refreshing}
+      >
+        <span className={`ptr-indicator-pill${refreshing ? ' ptr-indicator-pill--active' : ''}`} style={{ opacity: refreshing ? 1 : progress }}>
+          <RotateCcw
+            size={14}
+            strokeWidth={2}
+            className={refreshing ? 'planet-spin' : undefined}
+            style={refreshing ? undefined : { transform: `rotate(${progress * 360}deg)` }}
+          />
+          <span>{statusLabel}</span>
+        </span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 // ── PageHeader ─────────────────────────────────────────────────
-export function PageHeader({ title, onBack, action }: { title?: string; onBack?: () => void; action?: React.ReactNode }) {
+export function PageHeader({ title, onBack, action, className }: { title?: string; onBack?: () => void; action?: React.ReactNode; className?: string }) {
   const { t } = useApp();
   return (
-    <div className="page-header" data-layer="page-header">
+    <div className={`page-header${className ? ` ${className}` : ''}`} data-layer="page-header">
       {onBack && (
         <button className="back-btn" type="button" onClick={onBack} aria-label={t('返回', 'Back')}>
           <ArrowLeft size={22} strokeWidth={2} />
@@ -420,12 +533,12 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
         }
       }}
       aria-label={onGoToPlanet
-        ? t(`查看知识星球节点 ${post.nodeId}，${post.rating} 星`, `View Knowledge Planet node ${post.nodeId}, ${post.rating} ${post.rating === 1 ? 'star' : 'stars'}`)
+        ? t(`查看知识宇宙节点 ${post.nodeId}，${post.rating} 星`, `View Knowledge Universe node ${post.nodeId}, ${post.rating} ${post.rating === 1 ? 'star' : 'stars'}`)
         : t(`链接节点 ${post.nodeId}，${post.rating} 星`, `Link node ${post.nodeId}, ${post.rating} ${post.rating === 1 ? 'star' : 'stars'}`)}
     >
       <div className="gemini-left">
         <KnowledgePlanetIcon className="gemini-icon" />
-        <span className="gemini-label">{t('知识星球', 'Knowledge Planet')}</span>
+        <span className="gemini-label">{t('知识宇宙', 'Knowledge Universe')}</span>
         <span className="gemini-sep">·</span>
         <Rating value={post.rating} />
         <span className="gemini-sep">·</span>
@@ -435,7 +548,7 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
             type="button"
             className="gemini-id-goto"
             onClick={(e) => { e.stopPropagation(); onGoToPlanet(); }}
-            aria-label={t(`在知识星球中查看节点 ${post.nodeId}`, `View node ${post.nodeId} in Knowledge Planet`)}
+            aria-label={t(`在知识宇宙中查看节点 ${post.nodeId}`, `View node ${post.nodeId} in Knowledge Universe`)}
           >
             <ChevronRight size={14} strokeWidth={2.5} />
           </button>

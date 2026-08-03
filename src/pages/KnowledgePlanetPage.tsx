@@ -1,115 +1,206 @@
-import { useState } from 'react';
-import { ArrowDownToLine, ArrowUp, ArrowUpToLine, Check, ChevronDown, ChevronRight, Copy, Crown, FileText, Gift, LayoutGrid, Link, Loader2, Lock, MessageCircle, QrCode, Radio, Repeat2, Search, Star, TriangleAlert, Wallet, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Gem, Info, Loader2, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, Wrench, X } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { PageHeader, Rating } from '../components/shared';
-import { CURRENT_USER, MOCK_SUP_DEPOSIT_ADDRESS, MOCK_WALLET_ADDRESS } from '../mockData';
-import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
-import type { LucideIcon } from 'lucide-react';
-import type { SupTransactionReason } from '../types';
-
-const SUP_REASON_LABELS: Record<SupTransactionReason, [string, string]> = {
-  recharge: ['充值', 'Recharge'],
-  channel_open: ['开通频道', 'Open channel'],
-  post: ['发布知识星球节点', 'Publish Knowledge Planet Node'],
-  chain_unlock: ['解锁全文', 'Unlock full content'],
-  repost: ['转发并创建子节点', 'Repost and create child node'],
-  comment: ['评论并创建子节点', 'Comment and create child node'],
-  share: ['转发并创建子节点', 'Repost and create child node'],
-  like: ['点赞并创建子节点', 'Like and create child node'],
-  dislike: ['踩并创建子节点', 'Dislike and create child node'],
-  save: ['收藏并创建子节点', 'Save and create child node'],
-  unlock: ['解锁并创建子节点', 'Unlock and create child node'],
-};
+import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
+import { AssetOverviewCard } from '../components/AssetOverviewCard';
+import { PlanetAnnouncementBanner } from '../components/PlanetAnnouncementBanner';
+import { PageHeader, PullToRefresh } from '../components/shared';
+import { CURRENT_USER } from '../mockData';
+import { SUP_COST_BY_TIER, formatSupAmount, formatTokenAmount } from '../stakeConfig';
 
 // 面额（PB）：仅 1000 档支持五星升级；100 / 10 档不支持升级
 type NodeTier = 10 | 100 | 1000;
 
-// 节点来源：产生该节点的具体行为，便于用户筛选、了解自己节点的构成
-type NodeSource = '发帖' | '评论' | '转发' | '链接' | '解锁' | '频道开通' | '创世认购';
+/** 认购来源标识：节点只能通过认购创世 / 钻石节点产生，不存在无来源的普通节点 */
+type NodeOrigin = 'diamond' | 'genesis';
 
-const ALL_NODE_SOURCES: NodeSource[] = ['发帖', '评论', '转发', '链接', '解锁', '频道开通', '创世认购'];
+/** 节点取得方式：现金购买 / 用内部 PB 兑换（质押开通频道、签到等）——仅现金购买的 1-5 星节点可转让 */
+type PurchaseSource = 'cash' | 'pb';
+
+// 创建频道：暂时固定质押 1000 PB 档位
+const CREATE_TIER: NodeTier = 1000;
+
+/** 按星级开通：一次生成的固定包（与晋升所需子节点量对齐的演示规则） */
+const STAR_PACKS = [
+  { level: 5, qty: 63 },
+  { level: 4, qty: 31 },
+  { level: 3, qty: 15 },
+  { level: 2, qty: 7 },
+  { level: 1, qty: 3 },
+] as const;
+
+/** 付费「按个数」演示上限，避免一次插爆列表；星级包仍按完整包数量生成 */
+const PAID_QTY_MAX = 10;
+
+/** 新开通节点「同步中」态时长（demo：用短延迟模拟约 5 分钟生成） */
+const CREATE_SYNCING_MS = 4000;
+
+type CreatePayPath = 'free' | 'paid';
+type CreateScaleMode = 'qty' | 'star';
+type CreateStep = 1 | 2 | 3;
+
+// 转让选节点弹窗：节点数可能达到几万条，默认只渲染一页，靠搜索定位 + 「加载更多」分批追加，避免一次性挂载全部 DOM
+const TRANSFER_PICKER_PAGE_SIZE = 50;
+
+// 节点码校验状态机（移植自 gemini 质押流程 bind_node_code）：1 未检测 · 2 输入中 · 3 校验通过 · 4 校验未通过
+type CodeCheckStatus = '1' | '2' | '3' | '4';
+
+function generateNodeCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function formatNow(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** 字符串取种子，供 mulberry32 使用（demo mock：让同一节点每次打开子节点列表看到同一组数据） */
+function seedFromString(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (Math.imul(h, 31) + str.charCodeAt(i)) | 0;
+  return h;
+}
+
+function mulberry32(seed: number): () => number {
+  let a = seed;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+type ChildNodeEntry = { code: string; stars: number };
+
+/** 子节点具体名单（demo mock）：按节点 id 生成一份确定性的伪随机列表，条数等于该节点的 childCount */
+function generateChildNodes(node: KnowledgeNode): ChildNodeEntry[] {
+  const rand = mulberry32(seedFromString(node.id));
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const list: ChildNodeEntry[] = [];
+  for (let i = 0; i < node.childCount; i++) {
+    let code = '';
+    for (let j = 0; j < 6; j++) code += chars[Math.floor(rand() * chars.length)];
+    const stars = Math.ceil(rand() * 5) as 1 | 2 | 3 | 4 | 5;
+    list.push({ code, stars });
+  }
+  return list;
+}
 
 type KnowledgeNode = {
   id: string;
   nodeCode: string;
   tier: NodeTier;
   stars: number;
+  /** 下挂子节点数量（demo mock） */
+  childCount: number;
+  /** 二叉树直接子节点占用数（0/1/2）：链满 2 个时该节点开始产生收益，与 childCount（星级晋升用的累计子节点数）是两回事 */
+  boundChildren: 0 | 1 | 2;
+  /** 认购来源：只能是创世或钻石节点，节点必由认购产生 */
+  origin: NodeOrigin;
+  /** 认购序号（创世 / 钻石角标展示为 #N） */
+  serialNo: number;
+  /** 取得方式：仅 'cash' 且 1-5 星的节点可转让 */
+  purchaseSource: PurchaseSource;
+  /** 节点对应的频道名称；节点认购后即同步开通频道，因此必定存在 */
+  channelName: string;
+  /** 频道简介（开通时选填） */
+  channelDescription?: string;
+  /** 个人备注：仅在收藏弹窗中选填；有内容时展示在已收藏节点卡片上 */
+  remark?: string;
+  /** 刚开通尚未「落库」的演示态：列表可见但标同步中 */
+  syncing?: boolean;
   createdAt: string;
-  source: NodeSource;
 };
 
-type AirdropRecord = {
-  id: string;
-  amount: number;
-  time: string;
-};
-
-type WithdrawRecord = {
-  id: string;
-  amount: number;
-  time: string;
-};
-
-const NODE_SOURCE_ICONS: Record<NodeSource, LucideIcon> = {
-  '发帖': FileText,
-  '评论': MessageCircle,
-  '转发': Repeat2,
-  '链接': Link,
-  '解锁': Lock,
-  '频道开通': Radio,
-  '创世认购': Crown,
-};
-
-function NodeSourceIcon({ source, size = 14 }: { source: NodeSource | null; size?: number }) {
-  if (source === null) {
-    return <LayoutGrid size={size} strokeWidth={2} aria-hidden />;
+/** 从可用创世/钻石名额中按「创世优先、编号从小到大」取 count 个 */
+function takeFreeSerials(
+  available: Record<NodeOrigin, number[]>,
+  count: number,
+): { origin: NodeOrigin; serialNo: number }[] {
+  const genesis = [...available.genesis].sort((a, b) => a - b);
+  const diamond = [...available.diamond].sort((a, b) => a - b);
+  const picked: { origin: NodeOrigin; serialNo: number }[] = [];
+  for (const serialNo of genesis) {
+    if (picked.length >= count) break;
+    picked.push({ origin: 'genesis', serialNo });
   }
-  const Icon = NODE_SOURCE_ICONS[source];
-  if (source === '创世认购') {
-    return <Icon size={size} strokeWidth={0} fill="currentColor" aria-hidden />;
+  for (const serialNo of diamond) {
+    if (picked.length >= count) break;
+    picked.push({ origin: 'diamond', serialNo });
   }
-  return <Icon size={size} strokeWidth={2} aria-hidden />;
+  return picked;
 }
+
+/** 批量开通时的频道名：首个用原名，其余加 -2、-3… */
+function channelNameForIndex(base: string, index: number): string {
+  return index === 0 ? base : `${base}-${index + 1}`;
+}
+
+/** 顶部卡片展示用：一个认购编号 + 是否已消耗（已开通频道） */
+type SerialEntry = { serialNo: number; consumed: boolean };
 
 const INITIAL_NODES: KnowledgeNode[] = [
-  // 1000 PB —— 支持五星升级、空投无上限
-  { id: 'n1', nodeCode: 'A1B2C3', tier: 1000, stars: 5, createdAt: '2025-12-10 09:32', source: '发帖' },
-  { id: 'n2', nodeCode: 'D4E5F6', tier: 1000, stars: 4, createdAt: '2026-01-05 14:17', source: '发帖' },
-  { id: 'n3', nodeCode: 'G7H8I9', tier: 1000, stars: 3, createdAt: '2026-01-20 08:55', source: '转发' },
-  { id: 'n4', nodeCode: 'J0K1L2', tier: 1000, stars: 2, createdAt: '2026-02-01 21:03', source: '解锁' },
-  { id: 'n5', nodeCode: 'M3N4O5', tier: 1000, stars: 1, createdAt: '2026-02-15 11:44', source: '创世认购' },
-  // 100 PB —— 不支持升级，空投上限 500 PB（5 倍）
-  { id: 'n6', nodeCode: 'P6Q7R8', tier: 100, stars: 1, createdAt: '2026-03-01 16:28', source: '评论' },
-  { id: 'n7', nodeCode: 'S9T0U1', tier: 100, stars: 1, createdAt: '2026-03-10 07:19', source: '发帖' },
-  // 10 PB —— 不支持升级，空投上限 10 PB（1 倍）
-  { id: 'n8', nodeCode: 'V2W3X4', tier: 10, stars: 1, createdAt: '2026-04-01 13:50', source: '评论' },
-  { id: 'n9', nodeCode: 'Y5Z6A7', tier: 100, stars: 1, createdAt: '2026-04-12 09:15', source: '链接' },
+  // 1000 PB —— 支持五星升级、红包无上限
+  { id: 'n1', nodeCode: 'A1B2C3', tier: 1000, stars: 5, childCount: 128, boundChildren: 2, origin: 'genesis', serialNo: 1, purchaseSource: 'cash', createdAt: '2025-12-10 09:32', channelName: '深度思考日记', remark: '主力收益节点' },
+  { id: 'n2', nodeCode: 'D4E5F6', tier: 1000, stars: 4, childCount: 64, boundChildren: 2, origin: 'diamond', serialNo: 3, purchaseSource: 'cash', createdAt: '2026-01-05 14:17', channelName: 'AI 效率手记' },
+  { id: 'n3', nodeCode: 'G7H8I9', tier: 1000, stars: 3, childCount: 31, boundChildren: 1, origin: 'diamond', serialNo: 5, purchaseSource: 'cash', createdAt: '2026-01-20 08:55', channelName: '增长黑客笔记', remark: '待观察升星' },
+  { id: 'n4', nodeCode: 'J0K1L2', tier: 1000, stars: 2, childCount: 12, boundChildren: 2, origin: 'genesis', serialNo: 8, purchaseSource: 'cash', createdAt: '2026-02-01 21:03', channelName: '投资复盘室' },
+  { id: 'n5', nodeCode: 'M3N4O5', tier: 1000, stars: 1, childCount: 3, boundChildren: 0, origin: 'diamond', serialNo: 7, purchaseSource: 'cash', createdAt: '2026-02-15 11:44', channelName: '产品体验测评' },
+  // 100 PB —— 不支持升级，红包上限 500 PB（5 倍）
+  { id: 'n6', nodeCode: 'P6Q7R8', tier: 100, stars: 1, childCount: 7, boundChildren: 1, origin: 'genesis', serialNo: 12, purchaseSource: 'cash', createdAt: '2026-03-01 16:28', channelName: '读书会频道' },
+  { id: 'n7', nodeCode: 'S9T0U1', tier: 100, stars: 1, childCount: 2, boundChildren: 2, origin: 'diamond', serialNo: 9, purchaseSource: 'cash', createdAt: '2026-03-10 07:19', channelName: '摄影随笔' },
+  // 10 PB —— 不支持升级，红包上限 10 PB（1 倍）；用内部 PB 兑换取得，用于演示"不可转让"态
+  { id: 'n8', nodeCode: 'V2W3X4', tier: 10, stars: 1, childCount: 0, boundChildren: 0, origin: 'genesis', serialNo: 15, purchaseSource: 'pb', createdAt: '2026-04-01 13:50', channelName: '早期实验室' },
+  { id: 'n9', nodeCode: 'Y5Z6A7', tier: 100, stars: 1, childCount: 1, boundChildren: 1, origin: 'diamond', serialNo: 11, purchaseSource: 'cash', createdAt: '2026-04-12 09:15', channelName: '周报存档', remark: '周报专用' },
 ];
 
-const AIRDROP_HISTORY: AirdropRecord[] = [
-  { id: 'a1', amount: 126, time: '2026-06-22 10:00' },
-  { id: 'a2', amount: 81,  time: '2026-06-21 10:00' },
-  { id: 'a3', amount: 200, time: '2026-06-20 10:00' },
-  { id: 'a4', amount: 150, time: '2026-06-19 10:00' },
-];
+/** demo：带备注的节点默认已收藏（备注仅在收藏流程中选填） */
+const INITIAL_FAVORITE_NODE_IDS = ['n1', 'n3', 'n9'];
 
-const PENDING_AIRDROP = 239;
-// 已领取空投累计形成的「上链额度」（= 历史空投之和），领取后等额增加
-const INITIAL_CHAIN_CREDIT = AIRDROP_HISTORY.reduce((sum, r) => sum + r.amount, 0);
+// mock：模拟"注册表"里已存在的用户地址——转让校验通过分支用；demo 输入其中任意一个即可校验通过
+const REGISTERED_TRANSFER_ADDRESSES = new Set([
+  '0x9c1a2b3d4e5f60718293a4b5c6d7e8f9a0b1c2d',
+  '0x1f2e3d4c5b6a798877665544332211aabbccdde',
+]);
 
-// 升级费用：1000 档升 5 级，前期写死（会议口径 1200 / 3000 / 4000 / 5000）
-// 键为「升级后的星级」（1000 档初始即 1 星，故仅 2~5 星可升）
-const UPGRADE_COST_BY_NEXT: Record<number, number> = { 2: 1200, 3: 3000, 4: 4000, 5: 5000 };
-
-function canUpgradeNode(node: KnowledgeNode): boolean {
-  return node.tier === 1000 && node.stars < 5;
+/** 仅现金购买的 1-5 星节点可转让（会议纪要 00:00-00:07：PB 兑换/签到取得的节点不可转让） */
+function isTransferable(node: KnowledgeNode): boolean {
+  return node.purchaseSource === 'cash' && node.stars >= 1 && node.stars <= 5;
 }
 
-function airdropCapLabel(tier: NodeTier, zh: boolean): string {
-  if (tier === 1000) return zh ? '空投无上限' : 'Unlimited airdrop';
-  if (tier === 100) return zh ? '空投上限 500 PB' : 'Cap 500 PB';
-  return zh ? '空投上限 10 PB' : 'Cap 10 PB';
-}
+// AGENTS.md 红线（费用类文案须有明确出处）在此处经用户明确豁免：真实转让价格尚未公布
+// （bobo 会另行在群里公布），这里按星级示意性递增，仅用于截图/演示，不代表最终定价
+const TRANSFER_PRICE_BY_STAR: Record<number, number> = { 1: 100, 2: 300, 3: 600, 4: 1000, 5: 2000 };
+
+// 演示用「有效节点码」名单：创建频道时输入的节点码需命中此集合才能校验通过
+const VALID_INVITE_CODES = new Set(INITIAL_NODES.map(n => n.nodeCode));
+
+// mock：节点码对应的持有人地址——校验通过后仅展示后四位，方便用户对账、又不泄漏完整地址
+const NODE_CODE_OWNER_ADDRESS: Record<string, string> = {
+  A1B2C3: '0x9c1a2b3d4e5f60718293a4b5c6d7e8f9a0b1c2d',
+  D4E5F6: '0x1f2e3d4c5b6a798877665544332211aabbccdde',
+  G7H8I9: '0x3ab4c5d6e7f8091a2b3c4d5e6f7081920a3b4c5d',
+  J0K1L2: '0x5cd6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8',
+  M3N4O5: '0x7ef8091a2b3c4d5e6f708192a3b4c5d6e7f8091a',
+  P6Q7R8: '0x9012a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4',
+  S9T0U1: '0xb234c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6',
+  V2W3X4: '0xd456e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8',
+  Y5Z6A7: '0xf678091a2b3c4d5e6f708192a3b4c5d6e7f8091a',
+};
+
+// 已认购但尚未开通频道的创世 / 钻石节点编号（有限库存）：开通频道会从中按编号从小到大消耗一个
+const INITIAL_AVAILABLE_SERIALS: Record<NodeOrigin, number[]> = {
+  genesis: [2, 6],
+  diamond: [4, 10],
+};
+
+// 节点升级入口暂时隐藏（会议：列表升级按钮先不要；星级仍可见）
 
 const STAR_COLORS: Record<number, string> = {
   0: '#94a3b8',
@@ -120,84 +211,295 @@ const STAR_COLORS: Record<number, string> = {
   5: '#f59e0b',
 };
 
-const STAR_SHADOWS: Record<number, string> = {
-  0: 'rgba(148,163,184,0.3)',
-  1: 'rgba(16,185,129,0.5)',
-  2: 'rgba(99,102,241,0.5)',
-  3: 'rgba(124,58,237,0.5)',
-  4: 'rgba(239,68,68,0.5)',
-  5: 'rgba(245,158,11,0.8)',
-};
-
 function StarDisplay({ level, size = 44 }: { level: number; size?: number }) {
   const color = STAR_COLORS[level];
-  const shadow = STAR_SHADOWS[level];
 
   return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0, filter: `drop-shadow(0 0 8px ${shadow})` }}>
+    <div className="planet-node-star-wrap" style={{ width: size, height: size }}>
       <Star size={size} fill={color} strokeWidth={0} style={{ display: 'block' }} />
-      <span style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#fff', fontWeight: 700,
-        fontSize: Math.floor(size * 0.4),
-        lineHeight: 1,
-        textShadow: '0 1px 2px rgba(0,0,0,0.25)',
-        pointerEvents: 'none',
-      }}>
+      <span className="planet-node-star-level" style={{ fontSize: Math.max(13, Math.floor(size * 0.4)) }}>
         {level}
       </span>
     </div>
   );
 }
 
+/** 二叉树子节点槽位指示：0 个空心，1 个浅蓝填充，链满 2 个（该节点开始产生收益）两槽均实心加深为主色蓝 */
+function ChildSlotDots({ count }: { count: 0 | 1 | 2 }) {
+  return (
+    <div className={`planet-node-slot-dots${count === 2 ? ' planet-node-slot-dots--full' : ''}`}>
+      <span className={`planet-node-slot-dot${count >= 1 ? ' planet-node-slot-dot--filled' : ''}`} />
+      <span className={`planet-node-slot-dot${count >= 2 ? ' planet-node-slot-dot--filled' : ''}`} />
+    </div>
+  );
+}
+
 // 用户开通的频道会同步产生一个来源为"频道开通"的 1000 PB 双子星节点（懒初始化，每次进入本页时依据最新 channels 状态重新推导）
-function seedNodesWithChannel(channels: { ownerName: string; id: string; createdAt: string }[]): KnowledgeNode[] {
+function seedNodesWithChannel(channels: { ownerName: string; id: string; name: string; createdAt: string }[]): KnowledgeNode[] {
   const ownChannel = channels.find(c => c.ownerName === CURRENT_USER);
   if (!ownChannel) return INITIAL_NODES;
+  const maxGenesisSerial = Math.max(...INITIAL_NODES.filter(n => n.origin === 'genesis').map(n => n.serialNo));
   return [
     {
       id: `channel-node-${ownChannel.id}`,
       nodeCode: ownChannel.id.slice(-6).toUpperCase(),
       tier: 1000,
       stars: 1,
+      childCount: 0,
+      boundChildren: 0,
+      origin: 'genesis',
+      serialNo: maxGenesisSerial + 1,
+      purchaseSource: 'pb',
       createdAt: ownChannel.createdAt,
-      source: '频道开通',
+      channelName: ownChannel.name,
     },
     ...INITIAL_NODES,
   ];
 }
 
 export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string } = {}) {
-  const { goBack, canGoBack, showToast, t, language, channels, supBalance, supHistory } = useApp();
+  const { showToast, t, language, channels, walletAddress, walletConnecting, connectWallet, goBack, canGoBack } = useApp();
   const zh = language === 'zh-CN';
   const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
-  const [sourceFilter, setSourceFilter] = useState<NodeSource | null>(null);
-  const [pendingAmount, setPendingAmount] = useState(PENDING_AIRDROP);
-  const [chainCredit, setChainCredit] = useState(INITIAL_CHAIN_CREDIT);
-  const [claiming, setClaiming] = useState(false);
-  const [claimed, setClaimed] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [showSupHistoryModal, setShowSupHistoryModal] = useState(false);
-  const [upgradeTarget, setUpgradeTarget] = useState<KnowledgeNode | null>(null);
-  const [upgrading, setUpgrading] = useState(false);
+  const [availableSerials, setAvailableSerials] = useState<Record<NodeOrigin, number[]>>(INITIAL_AVAILABLE_SERIALS);
   const [nodeSearch, setNodeSearch] = useState(initialSearch ?? '');
   const [starFilter, setStarFilter] = useState<number | null>(null);
+  const [favoriteNodeIds, setFavoriteNodeIds] = useState<Set<string>>(() => new Set(INITIAL_FAVORITE_NODE_IDS));
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'star'>('newest');
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [showWithdrawSheet, setShowWithdrawSheet] = useState(false);
-  const [withdrawing, setWithdrawing] = useState(false);
-  const [withdrawHistory, setWithdrawHistory] = useState<WithdrawRecord[]>([]);
-  const [showRechargeSheet, setShowRechargeSheet] = useState(false);
-  const [addressCopied, setAddressCopied] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<'star' | 'source' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'star' | 'sort' | null>(null);
 
-  const maskedWallet = `${MOCK_WALLET_ADDRESS.slice(0, 6)}...${MOCK_WALLET_ADDRESS.slice(-6)}`;
+  // ── 创建频道：三步 Sheet（选规模 → 填身份 → 确认账单）+ 批量 mock ──
+  const [createSheetOpen, setCreateSheetOpen] = useState(false);
+  const [connectWalletSheetOpen, setConnectWalletSheetOpen] = useState(false);
+  const [createStep, setCreateStep] = useState<CreateStep>(1);
+  const [createPayPath, setCreatePayPath] = useState<CreatePayPath>('free');
+  const [createScaleMode, setCreateScaleMode] = useState<CreateScaleMode>('qty');
+  const [createQty, setCreateQty] = useState(1);
+  const [createStarLevel, setCreateStarLevel] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [channelNameInput, setChannelNameInput] = useState('');
+  const [channelDescInput, setChannelDescInput] = useState('');
+  const [channelDescOpen, setChannelDescOpen] = useState(false);
+  const [nodeCodeInput, setNodeCodeInput] = useState('');
+  const [codeCheckStatus, setCodeCheckStatus] = useState<CodeCheckStatus>('1');
+  const [verifying, setVerifying] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [devForceEmptyNodes, setDevForceEmptyNodes] = useState(false);
+  const [devMenuOpen, setDevMenuOpen] = useState(false);
+  const [devPanelHidden, setDevPanelHidden] = useState(false);
+  const [serialSheetOrigin, setSerialSheetOrigin] = useState<NodeOrigin | null>(null);
+  const [childInfoOpen, setChildInfoOpen] = useState(false);
+  const [childListNode, setChildListNode] = useState<KnowledgeNode | null>(null);
+  const [childListVisibleCount, setChildListVisibleCount] = useState(TRANSFER_PICKER_PAGE_SIZE);
 
-  const handleCopyDepositAddress = () => {
-    navigator.clipboard.writeText(MOCK_SUP_DEPOSIT_ADDRESS).then(() => {
-      setAddressCopied(true);
-      setTimeout(() => setAddressCopied(false), 1800);
-    });
+  // ── 转让节点（仅现金购买的 1-5 星节点）：入口收敛到「我的节点」标题行，先选节点再进转让流程 ──
+  const [transferPickerOpen, setTransferPickerOpen] = useState(false);
+  const [transferPickerSearch, setTransferPickerSearch] = useState('');
+  const [transferPickerVisibleCount, setTransferPickerVisibleCount] = useState(TRANSFER_PICKER_PAGE_SIZE);
+  const [transferSheetNode, setTransferSheetNode] = useState<KnowledgeNode | null>(null);
+  const [transferAddress, setTransferAddress] = useState('');
+  const [transferCheckStatus, setTransferCheckStatus] = useState<CodeCheckStatus>('1');
+  const [transferVerifying, setTransferVerifying] = useState(false);
+  const [transferring, setTransferring] = useState(false);
+  const [remarkSheetNode, setRemarkSheetNode] = useState<KnowledgeNode | null>(null);
+  const [remarkInput, setRemarkInput] = useState('');
+
+  const displayNodes = devForceEmptyNodes ? [] : nodes;
+  const showNoNodesEmpty = Boolean(walletAddress) && displayNodes.length === 0;
+
+  // 消耗顺序仍按编号从小到大（越早认购越先用），与展示顺序分开维护；DEV「清空节点」演示时可用库存也一并清空
+  const genesisAvailable = devForceEmptyNodes ? [] : [...availableSerials.genesis].sort((a, b) => a - b);
+  const diamondAvailable = devForceEmptyNodes ? [] : [...availableSerials.diamond].sort((a, b) => a - b);
+  // 顶部卡片 / 弹窗展示全部已认购的创世 / 钻石节点编号：按编号从大到小排列，最近获取的在前；未消耗的可继续开通频道，已消耗的编号仍保留、样式变灰
+  const buildSerialEntries = (origin: NodeOrigin, available: number[]): SerialEntry[] => {
+    const consumedSerials = displayNodes.filter(n => n.origin === origin).map(n => n.serialNo);
+    return [
+      ...consumedSerials.map(serialNo => ({ serialNo, consumed: true })),
+      ...available.map(serialNo => ({ serialNo, consumed: false })),
+    ].sort((a, b) => b.serialNo - a.serialNo);
+  };
+  const genesisEntries = buildSerialEntries('genesis', genesisAvailable);
+  const diamondEntries = buildSerialEntries('diamond', diamondAvailable);
+
+  const freeQuotaCount = genesisAvailable.length + diamondAvailable.length;
+  const freeSerialPreview = [...genesisAvailable.map(n => ({ origin: 'genesis' as const, serialNo: n })),
+    ...diamondAvailable.map(n => ({ origin: 'diamond' as const, serialNo: n }))];
+
+  const selectedStarPack = STAR_PACKS.find(p => p.level === createStarLevel) ?? STAR_PACKS[STAR_PACKS.length - 1];
+  const createCount = createScaleMode === 'star' ? selectedStarPack.qty : createQty;
+  const createStars = createScaleMode === 'star' ? selectedStarPack.level : 1;
+  const qtyMax = createPayPath === 'free' ? Math.max(freeQuotaCount, 1) : PAID_QTY_MAX;
+  const availableStarPacks = createPayPath === 'free'
+    ? STAR_PACKS.filter(p => p.qty <= freeQuotaCount)
+    : STAR_PACKS;
+  const freeSlotsForCreate = createPayPath === 'free'
+    ? takeFreeSerials(availableSerials, createCount)
+    : [];
+  const pbCost = CREATE_TIER * createCount;
+  const supCost = SUP_COST_BY_TIER[CREATE_TIER] * createCount;
+
+  const step1Ready = createPayPath === 'free'
+    ? freeQuotaCount > 0 && createCount >= 1 && createCount <= freeQuotaCount && freeSlotsForCreate.length === createCount
+    : createCount >= 1 && (createScaleMode === 'qty' ? createCount <= PAID_QTY_MAX : true);
+
+  const step2Ready = channelNameInput.trim().length > 0
+    && (createPayPath === 'free' || codeCheckStatus === '1' || codeCheckStatus === '3')
+    && !verifying;
+
+  const createConfirmReady = step1Ready && step2Ready && !creating;
+
+  const handleGenesisNode = () => {
+    showToast(t('跳转「钻石节点」', 'Opening "Diamond Node"'), 'demo');
+  };
+
+  const resetCreateSheet = (preferFree = freeQuotaCount > 0) => {
+    setCreateStep(1);
+    setCreatePayPath(preferFree ? 'free' : 'paid');
+    setCreateScaleMode('qty');
+    setCreateQty(1);
+    setCreateStarLevel(1);
+    setChannelNameInput('');
+    setChannelDescInput('');
+    setChannelDescOpen(false);
+    setNodeCodeInput('');
+    setCodeCheckStatus('1');
+    setVerifying(false);
+    setCreating(false);
+  };
+
+  const handleCreateChannel = () => {
+    if (!walletAddress) {
+      setConnectWalletSheetOpen(true);
+      return;
+    }
+    resetCreateSheet(freeQuotaCount > 0);
+    setCreateSheetOpen(true);
+  };
+
+  useEffect(() => {
+    if (walletAddress) setConnectWalletSheetOpen(false);
+  }, [walletAddress]);
+
+  const closeCreateSheet = () => {
+    if (creating) return;
+    setCreateSheetOpen(false);
+  };
+
+  const handleSelectPayPath = (path: CreatePayPath) => {
+    if (path === 'free' && freeQuotaCount <= 0) return;
+    setCreatePayPath(path);
+    setCreateScaleMode('qty');
+    setCreateQty(1);
+    const packs = path === 'free' ? STAR_PACKS.filter(p => p.qty <= freeQuotaCount) : STAR_PACKS;
+    setCreateStarLevel((packs[packs.length - 1]?.level ?? 1) as 1 | 2 | 3 | 4 | 5);
+    if (path === 'free') {
+      setNodeCodeInput('');
+      setCodeCheckStatus('1');
+    }
+  };
+
+  const handleSelectScaleMode = (mode: CreateScaleMode) => {
+    setCreateScaleMode(mode);
+    if (mode === 'star') {
+      const packs = createPayPath === 'free' ? STAR_PACKS.filter(p => p.qty <= freeQuotaCount) : STAR_PACKS;
+      if (packs.length > 0 && !packs.some(p => p.level === createStarLevel)) {
+        setCreateStarLevel(packs[0].level as 1 | 2 | 3 | 4 | 5);
+      }
+    } else {
+      setCreateQty(1);
+    }
+  };
+
+  const handleNodeCodeChange = (value: string) => {
+    setNodeCodeInput(value);
+    setCodeCheckStatus(value.trim() ? '2' : '1');
+  };
+
+  const handlePasteNodeCode = async () => {
+    if (creating) return;
+    try {
+      const clip = (await navigator.clipboard.readText()).trim().slice(0, 12);
+      if (clip) handleNodeCodeChange(clip);
+    } catch {
+      // 剪贴板读取失败（权限被拒等）：静默忽略，用户仍可手动输入
+    }
+  };
+
+  const handleVerifyNodeCode = () => {
+    const code = nodeCodeInput.trim();
+    if (!code || verifying) return;
+    setVerifying(true);
+    setTimeout(() => {
+      setCodeCheckStatus(VALID_INVITE_CODES.has(code.toUpperCase()) ? '3' : '4');
+      setVerifying(false);
+    }, 500);
+  };
+
+  const handleConfirmCreate = () => {
+    if (!createConfirmReady) return;
+    const baseName = channelNameInput.trim();
+    const description = channelDescInput.trim() || undefined;
+    const stars = createStars;
+    const count = createCount;
+    const payPath = createPayPath;
+    const slots = payPath === 'free' ? takeFreeSerials(availableSerials, count) : [];
+    if (payPath === 'free' && slots.length !== count) return;
+
+    setCreating(true);
+    setTimeout(() => {
+      const stamp = Date.now();
+      const createdAt = formatNow();
+      let nextPaidSerial = Math.max(
+        0,
+        ...nodes.map(n => n.serialNo),
+        ...availableSerials.genesis,
+        ...availableSerials.diamond,
+      );
+
+      const newNodes: KnowledgeNode[] = Array.from({ length: count }, (_, i) => {
+        const slot = payPath === 'free' ? slots[i] : null;
+        const origin: NodeOrigin = slot?.origin ?? 'diamond';
+        const serialNo = slot?.serialNo ?? (++nextPaidSerial);
+        return {
+          id: `node-${stamp}-${i}`,
+          nodeCode: generateNodeCode(),
+          tier: CREATE_TIER,
+          stars,
+          childCount: 0,
+          boundChildren: 0 as const,
+          origin,
+          serialNo,
+          purchaseSource: 'pb' as const,
+          channelName: channelNameForIndex(baseName, i),
+          channelDescription: description,
+          syncing: true,
+          createdAt,
+        };
+      });
+
+      setNodes(prev => [...newNodes, ...prev]);
+      if (payPath === 'free') {
+        const used = new Set(slots.map(s => `${s.origin}:${s.serialNo}`));
+        setAvailableSerials(prev => ({
+          genesis: prev.genesis.filter(s => !used.has(`genesis:${s}`)),
+          diamond: prev.diamond.filter(s => !used.has(`diamond:${s}`)),
+        }));
+      }
+
+      const newIds = newNodes.map(n => n.id);
+      window.setTimeout(() => {
+        setNodes(prev => prev.map(n => (newIds.includes(n.id) ? { ...n, syncing: false } : n)));
+      }, CREATE_SYNCING_MS);
+
+      showToast(
+        payPath === 'free'
+          ? t(`已提交开通 ${count} 个频道，名额已扣除`, `Submitted ${count} channels — quota deducted`)
+          : t(`已提交开通 ${count} 个频道，列表同步中`, `Submitted ${count} channels — syncing list`)
+      );
+      setCreating(false);
+      setCreateSheetOpen(false);
+    }, 900);
   };
 
   const copyNodeCode = (node: KnowledgeNode) => {
@@ -207,173 +509,226 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
     });
   };
 
-  const starCounts = [0, 1, 2, 3, 4, 5].map(s => nodes.filter(n => n.stars === s).length);
+  const openTransferSheet = (node: KnowledgeNode) => {
+    setTransferPickerOpen(false);
+    setTransferSheetNode(node);
+    setTransferAddress('');
+    setTransferCheckStatus('1');
+    setTransferVerifying(false);
+    setTransferring(false);
+  };
+
+  const closeTransferSheet = () => {
+    if (transferring) return;
+    setTransferSheetNode(null);
+  };
+
+  const handleTransferAddressChange = (value: string) => {
+    setTransferAddress(value);
+    setTransferCheckStatus(value.trim() ? '2' : '1');
+  };
+
+  const handlePasteTransferAddress = async () => {
+    if (transferring) return;
+    try {
+      const text = (await navigator.clipboard.readText()).trim();
+      if (text) handleTransferAddressChange(text);
+    } catch {
+      // 剪贴板读取失败（权限被拒等）：静默忽略，用户仍可手动输入
+    }
+  };
+
+  // 校验规则（会议纪要 00:03-00:04 拍板）：接收方地址须已在系统注册过，否则不允许转让，
+  // 也没有"确认后仍强转"的例外
+  const handleVerifyTransferAddress = () => {
+    const address = transferAddress.trim().toLowerCase();
+    if (!address || transferVerifying) return;
+    setTransferVerifying(true);
+    setTimeout(() => {
+      setTransferCheckStatus(REGISTERED_TRANSFER_ADDRESSES.has(address) ? '3' : '4');
+      setTransferVerifying(false);
+    }, 500);
+  };
+
+  const handleConfirmTransfer = () => {
+    if (!transferSheetNode || transferCheckStatus !== '3' || transferring) return;
+    const node = transferSheetNode;
+    setTransferring(true);
+    setTimeout(() => {
+      setNodes(prev => prev.filter(n => n.id !== node.id));
+      showToast(t(`节点 ${node.nodeCode} 转让成功`, `Node ${node.nodeCode} transferred`));
+      setTransferring(false);
+      setTransferSheetNode(null);
+    }, 1400);
+  };
+
+  const transferableNodes = displayNodes.filter(isTransferable);
+  const transferPickerSearchTerm = transferPickerSearch.trim().toLowerCase();
+  const transferPickerFiltered = transferPickerSearchTerm
+    ? transferableNodes.filter(n =>
+        n.nodeCode.toLowerCase().includes(transferPickerSearchTerm) ||
+        n.channelName.toLowerCase().includes(transferPickerSearchTerm)
+      )
+    : transferableNodes;
+  const transferPickerVisible = transferPickerFiltered.slice(0, transferPickerVisibleCount);
+  const transferPickerHasMore = transferPickerFiltered.length > transferPickerVisible.length;
+  const childListEntries = useMemo(() => (childListNode ? generateChildNodes(childListNode) : []), [childListNode]);
+  const childListVisible = childListEntries.slice(0, childListVisibleCount);
+  const childListHasMore = childListEntries.length > childListVisible.length;
+  const starCounts = [0, 1, 2, 3, 4, 5].map(s => displayNodes.filter(n => n.stars === s).length);
+  const favoriteCount = displayNodes.filter(n => favoriteNodeIds.has(n.id)).length;
   const search = nodeSearch.trim().toLowerCase();
-  const filteredNodes = nodes.filter(n => {
-    if (starFilter !== null && n.stars !== starFilter) return false;
-    if (sourceFilter !== null && n.source !== sourceFilter) return false;
-    if (search && !n.nodeCode.toLowerCase().includes(search)) return false;
-    return true;
-  });
-  const hasNodeFilters = starFilter !== null || sourceFilter !== null;
+  const filteredNodes = displayNodes
+    .filter(n => {
+      if (starFilter !== null && n.stars !== starFilter) return false;
+      if (showFavoritesOnly && !favoriteNodeIds.has(n.id)) return false;
+      if (search) {
+        const haystack = `${n.nodeCode} ${n.remark ?? ''}`.toLowerCase();
+        if (!haystack.includes(search)) return false;
+      }
+      return true;
+    })
+    .slice()
+    .sort((a, b) => {
+      const favoriteRank = Number(favoriteNodeIds.has(b.id)) - Number(favoriteNodeIds.has(a.id));
+      if (favoriteRank !== 0) return favoriteRank;
+      if (sortBy === 'star') return b.stars - a.stars;
+      if (sortBy === 'oldest') return a.createdAt.localeCompare(b.createdAt);
+      // 最新优先：钻石节点整体排在创世节点上方，组内再按最新优先排序
+      const originRank = (n: KnowledgeNode) => n.origin === 'diamond' ? 0 : 1;
+      const rankDiff = originRank(a) - originRank(b);
+      if (rankDiff !== 0) return rankDiff;
+      return b.createdAt.localeCompare(a.createdAt);
+    });
+  const hasNodeFilters = starFilter !== null || showFavoritesOnly || sortBy !== 'newest';
   const hasNodeListConstraints = hasNodeFilters || search.length > 0;
   const nodeCountLabel = hasNodeListConstraints
-    ? `${filteredNodes.length}/${nodes.length}`
-    : String(nodes.length);
+    ? `${filteredNodes.length}/${displayNodes.length}`
+    : String(displayNodes.length);
 
-  const handleClaim = () => {
-    if (claiming || claimed) return;
-    const claimedAmount = pendingAmount;
-    setClaiming(true);
-    setTimeout(() => {
-      setClaiming(false);
-      setClaimed(true);
-      setChainCredit(c => c + claimedAmount);
-      setPendingAmount(0);
-      showToast(t(
-        `空投已领取，上链额度 +${formatTokenAmount(claimedAmount)} PB`,
-        `Airdrop claimed — on-chain credit +${formatTokenAmount(claimedAmount)} PB`,
-      ));
-    }, 1500);
-  };
-
-  const handleWithdrawConfirm = () => {
-    if (withdrawing || chainCredit <= 0) return;
-    const withdrawAmount = chainCredit;
-    setWithdrawing(true);
-    setTimeout(() => {
-      setWithdrawing(false);
-      setShowWithdrawSheet(false);
-      setChainCredit(0);
-      setWithdrawHistory(prev => [
-        { id: `w${prev.length + 1}`, amount: withdrawAmount, time: new Date().toISOString().slice(0, 16).replace('T', ' ') },
-        ...prev,
-      ]);
-      showToast(t(
-        `提取成功，${formatTokenAmount(withdrawAmount)} PB 已提取上链`,
-        `Withdrawal successful — ${formatTokenAmount(withdrawAmount)} PB sent on-chain`,
-      ));
-    }, 1500);
-  };
-
-  const handleUpgradeConfirm = () => {
-    if (!upgradeTarget || upgrading) return;
-    setUpgrading(true);
-    setTimeout(() => {
-      setNodes(prev => prev.map(n =>
-        n.id === upgradeTarget.id ? { ...n, stars: Math.min(5, n.stars + 1) } : n
-      ));
-      setUpgrading(false);
-      setUpgradeTarget(null);
-      showToast(t('节点升级成功！', 'Node upgraded!'));
-    }, 1500);
-  };
+  const sortLabel =
+    sortBy === 'star' ? t('按星级', 'By star')
+    : sortBy === 'oldest' ? t('最早优先', 'Oldest first')
+    : t('最新优先', 'Newest first');
 
   const clearNodeFilters = () => {
     setStarFilter(null);
-    setSourceFilter(null);
+    setShowFavoritesOnly(false);
+    setSortBy('newest');
     setOpenDropdown(null);
+  };
+
+  /** 未收藏 → 弹出选填备注；已收藏 → 取消收藏并清除备注 */
+  const handleFavoriteClick = (node: KnowledgeNode) => {
+    if (favoriteNodeIds.has(node.id)) {
+      setFavoriteNodeIds(previous => {
+        const next = new Set(previous);
+        next.delete(node.id);
+        return next;
+      });
+      setNodes(prev => prev.map(n => (
+        n.id === node.id ? { ...n, remark: undefined } : n
+      )));
+      showToast(t('已取消收藏', 'Removed from favorites'));
+      return;
+    }
+    setRemarkInput('');
+    setRemarkSheetNode(node);
+  };
+
+  const closeFavoriteSheet = () => {
+    setRemarkSheetNode(null);
+    setRemarkInput('');
+  };
+
+  const confirmFavorite = () => {
+    if (!remarkSheetNode) return;
+    const remark = remarkInput.trim();
+    const nodeId = remarkSheetNode.id;
+    setFavoriteNodeIds(previous => new Set(previous).add(nodeId));
+    setNodes(prev => prev.map(n => (
+      n.id === nodeId ? { ...n, remark: remark || undefined } : n
+    )));
+    closeFavoriteSheet();
+    showToast(t('已收藏', 'Favorited'));
+  };
+
+  // 下拉刷新：demo 环境无真实后端，用短暂延迟模拟重新拉取余额 / 空投 / 节点数据，
+  // 并按最新 channels 状态重新推导节点列表（AssetOverviewCard 的余额与空投倒计时自身已是响应式，会随之一起呈现最新值）
+  const handleRefresh = async () => {
+    await new Promise(resolve => setTimeout(resolve, 900));
+    setNodes(seedNodesWithChannel(channels));
+    showToast(t('数据已刷新', 'Data refreshed'));
   };
 
   return (
     <div className="page">
-      <PageHeader title={t('我的知识星球', 'Knowledge Planet')} onBack={canGoBack ? goBack : undefined} />
-
-      <div className="scroll-area planet-scroll">
+      {canGoBack && <PageHeader onBack={goBack} className="page-header--transparent" />}
+      <PullToRefresh className="scroll-area planet-scroll" onRefresh={handleRefresh}>
         <div className="planet-content">
 
-          {/* ── Airdrop → 上链额度 Card ── */}
-          <div className="planet-airdrop-card">
-            <div className="planet-airdrop-top">
-              <div className="planet-airdrop-left">
-                <div className="planet-airdrop-icon">
-                  <Gift size={20} strokeWidth={1.8} />
-                </div>
-                <div>
-                  <div className="planet-airdrop-label">
-                    {t('待领取空投', 'Pending Airdrop')}
-                  </div>
-                  {claimed ? (
-                    <div className="planet-claimed-badge">{t('今日已领取', 'Claimed today')}</div>
-                  ) : (
-                    <div className="planet-airdrop-amount">
-                      {formatTokenAmount(pendingAmount)}
-                      <span className="planet-airdrop-unit"> PB</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <button
-                className={`planet-claim-btn${claimed ? ' planet-claim-btn--done' : ''}`}
-                onClick={handleClaim}
-                disabled={claiming || claimed}
-              >
-                {claiming
-                  ? <Loader2 size={14} strokeWidth={2} className="planet-spin" />
-                  : claimed
-                    ? t('已领取', 'Claimed')
-                    : t('立即领取', 'Claim Now')
-                }
-              </button>
-            </div>
-
-            <div className="planet-sup-row">
-              <button
-                type="button"
-                className="planet-sup-row-toggle"
-                onClick={() => setShowHistoryModal(true)}
-                aria-label={t('查看资产明细', 'View asset details')}
-              >
-                <div className="planet-history-toggle-left">
-                  <div className="planet-history-toggle-icon">
-                    <Wallet size={14} strokeWidth={2} />
-                  </div>
-                  <span>{t('可提取 PB：', 'Withdrawable PB:')}</span>
-                </div>
-                <div className="planet-history-toggle-right">
-                  <span className="planet-history-toggle-balance">{formatTokenAmount(chainCredit)} PB</span>
-                  <ChevronRight size={14} strokeWidth={2} className="planet-history-toggle-chevron" />
-                </div>
-              </button>
-              <button
-                type="button"
-                className="planet-sup-recharge-btn"
-                disabled={chainCredit <= 0}
-                onClick={(e) => { e.stopPropagation(); setShowWithdrawSheet(true); }}
-              >
-                <ArrowUpToLine size={12} strokeWidth={2.2} aria-hidden="true" />
-                {t('提取', 'Withdraw')}
-              </button>
-            </div>
-
-            <div className="planet-sup-row">
-              <button
-                type="button"
-                className="planet-sup-row-toggle"
-                onClick={() => setShowSupHistoryModal(true)}
-                aria-label={t('查看 SUP 明细', 'View SUP details')}
-              >
-                <div className="planet-history-toggle-left">
-                  <div className="planet-history-toggle-icon">
-                    <Wallet size={14} strokeWidth={2} />
-                  </div>
-                  <span>{t('SUP 余额：', 'SUP balance:')}</span>
-                </div>
-                <div className="planet-history-toggle-right">
-                  <span className="planet-history-toggle-balance">{formatSupAmount(supBalance)} SUP</span>
-                  <ChevronRight size={14} strokeWidth={2} className="planet-history-toggle-chevron" />
-                </div>
-              </button>
-              <button
-                type="button"
-                className="planet-sup-recharge-btn"
-                onClick={(e) => { e.stopPropagation(); setShowRechargeSheet(true); }}
-              >
-                <ArrowDownToLine size={12} strokeWidth={2.2} aria-hidden="true" />
-                {t('充值', 'Recharge')}
-              </button>
-            </div>
+          {/* ── 页顶插画 hero：星云插画 + 产品名（随内容滚动，与 .scroll-area 的固定壳体
+              布局兼容——沿用 ProfilePage .profile-hero 同款的“内容内叠压”写法，而非 genesis-node-diamond 中
+              把 hero 提到 .page 外层再用负 margin 顶起整页的写法，避免破坏本 app 固定视口 + 内部滚动的壳体结构） ── */}
+          <div className="planet-hero">
+            <img className="planet-hero-bg" src="/img/genesis-bigbang.webp" alt="" aria-hidden="true" />
+            <h1 className="planet-hero-title">{t('知识宇宙', 'Knowledge Universe')}</h1>
           </div>
+
+          {/* ── 页顶公告：单条可关闭横幅，点开看全文；负 margin 叠压在 hero 底边上 ── */}
+          <div className="planet-hero-overlap-anchor">
+            <PlanetAnnouncementBanner />
+          </div>
+
+          {/* ── 资产概览：PB 余额 + 领取空投 / SUP 余额 + 充值（右上角为邀请入口） ── */}
+          <AssetOverviewCard />
+
+          {/* ── Quick Actions: 钻石节点 / 创建频道 ── */}
+          <div className="planet-quick-actions">
+            <button
+              type="button"
+              className="planet-quick-action-btn planet-quick-action-btn--genesis"
+              onClick={handleGenesisNode}
+            >
+              <span className="planet-quick-action-icon">
+                <Gem size={20} strokeWidth={2} />
+              </span>
+              <span className="planet-quick-action-label">{t('抢占钻石节点', 'Claim Diamond Node')}</span>
+            </button>
+            <button
+              type="button"
+              className="planet-quick-action-btn planet-quick-action-btn--channel"
+              onClick={handleCreateChannel}
+            >
+              <span className="planet-quick-action-icon">
+                <Radio size={20} strokeWidth={2} />
+              </span>
+              <span className="planet-quick-action-label">{t('抢先开通频道', 'Early Channel Access')}</span>
+            </button>
+          </div>
+
+          {!walletAddress ? (
+            <div className="planet-wallet-empty" data-layer="wallet-empty">
+              <Wallet size={40} strokeWidth={1.5} aria-hidden="true" />
+              <span className="planet-wallet-empty-title">{t('尚未连接钱包', 'Wallet not connected')}</span>
+              <span className="planet-wallet-empty-sub">
+                {t('连接钱包后查看节点与管理频道', 'Connect your wallet to view nodes and manage channels')}
+              </span>
+              <button
+                type="button"
+                className="planet-wallet-empty-cta"
+                onClick={connectWallet}
+                disabled={walletConnecting}
+              >
+                {walletConnecting
+                  ? <Loader2 size={16} strokeWidth={2} className="planet-spin" aria-hidden="true" />
+                  : <Wallet size={16} strokeWidth={2} aria-hidden="true" />
+                }
+                <span>{walletConnecting ? t('连接中…', 'Connecting…') : t('连接钱包', 'Connect Wallet')}</span>
+              </button>
+            </div>
+          ) : (
+          <>
 
           {/* ── Node Section ── */}
           <div className="planet-section">
@@ -382,14 +737,56 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               <span
                 className={`planet-section-badge${hasNodeListConstraints ? ' planet-section-badge--filtered' : ''}`}
                 aria-label={hasNodeListConstraints
-                  ? t(`共 ${nodes.length} 个节点，当前显示 ${filteredNodes.length} 个`, `${filteredNodes.length} of ${nodes.length} nodes`)
-                  : t(`共 ${nodes.length} 个节点`, `${nodes.length} nodes total`)}
+                  ? t(`共 ${displayNodes.length} 个节点，当前显示 ${filteredNodes.length} 个`, `${filteredNodes.length} of ${displayNodes.length} nodes`)
+                  : t(`共 ${displayNodes.length} 个节点`, `${displayNodes.length} nodes total`)}
               >
                 {nodeCountLabel}
               </span>
+              {transferableNodes.length > 0 && (
+                <button
+                  type="button"
+                  className="planet-node-transfer-entry"
+                  onClick={() => {
+                    setTransferPickerSearch('');
+                    setTransferPickerVisibleCount(TRANSFER_PICKER_PAGE_SIZE);
+                    setTransferPickerOpen(true);
+                  }}
+                >
+                  <ArrowRightLeft size={13} strokeWidth={2.2} aria-hidden />
+                  {t('转让', 'Transfer')}
+                </button>
+              )}
             </div>
           </div>
 
+          {showNoNodesEmpty ? (
+            <div className="planet-nodes-empty" data-layer="nodes-empty">
+              <KnowledgePlanetIcon width={40} height={40} strokeWidth={1.5} className="planet-nodes-empty-icon" />
+              <span className="planet-nodes-empty-title">{t('还没有节点', 'No nodes yet')}</span>
+              <p className="planet-nodes-empty-text">
+                {zh ? (
+                  <>
+                    点击「
+                    <button type="button" className="planet-nodes-empty-link" onClick={handleGenesisNode}>钻石节点</button>
+                    」或「
+                    <button type="button" className="planet-nodes-empty-link" onClick={handleCreateChannel}>抢先开通频道</button>
+                    」获得节点
+                  </>
+                ) : (
+                  <>
+                    Tap{' '}
+                    <button type="button" className="planet-nodes-empty-link" onClick={handleGenesisNode}>Diamond Node</button>
+                    {' '}or{' '}
+                    <button type="button" className="planet-nodes-empty-link" onClick={handleCreateChannel}>Early Channel Access</button>
+                    {' '}to get a node
+                  </>
+                )}
+              </p>
+            </div>
+          ) : (
+          <>
+
+          <div className="planet-node-toolbar">
           <div className="planet-node-search-wrap">
             <Search size={15} strokeWidth={2} className="planet-node-search-icon" />
             <input
@@ -397,7 +794,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               type="text"
               value={nodeSearch}
               onChange={e => setNodeSearch(e.target.value)}
-              placeholder={t('搜索节点编号…', 'Search by node code…')}
+              placeholder={t('搜索节点编号或备注…', 'Search by code or remark…')}
             />
             {nodeSearch && (
               <button className="planet-node-search-clear" onClick={() => setNodeSearch('')} aria-label={t('清除', 'Clear')}>
@@ -407,6 +804,19 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
           </div>
 
           <div className="planet-node-filter-row">
+            <button
+              type="button"
+              className={`planet-node-dropdown-trigger${showFavoritesOnly ? ' planet-node-dropdown-trigger--active' : ''}`}
+              onClick={() => setShowFavoritesOnly(visible => !visible)}
+              aria-pressed={showFavoritesOnly}
+              aria-label={showFavoritesOnly ? t('显示全部节点', 'Show all nodes') : t('仅显示已收藏节点', 'Show favorited nodes only')}
+            >
+              <span className="planet-node-dropdown-value">
+                <Bookmark size={14} strokeWidth={2} fill={showFavoritesOnly ? 'currentColor' : 'none'} aria-hidden />
+                <span>{t('已收藏', 'Favorited')}</span>
+                <span className="planet-node-filter-count">{favoriteCount}</span>
+              </span>
+            </button>
             <div className="planet-node-dropdown">
               <button
                 type="button"
@@ -455,7 +865,11 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                         aria-selected={starFilter === s}
                         disabled={count === 0}
                         className={`planet-node-dropdown-item${starFilter === s ? ' planet-node-dropdown-item--active' : ''}`}
-                        onClick={() => { setStarFilter(s); setOpenDropdown(null); }}
+                        onClick={() => {
+                          setStarFilter(s);
+                          if (sortBy === 'star') setSortBy('newest');
+                          setOpenDropdown(null);
+                        }}
                       >
                         <span className="planet-node-dropdown-item-leading">
                           <StarDisplay level={s} size={22} />
@@ -472,47 +886,55 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             <div className="planet-node-dropdown">
               <button
                 type="button"
-                className={`planet-node-dropdown-trigger${sourceFilter !== null ? ' planet-node-dropdown-trigger--active' : ''}`}
-                onClick={() => setOpenDropdown(d => d === 'source' ? null : 'source')}
-                aria-expanded={openDropdown === 'source'}
+                className="planet-node-dropdown-trigger"
+                onClick={() => setOpenDropdown(d => d === 'sort' ? null : 'sort')}
+                aria-expanded={openDropdown === 'sort'}
                 aria-haspopup="listbox"
-                aria-label={t('来源筛选', 'Filter by source')}
+                aria-label={t('排序方式', 'Sort by')}
               >
                 <span className="planet-node-dropdown-value">
-                  <NodeSourceIcon source={sourceFilter} size={14} />
-                  <span>{sourceFilter ?? t('全部来源', 'All sources')}</span>
+                  <ArrowUpDown size={14} strokeWidth={2} aria-hidden />
+                  <span>{sortLabel}</span>
                 </span>
-                <ChevronDown size={14} strokeWidth={2} className={`planet-node-dropdown-chevron${openDropdown === 'source' ? ' planet-node-dropdown-chevron--open' : ''}`} />
+                <ChevronDown size={14} strokeWidth={2} className={`planet-node-dropdown-chevron${openDropdown === 'sort' ? ' planet-node-dropdown-chevron--open' : ''}`} />
               </button>
-              {openDropdown === 'source' && (
+              {openDropdown === 'sort' && (
                 <div className="planet-node-dropdown-menu planet-node-dropdown-menu--fit" role="listbox">
                   <button
                     type="button"
                     role="option"
-                    aria-selected={sourceFilter === null}
-                    className={`planet-node-dropdown-item${sourceFilter === null ? ' planet-node-dropdown-item--active' : ''}`}
-                    onClick={() => { setSourceFilter(null); setOpenDropdown(null); }}
+                    aria-selected={sortBy === 'newest'}
+                    className={`planet-node-dropdown-item${sortBy === 'newest' ? ' planet-node-dropdown-item--active' : ''}`}
+                    onClick={() => { setSortBy('newest'); setOpenDropdown(null); }}
                   >
                     <span className="planet-node-dropdown-item-leading">
-                      <NodeSourceIcon source={null} size={14} />
-                      <span>{t('全部来源', 'All sources')}</span>
+                      <span>{t('最新优先', 'Newest first')}</span>
                     </span>
                   </button>
-                  {ALL_NODE_SOURCES.map(source => (
-                    <button
-                      key={source}
-                      type="button"
-                      role="option"
-                      aria-selected={sourceFilter === source}
-                      className={`planet-node-dropdown-item${sourceFilter === source ? ' planet-node-dropdown-item--active' : ''}`}
-                      onClick={() => { setSourceFilter(source); setOpenDropdown(null); }}
-                    >
-                      <span className="planet-node-dropdown-item-leading">
-                        <NodeSourceIcon source={source} size={14} />
-                        <span>{source}</span>
-                      </span>
-                    </button>
-                  ))}
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={sortBy === 'oldest'}
+                    className={`planet-node-dropdown-item${sortBy === 'oldest' ? ' planet-node-dropdown-item--active' : ''}`}
+                    onClick={() => { setSortBy('oldest'); setOpenDropdown(null); }}
+                  >
+                    <span className="planet-node-dropdown-item-leading">
+                      <span>{t('最早优先', 'Oldest first')}</span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={sortBy === 'star'}
+                    disabled={starFilter !== null}
+                    title={starFilter !== null ? t('已按星级筛选，排序不生效', 'Already filtered by star — sorting has no effect') : undefined}
+                    className={`planet-node-dropdown-item${sortBy === 'star' ? ' planet-node-dropdown-item--active' : ''}`}
+                    onClick={() => { setSortBy('star'); setOpenDropdown(null); }}
+                  >
+                    <span className="planet-node-dropdown-item-leading">
+                      <span>{t('按星级', 'By star')}</span>
+                    </span>
+                  </button>
                 </div>
               )}
             </div>
@@ -522,12 +944,13 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 type="button"
                 className="planet-node-filter-reset"
                 onClick={clearNodeFilters}
-                aria-label={t('清除筛选', 'Clear filters')}
+                aria-label={t('重置筛选', 'Reset filters')}
               >
-                <X size={14} strokeWidth={2.2} />
-                {t('清除', 'Clear')}
+                <RotateCcw size={14} strokeWidth={2.2} />
+                {t('重置', 'Reset')}
               </button>
             )}
+          </div>
           </div>
 
           {openDropdown && (
@@ -548,18 +971,54 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 <span>{t('未找到节点', 'No nodes found')}</span>
                 <span className="planet-node-empty-sub">
                   {nodeSearch.trim()
-                    ? t(`编号中不含「${nodeSearch}」`, `No node code contains "${nodeSearch}"`)
+                    ? t(`编号或备注中不含「${nodeSearch}」`, `No code or remark contains "${nodeSearch}"`)
                     : hasNodeFilters
                       ? t('没有符合筛选条件的节点', 'No nodes match the current filters')
                       : t('暂无节点', 'No nodes yet')}
                 </span>
               </div>
-            ) : filteredNodes.map((node, idx) => (
-              <div key={node.id} className="planet-node-card">
-                <StarDisplay level={node.stars} />
+            ) : filteredNodes.map((node) => (
+              <div
+                key={node.id}
+                className={`planet-node-card planet-node-card--tagged${node.boundChildren === 2 ? ' planet-node-card--earning' : ''}`}
+              >
+                {node.origin === 'diamond' ? (
+                  <span className="planet-node-origin-tag planet-node-origin-tag--diamond">
+                    <Gem size={12} strokeWidth={2.5} aria-hidden />
+                    {t('钻石节点', 'Diamond')}
+                    <span className="planet-node-origin-serial">#{node.serialNo}</span>
+                  </span>
+                ) : (
+                  <span className="planet-node-origin-tag planet-node-origin-tag--genesis">
+                    <Sparkles size={12} strokeWidth={2.5} aria-hidden />
+                    {t('创世节点', 'Genesis')}
+                    <span className="planet-node-origin-serial">#{node.serialNo}</span>
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className={`planet-node-favorite-btn${favoriteNodeIds.has(node.id) ? ' planet-node-favorite-btn--active' : ''}`}
+                  onClick={() => handleFavoriteClick(node)}
+                  aria-pressed={favoriteNodeIds.has(node.id)}
+                  aria-label={favoriteNodeIds.has(node.id)
+                    ? t(`取消收藏 ${node.nodeCode}`, `Unfavorite ${node.nodeCode}`)
+                    : t(`收藏 ${node.nodeCode}`, `Favorite ${node.nodeCode}`)}
+                >
+                  <Bookmark size={18} strokeWidth={2} fill={favoriteNodeIds.has(node.id) ? 'currentColor' : 'none'} aria-hidden />
+                </button>
+                <div className="planet-node-star-col">
+                  <StarDisplay level={node.stars} />
+                  <ChildSlotDots count={node.boundChildren} />
+                </div>
                 <div className="planet-node-info">
                   <div className="planet-node-code-row">
                     <span className="planet-node-code">{node.nodeCode}</span>
+                    {node.syncing && (
+                      <span className="planet-node-syncing-badge">
+                        <Loader2 size={12} strokeWidth={2.5} className="planet-spin" aria-hidden />
+                        {t('同步中', 'Syncing')}
+                      </span>
+                    )}
                     <button
                       className={`planet-node-copy-btn${copiedId === node.id ? ' planet-node-copy-btn--done' : ''}`}
                       onClick={() => copyNodeCode(node)}
@@ -568,326 +1027,1041 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                       {copiedId === node.id ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} strokeWidth={2} />}
                     </button>
                   </div>
-                  <div className="planet-node-badges">
-                    <span className={`planet-node-attrs planet-node-attrs--t${node.tier}`}>
-                      {t(`质押 ${node.tier} PB`, `Stake ${node.tier} PB`)}
-                    </span>
-                    <span className={`planet-node-attrs planet-node-attrs--t${node.tier}`}>
-                      {airdropCapLabel(node.tier, zh)}
-                    </span>
-                  </div>
+                  {favoriteNodeIds.has(node.id) && node.remark && (
+                    <span className="planet-node-remark">{node.remark}</span>
+                  )}
                   <div className="planet-node-meta-row">
                     <span className="planet-node-meta">{node.createdAt}</span>
-                    <span className="planet-node-source">
-                      <NodeSourceIcon source={node.source} size={12} />
-                      {node.source}
-                    </span>
                   </div>
                 </div>
                 <div className="planet-node-action">
-                  {canUpgradeNode(node) ? (
-                    <button
-                      className="planet-upgrade-btn"
-                      onClick={() => setUpgradeTarget(node)}
-                    >
-                      <ArrowUp size={12} strokeWidth={2.5} />
-                      {t('升级', 'Upgrade')}
-                    </button>
-                  ) : node.tier === 1000 && node.stars === 5 ? (
-                    <span className="planet-max-tag">{t('满级', 'Max')}</span>
-                  ) : (
-                    <span className="planet-node-locked-tag">{t('不可升级', 'No upgrade')}</span>
-                  )}
+                  <button
+                    type="button"
+                    className="planet-node-child-count planet-node-child-count--clickable"
+                    onClick={() => {
+                      setChildListNode(node);
+                      setChildListVisibleCount(TRANSFER_PICKER_PAGE_SIZE);
+                    }}
+                  >
+                    <span className="planet-node-child-count-label">
+                      {t('子节点', 'Children')}
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        className="asset-overview-info-btn"
+                        onClick={e => { e.stopPropagation(); setChildInfoOpen(true); }}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); setChildInfoOpen(true); } }}
+                        aria-label={t('查看子节点说明', 'View sub-node info')}
+                      >
+                        <Info size={12} strokeWidth={2} />
+                      </span>
+                    </span>
+                    <span className="planet-node-child-count-num">
+                      {node.childCount}
+                      <ChevronRight size={13} strokeWidth={2.5} className="planet-node-child-count-chevron" aria-hidden />
+                    </span>
+                  </button>
                 </div>
               </div>
             ))}
           </div>
 
-        </div>
-      </div>
+          </>
+          )}
 
-      {showHistoryModal && (
-        <div className="sheet-backdrop" onClick={() => setShowHistoryModal(false)}>
-          <div className="payment-sheet planet-history-sheet" onClick={e => e.stopPropagation()}>
-            <div className="sheet-header">
-              <span className="sheet-title">{t('资产明细', 'Asset Details')}</span>
-              <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={() => setShowHistoryModal(false)} aria-label={t('关闭', 'Close')}>
-                <X size={18} strokeWidth={2} />
-              </button>
-            </div>
-            <div className="planet-credit-row planet-credit-row--modal">
-              <div>
-                <span className="planet-credit-label">{t('可提取余额', 'Withdrawable balance')}</span>
-                <div className="planet-credit-value">{formatTokenAmount(chainCredit)} PB</div>
-              </div>
-              <button
-                className="planet-withdraw-btn"
-                onClick={() => setShowWithdrawSheet(true)}
-                disabled={chainCredit <= 0}
-              >
-                <ArrowUpToLine size={13} strokeWidth={2.2} />
-                {t('提取', 'Withdraw')}
-              </button>
-            </div>
-            <div className="planet-history-list">
-              {withdrawHistory.map(w => (
-                <div key={w.id} className="planet-history-item">
-                  <div className="planet-history-icon planet-history-icon--withdraw">
-                    <ArrowUpToLine size={16} strokeWidth={1.8} />
-                  </div>
-                  <span className="planet-history-time">{t(`${w.time} · 提取至链上`, `${w.time} · Withdrawn on-chain`)}</span>
-                  <span className="planet-history-amount planet-history-amount--withdraw">-{formatTokenAmount(w.amount)} PB</span>
-                </div>
-              ))}
-              {AIRDROP_HISTORY.map(r => (
-                <div key={r.id} className="planet-history-item">
-                  <div className="planet-history-icon">
-                    <Gift size={16} strokeWidth={1.8} />
-                  </div>
-                  <span className="planet-history-time">{r.time}</span>
-                  <span className="planet-history-amount">+{formatTokenAmount(r.amount)} PB</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+          </>
+          )}
 
-      {/* ── Withdraw Sheet ── */}
-      {showWithdrawSheet && (
-        <div
-          className="sheet-backdrop"
-          onClick={() => { if (!withdrawing) setShowWithdrawSheet(false); }}
-        >
+        </div>
+      </PullToRefresh>
+
+      {/* ── Create Channel Sheet：Step1 选规模 → Step2 身份 → Step3 确认 ── */}
+      {walletAddress && createSheetOpen && (
+        <div className="sheet-backdrop" onClick={closeCreateSheet}>
           <div
-            className="payment-sheet planet-upgrade-sheet"
+            className="payment-sheet planet-upgrade-sheet planet-create-sheet"
             role="dialog"
             aria-modal="true"
             onClick={e => e.stopPropagation()}
           >
             <div className="sheet-header">
-              <span className="sheet-title">{t('提取到链上', 'Withdraw On-Chain')}</span>
+              {createStep > 1 ? (
+                <button
+                  type="button"
+                  className="back-btn"
+                  onClick={() => !creating && setCreateStep(s => (s === 3 ? 2 : 1) as CreateStep)}
+                  disabled={creating}
+                  aria-label={t('返回上一步', 'Back')}
+                >
+                  <ChevronLeft size={18} strokeWidth={2} />
+                </button>
+              ) : null}
+              <span className="sheet-title">{t('抢先开通频道', 'Early Channel Access')}</span>
+              <span className="create-step-indicator" aria-hidden="true">{createStep}/3</span>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
-                onClick={() => { if (!withdrawing) setShowWithdrawSheet(false); }}
+                onClick={closeCreateSheet}
+                aria-label={t('关闭', 'Close')}
+                disabled={creating}
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+
+            <div className="create-step-dots" aria-hidden="true">
+              {[1, 2, 3].map(s => (
+                <span
+                  key={s}
+                  className={`create-step-dot${createStep === s ? ' create-step-dot--active' : ''}${createStep > s ? ' create-step-dot--done' : ''}`}
+                />
+              ))}
+            </div>
+
+            {createStep === 1 && (
+              <div className="create-step-body">
+                <div className="create-quota-bar">
+                  <div className="create-quota-bar-main">
+                    <span className="create-quota-bar-label">{t('可用开通名额', 'Available quota')}</span>
+                    <span className="create-quota-bar-count font-mono">{freeQuotaCount}</span>
+                  </div>
+                  <div className="create-quota-bar-serials">
+                    {freeSerialPreview.length === 0 ? (
+                      <span className="create-quota-bar-empty">{t('暂无可用编号', 'No serials available')}</span>
+                    ) : (
+                      <>
+                        {freeSerialPreview.slice(0, 4).map(s => (
+                          <span
+                            key={`${s.origin}-${s.serialNo}`}
+                            className={`create-quota-chip create-quota-chip--${s.origin}`}
+                          >
+                            {s.origin === 'genesis' ? t('创世', 'Genesis') : t('钻石', 'Diamond')} #{s.serialNo}
+                          </span>
+                        ))}
+                        {freeSerialPreview.length > 4 ? (
+                          <span className="create-quota-bar-more">+{freeSerialPreview.length - 4}</span>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="create-quota-bar-link"
+                    onClick={() => setSerialSheetOrigin(genesisAvailable.length > 0 ? 'genesis' : 'diamond')}
+                  >
+                    {t('查看编号', 'View numbers')}
+                  </button>
+                </div>
+
+                <div className="create-pay-options">
+                  <button
+                    type="button"
+                    className={`create-pay-option${createPayPath === 'free' ? ' create-pay-option--active' : ''}`}
+                    disabled={freeQuotaCount <= 0 || creating}
+                    onClick={() => handleSelectPayPath('free')}
+                  >
+                    <span className="create-pay-option-title">{t('用名额开通', 'Use quota')}</span>
+                    <span className="create-pay-option-sub">
+                      {freeQuotaCount > 0
+                        ? t('消耗已认购未开通的创世/钻石号，不扣 PB / SUP', 'Consume unused Genesis/Diamond serials — no PB/SUP')
+                        : t('暂无可用名额，请先抢占钻石节点或改用 PB', 'No quota — claim a Diamond Node or pay with PB')}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`create-pay-option${createPayPath === 'paid' ? ' create-pay-option--active' : ''}`}
+                    disabled={creating}
+                    onClick={() => handleSelectPayPath('paid')}
+                  >
+                    <span className="create-pay-option-title">{t('用 PB 开通', 'Pay with PB')}</span>
+                    <span className="create-pay-option-sub">
+                      {t('每节点 1000 PB + Gas；适合名额用完后继续开', '1000 PB + Gas per node — for after quota runs out')}
+                    </span>
+                  </button>
+                </div>
+
+                <div className="stake-code-block">
+                  <div className="stake-code-label-row">
+                    <span className="stake-code-label">{t('开通规模', 'Scale')}</span>
+                  </div>
+                  <div className="create-scale-toggle">
+                    <button
+                      type="button"
+                      className={`create-scale-tab${createScaleMode === 'qty' ? ' create-scale-tab--active' : ''}`}
+                      disabled={creating}
+                      onClick={() => handleSelectScaleMode('qty')}
+                    >
+                      {t('按个数', 'By count')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`create-scale-tab${createScaleMode === 'star' ? ' create-scale-tab--active' : ''}`}
+                      disabled={creating || availableStarPacks.length === 0}
+                      onClick={() => handleSelectScaleMode('star')}
+                    >
+                      {t('按星级包', 'By star pack')}
+                    </button>
+                  </div>
+                </div>
+
+                {createScaleMode === 'qty' ? (
+                  <div className="create-qty-block">
+                    <button
+                      type="button"
+                      className="create-qty-btn"
+                      disabled={creating || createQty <= 1}
+                      onClick={() => setCreateQty(q => Math.max(1, q - 1))}
+                      aria-label={t('减少', 'Decrease')}
+                    >
+                      <Minus size={18} strokeWidth={2} />
+                    </button>
+                    <span className="create-qty-value font-mono">{createQty}</span>
+                    <button
+                      type="button"
+                      className="create-qty-btn"
+                      disabled={creating || createQty >= qtyMax}
+                      onClick={() => setCreateQty(q => Math.min(qtyMax, q + 1))}
+                      aria-label={t('增加', 'Increase')}
+                    >
+                      <Plus size={18} strokeWidth={2} />
+                    </button>
+                    <span className="create-qty-cap">
+                      {createPayPath === 'free'
+                        ? t(`最多 ${qtyMax}（名额）`, `Max ${qtyMax} (quota)`)
+                        : t(`演示最多 ${PAID_QTY_MAX}`, `Demo max ${PAID_QTY_MAX}`)}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="create-star-packs">
+                    {STAR_PACKS.map(pack => {
+                      const enabled = availableStarPacks.some(p => p.level === pack.level);
+                      const shortfall = createPayPath === 'free' ? Math.max(0, pack.qty - freeQuotaCount) : 0;
+                      return (
+                        <button
+                          key={pack.level}
+                          type="button"
+                          className={`create-star-pack${createStarLevel === pack.level && enabled ? ' create-star-pack--active' : ''}`}
+                          disabled={!enabled || creating}
+                          onClick={() => setCreateStarLevel(pack.level as 1 | 2 | 3 | 4 | 5)}
+                        >
+                          <StarDisplay level={pack.level} size={28} />
+                          <span className="create-star-pack-copy">
+                            <span className="create-star-pack-title">{t(`${pack.level} 星包`, `${pack.level}-star pack`)}</span>
+                            <span className="create-star-pack-sub">
+                              {enabled
+                                ? t(`一次生成 ${pack.qty} 个`, `Creates ${pack.qty} at once`)
+                                : t(`还差 ${shortfall} 个名额`, `Need ${shortfall} more quota`)}
+                            </span>
+                          </span>
+                          <span className="create-star-pack-qty font-mono">×{pack.qty}</span>
+                        </button>
+                      );
+                    })}
+                    {createPayPath === 'free' && availableStarPacks.length === 0 && (
+                      <span className="stake-code-caption">
+                        {t('剩余名额不足以按星级包开通（最低 1 星需 3 个）', 'Not enough quota for star packs (1-star needs 3)')}
+                      </span>
+                    )}
+                    <span className="stake-code-caption">
+                      {t('星级包按晋升所需数量一次生成，不是把单个节点直接改成该星级', 'A star pack creates the count needed for that tier — it does not upgrade one node in place')}
+                    </span>
+                  </div>
+                )}
+
+                <div className="create-preview-bar">
+                  <span>
+                    {createScaleMode === 'star'
+                      ? t(`将生成 ${createCount} 个 · 目标 ${createStars} 星`, `Will create ${createCount} · target ${createStars}★`)
+                      : t(`将生成 ${createCount} 个节点（1 星）`, `Will create ${createCount} node(s) at 1★`)}
+                  </span>
+                  <span>
+                    {createPayPath === 'free'
+                      ? (freeSlotsForCreate.length
+                          ? t(
+                              `消耗 ${freeSlotsForCreate.slice(0, 3).map(s => `#${s.serialNo}`).join(' ')}${freeSlotsForCreate.length > 3 ? '…' : ''}`,
+                              `Use ${freeSlotsForCreate.slice(0, 3).map(s => `#${s.serialNo}`).join(' ')}${freeSlotsForCreate.length > 3 ? '…' : ''}`
+                            )
+                          : t('名额不足', 'Insufficient quota'))
+                      : t(`支付 ${formatTokenAmount(pbCost)} PB + ${Number(supCost.toFixed(4))} SUP`, `Pay ${formatTokenAmount(pbCost)} PB + ${Number(supCost.toFixed(4))} SUP`)}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  className="planet-confirm-btn"
+                  disabled={!step1Ready || creating}
+                  onClick={() => setCreateStep(2)}
+                >
+                  {t('下一步', 'Next')}
+                </button>
+              </div>
+            )}
+
+            {createStep === 2 && (
+              <div className="create-step-body">
+                <div className="planet-pregen-note">
+                  {t(
+                    '知识星球系统尚未正式上线，当前生成的是预留频道，系统上线后自动转为正式频道',
+                    'The Knowledge Planet system hasn’t launched yet — this creates a reserved channel that automatically becomes active at launch'
+                  )}
+                </div>
+
+                <div className="stake-code-block">
+                  <div className="stake-code-label-row">
+                    <span className="stake-code-label">{t('频道名称', 'Channel name')}</span>
+                    <span className="stake-code-required-tag">{t('必填', 'Required')}</span>
+                  </div>
+                  <input
+                    className="stake-code-input stake-name-input"
+                    type="text"
+                    value={channelNameInput}
+                    onChange={e => setChannelNameInput(e.target.value)}
+                    placeholder={t('给频道起个名字', 'Name your channel')}
+                    disabled={creating}
+                    maxLength={20}
+                  />
+                  {createCount > 1 && (
+                    <span className="stake-code-caption">
+                      {t('批量时其余频道自动加序号，如 名称-2、名称-3', 'Extras get suffixes like Name-2, Name-3')}
+                    </span>
+                  )}
+                </div>
+
+                <div className="stake-code-block">
+                  <button
+                    type="button"
+                    className="create-desc-toggle"
+                    onClick={() => setChannelDescOpen(o => !o)}
+                    disabled={creating}
+                  >
+                    <span>{t('频道简介（选填）', 'Description (optional)')}</span>
+                    <ChevronDown size={16} strokeWidth={2} className={channelDescOpen ? 'create-desc-chevron create-desc-chevron--open' : 'create-desc-chevron'} />
+                  </button>
+                  {channelDescOpen && (
+                    <textarea
+                      className="stake-code-input stake-code-textarea"
+                      value={channelDescInput}
+                      onChange={e => setChannelDescInput(e.target.value)}
+                      placeholder={t('介绍一下你的频道', 'Introduce your channel')}
+                      disabled={creating}
+                      maxLength={100}
+                      rows={3}
+                    />
+                  )}
+                </div>
+
+                {createPayPath === 'paid' && (
+                  <div className="stake-code-block">
+                    <div className="stake-code-label-row">
+                      <span className="stake-code-label">{t('节点码', 'Node code')}</span>
+                      <span className="stake-code-optional-tag">{t('选填', 'Optional')}</span>
+                    </div>
+                    <div className="stake-code-row">
+                      <div className="stake-code-input-wrap">
+                        <input
+                          className="stake-code-input"
+                          type="text"
+                          value={nodeCodeInput}
+                          onChange={e => handleNodeCodeChange(e.target.value)}
+                          placeholder={t('不填则跳过', 'Leave blank to skip')}
+                          disabled={creating}
+                          maxLength={12}
+                        />
+                        <button
+                          type="button"
+                          className="stake-code-paste-btn"
+                          onClick={handlePasteNodeCode}
+                          disabled={creating}
+                        >
+                          {t('粘贴', 'Paste')}
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        className="stake-code-verify-btn"
+                        onClick={handleVerifyNodeCode}
+                        disabled={!nodeCodeInput.trim() || verifying || creating}
+                      >
+                        {verifying
+                          ? <Loader2 size={14} strokeWidth={2} className="planet-spin" />
+                          : t('校验', 'Verify')
+                        }
+                      </button>
+                    </div>
+                    {codeCheckStatus === '3' && (
+                      <span className="stake-code-status stake-code-status--ok">
+                        <ShieldCheck size={13} strokeWidth={2} />
+                        {t('校验通过', 'Verified')}
+                        {(() => {
+                          const owner = NODE_CODE_OWNER_ADDRESS[nodeCodeInput.trim().toUpperCase()];
+                          return owner ? t(`，对应地址尾号 ${owner.slice(-4)}`, `, owner address ending in ${owner.slice(-4)}`) : null;
+                        })()}
+                      </span>
+                    )}
+                    {codeCheckStatus === '4' && (
+                      <span className="stake-code-status stake-code-status--fail">
+                        <ShieldX size={13} strokeWidth={2} />
+                        {t('校验未通过', 'Verification failed')}
+                      </span>
+                    )}
+                    {codeCheckStatus === '1' && (
+                      <span className="stake-code-caption">
+                        {t('填写后将无法修改，如无节点码可直接跳过', 'Cannot be changed once entered — skip if you don’t have one')}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  className="planet-confirm-btn"
+                  disabled={!step2Ready || creating}
+                  onClick={() => setCreateStep(3)}
+                >
+                  {t('下一步', 'Next')}
+                </button>
+              </div>
+            )}
+
+            {createStep === 3 && (
+              <div className="create-step-body">
+                <div className="create-confirm-card">
+                  <span className="create-confirm-label">{t('你将得到', 'You will get')}</span>
+                  <span className="create-confirm-value">
+                    {createScaleMode === 'star'
+                      ? t(`${createCount} 个节点 · ${createStars} 星包`, `${createCount} nodes · ${createStars}★ pack`)
+                      : t(`${createCount} 个节点 · 1 星`, `${createCount} nodes · 1★`)}
+                  </span>
+                  <span className="create-confirm-channel">
+                    {t('主频道名', 'Primary name')} · {channelNameInput.trim() || '—'}
+                    {createCount > 1 ? t(`（+${createCount - 1} 个序号）`, ` (+${createCount - 1} numbered)` ) : ''}
+                  </span>
+                </div>
+
+                <div className="create-confirm-card">
+                  <span className="create-confirm-label">{t('支付方式', 'Payment')}</span>
+                  {createPayPath === 'free' ? (
+                    <>
+                      <span className="create-confirm-value">{t('免费 · 消耗名额', 'Free · use quota')}</span>
+                      <span className="create-confirm-serials">
+                        {freeSlotsForCreate.map(s => (
+                          <span key={`${s.origin}-${s.serialNo}`} className={`create-quota-chip create-quota-chip--${s.origin}`}>
+                            {s.origin === 'genesis' ? t('创世', 'Genesis') : t('钻石', 'Diamond')} #{s.serialNo}
+                          </span>
+                        ))}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="planet-upgrade-row" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                        <span className="planet-upgrade-row-label">{t('所需 PB', 'PB required')}</span>
+                        <div className="planet-upgrade-cost">
+                          <span className="planet-upgrade-cost-num">{formatTokenAmount(pbCost)}</span>
+                          <span className="planet-upgrade-cost-unit"> PB</span>
+                        </div>
+                      </div>
+                      <div className="planet-upgrade-row" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                        <span className="planet-upgrade-row-label">{t('Gas 费', 'Gas fee')}</span>
+                        <div className="planet-upgrade-cost">
+                          <span className="planet-upgrade-cost-num">{Number(supCost.toFixed(4))}</span>
+                          <span className="planet-upgrade-cost-unit"> SUP</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="create-delay-note">
+                  <Info size={14} strokeWidth={2} aria-hidden />
+                  <span>{t('节点生成约有延迟，提交后列表先显示「同步中」，稍后自动变为可用', 'Nodes may take a moment — the list shows Syncing first, then becomes ready')}</span>
+                </div>
+
+                <button
+                  type="button"
+                  className="planet-confirm-btn"
+                  onClick={handleConfirmCreate}
+                  disabled={!createConfirmReady}
+                >
+                  {creating
+                    ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
+                    : createPayPath === 'free'
+                      ? t('确认免费开通', 'Confirm free open')
+                      : t('确认支付并开通', 'Confirm pay & open')
+                  }
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── 收藏弹窗：选填备注，确认后收藏；有备注则展示在卡片上 ── */}
+      {remarkSheetNode && (
+        <div className="sheet-backdrop" onClick={closeFavoriteSheet}>
+          <div
+            className="payment-sheet planet-remark-sheet"
+            role="dialog"
+            aria-modal="true"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="sheet-header">
+              <span className="sheet-title">
+                {t(`收藏 · ${remarkSheetNode.nodeCode}`, `Favorite · ${remarkSheetNode.nodeCode}`)}
+              </span>
+              <button
+                className="back-btn"
+                style={{ marginLeft: 'auto' }}
+                onClick={closeFavoriteSheet}
+                aria-label={t('关闭', 'Close')}
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+            <div className="stake-code-block">
+              <div className="stake-code-label-row">
+                <span className="stake-code-label">{t('备注', 'Remark')}</span>
+                <span className="stake-code-optional-tag">{t('选填', 'Optional')}</span>
+              </div>
+              <input
+                className="stake-code-input stake-name-input"
+                type="text"
+                value={remarkInput}
+                onChange={e => setRemarkInput(e.target.value)}
+                placeholder={t('方便自己识别节点，如「主力收益」', 'Optional note to recognize this node')}
+                maxLength={20}
+                autoFocus
+              />
+            </div>
+            <button className="planet-confirm-btn" type="button" onClick={confirmFavorite}>
+              {t('确认收藏', 'Confirm Favorite')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Connect Wallet Sheet (创建频道前置) ── */}
+      {connectWalletSheetOpen && !walletAddress && (
+        <div className="sheet-backdrop" onClick={() => setConnectWalletSheetOpen(false)}>
+          <div
+            className="payment-sheet planet-connect-sheet"
+            role="dialog"
+            aria-modal="true"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="sheet-header">
+              <span className="sheet-title">{t('抢先开通频道', 'Early Channel Access')}</span>
+              <button
+                className="back-btn"
+                style={{ marginLeft: 'auto' }}
+                onClick={() => setConnectWalletSheetOpen(false)}
                 aria-label={t('关闭', 'Close')}
               >
                 <X size={18} strokeWidth={2} />
               </button>
             </div>
 
-            <div className="planet-upgrade-row">
-              <span className="planet-upgrade-row-label">{t('提取金额', 'Withdraw Amount')}</span>
-              <div className="planet-upgrade-cost">
-                <span className="planet-upgrade-cost-num">{formatTokenAmount(chainCredit)}</span>
-                <span className="planet-upgrade-cost-unit"> PB</span>
-              </div>
+            <div className="planet-connect-sheet-body">
+              <Wallet size={36} strokeWidth={1.5} aria-hidden="true" />
+              <span className="planet-connect-sheet-title">{t('请先连接钱包', 'Connect wallet first')}</span>
+              <span className="planet-connect-sheet-sub">
+                {t('创建频道需要连接钱包后才能继续', 'You need to connect your wallet before creating a channel')}
+              </span>
+              <button
+                type="button"
+                className="planet-confirm-btn planet-connect-sheet-cta"
+                onClick={connectWallet}
+                disabled={walletConnecting}
+              >
+                {walletConnecting
+                  ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
+                  : t('连接钱包', 'Connect Wallet')
+                }
+              </button>
             </div>
-            <div className="planet-upgrade-sep" />
-            <div className="planet-upgrade-row">
-              <span className="planet-upgrade-row-label">{t('提取至', 'Withdraw To')}</span>
-              <span className="planet-upgrade-row-value">{maskedWallet}</span>
-            </div>
-
-            <button
-              className="planet-confirm-btn"
-              onClick={handleWithdrawConfirm}
-              disabled={withdrawing}
-            >
-              {withdrawing
-                ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
-                : t('确认提取', 'Confirm Withdrawal')
-              }
-            </button>
           </div>
         </div>
       )}
 
-      {showSupHistoryModal && (
-        <div className="sheet-backdrop" onClick={() => setShowSupHistoryModal(false)}>
-          <div className="payment-sheet planet-history-sheet" onClick={e => e.stopPropagation()}>
+      {/* ── Transfer node picker (「我的节点」标题行转让入口 → 先选节点) ── */}
+      {walletAddress && transferPickerOpen && (
+        <div className="sheet-backdrop" onClick={() => setTransferPickerOpen(false)}>
+          <div
+            className="payment-sheet planet-transfer-picker-sheet"
+            role="dialog"
+            aria-modal="true"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="sheet-header">
-              <span className="sheet-title">{t('SUP 明细', 'SUP Details')}</span>
-              <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={() => setShowSupHistoryModal(false)} aria-label={t('关闭', 'Close')}>
+              <span className="sheet-title">{t('选择要转让的节点', 'Select a node to transfer')}</span>
+              <button
+                className="back-btn"
+                style={{ marginLeft: 'auto' }}
+                onClick={() => setTransferPickerOpen(false)}
+                aria-label={t('关闭', 'Close')}
+              >
                 <X size={18} strokeWidth={2} />
               </button>
             </div>
-            <div className="planet-credit-row planet-credit-row--modal">
-              <div>
-                <span className="planet-credit-label">{t('SUP 余额', 'SUP balance')}</span>
-                <div className="planet-credit-value">{formatSupAmount(supBalance)} SUP</div>
-              </div>
-              <button
-                type="button"
-                className="planet-sup-recharge-btn planet-sup-recharge-btn--modal"
-                onClick={() => setShowRechargeSheet(true)}
-              >
-                <ArrowDownToLine size={13} strokeWidth={2.2} aria-hidden="true" />
-                {t('充值', 'Recharge')}
-              </button>
+
+            <div className="planet-transfer-picker-search-wrap">
+              <Search size={15} strokeWidth={2} className="planet-node-search-icon" />
+              <input
+                className="planet-node-search-input"
+                type="text"
+                value={transferPickerSearch}
+                onChange={e => {
+                  setTransferPickerSearch(e.target.value);
+                  setTransferPickerVisibleCount(TRANSFER_PICKER_PAGE_SIZE);
+                }}
+                placeholder={t('搜索节点编号或频道名…', 'Search by node code or channel…')}
+              />
+              {transferPickerSearch && (
+                <button
+                  className="planet-node-search-clear"
+                  onClick={() => setTransferPickerSearch('')}
+                  aria-label={t('清除', 'Clear')}
+                >
+                  <X size={13} strokeWidth={2.5} />
+                </button>
+              )}
             </div>
-            <div className="planet-history-list">
-              {supHistory.length === 0 ? (
-                <p className="planet-history-empty">{t('暂无 SUP 流水', 'No SUP transactions yet')}</p>
+
+            <div className="planet-transfer-picker-list">
+              {transferPickerVisible.length === 0 ? (
+                <div className="planet-transfer-picker-empty">
+                  {t('未找到匹配的节点', 'No matching nodes')}
+                </div>
               ) : (
-                supHistory.map(tx => {
-                  const isIn = tx.direction === 'in';
-                  const label = t(...SUP_REASON_LABELS[tx.reason]);
-                  return (
-                    <div key={tx.id} className="planet-history-item">
-                      <div className={`planet-history-icon${isIn ? '' : ' planet-history-icon--withdraw'}`}>
-                        {isIn ? <ArrowDownToLine size={16} strokeWidth={1.8} /> : <ArrowUpToLine size={16} strokeWidth={1.8} />}
+                <>
+                  {transferPickerVisible.map(node => (
+                    <button
+                      key={node.id}
+                      type="button"
+                      className="planet-transfer-picker-item"
+                      onClick={() => openTransferSheet(node)}
+                    >
+                      <StarDisplay level={node.stars} />
+                      <div className="planet-transfer-picker-info">
+                        <span className="planet-transfer-picker-code">{node.nodeCode}</span>
                       </div>
-                      <span className="planet-history-time">{`${tx.time} · ${label}`}</span>
-                      <span className={`planet-history-amount${isIn ? '' : ' planet-history-amount--withdraw'}`}>
-                        {isIn ? '+' : '-'}{formatSupAmount(tx.amount)} SUP
+                      <span className="planet-transfer-picker-price">
+                        {formatTokenAmount(TRANSFER_PRICE_BY_STAR[node.stars] ?? 0)} PB
                       </span>
-                    </div>
-                  );
-                })
+                      <ChevronRight size={16} strokeWidth={2} className="planet-transfer-picker-chevron" aria-hidden />
+                    </button>
+                  ))}
+                  {transferPickerHasMore && (
+                    <button
+                      type="button"
+                      className="planet-transfer-picker-more-btn"
+                      onClick={() => setTransferPickerVisibleCount(c => c + TRANSFER_PICKER_PAGE_SIZE)}
+                    >
+                      {t(`加载更多（剩余 ${transferPickerFiltered.length - transferPickerVisible.length}）`, `Load more (${transferPickerFiltered.length - transferPickerVisible.length} left)`)}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Recharge SUP Sheet ── */}
-      {showRechargeSheet && (
-        <div
-          className="sheet-backdrop"
-          onClick={() => setShowRechargeSheet(false)}
-        >
+      {/* ── Transfer node sheet (仅现金购买的 1-5 星节点) ── */}
+      {walletAddress && transferSheetNode && (
+        <div className="sheet-backdrop" onClick={closeTransferSheet}>
           <div
-            className="payment-sheet planet-upgrade-sheet"
+            className="payment-sheet planet-transfer-sheet"
             role="dialog"
             aria-modal="true"
             onClick={e => e.stopPropagation()}
           >
             <div className="sheet-header">
-              <span className="sheet-title">{t('充值 SUP', 'Recharge SUP')}</span>
+              <span className="sheet-title">
+                {t(`转让节点 ${transferSheetNode.nodeCode}`, `Transfer Node ${transferSheetNode.nodeCode}`)}
+              </span>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
-                onClick={() => setShowRechargeSheet(false)}
+                onClick={closeTransferSheet}
                 aria-label={t('关闭', 'Close')}
+                disabled={transferring}
               >
                 <X size={18} strokeWidth={2} />
               </button>
             </div>
 
-            <div className="recharge-warning-banner">
-              <TriangleAlert size={16} strokeWidth={2.2} aria-hidden="true" />
-              <span>{t('请确认转账网络为 Super AI Chain，充错网络资产将无法找回', 'Make sure the network is Super AI Chain — assets sent on the wrong network cannot be recovered')}</span>
+            <div className="stake-hint">
+              {t(
+                '仅支持转让给已在知识宇宙注册过的用户。',
+                'Transfers are only supported to users already registered on Wisverse.'
+              )}
             </div>
 
-            <p className="gemini-stake-lead">
-              {t('使用任意钱包向以下地址转入 SUP，链上到账后自动计入站内余额', 'Send SUP from any wallet to the address below — it credits your in-app balance once confirmed on-chain')}
-            </p>
-
-            <div className="recharge-qr-box" aria-hidden="true">
-              <QrCode size={104} strokeWidth={1.2} />
-            </div>
-
-            <div className="planet-upgrade-row">
-              <span className="planet-upgrade-row-label">{t('网络', 'Network')}</span>
-              <span className="planet-upgrade-row-value">Super AI Chain</span>
-            </div>
-            <div className="planet-upgrade-sep" />
-            <div className="planet-upgrade-row planet-upgrade-row--address">
-              <span className="planet-upgrade-row-label">{t('充值地址', 'Deposit address')}</span>
-              <button
-                type="button"
-                className="recharge-address-copy"
-                onClick={handleCopyDepositAddress}
-                aria-label={t('复制充值地址', 'Copy deposit address')}
-              >
-                <span className="recharge-address-copy-text">{MOCK_SUP_DEPOSIT_ADDRESS}</span>
-                {addressCopied ? <Check size={14} strokeWidth={2.2} /> : <Copy size={14} strokeWidth={2} />}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Upgrade Modal ── */}
-      {upgradeTarget && (() => {
-        const nextStars = Math.min(5, upgradeTarget.stars + 1);
-        const upgradeCost = UPGRADE_COST_BY_NEXT[nextStars];
-        return (
-        <div
-          className="sheet-backdrop"
-          onClick={() => { if (!upgrading) setUpgradeTarget(null); }}
-        >
-          <div
-            className="payment-sheet planet-upgrade-sheet"
-            role="dialog"
-            aria-modal="true"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="sheet-header">
-              <span className="sheet-title">{t('节点升级', 'Node Upgrade')}</span>
-              <button
-                className="back-btn"
-                style={{ marginLeft: 'auto' }}
-                onClick={() => { if (!upgrading) setUpgradeTarget(null); }}
-                aria-label={t('关闭', 'Close')}
-              >
-                <X size={18} strokeWidth={2} />
-              </button>
-            </div>
-
-            {/* Stars transition */}
-            <div className="planet-upgrade-stars">
-              <div className="planet-upgrade-star-item">
-                <Rating value={upgradeTarget.stars} size={44} />
-                <span
-                  className="planet-upgrade-star-label"
-                  style={{ color: STAR_COLORS[upgradeTarget.stars] }}
-                >
-                  {upgradeTarget.stars} {t('星', 'Star')}
-                </span>
+            <div className="stake-code-block">
+              <div className="stake-code-label-row">
+                <span className="stake-code-label">{t('接收方地址', 'Recipient address')}</span>
+                <span className="stake-code-required-tag">{t('必填', 'Required')}</span>
               </div>
-              <div className="planet-upgrade-arrow">→</div>
-              <div className="planet-upgrade-star-item">
-                <Rating value={nextStars} size={44} />
-                <span
-                  className="planet-upgrade-star-label"
-                  style={{ color: STAR_COLORS[nextStars] }}
+              <div className="stake-code-row">
+                <div className="stake-code-input-wrap">
+                  <input
+                    className="stake-code-input"
+                    type="text"
+                    value={transferAddress}
+                    onChange={e => handleTransferAddressChange(e.target.value)}
+                    placeholder={t('请输入接收方钱包地址', 'Enter recipient’s wallet address')}
+                    disabled={transferring}
+                  />
+                  <button
+                    type="button"
+                    className="stake-code-paste-btn"
+                    onClick={handlePasteTransferAddress}
+                    disabled={transferring}
+                  >
+                    {t('粘贴', 'Paste')}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className="stake-code-verify-btn"
+                  onClick={handleVerifyTransferAddress}
+                  disabled={!transferAddress.trim() || transferVerifying || transferring}
                 >
-                  {nextStars} {t('星', 'Star')}
-                </span>
+                  {transferVerifying
+                    ? <Loader2 size={14} strokeWidth={2} className="planet-spin" />
+                    : t('校验', 'Verify')
+                  }
+                </button>
               </div>
+              {transferCheckStatus === '3' && (
+                <span className="stake-code-status stake-code-status--ok">
+                  <ShieldCheck size={13} strokeWidth={2} />
+                  {t('地址校验通过', 'Address verified')}
+                </span>
+              )}
+              {transferCheckStatus === '4' && (
+                <span className="stake-code-status stake-code-status--fail">
+                  <ShieldX size={13} strokeWidth={2} />
+                  {t('该地址从未使用过知识宇宙，请确认地址是否正确', 'This address has never used Wisverse — please confirm it’s correct')}
+                </span>
+              )}
             </div>
 
-            {/* Info rows */}
-            <div className="planet-upgrade-row">
-              <span className="planet-upgrade-row-label">{t('节点编号', 'Node ID')}</span>
-              <span className="planet-upgrade-row-value">#{upgradeTarget.nodeCode}</span>
-            </div>
             <div className="planet-upgrade-sep" />
+
             <div className="planet-upgrade-row">
-              <span className="planet-upgrade-row-label">{t('升级费用', 'Upgrade Cost')}</span>
+              <span className="planet-upgrade-row-label">
+                {t('转让价格', 'Transfer price')}
+              </span>
               <div className="planet-upgrade-cost">
-                <span className="planet-upgrade-cost-num">{upgradeCost}</span>
+                <span className="planet-upgrade-cost-num">
+                  {formatTokenAmount(TRANSFER_PRICE_BY_STAR[transferSheetNode.stars] ?? 0)}
+                </span>
                 <span className="planet-upgrade-cost-unit"> PB</span>
+              </div>
+            </div>
+            <div className="planet-upgrade-row">
+              <span className="planet-upgrade-row-label">{t('Gas 费', 'Gas fee')}</span>
+              <div className="planet-upgrade-cost">
+                <span className="planet-upgrade-cost-num">
+                  {formatSupAmount(SUP_COST_BY_TIER[transferSheetNode.tier])}
+                </span>
+                <span className="planet-upgrade-cost-unit"> SUP</span>
               </div>
             </div>
 
             <button
               className="planet-confirm-btn"
-              onClick={handleUpgradeConfirm}
-              disabled={upgrading}
+              onClick={handleConfirmTransfer}
+              disabled={transferCheckStatus !== '3' || transferring}
             >
-              {upgrading
+              {transferring
                 ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
-                : t('确认升级', 'Confirm Upgrade')
+                : t('确认转让', 'Confirm Transfer')
               }
             </button>
           </div>
         </div>
-        );
-      })()}
+      )}
+
+      {/* ── Genesis / Diamond serial number sheet (查看全部编号) ── */}
+      {serialSheetOrigin && (
+        <div className="sheet-backdrop" onClick={() => setSerialSheetOrigin(null)}>
+          <div
+            className="payment-sheet planet-serial-sheet"
+            role="dialog"
+            aria-modal="true"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="sheet-header">
+              <span className="sheet-title">
+                {serialSheetOrigin === 'genesis' ? t('创世节点编号', 'Genesis Node Numbers') : t('钻石节点编号', 'Diamond Node Numbers')}
+              </span>
+              <button
+                className="back-btn"
+                style={{ marginLeft: 'auto' }}
+                onClick={() => setSerialSheetOrigin(null)}
+                aria-label={t('关闭', 'Close')}
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+
+            <div className="planet-serial-sheet-stat">
+              {t(
+                `可用 ${serialSheetOrigin === 'genesis' ? genesisAvailable.length : diamondAvailable.length} / 共 ${serialSheetOrigin === 'genesis' ? genesisEntries.length : diamondEntries.length}`,
+                `${serialSheetOrigin === 'genesis' ? genesisAvailable.length : diamondAvailable.length} available / ${serialSheetOrigin === 'genesis' ? genesisEntries.length : diamondEntries.length} total`
+              )}
+            </div>
+
+            <div className="planet-serial-sheet-grid">
+              {(serialSheetOrigin === 'genesis' ? genesisEntries : diamondEntries).map(({ serialNo, consumed }) => (
+                <span
+                  key={serialNo}
+                  className={`planet-origin-summary-serial ${consumed ? 'planet-origin-summary-serial--consumed' : `planet-origin-summary-serial--${serialSheetOrigin}`}`}
+                >
+                  #{serialNo}
+                </span>
+              ))}
+            </div>
+
+            {serialSheetOrigin === 'diamond' && (
+              <button
+                type="button"
+                className="planet-serial-sheet-cta"
+                onClick={() => { setSerialSheetOrigin(null); handleGenesisNode(); }}
+              >
+                <Gem size={15} strokeWidth={2.2} aria-hidden />
+                {t('抢占更多钻石节点', 'Claim more Diamond Nodes')}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {childInfoOpen && (
+        <div className="sheet-backdrop" onClick={() => setChildInfoOpen(false)}>
+          <div
+            className="payment-sheet pb-info-sheet"
+            role="dialog"
+            aria-modal="true"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="sheet-header">
+              <span className="sheet-title">{t('子节点说明', 'About Sub-Nodes')}</span>
+              <button
+                className="back-btn"
+                style={{ marginLeft: 'auto' }}
+                onClick={() => setChildInfoOpen(false)}
+                aria-label={t('关闭', 'Close')}
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+
+            <div className="pb-info-sheet-body">
+              <p className="pb-info-sheet-para pb-info-sheet-heading">
+                {t(
+                  '关于知识宇宙"子节点"的定义与核算说明',
+                  'About the Definition and Calculation of "Sub-Nodes" in Wisverse'
+                )}
+              </p>
+              <p className="pb-info-sheet-para">
+                {t(
+                  '在知识宇宙（双子星节点生态）中，"子节点"是衡量一个频道核心强度与星级晋升的根本指标。其具体定义与核算规则如下：',
+                  'In Wisverse (the Gemini node ecosystem), "sub-nodes" are the fundamental metric for measuring a channel’s core strength and star-tier promotion. The specific definition and calculation rules are as follows:'
+                )}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('唯一核心定义：', 'Sole core definition: ')}</strong>
+                {t(
+                  '子节点仅指直接使用 PB（公信力积分）进行消耗，并完成直接订阅链接到该频道的节点数量。',
+                  'A sub-node refers only to a node that directly consumed PB (Public Belief) and completed a direct subscription link to that channel.'
+                )}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('不计入范围：', 'Excluded from the count: ')}</strong>
+                {t(
+                  '凡是由平台系统推流、公域引流或非消耗PB产生的常规链接节点，一律不计入该频道的子节点考核基数。',
+                  'Any node linked through platform-driven distribution, public-domain traffic, or without consuming PB is not counted toward the channel’s sub-node total.'
+                )}
+              </p>
+              <p className="pb-info-sheet-para pb-info-sheet-subheading">{t('核心结论：', 'Key conclusion:')}</p>
+              <p className="pb-info-sheet-para">
+                {t(
+                  '子节点是纯粹的"直推硬资产"。只有通过深耕频道内容，吸引用户付出实质性PB消耗进行订阅链接，才能沉淀为有效的子节点。当该直系消耗订阅的子节点数量达到 60多个（约63-64个） 时，频道将 100% 锁死并晋升为五星频道。',
+                  'Sub-nodes are a pure "direct-referral hard asset." Only by cultivating channel content that drives users to spend PB on a subscription link can it accumulate as a valid sub-node. Once the number of directly-subscribed sub-nodes reaches about 60+ (roughly 63–64), the channel is 100% locked in and promoted to a five-star channel.'
+                )}
+              </p>
+
+              <p className="pb-info-sheet-para pb-info-sheet-heading">
+                {t(
+                  '关于知识宇宙"定向广播"（Direction Broadcasting）机制说明',
+                  'About the "Direction Broadcasting" Mechanism in Wisverse'
+                )}
+              </p>
+              <p className="pb-info-sheet-para">
+                {t(
+                  '在知识宇宙生态中，定向广播（Direction Broadcasting）是实现内容精准分发与流量价值放大的核心推流机制。其运作原理与激励规则如下：',
+                  'In the Wisverse ecosystem, Direction Broadcasting is the core distribution mechanism for precise content delivery and traffic value amplification. Its operating principles and incentive rules are as follows:'
+                )}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('精准交叉推流：', 'Precision cross-distribution: ')}</strong>
+                {t(
+                  '频道发布的新内容，系统将优先向纵向深度达 25级的链接受众群体 进行交叉推流。这一设计确保了内容能率先触达组织架构内最核心、黏性最高的协同网络。',
+                  'When a channel publishes new content, the system prioritizes cross-distribution to the linked audience up to 25 levels deep. This ensures content first reaches the most core, highest-engagement network within the structure.'
+                )}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('行为激励机制：', 'Behavioral incentive mechanism: ')}</strong>
+                {t(
+                  '平台通过 AI 算法，根据受众对该内容的浏览、点赞、转发、收藏等真实互动行为进行多维评估。互动的热度与质量将直接转化为 PB（公信力积分）奖励，从而提升创作者与参与者的生态公信力权重。',
+                  'The platform uses an AI algorithm to evaluate the audience’s genuine interactions with the content — views, likes, reposts, and saves — across multiple dimensions. The heat and quality of engagement directly convert into PB rewards, raising the ecosystem trust weight of both creators and participants.'
+                )}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('BSP 权重放大：', 'BSP weight amplification: ')}</strong>
+                {t(
+                  '依托 BSP（Behavior Support Plan，行为支持计划）功能，高活跃度的定向广播将显著提升该频道的后续推流权重。权重越高，频道所获得的全局流量空投收益就越丰厚，从而实现"内容升级—流量反哺—收益倍增"的稳健闭环。',
+                  'Through the BSP (Behavior Support Plan) feature, high-activity Direction Broadcasting significantly raises a channel’s subsequent distribution weight. The higher the weight, the greater the channel’s global traffic airdrop rewards — forming a steady loop of "content upgrade → traffic feedback → reward multiplication."'
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Child node list (点击卡片「子节点」数字 → 该频道具体子节点名单) ── */}
+      {childListNode && (
+        <div className="sheet-backdrop" onClick={() => setChildListNode(null)}>
+          <div
+            className="payment-sheet planet-transfer-picker-sheet"
+            role="dialog"
+            aria-modal="true"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="sheet-header planet-child-list-sheet-header">
+              <div className="planet-child-list-sheet-heading">
+                <span className="sheet-title">
+                  {t(`子节点列表 · ${childListNode.nodeCode}`, `Sub-Nodes · ${childListNode.nodeCode}`)}
+                </span>
+                <span className="planet-child-list-sheet-count">
+                  {t(`共 ${childListEntries.length} 个`, `${childListEntries.length} total`)}
+                </span>
+              </div>
+              <button
+                className="back-btn"
+                style={{ marginLeft: 'auto' }}
+                onClick={() => setChildListNode(null)}
+                aria-label={t('关闭', 'Close')}
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+
+            <div className="planet-transfer-picker-list">
+              {childListVisible.length === 0 ? (
+                <div className="planet-transfer-picker-empty">
+                  {t('该节点暂无子节点', 'No sub-nodes yet')}
+                </div>
+              ) : (
+                <>
+                  {childListVisible.map((entry, i) => {
+                    const copyKey = `child-${i}-${entry.code}`;
+                    return (
+                      <div key={copyKey} className="planet-transfer-picker-item">
+                        <StarDisplay level={entry.stars} />
+                        <div className="planet-transfer-picker-info">
+                          <div className="planet-node-code-row">
+                            <span className="planet-transfer-picker-code">{entry.code}</span>
+                            <button
+                              type="button"
+                              className={`planet-node-copy-btn${copiedId === copyKey ? ' planet-node-copy-btn--done' : ''}`}
+                              onClick={() => {
+                                navigator.clipboard.writeText(entry.code).then(() => {
+                                  setCopiedId(copyKey);
+                                  setTimeout(() => setCopiedId(null), 1800);
+                                });
+                              }}
+                              aria-label={t('复制编号', 'Copy code')}
+                            >
+                              {copiedId === copyKey ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} strokeWidth={2} />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {childListHasMore && (
+                    <button
+                      type="button"
+                      className="planet-transfer-picker-more-btn"
+                      onClick={() => setChildListVisibleCount(c => c + TRANSFER_PICKER_PAGE_SIZE)}
+                    >
+                      {t(`加载更多（剩余 ${childListEntries.length - childListVisible.length}）`, `Load more (${childListEntries.length - childListVisible.length} left)`)}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Dev entry (half pill) ──
+          DEV 按钮点击只负责开合调试菜单；菜单内单独的关闭按钮才会整体隐藏面板，刷新页面后重新出现 ── */}
+      {!devPanelHidden && (
+      <div className="planet-dev-entry" data-layer="dev-entry">
+        {devMenuOpen && (
+          <button
+            type="button"
+            className="planet-dev-backdrop"
+            aria-hidden
+            tabIndex={-1}
+            onClick={() => setDevMenuOpen(false)}
+          />
+        )}
+        {devMenuOpen && (
+          <div className="planet-dev-menu" role="menu">
+            <div className="planet-dev-menu-header">
+              <span className="planet-dev-menu-title">{t('开发工具', 'Developer tools')}</span>
+              <button
+                type="button"
+                className="planet-dev-menu-close"
+                aria-label={t('关闭开发工具（刷新页面后重新出现）', 'Close developer tools (reappears after page refresh)')}
+                onClick={() => { setDevMenuOpen(false); setDevPanelHidden(true); }}
+              >
+                <X size={14} strokeWidth={2.5} aria-hidden="true" />
+              </button>
+            </div>
+            <button
+              type="button"
+              className="planet-dev-menu-item"
+              role="menuitemcheckbox"
+              aria-checked={devForceEmptyNodes}
+              onClick={() => setDevForceEmptyNodes(v => !v)}
+            >
+              <span>{t('无节点空状态', 'Empty nodes preview')}</span>
+              <span className={`planet-dev-menu-toggle${devForceEmptyNodes ? ' planet-dev-menu-toggle--on' : ''}`}>
+                {devForceEmptyNodes ? t('开', 'On') : t('关', 'Off')}
+              </span>
+            </button>
+          </div>
+        )}
+        <button
+          type="button"
+          className="planet-dev-pill"
+          aria-expanded={devMenuOpen}
+          aria-haspopup="menu"
+          aria-label={t('开发工具', 'Developer tools')}
+          onClick={() => setDevMenuOpen(v => !v)}
+        >
+          <Wrench size={14} strokeWidth={2} aria-hidden="true" />
+          <span>DEV</span>
+        </button>
+      </div>
+      )}
     </div>
   );
 }

@@ -140,10 +140,10 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
   const supCost = tier > 0 ? SUP_COST_BY_TIER[tier as Exclude<StakeTier, 0>] : 0;
 
   const titles: Record<PayCtx['ctx'], string> = {
-    post:   t('发布知识星球节点', 'Publish Knowledge Planet Node'),
+    post:   t('发布知识宇宙节点', 'Publish Knowledge Universe Node'),
     chain:  t('解锁全文', 'Unlock full content'),
     repost: t('转发并创建子节点', 'Repost and create child node'),
-    interaction: t('参与知识星球', 'Join Gemini'),
+    interaction: t('参与知识宇宙', 'Join Knowledge Universe'),
   };
 
   const interactionLabels: Record<InteractionAction, [string, string]> = {
@@ -188,7 +188,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
           <div className="link-modal-post">
             <div className="gemini-left">
               <KnowledgePlanetIcon className="gemini-icon" />
-              <span className="gemini-label">{t('知识星球', 'Knowledge Planet')}</span>
+              <span className="gemini-label">{t('知识宇宙', 'Knowledge Universe')}</span>
               <span className="gemini-sep">·</span>
               <Rating value={relatedPost.rating} />
               <span className="gemini-sep">·</span>
@@ -289,7 +289,7 @@ export function GeminiStakeModal({
         </div>
 
         <p className="gemini-stake-lead">
-          {t('该帖子已参与知识星球，选择面额后同步链接创建子节点', 'This post is in Knowledge Planet — choose an amount to link and create a child node')}
+          {t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点', 'This post is in Knowledge Universe — choose an amount to link and create a child node')}
         </p>
 
         <div className="stake-tier-list" style={{ marginBottom: 16 }}>
@@ -517,7 +517,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
         pageStep={step}
         icon={<div className="pay-page-brand-icon"><KnowledgePlanetIcon style={{ width: 30, height: 30 }} /></div>}
         productName={t('知识宇宙', 'Knowledge Universe')}
-        remark={post.nodeId ? `节点 ${post.nodeId}` : t('知识星球', 'Knowledge Planet')}
+        remark={post.nodeId ? `节点 ${post.nodeId}` : t('知识宇宙', 'Knowledge Universe')}
         amountText={`${selected} PB`}
         networkFee={`${formatSuperAmount(superAmount)} PB`}
         tokenFee={`${selected} PB`}
@@ -545,7 +545,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
           <div className="link-modal-post">
             <div className="gemini-left">
               <KnowledgePlanetIcon className="gemini-icon" />
-              <span className="gemini-label">{t('知识星球', 'Knowledge Planet')}</span>
+              <span className="gemini-label">{t('知识宇宙', 'Knowledge Universe')}</span>
               <span className="gemini-sep">·</span>
               <Rating value={post.rating} />
               <span className="gemini-sep">·</span>
@@ -556,7 +556,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
 
         <p className="gemini-stake-lead">
           {mode === 'unlock'
-            ? t('选择面额创建知识星球子节点，同步解锁全部内容', 'Choose an amount to create a Knowledge Planet child node and unlock full content')
+            ? t('选择面额创建知识宇宙子节点，同步解锁全部内容', 'Choose an amount to create a Knowledge Universe child node and unlock full content')
             : t('选择链接面额，在此节点下生成子节点并加入空投激励网络', 'Choose an amount to create a child node and join airdrop rewards')}
         </p>
         <div className="stake-tier-list" style={{ marginBottom: 16 }}>
@@ -2123,7 +2123,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
           </button>
           {paying === 'idle' && (
             <p className="channel-create-footer-hint">
-              {t('开通后免费产生一个知识星球节点', 'A Knowledge Planet node is created for free when you open a channel')}
+              {t('开通后免费产生一个知识宇宙节点', 'A Knowledge Universe node is created for free when you open a channel')}
             </p>
           )}
         </div>

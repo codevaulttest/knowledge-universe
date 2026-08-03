@@ -112,6 +112,11 @@
     "PingFang SC", "Microsoft YaHei",
     "Helvetica Neue", Arial, sans-serif;
 
+  /* 品牌字体：仅用于「知识宇宙」等品牌标题场景（如知识宇宙首页 hero），日常 UI 文本一律用 --ku-font-family。
+     选用隶书字族，古雅篆字气质，比常规衬线更具艺术/设计感 */
+  --ku-font-brand:
+    "STLiti", "Liti SC", "华文隶书", "Noto Serif SC", serif;
+
   /* ── 字号 / 行高 / 字重组合 ── */
   --ku-text-author-name:       700 15px/19px var(--ku-font-family);  /* 作者姓名 */
   --ku-text-tab:               600 15px/1 var(--ku-font-family);     /* Tab 标签 */
@@ -219,7 +224,7 @@
   --ku-nav-item-size:          48px;
   --ku-nav-item-gap:           2px;
   --ku-nav-planet-icon-size:   24px;
-  --ku-nav-active-width:       68px;  /* 需覆盖「知识星球」等 4 字文案，比图标本身略宽 */
+  --ku-nav-active-width:       68px;  /* 需覆盖「知识宇宙」等 4 字文案，比图标本身略宽 */
   --ku-nav-glass-filter:       blur(30px) saturate(180%);
   /* CodeVAULT 宿主底栏（复刻 Fast 虚拟卡原型） */
   --ku-host-nav-height:        82px;
@@ -254,7 +259,7 @@
   /* 响应式断点 600px 因 CSS 规范限制无法在 @media 中使用变量，见 styles.css */
 
   /* ═══════════════════════════════════════════════════
-     知识星球节点徽标 (GeminiNodeBadge)
+     知识宇宙节点徽标 (GeminiNodeBadge)
      ═══════════════════════════════════════════════════ */
 
   --ku-gemini-bg:              #f4fbfb;
@@ -303,7 +308,7 @@
   --ku-locked-media-icon-color: var(--ku-locked-media-placeholder-text);
 
   /* ═══════════════════════════════════════════════════
-     知识星球节点页 (KnowledgePlanetPage)
+     知识宇宙节点页 (KnowledgePlanetPage)
      ═══════════════════════════════════════════════════ */
   --ku-planet-airdrop-bg:          #f0fdf9;
   --ku-planet-airdrop-border:      rgba(0, 205, 184, 0.28);
@@ -331,6 +336,45 @@
 
   /* Motion */
   --ku-motion-fast:            160ms ease;
+
+  /* ═══════════════════════════════════════════════════
+     知识宇宙节点页 2.0（Planet V2 / 创世·钻石节点）
+     —— 由兄弟项目 genesis-node-diamond 移植而来，本页专用的
+        小型颜色/圆角/间距/阴影补充刻度；能复用上面已有 token 的
+        一律直接复用（见各行注释），只有确无对应语义时才新增。
+     ═══════════════════════════════════════════════════ */
+  --ku-planet2-color-primary-disabled: rgba(0, 205, 184, 0.35);
+  --ku-planet2-color-muted-soft:       #a8acb3;
+  --ku-planet2-color-surface-dark:     #0a0b0d;   /* 深色 hero / 高对比卡片背景 */
+  --ku-planet2-color-surface-dark-elevated: #16181c;
+  --ku-planet2-color-on-dark-soft:     rgba(255, 255, 255, 0.66);
+  --ku-planet2-color-accent-purple-light: #a78bfa; /* 钻石节点强调色的浅色变体 */
+  --ku-planet2-color-genesis-gold-light:  #f6c453; /* 创世节点金渐变的高光端，与 --ku-color-genesis-gold 配对使用 */
+
+  /* 圆角：与主项目现有 --ku-radius-* 语义不完全对齐，独立小刻度 */
+  --ku-planet2-radius-xs:   4px;
+  --ku-planet2-radius-sm:   8px;
+  --ku-planet2-radius-lg:   16px;
+  --ku-planet2-radius-xl:   24px;
+  --ku-planet2-radius-pill: 100px;
+  --ku-planet2-radius-full: 9999px;
+
+  /* 间距：主项目没有通用间距刻度（各处按组件命名具体像素值），本页沿用来源项目的通用刻度 */
+  --ku-planet2-space-xxs: 4px;
+  --ku-planet2-space-xs:  8px;
+  --ku-planet2-space-sm:  12px;
+  --ku-planet2-space-base:16px;
+  --ku-planet2-space-md:  20px;
+  --ku-planet2-space-lg:  24px;
+  --ku-planet2-space-xl:  32px;
+  --ku-planet2-space-xxl: 48px;
+  --ku-planet2-space-section: 96px;
+
+  --ku-planet2-height-button: 44px;
+  --ku-planet2-shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.04);
+  --ku-planet2-shadow-card: 0 6px 16px rgba(0, 0, 0, 0.12);
+  /* 数字 / 地址等宽字体（节点编号、金额、钱包地址） */
+  --ku-font-mono: 'SF Mono', 'Menlo', ui-monospace, 'JetBrains Mono', monospace;
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -360,7 +404,7 @@
   /* 知识图谱连线 */
   --ku-color-graph-line:       #ccd8f5;
 
-  /* 知识星球节点徽标 */
+  /* 知识宇宙节点徽标 */
   --ku-gemini-bg:              #f0f5ff;
   --ku-gemini-bg-hover:        #e8efff;
   --ku-gemini-border:          #c8daff;
@@ -374,7 +418,7 @@
   --ku-unlock-border:          #c8daff;
   --ku-unlock-text:            #1259EE;
 
-  /* 知识星球节点页 */
+  /* 知识宇宙节点页 */
   --ku-planet-airdrop-bg:      #f0f5ff;
   --ku-planet-airdrop-border:  rgba(27, 107, 255, 0.28);
   --ku-planet-airdrop-amount:  #1248cc;

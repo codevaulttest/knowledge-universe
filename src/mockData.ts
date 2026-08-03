@@ -15,6 +15,48 @@ export const MOCK_SUP_DEPOSIT_ADDRESS = '0x4f1a9c7e2b8d05f3a6c1e9b7d4f2a8c5e0b3d
 /** 演示登录用户：与钱包短名一致，避免与中文昵称人格混用 */
 export const CURRENT_USER = DEFAULT_WALLET_DISPLAY;
 
+/** 演示钱包 PB 余额（连接后展示） */
+export const MOCK_WALLET_PB_BALANCE = 5000;
+/** 演示钱包对应的邀请码（固定随机六位数字） */
+export const MOCK_MY_INVITE_CODE = '482915';
+
+/** 邀请码 → 邀请人钱包地址（demo：绑定后展示地址而非邀请码本身） */
+export const MOCK_INVITE_CODE_TO_ADDRESS: Record<string, string> = {
+  '100861': '0x1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d',
+  '888888': '0x9f8e7d6c5b4a3928170615243a4b5c6d7e8f9012',
+  '202607': '0x3c5e7a91b2d4f6081c3e5a7b9d0f1234567890ab',
+};
+
+/** 将 6 位邀请码解析为邀请人钱包地址；未知码用确定性 mock 地址，保证 demo 可绑任意码 */
+export function resolveInviterAddress(code: string): string {
+  if (MOCK_INVITE_CODE_TO_ADDRESS[code]) return MOCK_INVITE_CODE_TO_ADDRESS[code];
+  const hex = Array.from(code)
+    .map(ch => ch.charCodeAt(0).toString(16).padStart(2, '0'))
+    .join('')
+    .padEnd(40, '0')
+    .slice(0, 40);
+  return `0x${hex}`;
+}
+
+/** 周期性 PB 空投单次发放数量 */
+export const MOCK_PB_AIRDROP_AMOUNT = 100;
+
+const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
+
+/** 正式逻辑：北京时间当天 22:00 截止 */
+function getBeijingAirdropDeadline(now: number): number {
+  const beijingWallClock = new Date(now + BEIJING_OFFSET_MS);
+  const year = beijingWallClock.getUTCFullYear();
+  const month = beijingWallClock.getUTCMonth();
+  const day = beijingWallClock.getUTCDate();
+  return Date.UTC(year, month, day, 22, 0, 0) - BEIJING_OFFSET_MS;
+}
+
+/** 每日空投领取截止时间点（毫秒时间戳）：逾期未领取则错过本轮 */
+export function getAirdropDeadline(now: number = Date.now()): number {
+  return getBeijingAirdropDeadline(now);
+}
+
 export const AVATAR_PRESET_SEEDS = [
   'nova-7a3f', 'zenith-e2d1', 'prism-c94f', 'cipher-6a5b',
   'cosmos-3e0d', 'aurora-9c8f', 'nexus-2a7e', 'quasar-1b4d',
@@ -41,6 +83,148 @@ export const GENESIS_NODE_OWNERS: Record<string, 'silver' | 'gold'> = {
 export function getGenesisTier(name: string): 'silver' | 'gold' | null {
   return GENESIS_NODE_OWNERS[name] ?? null;
 }
+
+// ── 知识宇宙页顶公告（跑马灯 + 加权补贴规则详情）─────────────────
+export type PlanetAnnouncement = {
+  id: string;
+  /** 跑马灯单行文案 */
+  titleZh: string;
+  titleEn: string;
+  sheetTitleZh: string;
+  sheetTitleEn: string;
+  badgeZh: string;
+  badgeEn: string;
+  docTitleZh: string;
+  docTitleEn: string;
+  orgZh: string;
+  orgEn: string;
+  publishedAtZh: string;
+  publishedAtEn: string;
+  coreTitleZh: string;
+  coreTitleEn: string;
+  coreItems: Array<{
+    labelZh: string;
+    labelEn: string;
+    /** 正文；含 `{days}` 时高亮发放天数 */
+    bodyZh: string;
+    bodyEn: string;
+    withDays?: boolean;
+  }>;
+  benefitTitleZh: string;
+  benefitTitleEn: string;
+  benefitRows: Array<{
+    starZh: string;
+    starEn: string;
+    benefitZh: string;
+    benefitEn: string;
+    descZh: string;
+    descEn: string;
+  }>;
+  noteLabelZh: string;
+  noteLabelEn: string;
+  noteBodyZh: string;
+  noteBodyEn: string;
+  signTeamZh: string;
+  signTeamEn: string;
+  signDateZh: string;
+  signDateEn: string;
+  footerZh: string;
+  footerEn: string;
+};
+
+/** 对照 genesis_node `infoSubsidy` 官方公告弹窗（PDF 版式）；发放天数等规则来自该源，非本仓库臆造 */
+export const MOCK_PLANET_ANNOUNCEMENT: PlanetAnnouncement = {
+  id: 'ann-channel-node-subsidy-2026-07',
+  titleZh: '上线「频道节点加权补贴」活动，点击查看详情',
+  titleEn: '"Channel Node Weighted Subsidy" is live — tap for details',
+  sheetTitleZh: '加权补贴活动规则',
+  sheetTitleEn: 'Weighted Subsidy Rules',
+  badgeZh: '官方公告',
+  badgeEn: 'Official Notice',
+  docTitleZh: '知识宇宙：频道节点加权补贴活动规则',
+  docTitleEn: 'Wisverse: Channel Node Weighted Subsidy Rules',
+  orgZh: '发文单位：知识宇宙平台运营中心',
+  orgEn: 'Issued by: Wisverse Platform Operations Center',
+  publishedAtZh: '发布时间：2026年7月23日',
+  publishedAtEn: 'Published: July 23, 2026',
+  coreTitleZh: '一、核心机制',
+  coreTitleEn: '1. Core Mechanism',
+  coreItems: [
+    {
+      labelZh: '补贴评估：',
+      labelEn: 'Subsidy assessment: ',
+      bodyZh: '平台依据节点活跃度算法，定期向各个频道节点发放推流 PB 补贴。',
+      bodyEn: 'Based on the node activity algorithm, the platform periodically grants traffic-boost PB subsidies to channel nodes.',
+    },
+    {
+      labelZh: '发放周期：',
+      labelEn: 'Release schedule: ',
+      bodyZh: '补贴自节点升级/审核通过之日起，分 {days} 天按日线性发放至节点账户。',
+      bodyEn: 'Starting from the node upgrade / approval date, subsidies are released linearly over {days} days into the node account.',
+      withDays: true,
+    },
+    {
+      labelZh: '使用用途：',
+      labelEn: 'Intended use: ',
+      bodyZh: '专项辅助节点开展投流与品牌宣传推广。',
+      bodyEn: 'Dedicated support for node traffic buying and brand promotion.',
+    },
+  ],
+  benefitTitleZh: '二、星级解锁权益（一星至五星）',
+  benefitTitleEn: '2. Star-Tier Benefits (1★–5★)',
+  benefitRows: [
+    {
+      starZh: '一星节点',
+      starEn: '1★ Node',
+      benefitZh: '基础加权补贴额度',
+      benefitEn: 'Basic weighted subsidy quota',
+      descZh: '解锁基础推流 PB 补贴，按 100 天按日释放',
+      descEn: 'Unlock basic traffic-boost PB subsidy, released daily over 100 days',
+    },
+    {
+      starZh: '二星节点',
+      starEn: '2★ Node',
+      benefitZh: '进阶加权补贴额度',
+      benefitEn: 'Advanced weighted subsidy quota',
+      descZh: '解锁更高比例推流 PB 补贴',
+      descEn: 'Unlock a higher-ratio traffic-boost PB subsidy',
+    },
+    {
+      starZh: '三星节点',
+      starEn: '3★ Node',
+      benefitZh: '中级加权补贴额度',
+      benefitEn: 'Intermediate weighted subsidy quota',
+      descZh: '提高活跃度权重与补贴基数',
+      descEn: 'Raise activity weight and subsidy base',
+    },
+    {
+      starZh: '四星节点',
+      starEn: '4★ Node',
+      benefitZh: '高级加权补贴额度',
+      benefitEn: 'High-tier weighted subsidy quota',
+      descZh: '获得高阶流量扶持与 PB 补贴',
+      descEn: 'Gain higher-tier traffic support and PB subsidy',
+    },
+    {
+      starZh: '五星节点',
+      starEn: '5★ Node',
+      benefitZh: '顶级加权补贴额度',
+      benefitEn: 'Top-tier weighted subsidy quota',
+      descZh: '享受最高级别加权 PB 补贴与全网推流倾斜',
+      descEn: 'Enjoy top-tier weighted PB subsidy and network-wide traffic preference',
+    },
+  ],
+  noteLabelZh: '重要说明：',
+  noteLabelEn: 'Important: ',
+  noteBodyZh: '活跃度算法将直接影响实际结算的 PB 数量，星级越高，可解锁的补贴上限与加权系数越大。',
+  noteBodyEn: 'The activity algorithm directly affects settled PB. Higher star tiers unlock larger subsidy caps and weighting factors.',
+  signTeamZh: '知识宇宙官方运营团队',
+  signTeamEn: 'Wisverse Official Operations Team',
+  signDateZh: '2026年7月23日',
+  signDateEn: 'July 23, 2026',
+  footerZh: '知识宇宙官方运营团队 · 保持探索 · 链接未来',
+  footerEn: 'Wisverse Official Operations · Keep exploring · Connect the future',
+};
 
 // ── 频道 ───────────────────────────────────────────────────────
 export const ALL_CHANNELS: Channel[] = [

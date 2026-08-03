@@ -25,7 +25,6 @@ export function ActorsSheet({ postId, initialTab, onClose }: {
   const tabs: { key: PostAction | 'link' | 'tip'; zh: string; en: string }[] = [
     { key: 'link',    zh: '链接', en: 'Links' },
     { key: 'like',    zh: '点赞', en: 'Likes' },
-    { key: 'dislike', zh: '踩',   en: 'Dislikes' },
     { key: 'share',   zh: '转发', en: 'Reposts' },
     { key: 'save',    zh: '收藏', en: 'Saves' },
     { key: 'tip',     zh: '打赏', en: 'Tips' },
@@ -423,5 +422,5 @@ export function PostCard({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// P0 — Feed page（推荐 / 关注 / 知识星球 三 tab）
+// P0 — Feed page（推荐 / 关注 / 知识宇宙 三 tab）
 // ═══════════════════════════════════════════════════════════════

@@ -58,7 +58,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     return () => window.removeEventListener('resize', updateTabsScrollState);
   }, [isOwn, language]);
 
-  // 频道订阅门槛：不限档位（无 minTierIndex，无需订阅即可看到）/ 会员专属（设了 minTierIndex，需订阅达标才可见；是否收费另由知识星球单条付费决定）
+  // 频道订阅门槛：不限档位（无 minTierIndex，无需订阅即可看到）/ 会员专属（设了 minTierIndex，需订阅达标才可见；是否收费另由知识宇宙单条付费决定）
   const isChannelExclusive = (p: (typeof allPosts)[number]) => !!channel && p.channelId === channel.id && p.minTierIndex != null;
   const filteredOtherPosts = (() => {
     if (contentFilter === 'free') return myPosts.filter(p => !isChannelExclusive(p));
@@ -134,11 +134,11 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
   return (
     <div className="page">
-      {!isOwn && <PageHeader title={authorName} onBack={canGoBack ? goBack : undefined} />}
+      {!isOwn && <PageHeader title={authorName} onBack={canGoBack ? goBack : undefined} className="page-header--transparent" />}
       <div className="scroll-area">
-        <div className={isOwn ? 'profile-hero' : undefined}>
-        {isOwn && <img className="profile-header-bg" src="/img/genesis-bigbang.webp" alt="" aria-hidden="true" />}
-        <div className={`profile-header${isOwn ? ' profile-header--hero' : ''}`}>
+        <div className="profile-hero">
+        <img className="profile-header-bg" src="/img/genesis-bigbang.webp" alt="" aria-hidden="true" />
+        <div className="profile-header profile-header--hero">
           {/* 自己的主页视为底栏 Tab 根页面，不展示返回（即便从头像 navigate 进来也不出现） */}
           {isOwn ? (
             <div className="avatar">
@@ -198,41 +198,38 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           ) : null}
         </div>
 
-        {/* 自己主页：身份之后先展示核心社交数据，与头部背景插画同属一个视觉区块 */}
-        {isOwn && (
-          <div className="profile-mini-stats profile-mini-stats--hero">
-            <button type="button" className="profile-mini-stat profile-mini-stat--btn" onClick={() => setFollowListType('following')}>
-              <span className="profile-mini-stat-num">{followedAuthors.size}</span>
-              <span className="profile-mini-stat-label">{t('关注', 'Following')}</span>
-            </button>
-            <button type="button" className="profile-mini-stat profile-mini-stat--btn" onClick={() => setFollowListType('followers')}>
-              <span className="profile-mini-stat-num">49</span>
-              <span className="profile-mini-stat-label">{t('粉丝', 'Followers')}</span>
-            </button>
-          </div>
-        )}
-
-        {isOwn && channelSection}
+        {/* 身份之后先展示核心社交数据，与头部背景插画同属一个视觉区块（自己/他人主页共用同一套顶部样式） */}
+        <div className="profile-mini-stats profile-mini-stats--hero">
+          {isOwn ? (
+            <>
+              <button type="button" className="profile-mini-stat profile-mini-stat--btn" onClick={() => setFollowListType('following')}>
+                <span className="profile-mini-stat-num">{followedAuthors.size}</span>
+                <span className="profile-mini-stat-label">{t('关注', 'Following')}</span>
+              </button>
+              <button type="button" className="profile-mini-stat profile-mini-stat--btn" onClick={() => setFollowListType('followers')}>
+                <span className="profile-mini-stat-num">49</span>
+                <span className="profile-mini-stat-label">{t('粉丝', 'Followers')}</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="profile-mini-stat">
+                <span className="profile-mini-stat-num">15</span>
+                <span className="profile-mini-stat-label">{t('关注', 'Following')}</span>
+              </span>
+              <span className="profile-mini-stat">
+                <span className="profile-mini-stat-num">124</span>
+                <span className="profile-mini-stat-label">{t('粉丝', 'Followers')}</span>
+              </span>
+            </>
+          )}
         </div>
 
-        {/* 他人主页：频道信息条 → 关注数据 → 关注/打赏/私信 操作 */}
-        {!isOwn && channelSection}
+        {channelSection}
 
+        {/* 关注/打赏/私信操作行延伸进头部视觉区块，与背景插画同属一体 */}
         {!isOwn && (
-          <div className="profile-mini-stats">
-            <span className="profile-mini-stat">
-              <span className="profile-mini-stat-num">15</span>
-              <span className="profile-mini-stat-label">{t('关注', 'Following')}</span>
-            </span>
-            <span className="profile-mini-stat">
-              <span className="profile-mini-stat-num">124</span>
-              <span className="profile-mini-stat-label">{t('粉丝', 'Followers')}</span>
-            </span>
-          </div>
-        )}
-
-        {!isOwn && (
-          <div className="profile-actions">
+          <div className="profile-actions profile-actions--hero">
             <button
               type="button"
               className={`follow-btn${isFollowing ? ' follow-btn--following' : ''}`}
@@ -260,6 +257,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             </button>
           </div>
         )}
+        </div>
 
         {/* 自己主页显示帖子/收藏 tab；他人主页只显示标签 */}
         {isOwn ? (
@@ -316,7 +314,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           <div className={`profile-content-tabs-fade profile-content-tabs-fade--right${tabsCanScrollRight ? ' profile-content-tabs-fade--visible' : ''}`} aria-hidden="true" />
           </div>
         ) : (
-          <div className="profile-content-tabs-wrap">
+          <div className="profile-content-tabs-wrap profile-content-tabs-wrap--hero">
           <nav
             className="profile-content-tabs"
             aria-label={t('内容筛选', 'Content filter')}

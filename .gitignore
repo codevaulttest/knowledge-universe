@@ -18,3 +18,6 @@ design/
 .firebase/
 .firebaserc
 firebase.json
+
+# Nested standalone project (own git repo, not a submodule)
+genesis-node-diamond/

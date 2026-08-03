@@ -166,7 +166,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
             } : undefined}
           />
 
-          {/* 知识星球节点标识 → 点击打开链接弹窗（onClick 由 GeminiNodeBadge 自身处理）*/}
+          {/* 知识宇宙节点标识 → 点击打开链接弹窗（onClick 由 GeminiNodeBadge 自身处理）*/}
           {post.isNode && (
             <GeminiNodeBadge
               post={post}

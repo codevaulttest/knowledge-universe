@@ -35,7 +35,7 @@ export function formatSuperAmount(amount: number): string {
 
 export function stakeTierDescription(tier: StakeTier, zh: boolean): string {
   if (tier === 0) {
-    return zh ? '不创建知识星球节点，内容全公开' : 'No node; content fully public';
+    return zh ? '不创建知识宇宙节点，内容全公开' : 'No node; content fully public';
   }
   if (tier === 10) {
     return zh

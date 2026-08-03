@@ -560,7 +560,7 @@ export function ComposePage({
           </>
         )}
 
-        {/* 同步至我的频道（仅频道主可见）—— 频道门槛优先于知识星球单条付费生效，所以放在前面 */}
+        {/* 同步至我的频道（仅频道主可见）—— 频道门槛优先于知识宇宙单条付费生效，所以放在前面 */}
         {!isEditMode && myChannel && (
           <div className="compose-section compose-stake-section compose-stake-section--channel">
             <div className="compose-stake-heading">
@@ -662,17 +662,17 @@ export function ComposePage({
           </div>
         )}
 
-        {/* 参与知识星球面额（编辑模式隐藏；长文 / 普通帖均可选择，非强制）*/}
+        {/* 参与知识宇宙面额（编辑模式隐藏；长文 / 普通帖均可选择，非强制）*/}
         {!isEditMode && (
           <div className="compose-section compose-stake-section">
             <div className="compose-stake-heading">
               <KnowledgePlanetIcon width={16} height={16} />
-              <span>{t('参与知识星球', 'Join Gemini')}</span>
+              <span>{t('参与知识宇宙', 'Join Knowledge Universe')}</span>
             </div>
             <p className="compose-stake-hint">
-              {t('选择质押面额，创建可链接的知识星球节点；可选择不加入', 'Pick a stake tier to create a linkable node; opting out is allowed')}
+              {t('选择质押面额，创建可链接的知识宇宙节点；可选择不加入', 'Pick a stake tier to create a linkable node; opting out is allowed')}
             </p>
-            <div className="stake-tier-list" role="radiogroup" aria-label={t('知识星球面额', 'Gemini stake tier')}>
+            <div className="stake-tier-list" role="radiogroup" aria-label={t('知识宇宙面额', 'Knowledge Universe stake tier')}>
               {STAKE_TIERS.map(tier => {
                 const active = stakeTier === tier;
                 const zh = language === 'zh-CN';

@@ -38,10 +38,10 @@ export function BottomNav({ route, setTab }: {
         type="button"
         className={`nav-item nav-item--planet${isPlanet ? ' nav-item--active' : ''}`}
         onClick={() => requireWallet(() => { if (!isPlanet) navigateRoot({ page: 'P_PLANET' }); })}
-        aria-label={t('知识星球', 'Knowledge Planet')}
+        aria-label={t('知识宇宙', 'Knowledge Universe')}
       >
         <KnowledgePlanetIcon className="knowledge-planet-icon" />
-        <span className="nav-label">{t('知识星球', 'Planet')}</span>
+        <span className="nav-label">{t('知识宇宙', 'Universe')}</span>
       </button>
       <button
         type="button"

@@ -5,7 +5,7 @@ import { ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { PostCard } from '../components/PostCard';
 import { Avatar, AuthorName } from '../components/shared';
 
-const TRENDING = ['AI Agent', 'RAG 技术', '独立开发', 'Figma 组件', 'Prompt 工程', 'Web3', '知识星球', '数据方法论'];
+const TRENDING = ['AI Agent', 'RAG 技术', '独立开发', 'Figma 组件', 'Prompt 工程', 'Web3', '知识宇宙', '数据方法论'];
 
 export function SearchPage() {
   const {

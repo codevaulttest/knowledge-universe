@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY } from './mockData';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_PB_AIRDROP_AMOUNT, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import { postHasStake } from './stakeConfig';
 import { BottomNav } from './components/BottomNav';
@@ -51,6 +51,9 @@ export default function App() {
   // 游客模式：默认未连接钱包，可浏览帖子；触发需要身份/资产/链上能力的操作时先弹窗确认再连接
   const [walletConnected, setWalletConnected] = useState(false);
   const [showConnectWallet, setShowConnectWallet] = useState(false);
+  // 知识宇宙页用的钱包地址态，与 walletConnected 同步维护，供该页头部的钱包 chip 展示
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [walletConnecting, setWalletConnecting] = useState(false);
 
   // 显式的"连接钱包"入口（顶部快捷按钮、主页引导按钮）直接连接，无需二次确认；
   // 若是从确认弹窗触发（携带被拦截的原操作），连接后继续执行该操作
@@ -61,6 +64,16 @@ export default function App() {
     const pending = pendingWalletActionRef.current;
     pendingWalletActionRef.current = null;
     pending?.();
+    setWalletConnecting(true);
+    setTimeout(() => {
+      setWalletAddress(MOCK_WALLET_ADDRESS);
+      setWalletConnecting(false);
+    }, 600);
+  };
+
+  const disconnectWallet = () => {
+    setWalletConnected(false);
+    setWalletAddress(null);
   };
 
   // 其余触发到需要身份/资产/链上能力操作的入口，先弹窗确认
@@ -68,6 +81,27 @@ export default function App() {
     if (walletConnected) { action(); return; }
     pendingWalletActionRef.current = action;
     setShowConnectWallet(true);
+  };
+
+  // ── 知识宇宙页：PB 余额 / 邀请绑定 / 周期性空投 ──────────────────
+  const [pbBalance, setPbBalance] = useState(MOCK_WALLET_PB_BALANCE);
+  const [inviterAddress, setInviterAddress] = useState<string | null>(null);
+  const [airdropClaimed, setAirdropClaimed] = useState(false);
+
+  const bindInviter = (code: string) => {
+    if (inviterAddress) return { ok: false, message: t('已绑定邀请人，无法更换', 'Inviter already bound') };
+    if (!/^\d{6}$/.test(code)) return { ok: false, message: t('请输入 6 位数字邀请码', 'Enter a 6-digit invite code') };
+    if (code === MOCK_MY_INVITE_CODE) return { ok: false, message: t('不能绑定自己的邀请码', "You can't bind your own invite code") };
+    setInviterAddress(resolveInviterAddress(code));
+    showToast(t('绑定成功', 'Inviter bound'));
+    return { ok: true, message: '' };
+  };
+
+  const claimAirdrop = () => {
+    if (airdropClaimed || Date.now() > getAirdropDeadline()) return;
+    setPbBalance(prev => prev + MOCK_PB_AIRDROP_AMOUNT);
+    setAirdropClaimed(true);
+    showToast(t(`领取成功，+${MOCK_PB_AIRDROP_AMOUNT} PB`, `Claimed +${MOCK_PB_AIRDROP_AMOUNT} PB`));
   };
 
   const [supBalance, setSupBalance] = useState(13);
@@ -483,7 +517,7 @@ export default function App() {
       }
       setComposeOpen(false);
       setComposeDraftId(null);
-      showToast(t('发布成功！知识星球节点已生成', 'Published! Knowledge Planet node created'));
+      showToast(t('发布成功！知识宇宙节点已生成', 'Published! Knowledge Universe node created'));
     } else if (ctx === 'repost') {
       showToast(t('转发成功！子节点已创建', 'Reposted! Child node created'));
     } else if (ctx === 'interaction') {
@@ -575,7 +609,7 @@ export default function App() {
     setComposeOpen(false);
     setComposeDraftId(null);
     showToast(data.isNode
-      ? t('发布成功！知识星球节点已生成', 'Published! Knowledge Planet node created')
+      ? t('发布成功！知识宇宙节点已生成', 'Published! Knowledge Universe node created')
       : t('发布成功！帖子已公开', 'Published! Your post is now public')
     );
   };
@@ -602,6 +636,9 @@ export default function App() {
     openManageChannel, closeManageChannel,
     supBalance, supHistory, deductSup,
     walletConnected, connectWallet, requireWallet,
+    walletAddress, walletConnecting, disconnectWallet,
+    pbBalance, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
+    airdropClaimed, claimAirdrop,
   };
 
 

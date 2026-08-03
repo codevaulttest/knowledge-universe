@@ -79,6 +79,20 @@ export type AppContextValue = {
   connectWallet: () => void;
   // 供无法直接改造成 context action 的本地交互（如私信发送、评论提交）复用同一套连接钱包拦截逻辑
   requireWallet: (action: () => void) => void;
+  // 知识宇宙页：钱包地址态（与 walletConnected 同步维护）+ 断开钱包
+  walletAddress: string | null;
+  walletConnecting: boolean;
+  disconnectWallet: () => void;
+  // 知识宇宙页：账户级 PB 余额（与 supBalance 平行的另一种代币余额）
+  pbBalance: number;
+  // 知识宇宙页：邀请码绑定
+  myInviteCode: string;
+  /** 已绑定邀请人的钱包地址；未绑定为 null */
+  inviterAddress: string | null;
+  bindInviter: (code: string) => { ok: boolean; message: string };
+  // 知识宇宙页：周期性 PB 空投
+  airdropClaimed: boolean;
+  claimAirdrop: () => void;
 };
 
 
