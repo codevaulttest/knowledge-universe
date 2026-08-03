@@ -1,17 +1,64 @@
-import { CircleCheckBig, CircleSlash, Info, Megaphone } from 'lucide-react';
+import { ChevronRight, Crown, Info, Megaphone, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { bspRemainingDays, type BspInvestment } from '../bspConfig';
 import { shortenAddress } from '../formatAddress';
-import { formatTokenAmount } from '../stakeConfig';
+
+export function BspRecordSummary({
+  investments,
+  onOpen,
+  onOpenInvest,
+}: {
+  investments: BspInvestment[];
+  onOpen: () => void;
+  onOpenInvest: () => void;
+}) {
+  const { t } = useApp();
+  const activeInvestmentCount = investments.filter(
+    investment => investment.status === 'paid' && bspRemainingDays(investment.endDate) > 0,
+  ).length;
+  const hasRecords = investments.length > 0;
+
+  return (
+    <div className="planet-section bsp-record-summary-section">
+      <button
+        type="button"
+        className="planet-node-card bsp-record-summary"
+        onClick={hasRecords ? onOpen : onOpenInvest}
+        aria-label={hasRecords ? t('查看全部投流记录', 'View all investments') : t('开始 BSP 巨星投流', 'Start BSP investment')}
+      >
+        <span className="bsp-record-summary-icon" aria-hidden>
+          <Crown size={20} strokeWidth={2} />
+        </span>
+        <span className="bsp-record-summary-content">
+          <span className="bsp-record-summary-title">{t('我的投流记录', 'My Investments')}</span>
+          <span className="bsp-record-summary-meta">
+            {hasRecords
+              ? t(
+                  `${activeInvestmentCount} 笔进行中 · 点击查看投流历史`,
+                  `${activeInvestmentCount} active · View investment history`,
+                )
+              : t('暂无记录，点击开始投放', 'No records yet — tap to invest')}
+          </span>
+        </span>
+        <span className="bsp-record-summary-action">
+          {t(hasRecords ? '查看全部' : '去投放', hasRecords ? 'View all' : 'Invest')}
+          <ChevronRight size={16} strokeWidth={2.2} aria-hidden />
+        </span>
+      </button>
+    </div>
+  );
+}
 
 export function BspRecordList({
   investments,
   onOpenRules,
   onOpenInvest,
+  onClose,
 }: {
   investments: BspInvestment[];
   onOpenRules: () => void;
   onOpenInvest: () => void;
+  onClose: () => void;
 }) {
   const { t } = useApp();
 
@@ -23,6 +70,9 @@ export function BspRecordList({
         <button type="button" className="planet-node-transfer-entry" onClick={onOpenRules}>
           <Info size={13} strokeWidth={2.2} aria-hidden />
           {t('保底说明', 'Floor rules')}
+        </button>
+        <button type="button" className="back-btn" onClick={onClose} aria-label={t('关闭', 'Close')}>
+          <X size={18} strokeWidth={2} />
         </button>
       </div>
 
@@ -51,8 +101,11 @@ export function BspRecordList({
 function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
   const { t } = useApp();
   const remaining = bspRemainingDays(inv.endDate);
-  const guarantee = inv.units * 3;
-  const settlement = inv.lastSettlement;
+  const paymentStatus = inv.status === 'paid'
+    ? t('支付成功', 'Paid')
+    : t('待支付', 'Pending');
+  const paidPb = inv.paidPb.toLocaleString();
+  const paidSup = inv.paidSup.toLocaleString();
 
   return (
     <div className="planet-node-card planet-node-card--tagged bsp-record-card">
@@ -69,7 +122,7 @@ function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
       )}
 
       <span className="bsp-record-headline">
-        {t(`${inv.units.toLocaleString()} 个单位 · ${formatTokenAmount(inv.paidPb)} PB`, `${inv.units.toLocaleString()} units · ${formatTokenAmount(inv.paidPb)} PB`)}
+        {t(`${inv.units.toLocaleString()} 个单位 · ${paidPb} PB`, `${inv.units.toLocaleString()} units · ${paidPb} PB`)}
       </span>
 
       <span className="bsp-record-target">
@@ -78,55 +131,22 @@ function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
           : t(`投给 ${shortenAddress(inv.beneficiaryAddress)}`, `For ${shortenAddress(inv.beneficiaryAddress)}`)}
       </span>
 
+      <div className="bsp-record-payment">
+        <span>{t(`支付 ${paidPb} PB + ${paidSup} SUP`, `Paid ${paidPb} PB + ${paidSup} SUP`)}</span>
+        <span className={`bsp-record-payment-status${inv.status === 'paid' ? ' bsp-record-payment-status--paid' : ''}`}>
+          {paymentStatus}
+        </span>
+      </div>
+
+      <span className="bsp-record-created-at">
+        {t(`支付时间 ${inv.createdAt}`, `Paid at ${inv.createdAt}`)}
+      </span>
+
       <div className="bsp-record-period">
         <span>{t(`生效期 ${inv.startDate} → ${inv.endDate}`, `Active ${inv.startDate} → ${inv.endDate}`)}</span>
         <span className="planet-section-badge">{t(`剩余 ${remaining} 天`, `${remaining}d left`)}</span>
       </div>
 
-      <div className="bsp-record-guarantee">
-        {t('每日打赏保底 ', 'Daily floor ')}
-        <b>{formatTokenAmount(guarantee)} PB</b>
-      </div>
-
-      {settlement && (
-        <div className="bsp-record-settle">
-          <div className="bsp-record-settle-title">
-            {t(`昨日结算（${settlement.date}）`, `Yesterday's settlement (${settlement.date})`)}
-          </div>
-          <div className="planet-upgrade-row">
-            <span className="planet-upgrade-row-label">{t('发帖状态', 'Post status')}</span>
-            {settlement.posted ? (
-              <span className="bsp-record-posted">
-                <CircleCheckBig size={14} strokeWidth={2.2} aria-hidden />
-                {t('已发帖', 'Posted')}
-              </span>
-            ) : (
-              <span className="bsp-record-posted bsp-record-posted--missed">
-                <CircleSlash size={14} strokeWidth={2.2} aria-hidden />
-                {t('未发帖 · 当日无保底', 'No post — no floor that day')}
-              </span>
-            )}
-          </div>
-          <div className="planet-upgrade-row">
-            <span className="planet-upgrade-row-label">{t('实得打赏', 'Tips received')}</span>
-            <span className="planet-upgrade-row-value">{formatTokenAmount(settlement.tipsNet)} PB</span>
-          </div>
-          <div className="planet-upgrade-row">
-            <span className="planet-upgrade-row-label">{t('系统补贴', 'System top-up')}</span>
-            {settlement.topUp > 0 ? (
-              <span className="bsp-record-topup">+{formatTokenAmount(settlement.topUp)} PB</span>
-            ) : settlement.posted ? (
-              <span className="planet-upgrade-row-value">{t('已超保底，无需补贴', 'Above the floor')}</span>
-            ) : (
-              <span className="planet-upgrade-row-value">{t('无保底', 'No floor')}</span>
-            )}
-          </div>
-          <div className="planet-upgrade-row">
-            <span className="planet-upgrade-row-label">{t('当日合计', 'Day total')}</span>
-            <span className="planet-upgrade-row-value">{formatTokenAmount(settlement.tipsNet + settlement.topUp)} PB</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

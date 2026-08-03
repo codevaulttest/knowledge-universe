@@ -5,13 +5,12 @@ import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { AssetOverviewCard } from '../components/AssetOverviewCard';
 import { PlanetAnnouncementBanner } from '../components/PlanetAnnouncementBanner';
 import { BspInvestSheet } from '../components/BspInvestSheet';
-import { BspRecordList } from '../components/BspRecordList';
+import { BspRecordList, BspRecordSummary } from '../components/BspRecordList';
 import { BspRulesSheet } from '../components/BspRulesSheet';
 import { PageHeader, PullToRefresh } from '../components/shared';
 import { CURRENT_USER, MOCK_WALLET_ADDRESS } from '../mockData';
 import { SUP_COST_BY_TIER, formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import { bspPbCost, bspSupCost, bspEffectivePeriod, type BspInvestment } from '../bspConfig';
-import { dayKey } from '../checkInConfig';
 
 // 面额（PB）：仅 1000 档支持五星升级；100 / 10 档不支持升级
 type NodeTier = 10 | 100 | 1000;
@@ -185,10 +184,9 @@ const TRANSFER_PRICE_BY_STAR: Record<number, number> = { 1: 100, 2: 300, 3: 600,
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** BSP 巨星投流种子数据：覆盖「补贴差额」「超保底不补」「未发帖无保底」三种形态 */
+/** BSP 巨星投流种子数据：展示多笔投流的交易历史。 */
 function buildInitialBspInvestments(myAddress: string): BspInvestment[] {
   const now = new Date();
-  const yesterday = dayKey(new Date(now.getTime() - DAY_MS));
   const period1 = bspEffectivePeriod(new Date(now.getTime() - 30 * DAY_MS));
   const period2 = bspEffectivePeriod(new Date(now.getTime() - 5 * DAY_MS));
   const period3 = bspEffectivePeriod(new Date(now.getTime() - 350 * DAY_MS));
@@ -205,7 +203,6 @@ function buildInitialBspInvestments(myAddress: string): BspInvestment[] {
       startDate: period1.startDate,
       endDate: period1.endDate,
       status: 'paid',
-      lastSettlement: { date: yesterday, posted: true, tipsGross: 10000, tipsNet: 8000, topUp: 22000 },
     },
     {
       id: 'bsp2',
@@ -219,7 +216,6 @@ function buildInitialBspInvestments(myAddress: string): BspInvestment[] {
       startDate: period2.startDate,
       endDate: period2.endDate,
       status: 'paid',
-      lastSettlement: { date: yesterday, posted: true, tipsGross: 100000, tipsNet: 80000, topUp: 0 },
     },
     {
       id: 'bsp3',
@@ -233,7 +229,6 @@ function buildInitialBspInvestments(myAddress: string): BspInvestment[] {
       startDate: period3.startDate,
       endDate: period3.endDate,
       status: 'paid',
-      lastSettlement: { date: yesterday, posted: false, tipsGross: 120, tipsNet: 96, topUp: 0 },
     },
   ];
 }
@@ -324,6 +319,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
   const [bspRecords, setBspRecords] = useState<BspInvestment[]>(() => buildInitialBspInvestments(MOCK_WALLET_ADDRESS));
   const [bspSheetOpen, setBspSheetOpen] = useState(false);
   const [bspRulesOpen, setBspRulesOpen] = useState(false);
+  const [bspRecordsOpen, setBspRecordsOpen] = useState(false);
   const [availableSerials, setAvailableSerials] = useState<Record<NodeOrigin, number[]>>(INITIAL_AVAILABLE_SERIALS);
   const [nodeSearch, setNodeSearch] = useState(initialSearch ?? '');
   const [starFilter, setStarFilter] = useState<number | null>(null);
@@ -803,10 +799,10 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
           ) : (
           <>
 
-          {/* ── BSP 巨星投流：我的投流记录 ── */}
-          <BspRecordList
+          {/* ── BSP 巨星投流：交易历史摘要，完整记录收进底部弹层 ── */}
+          <BspRecordSummary
             investments={bspRecords}
-            onOpenRules={() => setBspRulesOpen(true)}
+            onOpen={() => setBspRecordsOpen(true)}
             onOpenInvest={handleOpenBsp}
           />
 
@@ -1584,6 +1580,29 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
           onClose={() => setBspSheetOpen(false)}
           onConfirmed={record => setBspRecords(prev => [record, ...prev])}
         />
+      )}
+
+      {/* ── BSP 巨星投流：完整投流记录底部弹层 ── */}
+      {bspRecordsOpen && (
+        <div className="sheet-backdrop sheet-backdrop--bottom" onClick={() => setBspRecordsOpen(false)}>
+          <div
+            className="payment-sheet bsp-record-list-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('我的投流记录', 'My Investments')}
+            onClick={event => event.stopPropagation()}
+          >
+            <BspRecordList
+              investments={bspRecords}
+              onOpenRules={() => setBspRulesOpen(true)}
+              onOpenInvest={() => {
+                setBspRecordsOpen(false);
+                handleOpenBsp();
+              }}
+              onClose={() => setBspRecordsOpen(false)}
+            />
+          </div>
+        </div>
       )}
 
       {/* ── BSP 巨星投流：保底规则说明 ── */}
