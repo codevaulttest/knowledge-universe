@@ -9447,11 +9447,7 @@ button {
 }
 
 .bsp-record-list-sheet .planet-section-header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   padding-bottom: var(--ku-planet2-space-xs);
-  background: var(--ku-color-bg-phone);
 }
 
 /* 数量输入：与 .create-qty-value 同盒模型/字号，只重置 input 差量
@@ -9503,7 +9499,6 @@ button {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
   color: var(--ku-color-text-secondary);
 }
 
@@ -9512,8 +9507,17 @@ button {
   flex-direction: column;
   align-items: flex-start;
   gap: var(--ku-planet2-space-xs);
-  font-size: 14px;
   color: var(--ku-color-text-meta);
+}
+
+.bsp-record-target,
+.bsp-record-payment,
+.bsp-record-created-at,
+.bsp-record-period,
+.bsp-record-period-remaining,
+.bsp-record-payment-status {
+  font: var(--ku-text-body-sm);
+  font-weight: 400;
 }
 
 .bsp-record-period-dates,
@@ -9527,7 +9531,6 @@ button {
   justify-content: space-between;
   gap: var(--ku-planet2-space-sm);
   color: var(--ku-color-text-meta);
-  font: var(--ku-text-meta);
 }
 
 .bsp-record-payment-status {
@@ -9540,7 +9543,6 @@ button {
 
 .bsp-record-created-at {
   color: var(--ku-color-text-meta);
-  font: var(--ku-text-meta);
 }
 
 .planet-create-sheet .planet-confirm-btn {

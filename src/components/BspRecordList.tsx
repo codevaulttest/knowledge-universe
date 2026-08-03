@@ -122,7 +122,7 @@ function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
       )}
 
       <span className="bsp-record-headline">
-        {t(`${inv.units.toLocaleString()} 个单位 · ${paidPb} PB`, `${inv.units.toLocaleString()} units · ${paidPb} PB`)}
+        {t(`本次投流 ${paidPb} PB`, `Investment ${paidPb} PB`)}
       </span>
 
       <span className="bsp-record-target">
@@ -132,7 +132,7 @@ function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
       </span>
 
       <div className="bsp-record-payment">
-        <span>{t(`支付 ${paidPb} PB + ${paidSup} SUP`, `Paid ${paidPb} PB + ${paidSup} SUP`)}</span>
+        <span>{t(`共 ${inv.units.toLocaleString()} 份 · Gas 费 ${paidSup} SUP`, `${inv.units.toLocaleString()} units · Gas ${paidSup} SUP`)}</span>
         <span className={`bsp-record-payment-status${inv.status === 'paid' ? ' bsp-record-payment-status--paid' : ''}`}>
           {paymentStatus}
         </span>
