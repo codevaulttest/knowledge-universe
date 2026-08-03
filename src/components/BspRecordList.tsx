@@ -1,4 +1,4 @@
-import { ChevronRight, Crown, Info, Megaphone, X } from 'lucide-react';
+import { ChevronRight, Crown, Info, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { bspRemainingDays, type BspInvestment } from '../bspConfig';
 import { shortenAddress } from '../formatAddress';
@@ -78,7 +78,7 @@ export function BspRecordList({
 
       {investments.length === 0 ? (
         <div className="planet-nodes-empty" data-layer="bsp-empty">
-          <Megaphone width={40} height={40} strokeWidth={1.5} className="planet-nodes-empty-icon" />
+          <Crown width={40} height={40} strokeWidth={1.5} className="planet-nodes-empty-icon" />
           <span className="planet-nodes-empty-title">{t('还没有投流记录', 'No investments yet')}</span>
           <p className="planet-nodes-empty-text">
             {t('点击「BSP 巨星投流」开始你的第一笔投放', 'Tap "BSP Big Star Plan" to make your first one')}
@@ -111,12 +111,12 @@ function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
     <div className="planet-node-card planet-node-card--tagged bsp-record-card">
       {inv.beneficiaryKind === 'self' ? (
         <span className="planet-node-origin-tag planet-node-origin-tag--bsp-self">
-          <Megaphone size={12} strokeWidth={2.5} aria-hidden />
+          <Crown size={12} strokeWidth={2.5} aria-hidden />
           {t('自投', 'Self')}
         </span>
       ) : (
         <span className="planet-node-origin-tag planet-node-origin-tag--bsp-proxy">
-          <Megaphone size={12} strokeWidth={2.5} aria-hidden />
+          <Crown size={12} strokeWidth={2.5} aria-hidden />
           {t('代投', 'For others')}
         </span>
       )}
@@ -143,8 +143,8 @@ function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
       </span>
 
       <div className="bsp-record-period">
-        <span>{t(`生效期 ${inv.startDate} → ${inv.endDate}`, `Active ${inv.startDate} → ${inv.endDate}`)}</span>
-        <span className="planet-section-badge">{t(`剩余 ${remaining} 天`, `${remaining}d left`)}</span>
+        <span className="bsp-record-period-dates">{t(`生效期 ${inv.startDate} → ${inv.endDate}`, `Active ${inv.startDate} → ${inv.endDate}`)}</span>
+        <span className="planet-section-badge bsp-record-period-remaining">{t(`剩余 ${remaining} 天`, `${remaining}d left`)}</span>
       </div>
 
     </div>

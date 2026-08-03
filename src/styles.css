@@ -9509,11 +9509,16 @@ button {
 
 .bsp-record-period {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--ku-planet2-space-xs);
   font-size: 14px;
   color: var(--ku-color-text-meta);
+}
+
+.bsp-record-period-dates,
+.bsp-record-period-remaining {
+  white-space: nowrap;
 }
 
 .bsp-record-payment {
