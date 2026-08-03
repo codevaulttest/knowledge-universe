@@ -6993,6 +6993,10 @@ button {
   color: var(--ku-color-text-primary);
 }
 
+.bsp-rules-close {
+  margin-left: auto;
+}
+
 .asset-overview-balance {
   font-family: var(--ku-font-mono);
   font-size: 16px;
@@ -7107,7 +7111,7 @@ button {
   gap: 4px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--ku-color-success-text);
+  color: var(--ku-color-text-meta);
   background: var(--ku-color-border-cell);
   padding: 3px 10px;
   border-radius: var(--ku-planet2-radius-pill);
@@ -7134,7 +7138,8 @@ button {
 
 .asset-overview-claim-btn--done,
 .asset-overview-claim-btn:disabled {
-  background: var(--ku-planet2-color-primary-disabled);
+  background: var(--ku-planet2-color-claim-disabled);
+  color: var(--ku-color-on-primary);
   box-shadow: none;
   cursor: not-allowed;
 }
@@ -8646,7 +8651,7 @@ button {
 .stake-tier-row {
   display: flex;
   gap: var(--ku-planet2-space-xs);
-  padding: 0 var(--ku-planet2-space-base) var(--ku-planet2-space-sm);
+  padding: 0 0 var(--ku-planet2-space-sm);
 }
 
 .stake-tier-btn {
@@ -8695,7 +8700,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 0 var(--ku-planet2-space-base) var(--ku-planet2-space-sm);
+  padding: 0 0 var(--ku-planet2-space-sm);
 }
 
 .stake-code-label-row {
@@ -9008,7 +9013,7 @@ button {
 }
 
 .create-quota-bar {
-  margin: 0 var(--ku-planet2-space-base) var(--ku-planet2-space-md);
+  margin: 0 0 var(--ku-planet2-space-md);
   padding: 12px;
   border-radius: var(--ku-radius-card);
   background: var(--ku-color-bg-page);
@@ -9090,7 +9095,7 @@ button {
 .create-pay-options {
   display: flex;
   flex-direction: column;
-  margin: 0 var(--ku-planet2-space-base) var(--ku-planet2-space-md);
+  margin: 0 0 var(--ku-planet2-space-md);
 }
 
 .create-pay-option {
@@ -9221,7 +9226,7 @@ button {
 .create-star-packs {
   display: flex;
   flex-direction: column;
-  margin: 0 var(--ku-planet2-space-base) var(--ku-planet2-space-md);
+  margin: 0 0 var(--ku-planet2-space-md);
 }
 
 .create-star-pack {
@@ -9280,7 +9285,7 @@ button {
 .create-preview-bar {
   display: flex;
   flex-direction: column;
-  margin: 0 var(--ku-planet2-space-base) var(--ku-planet2-space-md);
+  margin: 0 0 var(--ku-planet2-space-md);
   padding: 12px;
   border-radius: var(--ku-radius-card);
   background: var(--ku-color-bg-page);
@@ -9322,7 +9327,7 @@ button {
 .create-confirm-card {
   display: flex;
   flex-direction: column;
-  margin: 0 var(--ku-planet2-space-base) var(--ku-planet2-space-md);
+  margin: 0 0 var(--ku-planet2-space-md);
   padding: 14px;
   border: 1px solid var(--ku-color-border-card);
   border-radius: var(--ku-radius-card);
@@ -9361,7 +9366,7 @@ button {
 .create-delay-note {
   display: flex;
   align-items: flex-start;
-  margin: 0 var(--ku-planet2-space-base) var(--ku-planet2-space-md);
+  margin: 0 0 var(--ku-planet2-space-md);
   padding: 10px 12px;
   border-radius: var(--ku-radius-card);
   background: color-mix(in srgb, var(--ku-color-primary) 8%, var(--ku-color-bg-phone));
@@ -9469,6 +9474,7 @@ button {
 }
 
 .bsp-qty-unit {
+  margin-left: var(--ku-planet2-space-base);
   font-size: 14px;
   color: var(--ku-color-text-meta);
 }
@@ -9512,16 +9518,15 @@ button {
 
 .bsp-record-target,
 .bsp-record-payment,
+.bsp-record-gas,
 .bsp-record-created-at,
 .bsp-record-period,
-.bsp-record-period-remaining,
 .bsp-record-payment-status {
   font: var(--ku-text-body-sm);
   font-weight: 400;
 }
 
-.bsp-record-period-dates,
-.bsp-record-period-remaining {
+.bsp-record-period-dates {
   white-space: nowrap;
 }
 
@@ -9530,6 +9535,14 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: var(--ku-planet2-space-sm);
+  color: var(--ku-color-text-meta);
+}
+
+.bsp-record-payment--status-only {
+  justify-content: flex-end;
+}
+
+.bsp-record-gas {
   color: var(--ku-color-text-meta);
 }
 
@@ -9548,6 +9561,7 @@ button {
 .planet-create-sheet .planet-confirm-btn {
   margin-top: 0;
 }
+
 
 /* ── 页顶插画 hero：星云插画 + 产品名，钱包 chip 悬于左上角，随 .planet-content 一起滚动
    （对齐 genesis-node-diamond TopHero 的视觉：钱包 chip 左上角 + 大号产品名 + 公告横幅叠压在

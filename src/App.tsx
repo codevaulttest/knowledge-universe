@@ -48,11 +48,11 @@ export default function App() {
   const [checkInPreview, setCheckInPreview] = useState<ClaimPreview | null>(null);
   const [checkInClaimable, setCheckInClaimable] = useState(false);
 
-  // 游客模式：默认未连接钱包，可浏览帖子；触发需要身份/资产/链上能力的操作时先弹窗确认再连接
-  const [walletConnected, setWalletConnected] = useState(false);
+  // 演示默认使用已连接的钱包；断开后仍可作为游客浏览帖子。
+  const [walletConnected, setWalletConnected] = useState(true);
   const [showConnectWallet, setShowConnectWallet] = useState(false);
   // 知识宇宙页用的钱包地址态，与 walletConnected 同步维护，供该页头部的钱包 chip 展示
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(MOCK_WALLET_ADDRESS);
   const [walletConnecting, setWalletConnecting] = useState(false);
 
   // 显式的"连接钱包"入口（顶部快捷按钮、主页引导按钮）直接连接，无需二次确认；

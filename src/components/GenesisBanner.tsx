@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ArrowRight, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 
-const DISMISS_KEY = 'ku-genesis-banner-dismissed';
+const DISMISS_KEY = 'ku-bsp-superstar-banner-dismissed';
 
 export function GenesisBanner() {
   const { t, showToast } = useApp();
@@ -13,7 +13,7 @@ export function GenesisBanner() {
   if (dismissed) return null;
 
   const handleEnter = () => {
-    showToast(t('跳转“知识宇宙·创世节点 DApp”', 'Opening "Knowledge Universe · Genesis Node" DApp'), 'demo');
+    showToast(t('打开“BSP 巨星投流计划”', 'Opening "BSP Big Star Plan"'), 'demo');
   };
 
   const handleDismiss = (e: React.MouseEvent) => {
@@ -28,18 +28,18 @@ export function GenesisBanner() {
       className="genesis-banner"
       data-layer="genesis-banner"
       onClick={handleEnter}
-      aria-label={t('进入知识宇宙·创世节点', 'Open Knowledge Universe · Genesis Node')}
+      aria-label={t('进入 BSP 巨星投流计划', 'Open BSP Big Star Plan')}
     >
-      <img className="genesis-banner-bg" src="/img/genesis-bigbang.webp" alt="" aria-hidden="true" />
+      <img className="genesis-banner-bg" src="/img/bsp-superstar-banner.webp" alt="" aria-hidden="true" />
       <span className="genesis-banner-content">
         <span className="genesis-banner-eyebrow">{t('全新上线', 'Now Live')}</span>
-        <span className="genesis-banner-title">{t('知识宇宙·创世节点', 'Genesis Node')}</span>
+        <span className="genesis-banner-title">{t('BSP 巨星投流计划', 'BSP Big Star Plan')}</span>
         <span className="genesis-banner-sub">
-          {t('全球限量发售', 'Limited worldwide supply')}
-          <span className="genesis-banner-scarcity-left">{t('· 抢完即止', '· gone once claimed')}</span>
+          {t('投流支持创作者', 'Back creators with traffic')}
+          <span className="genesis-banner-scarcity-left">{t('· 365 天长期扶持', '· 365-day support')}</span>
         </span>
         <span className="genesis-banner-cta">
-          {t('立即抢占', 'Claim now')}
+          {t('立即投流', 'Invest now')}
           <ArrowRight size={14} strokeWidth={2.4} />
         </span>
       </span>

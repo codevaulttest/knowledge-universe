@@ -6,6 +6,7 @@ import type { Channel, Post, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { GenesisBanner } from '../components/GenesisBanner';
 import { Avatar } from '../components/shared';
+import { DevPanel } from '../components/DevPanel';
 
 type FeedEntry = { post: Post; repostedBy?: RepostedBy };
 
@@ -261,6 +262,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
         {tab === 1 && <FollowFeed followedAuthors={followedAuthors} />}
         {tab === 2 && <ChannelDiscoverFeed />}
       </div>
+      <DevPanel />
     </>
   );
 }

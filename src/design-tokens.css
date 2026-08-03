@@ -344,6 +344,7 @@
         一律直接复用（见各行注释），只有确无对应语义时才新增。
      ═══════════════════════════════════════════════════ */
   --ku-planet2-color-primary-disabled: rgba(0, 205, 184, 0.35);
+  --ku-planet2-color-claim-disabled:   #a8b8cc; /* 对齐 genesis-node-diamond 的空投领取禁用态 */
   --ku-planet2-color-muted-soft:       #a8acb3;
   --ku-planet2-color-surface-dark:     #0a0b0d;   /* 深色 hero / 高对比卡片背景 */
   --ku-planet2-color-surface-dark-elevated: #16181c;

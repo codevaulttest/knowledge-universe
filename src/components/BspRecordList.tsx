@@ -1,6 +1,6 @@
 import { ChevronRight, Crown, Info, X } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { bspRemainingDays, type BspInvestment } from '../bspConfig';
+import { BSP_UNIT_PB, bspRemainingDays, type BspInvestment } from '../bspConfig';
 import { shortenAddress } from '../formatAddress';
 
 export function BspRecordSummary({
@@ -34,8 +34,8 @@ export function BspRecordSummary({
           <span className="bsp-record-summary-meta">
             {hasRecords
               ? t(
-                  `${activeInvestmentCount} 笔进行中 · 点击查看投流历史`,
-                  `${activeInvestmentCount} active · View investment history`,
+                  `${activeInvestmentCount} 笔进行中`,
+                  `${activeInvestmentCount} active`,
                 )
               : t('暂无记录，点击开始投放', 'No records yet — tap to invest')}
           </span>
@@ -100,7 +100,6 @@ export function BspRecordList({
 
 function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
   const { t } = useApp();
-  const remaining = bspRemainingDays(inv.endDate);
   const paymentStatus = inv.status === 'paid'
     ? t('支付成功', 'Paid')
     : t('待支付', 'Pending');
@@ -131,12 +130,13 @@ function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
           : t(`投给 ${shortenAddress(inv.beneficiaryAddress)}`, `For ${shortenAddress(inv.beneficiaryAddress)}`)}
       </span>
 
-      <div className="bsp-record-payment">
-        <span>{t(`共 ${inv.units.toLocaleString()} 份 · Gas 费 ${paidSup} SUP`, `${inv.units.toLocaleString()} units · Gas ${paidSup} SUP`)}</span>
+      <div className="bsp-record-payment bsp-record-payment--status-only">
         <span className={`bsp-record-payment-status${inv.status === 'paid' ? ' bsp-record-payment-status--paid' : ''}`}>
           {paymentStatus}
         </span>
       </div>
+
+      <span className="bsp-record-gas">{t(`Gas 费 ${paidSup} SUP`, `Gas ${paidSup} SUP`)}</span>
 
       <span className="bsp-record-created-at">
         {t(`支付时间 ${inv.createdAt}`, `Paid at ${inv.createdAt}`)}
@@ -144,7 +144,6 @@ function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
 
       <div className="bsp-record-period">
         <span className="bsp-record-period-dates">{t(`生效期 ${inv.startDate} → ${inv.endDate}`, `Active ${inv.startDate} → ${inv.endDate}`)}</span>
-        <span className="planet-section-badge bsp-record-period-remaining">{t(`剩余 ${remaining} 天`, `${remaining}d left`)}</span>
       </div>
 
     </div>

@@ -265,9 +265,6 @@ export function BspInvestSheet({
               <Plus size={18} strokeWidth={2} />
             </button>
             <span className="bsp-qty-unit">{t('× 1000 PB', '× 1,000 PB')}</span>
-            <span className="create-qty-cap">
-              {t('1 个单位 = 1000 PB + 0.1 SUP，最多 5 位数（99999）', '1 unit = 1,000 PB + 0.1 SUP · up to 5 digits (99,999)')}
-            </span>
           </div>
         </div>
 
@@ -321,8 +318,8 @@ export function BspInvestSheet({
           <Info size={14} strokeWidth={2} aria-hidden />
           <span>
             {t(
-              '次日凌晨生效。受益人当天需至少发布 1 篇内容，才触发当日保底。',
-              "Takes effect at midnight tonight. The beneficiary must publish at least one post that day to trigger that day's floor."
+              '受益人当天需至少发布 1 篇内容，才触发当日保底。',
+              'The beneficiary must publish at least one post that day to trigger the floor.'
             )}
           </span>
         </div>

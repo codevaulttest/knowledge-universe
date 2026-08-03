@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Crown, Gem, Info, Loader2, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, Wrench, X } from 'lucide-react';
+import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Crown, Gem, Info, Loader2, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { AssetOverviewCard } from '../components/AssetOverviewCard';
@@ -7,6 +7,7 @@ import { PlanetAnnouncementBanner } from '../components/PlanetAnnouncementBanner
 import { BspInvestSheet } from '../components/BspInvestSheet';
 import { BspRecordList, BspRecordSummary } from '../components/BspRecordList';
 import { BspRulesSheet } from '../components/BspRulesSheet';
+import { DevPanel } from '../components/DevPanel';
 import { PageHeader, PullToRefresh } from '../components/shared';
 import { CURRENT_USER, MOCK_WALLET_ADDRESS } from '../mockData';
 import { SUP_COST_BY_TIER, formatSupAmount, formatTokenAmount } from '../stakeConfig';
@@ -346,8 +347,6 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
   const [creating, setCreating] = useState(false);
   const [devForceEmptyNodes, setDevForceEmptyNodes] = useState(false);
   const [devBspInsufficient, setDevBspInsufficient] = useState(false);
-  const [devMenuOpen, setDevMenuOpen] = useState(false);
-  const [devPanelHidden, setDevPanelHidden] = useState(false);
   const [serialSheetOrigin, setSerialSheetOrigin] = useState<NodeOrigin | null>(null);
   const [childInfoOpen, setChildInfoOpen] = useState(false);
   const [childListNode, setChildListNode] = useState<KnowledgeNode | null>(null);
@@ -2122,32 +2121,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
         </div>
       )}
 
-      {/* ── Dev entry (half pill) ──
-          DEV 按钮点击只负责开合调试菜单；菜单内单独的关闭按钮才会整体隐藏面板，刷新页面后重新出现 ── */}
-      {!devPanelHidden && (
-      <div className="planet-dev-entry" data-layer="dev-entry">
-        {devMenuOpen && (
-          <button
-            type="button"
-            className="planet-dev-backdrop"
-            aria-hidden
-            tabIndex={-1}
-            onClick={() => setDevMenuOpen(false)}
-          />
-        )}
-        {devMenuOpen && (
-          <div className="planet-dev-menu" role="menu">
-            <div className="planet-dev-menu-header">
-              <span className="planet-dev-menu-title">{t('开发工具', 'Developer tools')}</span>
-              <button
-                type="button"
-                className="planet-dev-menu-close"
-                aria-label={t('关闭开发工具（刷新页面后重新出现）', 'Close developer tools (reappears after page refresh)')}
-                onClick={() => { setDevMenuOpen(false); setDevPanelHidden(true); }}
-              >
-                <X size={14} strokeWidth={2.5} aria-hidden="true" />
-              </button>
-            </div>
+      <DevPanel>
             <button
               type="button"
               className="planet-dev-menu-item"
@@ -2172,21 +2146,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 {devBspInsufficient ? t('开', 'On') : t('关', 'Off')}
               </span>
             </button>
-          </div>
-        )}
-        <button
-          type="button"
-          className="planet-dev-pill"
-          aria-expanded={devMenuOpen}
-          aria-haspopup="menu"
-          aria-label={t('开发工具', 'Developer tools')}
-          onClick={() => setDevMenuOpen(v => !v)}
-        >
-          <Wrench size={14} strokeWidth={2} aria-hidden="true" />
-          <span>DEV</span>
-        </button>
-      </div>
-      )}
+      </DevPanel>
     </div>
   );
 }
