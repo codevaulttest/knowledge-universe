@@ -9135,7 +9135,7 @@ button {
   gap: 6px;
   padding: 8px 10px 8px 14px;
   border-radius: var(--ku-planet2-radius-pill) 0 0 var(--ku-planet2-radius-pill);
-  background: var(--ku-color-success-text);
+  background: var(--ku-color-dev-pill);
   color: var(--ku-color-on-primary);
   font-size: 14px;
   font-weight: 700;
@@ -9144,7 +9144,7 @@ button {
 }
 
 .planet-dev-pill:active {
-  background: color-mix(in srgb, var(--ku-color-success-text) 85%, var(--ku-color-text-primary));
+  background: color-mix(in srgb, var(--ku-color-dev-pill) 85%, var(--ku-color-text-primary));
 }
 
 

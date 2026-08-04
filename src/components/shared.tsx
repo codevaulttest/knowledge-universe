@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, Crown, FileText, Gem, Link, Lock, RotateCcw, Star, Wallet } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, FileText, Gem, Link, Lock, RotateCcw, Star, Wallet } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { isVerifiedAuthor } from '../mockData';
@@ -31,7 +31,7 @@ export function GenesisBadge({ tier, size = 12 }: { tier: 'silver' | 'gold'; siz
       aria-label={tier === 'gold' ? t('创世节点·金（10000 档）') : t('创世节点·银（1000 档）')}
       title={tier === 'gold' ? t('创世节点·金') : t('创世节点·银')}
     >
-      <Crown size={size} strokeWidth={0} fill="currentColor" />
+      <Gem size={size} strokeWidth={2.4} />
       <span className="genesis-owner-badge-text">{label}</span>
     </span>
   );

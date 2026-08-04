@@ -48,6 +48,7 @@
 
   --ku-color-success-bg:       #d9f7e6;
   --ku-color-success-text:     #137a36;
+  --ku-color-dev-pill:         #19b750;  /* 开发工具入口按钮：亮绿色，独立于 success 语义色 */
   --ku-color-warning-bg:       #fdf3d9;  /* 风险提示条底色（充值网络提醒等） */
   --ku-color-warning-text:     #92600a;
   --ku-color-warning-icon:     #985d00;
@@ -371,7 +372,7 @@
   --ku-planet2-space-xl:  32px;
   --ku-planet2-space-xxl: 48px;
   --ku-planet2-space-section: 96px;
-  --ku-planet2-dev-entry-bottom: 88px;
+  --ku-planet2-dev-entry-bottom: 103px;
 
   --ku-planet2-height-button: 44px;
   --ku-planet2-shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.04);
