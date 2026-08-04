@@ -2221,7 +2221,13 @@ button {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 20px;
+  position: sticky;
+  top: calc(var(--ku-modal-content-padding) * -1);
+  z-index: 1;
+  margin: calc(var(--ku-modal-content-padding) * -1);
+  margin-bottom: var(--ku-modal-content-padding);
+  padding: var(--ku-modal-content-padding);
+  background: var(--ku-color-bg-phone);
 }
 .sheet-title {
   font: 600 15px/1 var(--ku-font-family);
@@ -3466,6 +3472,8 @@ button {
 .gemini-stake-modal {
   width: 100%;
   max-width: var(--ku-modal-width);
+  max-height: var(--ku-modal-max-height);
+  overflow-y: auto;
   background: var(--ku-color-bg-phone);
   border-radius: var(--ku-radius-modal);
   padding: var(--ku-modal-content-padding);
@@ -5813,15 +5821,25 @@ button {
   overflow-y: auto;
   background: var(--ku-color-bg-phone);
   border-radius: var(--ku-radius-modal);
-  padding: 24px 20px 20px;
+  padding: var(--ku-checkin-modal-padding-top) var(--ku-modal-content-padding) var(--ku-modal-content-padding);
   box-shadow: var(--ku-shadow-modal);
   text-align: center;
   animation: ku-checkin-pop 0.24s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .checkin-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
+  flex-shrink: 0;
+}
+
+.checkin-modal-header {
+  position: sticky;
+  top: calc(var(--ku-checkin-modal-padding-top) * -1);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: calc(var(--ku-checkin-modal-padding-top) * -1) calc(var(--ku-modal-content-padding) * -1) var(--ku-modal-content-padding);
+  padding: var(--ku-checkin-modal-padding-top) var(--ku-modal-content-padding) var(--ku-modal-content-padding);
+  background: var(--ku-color-bg-phone);
 }
 
 .checkin-hero {

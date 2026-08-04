@@ -1577,15 +1577,17 @@ export function CheckInModal({
   return (
     <div className="sheet-backdrop" onClick={status === 'idle' ? onClose : undefined}>
       <div className="checkin-modal" role="dialog" aria-modal="true" aria-label={t('每日签到', 'Daily check-in')} onClick={e => e.stopPropagation()}>
-        <button type="button" className="modal-close checkin-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
-          <X size={18} strokeWidth={2} />
-        </button>
+        <div className="checkin-modal-header">
+          <span className="checkin-hero-title">{t('每日签到', 'Daily check-in')}</span>
+          <button type="button" className="modal-close checkin-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
 
         <div className="checkin-hero">
           <div className="checkin-hero-icon" aria-hidden="true">
             <CalendarCheck size={28} strokeWidth={1.9} />
           </div>
-          <span className="checkin-hero-title">{t('每日签到', 'Daily check-in')}</span>
           <span className="checkin-hero-sub">
             {t(`连续签到，免费领${rewardName}`, `Check in daily for free ${rewardName}`)}
           </span>

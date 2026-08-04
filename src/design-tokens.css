@@ -246,6 +246,7 @@
   --ku-modal-compact-width:    280px;
   --ku-modal-screen-padding:   24px;
   --ku-modal-content-padding:  20px;
+  --ku-checkin-modal-padding-top: 24px;
   --ku-modal-max-height:       calc(100vh - 48px);
   --ku-lightbox-lock-icon-size: 28px;
   --ku-lightbox-lock-gap:      12px;
