@@ -18,14 +18,14 @@ export function BspRulesSheet({ onClose }: { onClose: () => void }) {
         <div className="pb-info-sheet-body">
           <p className="pb-info-sheet-para pb-info-sheet-heading">
             {t(
-              'BSP 大明星推广计划：频道推流功能介绍',
+              'BSP 巨星投流计划：频道推流功能介绍',
               'BSP Big Star Promotion Plan: Channel Distribution'
             )}
           </p>
 
           <p className="pb-info-sheet-para">
             {t(
-              '频道推流功能是“BSP 大明星推广计划”中核心的高效引流与曝光工具。该功能旨在通过智能算法与跨平台分发机制，将创作者的频道内容精准投送到目标用户群体的核心信息流中，实现跨越式增长。',
+              '频道推流功能是“BSP 巨星投流计划”中核心的高效引流与曝光工具。该功能旨在通过智能算法与跨平台分发机制，将创作者的频道内容精准投送到目标用户群体的核心信息流中，实现跨越式增长。',
               'Channel Distribution is the Big Star Promotion Plan’s core tool for efficient reach and visibility. Intelligent algorithms and cross-platform distribution deliver a creator’s channel content to the target audience’s main feed for faster growth.'
             )}
           </p>
@@ -66,7 +66,7 @@ export function BspRulesSheet({ onClose }: { onClose: () => void }) {
             <AlertTriangle size={16} strokeWidth={2} aria-hidden="true" />
             <span>
               {t(
-                '作为“大明星推广计划”的流量发动机，频道推流功能将彻底打破自然增长的瓶颈，助力创作者快速构建专属的私域价值阵地。',
+                '作为“巨星投流计划”的流量发动机，频道推流功能将彻底打破自然增长的瓶颈，助力创作者快速构建专属的私域价值阵地。',
                 'As the Big Star Promotion Plan’s traffic engine, Channel Distribution helps creators break through natural-growth limits and build their own high-value audience base.'
               )}
             </span>

@@ -7393,31 +7393,6 @@ button {
   color: var(--ku-color-genesis-gold);
 }
 
-.planet-origin-summary-serial {
-  font-family: var(--ku-font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: var(--ku-planet2-radius-pill);
-}
-
-.planet-origin-summary-serial--genesis {
-  background: color-mix(in srgb, var(--ku-color-primary) 10%, var(--ku-color-bg-phone));
-  color: var(--ku-color-primary);
-}
-
-.planet-origin-summary-serial--diamond {
-  background: color-mix(in srgb, var(--ku-color-genesis-gold) 18%, var(--ku-color-bg-phone));
-  color: color-mix(in srgb, var(--ku-color-genesis-gold) 70%, var(--ku-color-text-primary));
-}
-
-.planet-origin-summary-serial--consumed {
-  background: var(--ku-color-bg-page);
-  color: var(--ku-planet2-color-muted-soft);
-  text-decoration: line-through;
-}
-
 .planet-origin-summary-divider {
   width: 1px;
   align-self: stretch;
@@ -8429,43 +8404,6 @@ button {
   color: var(--ku-color-text-meta);
 }
 
-.planet-serial-sheet-stat {
-  padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base) 0;
-  font-family: var(--ku-font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ku-color-text-meta);
-}
-
-.planet-serial-sheet-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ku-planet2-space-xs);
-  max-height: 50vh;
-  overflow-y: auto;
-  padding: var(--ku-planet2-space-base);
-}
-
-.planet-serial-sheet-cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: calc(100% - var(--ku-planet2-space-base) * 2);
-  height: var(--ku-planet2-height-button);
-  margin: 0 auto calc(var(--ku-planet2-space-base) + env(safe-area-inset-bottom, 0px));
-  border-radius: var(--ku-planet2-radius-pill);
-  background: linear-gradient(135deg, var(--ku-planet2-color-genesis-gold-light) 0%, var(--ku-color-genesis-gold) 100%);
-  color: var(--ku-color-on-primary);
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.planet-serial-sheet-cta:active {
-  filter: brightness(0.96);
-}
-
 /* ── SUP Deposit Sheet ── */
 
 .sup-deposit-body {
@@ -8623,7 +8561,7 @@ button {
 /* ── Create Channel Sheet (质押生成节点) ── */
 
 .planet-pregen-note {
-  margin: var(--ku-planet2-space-base);
+  margin: 0 0 var(--ku-planet2-space-base);
   padding: 10px 12px;
   border-radius: var(--ku-radius-card);
   background: color-mix(in srgb, var(--ku-color-genesis-gold) 12%, var(--ku-color-bg-phone));
@@ -8710,6 +8648,12 @@ button {
   flex-direction: column;
   gap: 6px;
   padding: 0 0 var(--ku-planet2-space-sm);
+}
+
+.stake-code-caption {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ku-color-text-meta);
 }
 
 .stake-code-label-row {
@@ -8972,175 +8916,12 @@ button {
 }
 
 
-/* ── Create Channel 3-step sheet ── */
-
-.create-step-indicator {
-  margin-left: var(--ku-planet2-space-sm);
-  font-family: var(--ku-font-mono);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ku-color-text-meta);
-}
-
-.create-step-dots {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 var(--ku-planet2-space-base) var(--ku-planet2-space-sm);
-}
-
-.create-step-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--ku-planet2-radius-full);
-  background: var(--ku-color-border-card);
-}
-
-.create-step-dot + .create-step-dot {
-  margin-left: 6px;
-}
-
-.create-step-dot--active {
-  width: 16px;
-  border-radius: 3px;
-  background: var(--ku-color-primary);
-}
-
-.create-step-dot--done {
-  background: color-mix(in srgb, var(--ku-color-primary) 45%, var(--ku-color-border-card));
-}
+/* ── Create Channel sheet ── */
 
 .create-step-body {
   display: flex;
   flex-direction: column;
   padding-bottom: var(--ku-planet2-space-base);
-}
-
-.create-quota-bar {
-  margin: 0 0 var(--ku-planet2-space-md);
-  padding: 12px;
-  border-radius: var(--ku-radius-card);
-  background: var(--ku-color-bg-page);
-  border: 1px solid var(--ku-color-border-card);
-}
-
-.create-quota-bar-main {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-}
-
-.create-quota-bar-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ku-color-text-secondary);
-}
-
-.create-quota-bar-count {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--ku-color-text-primary);
-}
-
-.create-quota-bar-serials {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.create-quota-bar-serials > * + * {
-  margin-left: 6px;
-}
-
-.create-quota-bar-serials > *.create-quota-chip {
-  margin-top: 4px;
-  margin-left: 0;
-  margin-right: 6px;
-}
-
-.create-quota-bar-empty,
-.create-quota-bar-more {
-  font-size: 14px;
-  color: var(--ku-color-text-meta);
-}
-
-.create-quota-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: var(--ku-planet2-radius-full);
-  font-size: 14px;
-  font-family: var(--ku-font-mono);
-  font-weight: 600;
-}
-
-.create-quota-chip--genesis {
-  background: color-mix(in srgb, var(--ku-color-primary) 12%, var(--ku-color-bg-phone));
-  color: var(--ku-color-primary);
-}
-
-.create-quota-chip--diamond {
-  background: color-mix(in srgb, var(--ku-color-genesis-gold) 18%, var(--ku-color-bg-phone));
-  color: color-mix(in srgb, var(--ku-color-genesis-gold) 70%, var(--ku-color-text-primary));
-}
-
-.create-quota-bar-link {
-  margin-top: 10px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--ku-color-primary);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.create-pay-options {
-  display: flex;
-  flex-direction: column;
-  margin: 0 0 var(--ku-planet2-space-md);
-}
-
-.create-pay-option {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--ku-color-border-card);
-  border-radius: var(--ku-radius-card);
-  background: var(--ku-color-bg-phone);
-  text-align: left;
-  cursor: pointer;
-}
-
-.create-pay-option + .create-pay-option {
-  margin-top: 8px;
-}
-
-.create-pay-option--active {
-  border-color: var(--ku-color-primary);
-  background: color-mix(in srgb, var(--ku-color-primary) 6%, var(--ku-color-bg-phone));
-  box-shadow: inset 0 0 0 1px var(--ku-color-primary);
-}
-
-.create-pay-option:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.create-pay-option-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--ku-color-text-primary);
-}
-
-.create-pay-option-sub {
-  margin-top: 4px;
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--ku-color-text-meta);
 }
 
 .create-scale-toggle {
@@ -9342,29 +9123,6 @@ button {
   font-size: 14px;
   font-weight: 600;
   color: var(--ku-color-text-meta);
-}
-
-.create-confirm-value {
-  margin-top: 6px;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--ku-color-text-primary);
-}
-
-.create-confirm-channel {
-  margin-top: 6px;
-  font-size: 14px;
-  color: var(--ku-color-text-secondary);
-}
-
-.create-confirm-serials {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-.create-confirm-serials > .create-quota-chip {
-  margin: 0 6px 6px 0;
 }
 
 .create-delay-note {

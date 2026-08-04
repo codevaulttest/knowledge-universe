@@ -123,7 +123,10 @@ export function BspInvestSheet({
       };
       onConfirmed(record);
       showToast(
-        t(`投流成功，共 ${units} 个单位，明日凌晨生效`, `Investment confirmed — ${units} units, effective from midnight`)
+        t(
+          `投流成功，已投放 ${formatTokenAmount(pbCost)} PB，明日 00:00 起为你保底每日 ${formatTokenAmount(dailyGuarantee)} PB`,
+          `Investment confirmed — ${formatTokenAmount(pbCost)} PB invested, guaranteeing ${formatTokenAmount(dailyGuarantee)} PB/day from midnight`
+        )
       );
       setPaying(false);
       onClose();
@@ -151,12 +154,6 @@ export function BspInvestSheet({
           </button>
         </div>
 
-        <p className="stake-hint">
-          {t(
-            '投放 PB 参与巨星计划，为自己或指定创作者换取 1 年流量扶持与每日打赏保底。',
-            'Invest PB in the Big Star Plan to buy 1 year of traffic support and a daily tip floor — for yourself or a creator you choose.'
-          )}
-        </p>
 
         <div className="stake-code-block">
           <div className="stake-code-label-row">
