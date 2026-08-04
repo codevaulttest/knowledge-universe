@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Check, ChevronRight, CircleCheck, Edit3, FileText, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, Plus, Radio, Repeat2, Settings, Trash2, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Check, ChevronRight, CircleCheck, Edit3, FileText, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, Plus, Radio, Repeat2, Settings, ThumbsUp, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
-import type { Channel, ChannelSubscriber, Draft, RepostedBy } from '../types';
+import type { Channel, ChannelSubscriber, Draft, Language, OutgoingTip, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, PageHeader } from '../components/shared';
@@ -11,7 +11,7 @@ import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, PageHeader } from
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, repostedPostIds, unreadActivityCount, t, userProfile, updateUserProfile, channels, subscribedChannelTiers, openChannelSubscribe, openCreateChannel, openManageChannel, requireWallet } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, subscribedChannelTiers, openChannelSubscribe, openCreateChannel, openManageChannel, requireWallet } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   const channel = channels.find(c => c.ownerName === authorName);
@@ -20,6 +20,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   // 我的主页隐藏长文（article）类型的 mock 帖子
   const myPosts = allPosts.filter(p => p.author === authorName && !(isOwn && p.kind === 'article'));
   const savedPosts = allPosts.filter(p => savedPostIds.has(p.id));
+  const likedPosts = allPosts.filter(p => likedPostIds.has(p.id));
   const repostedPosts = allPosts.filter(p => repostedPostIds.has(p.id));
   const firstPost = allPosts.find(p => p.author === authorName);
 
@@ -34,8 +35,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     .filter((p): p is (typeof allPosts)[number] => !!p && p.author !== authorName)
     .map(post => ({ post, repostedBy: { name: authorName, avatarIdx: theirAvatarIdx } }));
 
-  // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 收藏
-  const [profileTab, setProfileTab] = useState<0 | 1 | 2 | 3>(0);
+  // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 打赏，4 = 收藏，5 = 赞过
+  const [profileTab, setProfileTab] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
   // 他人主页内容筛选：'all' | 'free' | 'sub'
   const [contentFilter, setContentFilter] = useState<'all' | 'free' | 'sub'>('all');
   const [followListType, setFollowListType] = useState<'following' | 'followers' | null>(null);
@@ -43,6 +44,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const [confirmDeleteDraftId, setConfirmDeleteDraftId] = useState<string | null>(null);
   const [tipTarget, setTipTarget] = useState<{ context: 'post' | 'author'; postTitle?: string } | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showLanguageSheet, setShowLanguageSheet] = useState(false);
   const tabsScrollRef = useRef<HTMLElement | null>(null);
   const [tabsCanScrollLeft, setTabsCanScrollLeft] = useState(false);
   const [tabsCanScrollRight, setTabsCanScrollRight] = useState(false);
@@ -68,7 +70,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
   const displayedEntries: { post: (typeof allPosts)[number]; repostedBy?: RepostedBy }[] =
     isOwn && profileTab === 2 ? ownRepostEntries
-    : isOwn && profileTab === 3 ? savedPosts.map(post => ({ post }))
+    : isOwn && profileTab === 4 ? savedPosts.map(post => ({ post }))
+    : isOwn && profileTab === 5 ? likedPosts.map(post => ({ post }))
     : isOwn ? myPosts.map(post => ({ post }))
     : contentFilter === 'all' ? [...filteredOtherPosts.map(post => ({ post })), ...theirRepostEntries]
     : filteredOtherPosts.map(post => ({ post }));
@@ -88,21 +91,21 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               type="button"
               className="channel-info-bar-sub channel-info-bar-sub--btn"
               onClick={() => setShowSubscribers(true)}
-              aria-label={t(`查看 ${channel.subscriberCount} 位订阅用户`, `View ${channel.subscriberCount} subscribers`)}
+              aria-label={t('查看 {subscriberCount} 位订阅用户', { subscriberCount: channel.subscriberCount })}
             >
-              {t(`${channel.subscriberCount} 人已订阅`, `${channel.subscriberCount} subscribers`)}
+              {t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}
               <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
             </button>
           ) : (
             <span className="channel-info-bar-sub">
-              {t(`${channel.subscriberCount} 人已订阅`, `${channel.subscriberCount} subscribers`)}
+              {t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}
             </span>
           )}
         </div>
         {isOwn ? (
           <button type="button" className="channel-manage-btn" onClick={() => openManageChannel(channel.id)}>
             <Settings size={13} strokeWidth={2.2} />
-            {t('管理频道', 'Manage')}
+            {t('管理频道2')}
           </button>
         ) : (mySubscribedTierIndex != null || channel.tiers.some(tr => !tr.archived)) ? (
           <button
@@ -113,12 +116,12 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             {mySubscribedTierIndex != null ? (
               <>
                 <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
-                {t(`已订阅 · ${channel.tiers[mySubscribedTierIndex].name}`, `Subscribed · ${channel.tiers[mySubscribedTierIndex].name}`)}
+                {t('已订阅 · {name}', { name: channel.tiers[mySubscribedTierIndex].name })}
               </>
             ) : (
               <>
                 <Gem size={13} strokeWidth={2.2} aria-hidden="true" />
-                {t('订阅', 'Subscribe')}
+                {t('订阅')}
               </>
             )}
           </button>
@@ -128,25 +131,30 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   ) : isOwn ? (
     <button type="button" className="channel-create-entry channel-create-entry--subtle" onClick={openCreateChannel}>
       <Radio size={14} strokeWidth={2.2} />
-      {t('开通频道 · 发布专属内容', 'Create a channel · Share exclusive content')}
+      {t('开通频道 · 发布专属内容')}
     </button>
   ) : null;
 
   return (
     <div className="page">
-      {!isOwn && <PageHeader title={authorName} onBack={canGoBack ? goBack : undefined} className="page-header--transparent" />}
+      {!isOwn && <PageHeader onBack={canGoBack ? goBack : undefined} className="page-header--transparent" />}
       <div className="scroll-area">
-        <div className="profile-hero">
+        <div className={`profile-hero${!isOwn ? ' profile-hero--with-header' : ''}`}>
         <img className="profile-header-bg" src="/img/genesis-bigbang.webp" alt="" aria-hidden="true" />
         <div className="profile-header profile-header--hero">
           {/* 自己的主页视为底栏 Tab 根页面，不展示返回（即便从头像 navigate 进来也不出现） */}
           {isOwn ? (
-            <div className="avatar">
+            <button
+              type="button"
+              className="avatar profile-avatar-edit-btn"
+              onClick={() => setShowEditProfile(true)}
+              aria-label={t('编辑资料')}
+            >
               {userProfile.avatarUrl
                 ? <img src={userProfile.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                 : <BoringAvatar size="100%" name={userProfile.avatarSeed} variant="beam" colors={AVATAR_COLORS} />
               }
-            </div>
+            </button>
           ) : (
             <Avatar index={firstPost ? ALL_POSTS.indexOf(firstPost) % 3 : 0} seed={authorName} />
           )}
@@ -163,7 +171,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                   onClick={() => setShowEditProfile(true)}
                 >
                   <Edit3 size={12} strokeWidth={2} />
-                  {t('编辑资料', 'Edit Profile')}
+                  {t('编辑资料')}
                 </button>
               </>
             ) : (
@@ -179,7 +187,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 type="button"
                 className="feed-bell-btn"
                 onClick={() => requireWallet(() => navigate({ page: 'P7' }))}
-                aria-label={t('互动通知', 'Activity')}
+                aria-label={t('互动通知')}
               >
                 <Bell size={20} strokeWidth={1.8} />
                 {unreadActivityCount > 0 && (
@@ -189,8 +197,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               <button
                 type="button"
                 className="profile-settings-btn"
-                onClick={() => setLanguage(language === 'zh-CN' ? 'en' : 'zh-CN')}
-                aria-label={t('切换语言', 'Switch language')}
+                onClick={() => setShowLanguageSheet(true)}
+                aria-label={t('切换语言')}
               >
                 <Languages size={20} strokeWidth={1.8} />
               </button>
@@ -204,22 +212,22 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             <>
               <button type="button" className="profile-mini-stat profile-mini-stat--btn" onClick={() => setFollowListType('following')}>
                 <span className="profile-mini-stat-num">{followedAuthors.size}</span>
-                <span className="profile-mini-stat-label">{t('关注', 'Following')}</span>
+                <span className="profile-mini-stat-label">{t('关注2')}</span>
               </button>
               <button type="button" className="profile-mini-stat profile-mini-stat--btn" onClick={() => setFollowListType('followers')}>
                 <span className="profile-mini-stat-num">49</span>
-                <span className="profile-mini-stat-label">{t('粉丝', 'Followers')}</span>
+                <span className="profile-mini-stat-label">{t('粉丝')}</span>
               </button>
             </>
           ) : (
             <>
               <span className="profile-mini-stat">
                 <span className="profile-mini-stat-num">15</span>
-                <span className="profile-mini-stat-label">{t('关注', 'Following')}</span>
+                <span className="profile-mini-stat-label">{t('关注2')}</span>
               </span>
               <span className="profile-mini-stat">
                 <span className="profile-mini-stat-num">124</span>
-                <span className="profile-mini-stat-label">{t('粉丝', 'Followers')}</span>
+                <span className="profile-mini-stat-label">{t('粉丝')}</span>
               </span>
             </>
           )}
@@ -235,25 +243,32 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               className={`follow-btn${isFollowing ? ' follow-btn--following' : ''}`}
               onClick={() => toggleFollow(authorName)}
             >
-              {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注', 'Following')}</span> : t('+ 关注', '+ Follow')}
+              {/* 双标签叠放：宽度取「+ 关注 / 已关注」较大者，切换态不抖动 */}
+              <span className="profile-follow-face" data-active={isFollowing ? undefined : true} aria-hidden={isFollowing || undefined}>
+                {t('+ 关注')}
+              </span>
+              <span className="profile-follow-face" data-active={isFollowing ? true : undefined} aria-hidden={!isFollowing || undefined}>
+                <Check size={12} strokeWidth={2.5} />
+                {t('已关注')}
+              </span>
             </button>
             <button
               type="button"
               className="profile-tip-btn"
               onClick={() => requireWallet(() => setTipTarget({ context: 'author' }))}
-              aria-label={t('打赏博主', 'Tip creator')}
+              aria-label={t('打赏博主')}
             >
               <HandCoins size={14} strokeWidth={2} />
-              {t('打赏', 'Tip')}
+              {t('打赏')}
             </button>
             <button
               type="button"
-              className="profile-tip-btn"
+              className="profile-dm-btn"
               onClick={() => requireWallet(() => navigate({ page: 'P_DM_CHAT', peerId: authorName }))}
-              aria-label={t('发私信', 'Send message')}
+              aria-label={t('发私信')}
             >
               <MessageCircle size={14} strokeWidth={2} />
-              {t('私信', 'Message')}
+              {t('私信')}
             </button>
           </div>
         )}
@@ -264,7 +279,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           <div className="profile-content-tabs-wrap profile-content-tabs-wrap--hero">
           <nav
             className="profile-content-tabs"
-            aria-label={t('内容分类', 'Content categories')}
+            aria-label={t('内容分类')}
             ref={tabsScrollRef as React.RefObject<HTMLElement>}
             onScroll={updateTabsScrollState}
           >
@@ -276,7 +291,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               aria-selected={profileTab === 0}
             >
               <FileText size={14} strokeWidth={2} />
-              {t('帖子', 'Posts')}
+              {t('帖子')}
             </button>
             <button
               type="button"
@@ -286,7 +301,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               aria-selected={profileTab === 1}
             >
               <Edit3 size={14} strokeWidth={2} />
-              {t('草稿', 'Drafts')}
+              {t('草稿')}
               {drafts.length > 0 && <span className="profile-content-tab-badge">{drafts.length}</span>}
             </button>
             <button
@@ -297,17 +312,37 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               aria-selected={profileTab === 2}
             >
               <Repeat2 size={14} strokeWidth={2} />
-              {t('转发', 'Reposted')}
+              {t('转发2')}
             </button>
             <button
               type="button"
-              id="profile-tab-saved"
+              id="profile-tab-tipped"
               className={`profile-content-tab${profileTab === 3 ? ' profile-content-tab--active' : ''}`}
               onClick={() => setProfileTab(3)}
               aria-selected={profileTab === 3}
             >
+              <HandCoins size={14} strokeWidth={2} />
+              {t('打赏2')}
+            </button>
+            <button
+              type="button"
+              id="profile-tab-saved"
+              className={`profile-content-tab${profileTab === 4 ? ' profile-content-tab--active' : ''}`}
+              onClick={() => setProfileTab(4)}
+              aria-selected={profileTab === 4}
+            >
               <Bookmark size={14} strokeWidth={2} />
-              {t('收藏', 'Saved')}
+              {t('收藏3')}
+            </button>
+            <button
+              type="button"
+              id="profile-tab-liked"
+              className={`profile-content-tab${profileTab === 5 ? ' profile-content-tab--active' : ''}`}
+              onClick={() => setProfileTab(5)}
+              aria-selected={profileTab === 5}
+            >
+              <ThumbsUp size={14} strokeWidth={2} />
+              {t('赞过')}
             </button>
           </nav>
           <div className={`profile-content-tabs-fade profile-content-tabs-fade--left${tabsCanScrollLeft ? ' profile-content-tabs-fade--visible' : ''}`} aria-hidden="true" />
@@ -317,7 +352,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           <div className="profile-content-tabs-wrap profile-content-tabs-wrap--hero">
           <nav
             className="profile-content-tabs"
-            aria-label={t('内容筛选', 'Content filter')}
+            aria-label={t('内容筛选')}
             ref={tabsScrollRef as React.RefObject<HTMLElement>}
             onScroll={updateTabsScrollState}
           >
@@ -329,7 +364,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 onClick={() => setContentFilter(f)}
               >
                 {f === 'all' ? <LayoutGrid size={14} strokeWidth={2} /> : <Gem size={14} strokeWidth={2} />}
-                {f === 'all' ? t('全部', 'All') : t('会员', 'Members')}
+                {f === 'all' ? t('全部') : t('会员')}
               </button>
             ))}
           </nav>
@@ -338,17 +373,38 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           </div>
         )}
 
-        {profileTab === 1 ? (
+        {isOwn && profileTab === 1 ? (
           <section className="feed draft-list">
             {drafts.length === 0 ? (
               <div className="profile-empty-state">
                 <Edit3 size={32} strokeWidth={1.2} className="profile-empty-icon" />
-                <p className="profile-empty-title">{t('还没有草稿', 'No drafts yet')}</p>
-                <p className="profile-empty-sub">{t('在发帖时可以保存草稿，稍后继续编辑', 'Save a draft while composing to find it here')}</p>
+                <p className="profile-empty-title">{t('还没有草稿')}</p>
+                <p className="profile-empty-sub">{t('在发帖时可以保存草稿，稍后继续编辑')}</p>
               </div>
             ) : (
               drafts.map(d => (
                 <DraftItem key={d.id} draft={d} onEdit={() => openComposeWithDraft(d)} onDelete={() => setConfirmDeleteDraftId(d.id)} />
+              ))
+            )}
+          </section>
+        ) : isOwn && profileTab === 3 ? (
+          <section className="feed tip-history-list">
+            {outgoingTips.length === 0 ? (
+              <div className="profile-empty-state">
+                <HandCoins size={32} strokeWidth={1.2} className="profile-empty-icon" />
+                <p className="profile-empty-title">{t('还没有打赏')}</p>
+                <p className="profile-empty-sub">{t('在帖子或用户主页点击打赏，就能在这里看到了')}</p>
+              </div>
+            ) : (
+              outgoingTips.map(tip => (
+                <OutgoingTipItem
+                  key={tip.id}
+                  tip={tip}
+                  onOpen={() => {
+                    if (tip.postId) navigate({ page: 'P2', postId: tip.postId });
+                    else navigate({ page: 'P6', authorName: tip.recipientName });
+                  }}
+                />
               ))
             )}
           </section>
@@ -368,20 +424,26 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 {profileTab === 2 ? (
                   <>
                     <Repeat2 size={32} strokeWidth={1.2} className="profile-empty-icon" />
-                    <p className="profile-empty-title">{t('还没有转发', 'No reposted posts')}</p>
-                    <p className="profile-empty-sub">{t('点击帖子右下角的转发图标，就能在这里看到了', 'Tap the repost icon on a post to find it here')}</p>
+                    <p className="profile-empty-title">{t('还没有转发')}</p>
+                    <p className="profile-empty-sub">{t('点击帖子右下角的转发图标，就能在这里看到了')}</p>
                   </>
-                ) : profileTab === 3 ? (
+                ) : profileTab === 4 ? (
                   <>
                     <Bookmark size={32} strokeWidth={1.2} className="profile-empty-icon" />
-                    <p className="profile-empty-title">{t('还没有收藏', 'Nothing saved yet')}</p>
-                    <p className="profile-empty-sub">{t('点击帖子右下角的收藏图标，就能在这里看到了', 'Tap the save icon on a post to find it here')}</p>
+                    <p className="profile-empty-title">{t('还没有收藏')}</p>
+                    <p className="profile-empty-sub">{t('点击帖子右下角的收藏图标，就能在这里看到了')}</p>
+                  </>
+                ) : profileTab === 5 ? (
+                  <>
+                    <ThumbsUp size={32} strokeWidth={1.2} className="profile-empty-icon" />
+                    <p className="profile-empty-title">{t('还没有赞过')}</p>
+                    <p className="profile-empty-sub">{t('点击帖子右下角的点赞图标，就能在这里看到了')}</p>
                   </>
                 ) : (
                   <>
                     <FileText size={32} strokeWidth={1.2} className="profile-empty-icon" />
-                    <p className="profile-empty-title">{t('还没有帖子', 'No posts yet')}</p>
-                    <p className="profile-empty-sub">{t('发布第一篇帖子，开始记录你的知识', 'Publish your first post and start capturing your knowledge')}</p>
+                    <p className="profile-empty-title">{t('还没有帖子')}</p>
+                    <p className="profile-empty-sub">{t('发布第一篇帖子，开始记录你的知识')}</p>
                   </>
                 )}
               </div>
@@ -422,6 +484,10 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         />
       )}
 
+      {showLanguageSheet && (
+        <LanguageSheet onClose={() => setShowLanguageSheet(false)} />
+      )}
+
       {showEditProfile && (
         <EditProfileModal
           userProfile={userProfile}
@@ -448,7 +514,7 @@ function EditProfileModal({
   userProfile: { nickname: string; avatarSeed: string; avatarUrl?: string };
   onSave: (profile: { nickname: string; avatarSeed: string; avatarUrl?: string }) => void;
   onClose: () => void;
-  t: (zh: string, en: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [nickname, setNickname] = useState(userProfile.nickname);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(userProfile.avatarUrl);
@@ -466,18 +532,18 @@ function EditProfileModal({
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="edit-profile-sheet" role="dialog" aria-label={t('编辑资料', 'Edit Profile')} onClick={e => e.stopPropagation()}>
+      <div className="edit-profile-sheet" role="dialog" aria-label={t('编辑资料')} onClick={e => e.stopPropagation()}>
         <div className="edit-profile-header">
-          <button type="button" className="edit-profile-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+          <button type="button" className="edit-profile-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
-          <span className="edit-profile-title">{t('编辑资料', 'Edit Profile')}</span>
+          <span className="edit-profile-title">{t('编辑资料')}</span>
           <button
             type="button"
             className="edit-profile-save"
             onClick={() => onSave({ nickname: trimmed, avatarSeed: userProfile.avatarSeed, avatarUrl })}
           >
-            {t('保存', 'Save')}
+            {t('保存')}
           </button>
         </div>
 
@@ -489,7 +555,7 @@ function EditProfileModal({
               onClick={() => fileInputRef.current?.click()}
               role="button"
               tabIndex={0}
-              aria-label={t('更换头像', 'Change avatar')}
+              aria-label={t('更换头像')}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
             >
               {avatarUrl
@@ -511,14 +577,14 @@ function EditProfileModal({
 
           {/* 钱包地址（只读） */}
           <div className="edit-profile-wallet">
-            <span className="edit-profile-wallet-label">{t('钱包地址', 'Wallet')}</span>
+            <span className="edit-profile-wallet-label">{t('钱包地址')}</span>
             <span className="edit-profile-wallet-addr">{maskedWallet}</span>
           </div>
 
           {/* 昵称输入 */}
           <div className="edit-profile-field">
             <label className="edit-profile-label" htmlFor="ep-nickname">
-              {t('昵称', 'Nickname')}
+              {t('昵称')}
             </label>
             <input
               id="ep-nickname"
@@ -531,6 +597,53 @@ function EditProfileModal({
             />
             <span className="edit-profile-charcount">{nickname.length}/24</span>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const LANGUAGE_OPTIONS: { code: Language; label: string }[] = [
+  { code: 'zh-CN', label: '简体中文' },
+  { code: 'zh-TW', label: '繁體中文' },
+  { code: 'en', label: 'English' },
+  { code: 'ja', label: '日本語' },
+  { code: 'ko', label: '한국어' },
+  { code: 'th', label: 'ไทย' },
+  { code: 'vi', label: 'Tiếng Việt' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'es', label: 'Español' },
+  { code: 'fr', label: 'Français' },
+  { code: 'pt', label: 'Português' },
+];
+
+function LanguageSheet({ onClose }: { onClose: () => void }) {
+  const { language, setLanguage, t } = useApp();
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="payment-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div className="sheet-header">
+          <span className="sheet-title">{t('选择语言')}</span>
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+
+        <div className="lang-option-list">
+          {LANGUAGE_OPTIONS.map(opt => (
+            <button
+              key={opt.code}
+              type="button"
+              className="lang-option"
+              onClick={() => { setLanguage(opt.code); onClose(); }}
+            >
+              <span className="lang-option__label">{opt.label}</span>
+              {language === opt.code && (
+                <Check size={16} strokeWidth={2.5} className="lang-option__check" aria-hidden="true" />
+              )}
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -579,17 +692,17 @@ function FollowListModal({
         <div className="follow-list-header">
           <span className="follow-list-title">
             {type === 'following'
-              ? (isOwn ? t('我的关注', 'Following') : t(`${authorName} 的关注`, `${authorName} follows`))
-              : (isOwn ? t('我的粉丝', 'Followers') : t(`${authorName} 的粉丝`, `${authorName}’s followers`))}
+              ? (isOwn ? t('我的关注') : t('{authorName} 的关注', { authorName }))
+              : (isOwn ? t('我的粉丝') : t('{authorName} 的粉丝', { authorName }))}
           </span>
-          <button type="button" className="follow-list-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+          <button type="button" className="follow-list-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
         <div className="follow-list-content">
           {users.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--ku-color-text-secondary)' }}>
-              {t('暂无数据', 'No data yet')}
+              {t('暂无数据')}
             </div>
           ) : (
             users.map((user) => {
@@ -622,12 +735,12 @@ function FollowListModal({
                     {isUserFollowing ? (
                       <>
                         <Check size={12} strokeWidth={2.5} aria-hidden="true" />
-                        {t('已关注', 'Following')}
+                        {t('已关注')}
                       </>
                     ) : (
                       <>
                         <Plus size={12} strokeWidth={2.5} aria-hidden="true" />
-                        {t('关注', 'Follow')}
+                        {t('关注')}
                       </>
                     )}
                   </button>
@@ -675,16 +788,16 @@ function SubscriberListModal({
       <div className="follow-list-modal" onClick={e => e.stopPropagation()}>
         <div className="follow-list-header">
           <span className="follow-list-title">
-            {t(`订阅用户 · ${displayCount}`, `Subscribers · ${displayCount}`)}
+            {t('订阅用户 · {displayCount}', { displayCount })}
           </span>
-          <button type="button" className="follow-list-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+          <button type="button" className="follow-list-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
         <div className="follow-list-content">
           {groups.length === 0 ? (
             <div className="follow-list-empty">
-              {t('还没有订阅用户', 'No subscribers yet')}
+              {t('还没有订阅用户')}
             </div>
           ) : (
             groups.map(group => {
@@ -695,11 +808,11 @@ function SubscriberListModal({
                     {group.tierName}
                     {tier ? (
                       <span className="subscriber-tier-group-meta">
-                        {t(`${tier.price} PB/月 · ${group.users.length} 人`, `${tier.price} PB/mo · ${group.users.length}`)}
+                        {t('{price} PB/月 · {length} 人', { price: tier.price, length: group.users.length })}
                       </span>
                     ) : (
                       <span className="subscriber-tier-group-meta">
-                        {t(`${group.users.length} 人`, `${group.users.length}`)}
+                        {t('{length} 人', { length: group.users.length })}
                       </span>
                     )}
                   </h3>
@@ -722,7 +835,7 @@ function SubscriberListModal({
                             <ChannelMemberBadge tierName={user.tierName} />
                           </div>
                           <div className="follow-item-desc">
-                            {t(`订阅于 ${user.subscribedAt}`, `Joined ${user.subscribedAt}`)}
+                            {t('订阅于 {subscribedAt}', { subscribedAt: user.subscribedAt })}
                           </div>
                         </div>
                         {!isSelf && (
@@ -737,12 +850,12 @@ function SubscriberListModal({
                             {isUserFollowing ? (
                               <>
                                 <Check size={12} strokeWidth={2.5} aria-hidden="true" />
-                                {t('已关注', 'Following')}
+                                {t('已关注')}
                               </>
                             ) : (
                               <>
                                 <Plus size={12} strokeWidth={2.5} aria-hidden="true" />
-                                {t('关注', 'Follow')}
+                                {t('关注')}
                               </>
                             )}
                           </button>
@@ -764,18 +877,53 @@ function SubscriberListModal({
 // Draft Item Row
 // ═══════════════════════════════════════════════════════════════
 
+function OutgoingTipItem({ tip, onOpen }: { tip: OutgoingTip; onOpen: () => void }) {
+  const { t } = useApp();
+
+  const formatTime = (ts: number) => {
+    const diff = Date.now() - ts;
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return t('刚刚');
+    if (min < 60) return `${min}${t('分钟前')}`;
+    const hours = Math.floor(min / 60);
+    if (hours < 24) return `${hours}${t('小时前')}`;
+    const days = Math.floor(hours / 24);
+    return `${days}${t('天前')}`;
+  };
+
+  const title = tip.context === 'post' && tip.postTitle
+    ? tip.postTitle.split('\n')[0]
+    : t('打赏给 {recipientName}', { recipientName: tip.recipientName });
+
+  return (
+    <button type="button" className="tip-history-item" onClick={onOpen}>
+      <div className="tip-history-item-icon" aria-hidden="true">
+        <HandCoins size={16} strokeWidth={2} />
+      </div>
+      <div className="tip-history-item-body">
+        <div className="tip-history-item-title">{title}</div>
+        <div className="tip-history-item-meta">
+          <span>{tip.recipientName}</span>
+          <span>{formatTime(tip.createdAt)}</span>
+        </div>
+      </div>
+      <span className="tip-history-item-amount">-{tip.amount} PB</span>
+    </button>
+  );
+}
+
 function DraftItem({ draft, onEdit, onDelete }: { draft: Draft; onEdit: () => void; onDelete: () => void }) {
   const { t } = useApp();
 
   const formatTime = (ts: number) => {
     const diff = Date.now() - ts;
     const min = Math.floor(diff / 60000);
-    if (min < 1) return t('刚刚', 'Just now');
-    if (min < 60) return `${min}${t('分钟前', 'm ago')}`;
+    if (min < 1) return t('刚刚');
+    if (min < 60) return `${min}${t('分钟前')}`;
     const hours = Math.floor(min / 60);
-    if (hours < 24) return `${hours}${t('小时前', 'h ago')}`;
+    if (hours < 24) return `${hours}${t('小时前')}`;
     const days = Math.floor(hours / 24);
-    return `${days}${t('天前', 'd ago')}`;
+    return `${days}${t('天前')}`;
   };
 
   const hasThumbnail = !!draft.thumbnailUrl;
@@ -788,7 +936,7 @@ function DraftItem({ draft, onEdit, onDelete }: { draft: Draft; onEdit: () => vo
         </div>
       )}
       <div className="draft-item-body">
-        <div className="draft-item-title">{draft.title || draft.articleTitle || t('（无标题）', '(No title)')}</div>
+        <div className="draft-item-title">{draft.title || draft.articleTitle || t('（无标题）')}</div>
         <div className="draft-item-meta">
           <span className="draft-item-time">{formatTime(draft.savedAt)}</span>
         </div>
@@ -797,7 +945,7 @@ function DraftItem({ draft, onEdit, onDelete }: { draft: Draft; onEdit: () => vo
         type="button"
         className="draft-item-delete"
         onClick={e => { e.stopPropagation(); onDelete(); }}
-        aria-label={t('删除草稿', 'Delete draft')}
+        aria-label={t('删除草稿')}
       >
         <Trash2 size={14} strokeWidth={2} />
       </button>

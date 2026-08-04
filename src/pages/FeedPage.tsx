@@ -47,8 +47,8 @@ function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElemen
   if (posts.length === 0) {
     return (
       <div className="empty-state">
-        <p>{t('还没有帖子', 'No posts yet')}</p>
-        <p className="empty-sub">{t('发布第一篇帖子，开始记录你的知识', 'Publish your first post to start capturing knowledge')}</p>
+        <p>{t('还没有帖子')}</p>
+        <p className="empty-sub">{t('发布第一篇帖子，开始记录你的知识2')}</p>
       </div>
     );
   }
@@ -65,7 +65,7 @@ function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElemen
         />
       ))}
       {loading && <div className="feed-loading"><span className="spinner" /></div>}
-      {!hasMore && !loading && <div className="feed-end">— {t('已经到底了', "You're all caught up")} —</div>}
+      {!hasMore && !loading && <div className="feed-end">— {t('已经到底了')} —</div>}
       <div ref={sentinelRef} style={{ height: 1 }} aria-hidden />
     </section>
   );
@@ -77,8 +77,8 @@ function FollowFeed({ followedAuthors }: { followedAuthors: Set<string> }) {
   if (followedPosts.length === 0) {
     return (
       <div className="empty-state">
-        <p>{t('还没有关注的人', "You're not following anyone yet")}</p>
-        <p className="empty-sub">{t('去发现感兴趣的创作者，点击帖子右上角「+ 关注」即可', 'Discover creators you like and tap "+ Follow" on a post')}</p>
+        <p>{t('还没有关注的人')}</p>
+        <p className="empty-sub">{t('去发现感兴趣的创作者，点击帖子右上角「+ 关注」即可')}</p>
       </div>
     );
   }
@@ -118,20 +118,20 @@ function ChannelDiscoverFeed() {
   if (channels.length === 0) {
     return (
       <div className="empty-state">
-        <p>{t('暂无频道', 'No channels yet')}</p>
+        <p>{t('暂无频道')}</p>
       </div>
     );
   }
   return (
     <section className="channel-discover-list">
-      <nav className="channel-scope-nav" aria-label={t('频道范围', 'Channel scope')}>
+      <nav className="channel-scope-nav" aria-label={t('频道范围')}>
         <button
           type="button"
           className={`channel-scope-tab${scope === 'all' ? ' channel-scope-tab--active' : ''}`}
           onClick={() => setScope('all')}
           aria-selected={scope === 'all'}
         >
-          {t('发现', 'Discover')}
+          {t('发现')}
         </button>
         <button
           type="button"
@@ -139,32 +139,32 @@ function ChannelDiscoverFeed() {
           onClick={() => setScope('subscribed')}
           aria-selected={scope === 'subscribed'}
         >
-          {t('已订阅', 'Subscribed')}
+          {t('已订阅')}
         </button>
       </nav>
 
       {displayedChannels.length > 0 && (
         <div className="channel-discover-section-head">
           <span className="channel-discover-section-label">
-            {scope === 'all' ? t('为你推荐', 'Recommended for you') : t('我的订阅', 'My subscriptions')}
+            {scope === 'all' ? t('为你推荐') : t('我的订阅')}
           </span>
           {canRefresh && (
             <button
               type="button"
               className="channel-refresh-btn"
               onClick={() => setBatchIndex(i => i + 1)}
-              aria-label={t('换一批频道推荐', 'Refresh channel recommendations')}
+              aria-label={t('换一批频道推荐')}
             >
               <RefreshCw size={13} strokeWidth={2.2} />
-              {t('换一批', 'Refresh')}
+              {t('换一批')}
             </button>
           )}
         </div>
       )}
       {displayedChannels.length === 0 ? (
         <div className="empty-state">
-          <p>{t('还没有订阅任何频道', "You haven't subscribed to any channels yet")}</p>
-          <p className="empty-sub">{t('去"发现"里看看有没有喜欢的频道', 'Check out "Discover" to find channels you like')}</p>
+          <p>{t('还没有订阅任何频道')}</p>
+          <p className="empty-sub">{t('去"发现"里看看有没有喜欢的频道')}</p>
         </div>
       ) : displayedChannels.map((channel, i) => (
         <button
@@ -181,7 +181,7 @@ function ChannelDiscoverFeed() {
             </span>
             <span className="channel-discover-desc">{channel.description}</span>
             <div className="channel-discover-meta">
-              <span className="channel-discover-subs">{t(`${channel.subscriberCount} 人已订阅`, `${channel.subscriberCount} subscribers`)}</span>
+              <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
             </div>
           </div>
         </button>
@@ -219,17 +219,17 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
             type="button"
             className="feed-bell-btn feed-checkin-btn"
             onClick={openCheckIn}
-            aria-label={t('每日签到', 'Daily check-in')}
+            aria-label={t('每日签到')}
           >
             <CalendarCheck size={22} strokeWidth={2} />
-            <span className="feed-checkin-label">{t('签到', 'Check in')}</span>
+            <span className="feed-checkin-label">{t('签到')}</span>
             {checkInClaimable && <span className="feed-bell-dot feed-bell-dot--plain" aria-hidden="true" />}
           </button>
         </div>
         <nav className="tabs" data-layer="top-tabs">
-          <button className={tab === 0 ? 'active' : ''} type="button" onClick={() => goTab(0)}>{t('推荐', 'For You')}</button>
-          <button className={tab === 1 ? 'active' : ''} type="button" onClick={() => goTab(1)}>{t('关注', 'Following')}</button>
-          <button className={tab === 2 ? 'active' : ''} type="button" onClick={() => goTab(2)}>{t('频道', 'Channels')}</button>
+          <button className={tab === 0 ? 'active' : ''} type="button" onClick={() => goTab(0)}>{t('推荐')}</button>
+          <button className={tab === 1 ? 'active' : ''} type="button" onClick={() => goTab(1)}>{t('关注2')}</button>
+          <button className={tab === 2 ? 'active' : ''} type="button" onClick={() => goTab(2)}>{t('频道')}</button>
         </nav>
         <div className="feed-header-right">
           {!walletConnected && (
@@ -239,7 +239,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
               onClick={connectWallet}
             >
               <Wallet size={13} strokeWidth={2.2} />
-              {t('连接钱包', 'Connect Wallet')}
+              {t('连接钱包')}
             </button>
           )}
           {walletConnected && (
@@ -247,7 +247,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
               type="button"
               className="feed-bell-btn"
               onClick={() => navigate({ page: 'P7' })}
-              aria-label={t('通知', 'Notifications')}
+              aria-label={t('通知')}
             >
               <Bell size={22} strokeWidth={2} />
               {unreadActivityCount > 0 && (

@@ -5,7 +5,7 @@ import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 import { Avatar, AuthorName, Rating, GeminiNodeBadge } from './shared';
 import { Actions } from './PostCard';
-import { localizeTime } from '../i18n';
+import { isChinese, localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
 import type { Channel, ChannelTier, InteractionAction, PayCtx, Post, PostAction, SupTransactionReason } from '../types';
 import { formatSuperAmount, formatSupAmount, stakeTierDescription, SUPER_BY_TIER, SUP_COST_BY_TIER } from '../stakeConfig';
@@ -42,14 +42,25 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
 }) {
   const { openLink, t } = useApp();
   const [idx, setIdx] = useState(initialIndex);
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const dragStartX = useRef<number | null>(null);
   const total = post.imageCount ?? 3;
-  const isLocked = idx >= visibleImgCount;
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     dragStartX.current = event.clientX;
+    setIsDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (dragStartX.current === null) return;
+    let delta = event.clientX - dragStartX.current;
+    // 拖到首/末张时做橡皮筋阻尼，暗示已到边界
+    if (idx === 0 && delta > 0) delta /= 3;
+    if (idx === total - 1 && delta < 0) delta /= 3;
+    setDragX(delta);
   };
 
   const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -57,6 +68,8 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
 
     const dragDistance = event.clientX - dragStartX.current;
     dragStartX.current = null;
+    setIsDragging(false);
+    setDragX(0);
 
     if (dragDistance < -40) {
       setIdx(current => Math.min(current + 1, total - 1));
@@ -67,6 +80,8 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
 
   const handlePointerCancel = () => {
     dragStartX.current = null;
+    setIsDragging(false);
+    setDragX(0);
   };
 
   const handleUnlock = () => {
@@ -75,12 +90,12 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
   };
 
   return (
-    <div className="lightbox-overlay" role="dialog" aria-modal="true" aria-label={t('查看图片', 'View images')}>
+    <div className="lightbox-overlay" role="dialog" aria-modal="true" aria-label={t('查看图片')}>
       {/* Header */}
       <div className="lightbox-header">
         <AuthorName name={post.author} className="lightbox-author" />
         <span className="lightbox-counter">{idx + 1} / {total}</span>
-        <button type="button" className="lightbox-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+        <button type="button" className="lightbox-close" onClick={onClose} aria-label={t('关闭')}>
           <X size={20} strokeWidth={2} />
         </button>
       </div>
@@ -89,24 +104,38 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
       <div
         className="lightbox-stage"
         onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
       >
-        <div className="lightbox-media">
-          <div
-            className={`lightbox-img${isLocked ? ' lightbox-img--locked' : ''}`}
-            style={{ background: IMG_GRADIENTS[idx] }}
-            aria-label={IMG_LABELS[idx]}
-          />
-          {isLocked && (
-            <div className="lightbox-lock-overlay">
-              <Lock className="lightbox-lock-icon" strokeWidth={1.8} />
-              <p className="lightbox-lock-hint">此图片尚未解锁</p>
-              <button type="button" className="lightbox-unlock-btn" onClick={handleUnlock}>
-                解锁
-              </button>
-            </div>
-          )}
+        <div
+          className="lightbox-track"
+          style={{
+            transform: `translateX(calc(${-idx * 100}% + ${dragX}px))`,
+            transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+          }}
+        >
+          {Array.from({ length: total }).map((_, i) => {
+            const slideLocked = i >= visibleImgCount;
+            return (
+              <div className="lightbox-media" key={i}>
+                <div
+                  className={`lightbox-img${slideLocked ? ' lightbox-img--locked' : ''}`}
+                  style={{ background: IMG_GRADIENTS[i] }}
+                  aria-label={IMG_LABELS[i]}
+                />
+                {slideLocked && (
+                  <div className="lightbox-lock-overlay">
+                    <Lock className="lightbox-lock-icon" strokeWidth={1.8} />
+                    <p className="lightbox-lock-hint">此图片尚未解锁</p>
+                    <button type="button" className="lightbox-unlock-btn" onClick={handleUnlock}>
+                      解锁
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -118,7 +147,7 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
             type="button"
             role="tab"
             aria-selected={i === idx}
-            aria-label={t(`第 ${i + 1} 张`, `Image ${i + 1}`)}
+            aria-label={t('第 {i} 张', { i: i + 1 })}
             className={`lightbox-dot${i === idx ? ' lightbox-dot--active' : ''}${i >= visibleImgCount ? ' lightbox-dot--locked' : ''}`}
             onClick={() => setIdx(i)}
           />
@@ -140,19 +169,19 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
   const supCost = tier > 0 ? SUP_COST_BY_TIER[tier as Exclude<StakeTier, 0>] : 0;
 
   const titles: Record<PayCtx['ctx'], string> = {
-    post:   t('发布知识宇宙节点', 'Publish Knowledge Universe Node'),
-    chain:  t('解锁全文', 'Unlock full content'),
-    repost: t('转发并创建子节点', 'Repost and create child node'),
-    interaction: t('参与知识宇宙', 'Join Knowledge Universe'),
+    post:   t('发布知识宇宙节点'),
+    chain:  t('解锁全文'),
+    repost: t('转发并创建子节点'),
+    interaction: t('参与知识宇宙'),
   };
 
   const interactionLabels: Record<InteractionAction, [string, string]> = {
-    comment: [t('评论', 'Comment'), t('评论并创建子节点', 'Comment and create child node')],
-    share: [t('转发', 'Repost'), t('转发并创建子节点', 'Repost and create child node')],
-    like: [t('点赞', 'Like'), t('点赞并创建子节点', 'Like and create child node')],
-    dislike: [t('踩', 'Dislike'), t('踩并创建子节点', 'Dislike and create child node')],
-    save: [t('收藏', 'Save'), t('收藏并创建子节点', 'Save and create child node')],
-    unlock: [t('解锁', 'Unlock'), t('解锁并创建子节点', 'Unlock and create child node')],
+    comment: [t('评论'), t('评论并创建子节点')],
+    share: [t('转发'), t('转发并创建子节点')],
+    like: [t('点赞2'), t('点赞并创建子节点')],
+    dislike: [t('踩2'), t('踩并创建子节点')],
+    save: [t('收藏2'), t('收藏并创建子节点')],
+    unlock: [t('解锁'), t('解锁并创建子节点')],
   };
 
   const sheetTitle = payCtx.ctx === 'interaction' && payCtx.action
@@ -164,7 +193,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
     setTimeout(() => {
       const shouldFail = Math.random() < 0.12;
       if (shouldFail) {
-        setFailReason(t('余额不足，请充值后重试', 'Insufficient balance, please top up and retry'));
+        setFailReason(t('余额不足，请充值后重试'));
         setStatus('failed');
       } else {
         if (supCost > 0) deductSup(supCost, payCtxToSupReason(payCtx));
@@ -179,7 +208,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
       <div className="payment-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">{sheetTitle}</span>
-          <button type="button" className="modal-close" onClick={onClose} disabled={status === 'loading'} aria-label={t('关闭', 'Close')}>
+          <button type="button" className="modal-close" onClick={onClose} disabled={status === 'loading'} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
@@ -188,7 +217,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
           <div className="link-modal-post">
             <div className="gemini-left">
               <KnowledgePlanetIcon className="gemini-icon" />
-              <span className="gemini-label">{t('知识宇宙', 'Knowledge Universe')}</span>
+              <span className="gemini-label">{t('知识宇宙')}</span>
               <span className="gemini-sep">·</span>
               <Rating value={relatedPost.rating} />
               <span className="gemini-sep">·</span>
@@ -200,15 +229,15 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
         {tier > 0 && (
           <div className="pay-combo-breakdown">
             <div className="pay-combo-row">
-              <span className="pay-combo-label">{t('PB 消耗', 'PB cost')}</span>
+              <span className="pay-combo-label">{t('PB 消耗')}</span>
               <span className="pay-combo-value">{formatSuperAmount(tier)} PB</span>
             </div>
             <div className="pay-combo-row">
-              <span className="pay-combo-label">{t('SUP 消耗', 'SUP cost')}</span>
+              <span className="pay-combo-label">{t('SUP 消耗')}</span>
               <span className="pay-combo-value">{formatSupAmount(supCost)} SUP</span>
             </div>
             <p className="pay-combo-hint">
-              {t('将扣除 PB，并同步扣除站内 SUP', 'Deducts PB, and deducts SUP from your in-app balance')}
+              {t('将扣除 PB，并同步扣除站内 SUP')}
             </p>
           </div>
         )}
@@ -216,22 +245,22 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
         {status === 'idle' && (
           <button type="button" className="planet-confirm-btn" onClick={pay}>
             {tier > 0
-              ? `${t('支付', 'Pay')} · ${formatSuperAmount(tier)} PB + ${formatSupAmount(supCost)} SUP`
-              : t('确认支付', 'Confirm payment')}
+              ? `${t('支付')} · ${formatSuperAmount(tier)} PB + ${formatSupAmount(supCost)} SUP`
+              : t('确认支付')}
           </button>
         )}
 
         {status === 'loading' && (
           <div className="pay-status">
             <span className="spinner" />
-            <span>{t('支付中…', 'Processing…')}</span>
+            <span>{t('支付中…')}</span>
           </div>
         )}
 
         {status === 'done' && (
           <div className="pay-status pay-status--done">
             <span className="pay-check">✓</span>
-            <span>{t('支付成功', 'Payment successful')}</span>
+            <span>{t('支付成功')}</span>
           </div>
         )}
 
@@ -244,7 +273,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
               className="pay-retry-btn"
               onClick={() => setStatus('idle')}
             >
-              {t('重试', 'Retry')}
+              {t('重试')}
             </button>
           </div>
         )}
@@ -274,7 +303,7 @@ export function GeminiStakeModal({
   onClose: () => void;
 }) {
   const { t, language } = useApp();
-  const zh = language === 'zh-CN';
+  const zh = isChinese(language);
   const [selected, setSelected] = useState<Exclude<StakeTier, 0>>(10);
   const tiers: Exclude<StakeTier, 0>[] = [10, 100, 1000];
 
@@ -282,14 +311,14 @@ export function GeminiStakeModal({
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="gemini-stake-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
-          <span className="sheet-title">{t('同步创建子节点', 'Create a child node')}</span>
-          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+          <span className="sheet-title">{t('同步创建子节点')}</span>
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
 
         <p className="gemini-stake-lead">
-          {t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点', 'This post is in Knowledge Universe — choose an amount to link and create a child node')}
+          {t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点')}
         </p>
 
         <div className="stake-tier-list" style={{ marginBottom: 16 }}>
@@ -307,10 +336,10 @@ export function GeminiStakeModal({
         </div>
 
         <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" onClick={() => onParticipate(selected)}>
-          {t(`创建子节点 · ${selected} PB`, `Create child node · ${selected} PB`)}
+          {t('创建子节点 · {selected} PB', { selected })}
         </button>
         <button type="button" className="gemini-stake-btn gemini-stake-btn--secondary" onClick={onSkip}>
-          {t('不参与', 'Skip')}
+          {t('不参与')}
         </button>
       </div>
     </div>
@@ -374,7 +403,7 @@ function PaymentConfirmPage({
       {/* Gradient header */}
       <div className="pay-page-header">
         <div className="pay-page-header-spacer" aria-hidden />
-        <span className="pay-page-header-title">{t('确认支付', 'Confirm Payment')}</span>
+        <span className="pay-page-header-title">{t('确认支付2')}</span>
         <div className="pay-page-header-spacer" aria-hidden />
       </div>
 
@@ -394,37 +423,37 @@ function PaymentConfirmPage({
 
           <div className="pay-page-rows">
             <div className="pay-page-row">
-              <span className="pay-page-row-label">{t('商品名称', 'Product')}</span>
+              <span className="pay-page-row-label">{t('商品名称')}</span>
               <span className="pay-page-row-value">{productName}</span>
             </div>
             <div className="pay-page-row">
-              <span className="pay-page-row-label">{t('备注', 'Remark')}</span>
+              <span className="pay-page-row-label">{t('备注')}</span>
               <span className="pay-page-row-value">{remark}</span>
             </div>
             <div className="pay-page-row">
-              <span className="pay-page-row-label">{t('钱包地址', 'Wallet')}</span>
+              <span className="pay-page-row-label">{t('钱包地址')}</span>
               <span className="pay-page-row-value pay-page-addr">{MOCK_WALLET_ADDR}</span>
             </div>
             <div className="pay-page-row">
-              <span className="pay-page-row-label">{t('余额', 'Balance')}</span>
+              <span className="pay-page-row-label">{t('余额')}</span>
               <span className="pay-page-row-value">{MOCK_PB_BALANCE} PB</span>
             </div>
             <div className="pay-page-row">
-              <span className="pay-page-row-label">{t('网络', 'Network')}</span>
+              <span className="pay-page-row-label">{t('网络')}</span>
               <span className="pay-page-row-value">{MOCK_NETWORK}</span>
             </div>
             <div className="pay-page-fee-section">
               <div className="pay-page-row">
                 <FeeLabelTooltip
-                  label={t('网络手续费', 'Network fee')}
-                  tip={t('提示文案占位', 'Tooltip placeholder')}
+                  label={t('网络手续费')}
+                  tip={t('提示文案占位')}
                 />
                 <span className="pay-page-row-value">{networkFee}</span>
               </div>
               <div className="pay-page-row">
                 <FeeLabelTooltip
-                  label={t('代币手续费', 'Token fee')}
-                  tip={t('提示文案占位', 'Tooltip placeholder')}
+                  label={t('代币手续费')}
+                  tip={t('提示文案占位')}
                 />
                 <span className="pay-page-row-value">{tokenFee}</span>
               </div>
@@ -439,8 +468,8 @@ function PaymentConfirmPage({
               disabled={isPaying}
             >
               {isPaying
-                ? <><span className="spinner pay-page-spinner" />{t('支付中…', 'Processing…')}</>
-                : t('确定', 'Confirm')}
+                ? <><span className="spinner pay-page-spinner" />{t('支付中…')}</>
+                : t('确定')}
             </button>
             <button
               type="button"
@@ -448,7 +477,7 @@ function PaymentConfirmPage({
               onClick={onBack}
               disabled={isPaying}
             >
-              {t('拒绝', 'Reject')}
+              {t('拒绝')}
             </button>
           </div>
         </>
@@ -460,7 +489,7 @@ function PaymentConfirmPage({
           <div className="pay-page-result-icon pay-page-result-icon--success">
             <Check size={32} strokeWidth={2.5} />
           </div>
-          <span className="pay-page-result-title">{t('支付成功', 'Payment successful')}</span>
+          <span className="pay-page-result-title">{t('支付成功')}</span>
         </div>
       )}
 
@@ -468,10 +497,10 @@ function PaymentConfirmPage({
       {isFailed && (
         <div className="pay-page-result">
           <div className="pay-page-result-icon pay-page-result-icon--error">✕</div>
-          <span className="pay-page-result-title">{t('支付失败', 'Payment failed')}</span>
+          <span className="pay-page-result-title">{t('支付失败')}</span>
           {failReason && <p className="pay-page-result-reason">{failReason}</p>}
           <button type="button" className="pay-retry-btn" onClick={onRetry}>
-            {t('重试', 'Retry')}
+            {t('重试')}
           </button>
         </div>
       )}
@@ -489,7 +518,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
   onClose: () => void;
 }) {
   const { t, language } = useApp();
-  const zh = language === 'zh-CN';
+  const zh = isChinese(language);
   const [selected, setSelected] = useState<Exclude<StakeTier, 0>>(10);
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done' | 'failed'>('select');
   const [failReason, setFailReason] = useState('');
@@ -501,7 +530,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
     setStep('paying');
     setTimeout(() => {
       if (Math.random() < 0.12) {
-        setFailReason(t('余额不足，请充值后重试', 'Insufficient balance, please top up and retry'));
+        setFailReason(t('余额不足，请充值后重试'));
         setStep('failed');
       } else {
         setStep('done');
@@ -516,8 +545,8 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
       <PaymentConfirmPage
         pageStep={step}
         icon={<div className="pay-page-brand-icon"><KnowledgePlanetIcon style={{ width: 30, height: 30 }} /></div>}
-        productName={t('知识宇宙', 'Knowledge Universe')}
-        remark={post.nodeId ? `节点 ${post.nodeId}` : t('知识宇宙', 'Knowledge Universe')}
+        productName={t('知识宇宙')}
+        remark={post.nodeId ? `节点 ${post.nodeId}` : t('知识宇宙')}
         amountText={`${selected} PB`}
         networkFee={`${formatSuperAmount(superAmount)} PB`}
         tokenFee={`${selected} PB`}
@@ -534,9 +563,9 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
       <div className="gemini-stake-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">
-            {mode === 'unlock' ? t('解锁全部内容', 'Unlock full content') : t('创建子节点并链接', 'Create child node and link')}
+            {mode === 'unlock' ? t('解锁全部内容') : t('创建子节点并链接')}
           </span>
-          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
@@ -545,7 +574,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
           <div className="link-modal-post">
             <div className="gemini-left">
               <KnowledgePlanetIcon className="gemini-icon" />
-              <span className="gemini-label">{t('知识宇宙', 'Knowledge Universe')}</span>
+              <span className="gemini-label">{t('知识宇宙')}</span>
               <span className="gemini-sep">·</span>
               <Rating value={post.rating} />
               <span className="gemini-sep">·</span>
@@ -556,8 +585,8 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
 
         <p className="gemini-stake-lead">
           {mode === 'unlock'
-            ? t('选择面额创建知识宇宙子节点，同步解锁全部内容', 'Choose an amount to create a Knowledge Universe child node and unlock full content')
-            : t('选择链接面额，在此节点下生成子节点并加入空投激励网络', 'Choose an amount to create a child node and join airdrop rewards')}
+            ? t('选择面额创建知识宇宙子节点，同步解锁全部内容')
+            : t('选择链接面额，在此节点下生成子节点并加入空投激励网络')}
         </p>
         <div className="stake-tier-list" style={{ marginBottom: 16 }}>
           {tiers.map(tier => (
@@ -574,8 +603,8 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
         </div>
         <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" onClick={() => setStep('confirm')}>
           {mode === 'unlock'
-            ? t(`解锁并创建子节点 · ${selected} PB`, `Unlock & create child node · ${selected} PB`)
-            : t(`创建子节点并链接 · ${selected} PB`, `Create child node and link · ${selected} PB`)}
+            ? t('解锁并创建子节点 · {selected} PB', { selected })
+            : t('创建子节点并链接 · {selected} PB', { selected })}
         </button>
       </div>
     </div>
@@ -779,7 +808,7 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
               type="button"
               className={`article-reader-back${hasCover ? '' : ' article-reader-back--on-light'}`}
               onClick={onClose}
-              aria-label={t('返回', 'Back')}
+              aria-label={t('返回')}
             >
               <ArrowLeft size={20} strokeWidth={2} />
             </button>
@@ -806,11 +835,11 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
                   type="button"
                   className={`follow-btn follow-btn--sm${isFollowing ? ' follow-btn--following' : ''}`}
                   onClick={(e) => { e.stopPropagation(); toggleFollow(post.author); }}
-                  aria-label={isFollowing ? t(`取消关注 ${post.author}`, `Unfollow ${post.author}`) : t(`关注 ${post.author}`, `Follow ${post.author}`)}
+                  aria-label={isFollowing ? t('取消关注 {author}', { author: post.author }) : t('关注 {author}', { author: post.author })}
                 >
                   {isFollowing
-                    ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注', 'Following')}</span>
-                    : t('+ 关注', '+ Follow')}
+                    ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注')}</span>
+                    : t('+ 关注')}
                 </button>
               )}
             </div>
@@ -825,13 +854,13 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
               <div className="article-reader-mask-fade" />
               <div className="article-reader-unlock">
                 <Lock size={16} strokeWidth={2} />
-                <span>{t('部分内容已隐藏', 'Some content is hidden')}</span>
+                <span>{t('部分内容已隐藏')}</span>
                 <button
                   type="button"
                   className="article-reader-unlock-btn"
                   onClick={(e) => { e.stopPropagation(); onClose(); openLink(post.id); }}
                 >
-                  {t('解锁全文', 'Unlock full text')}
+                  {t('解锁全文2')}
                   <ChevronRight size={14} strokeWidth={2.5} />
                 </button>
               </div>
@@ -848,7 +877,7 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
                 type="button"
                 className="detail-tip-btn"
                 onClick={() => setShowTip(true)}
-                aria-label={t('打赏此文章', 'Tip this article')}
+                aria-label={t('打赏此文章')}
               >
                 <HandCoins size={15} strokeWidth={2} />
               </button>
@@ -859,6 +888,7 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
           <TipModal
             recipientName={post.author}
             context="post"
+            postId={post.id}
             postTitle={post.title}
             onClose={() => setShowTip(false)}
           />
@@ -1020,7 +1050,7 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="video-player-overlay" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         {/* Top close button */}
-        <button type="button" className="video-player-back" onClick={onClose} aria-label={t('返回', 'Back')}>
+        <button type="button" className="video-player-back" onClick={onClose} aria-label={t('返回')}>
           <ArrowLeft size={22} strokeWidth={2} />
         </button>
         <div className="video-player-stage" ref={containerRef}>
@@ -1036,7 +1066,7 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
           {/* Video load error */}
           {videoError && (
             <div className="video-player-unlock-overlay">
-              <p className="video-player-unlock-text">{t('视频暂时无法播放', 'Video unavailable')}</p>
+              <p className="video-player-unlock-text">{t('视频暂时无法播放')}</p>
             </div>
           )}
           {/* Play button overlay when paused */}
@@ -1052,14 +1082,14 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
             <div className="video-player-unlock-overlay">
               <Lock size={24} strokeWidth={1.8} />
               <p className="video-player-unlock-text">
-                {t('预览已结束', 'Preview ended')}
+                {t('预览已结束')}
               </p>
               <button
                 type="button"
                 className="video-player-unlock-btn"
                 onClick={handleUnlock}
               >
-                {t('解锁完整视频', 'Unlock full video')}
+                {t('解锁完整视频')}
               </button>
             </div>
           )}
@@ -1088,7 +1118,7 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
                 role="button" tabIndex={0}
                 onClick={(e) => { e.stopPropagation(); navigate({ page: 'P2', postId: post.id }); }}
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate({ page: 'P2', postId: post.id }); }}
-                aria-label={t(`查看 ${post.replies} 条评论`, `View ${post.replies} comments`)}
+                aria-label={t('查看 {replies} 条评论', { replies: post.replies })}
               >
                 <MessageCircle size={16} strokeWidth={2.25} />{formatCount(post.replies, language)}
               </span>
@@ -1118,7 +1148,7 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
                   type="button"
                   className="video-player-action-item video-player-action-item--tip"
                   onClick={(e) => { e.stopPropagation(); setShowTip(true); }}
-                  aria-label={t('打赏', 'Tip')}
+                  aria-label={t('打赏')}
                 >
                   <HandCoins size={16} strokeWidth={2} />
                 </button>
@@ -1145,7 +1175,7 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
                   type="button"
                   className="video-player-ctrl-btn"
                   onClick={handlePlayPause}
-                  aria-label={paused ? t('播放', 'Play') : t('暂停', 'Pause')}
+                  aria-label={paused ? t('播放') : t('暂停')}
                 >
                   {paused ? <Play size={16} strokeWidth={2} /> : <Pause size={16} strokeWidth={2} />}
                 </button>
@@ -1161,7 +1191,7 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
                     type="button"
                     className="video-player-ctrl-btn video-player-speed-btn"
                     onClick={() => setShowSpeedMenu(v => !v)}
-                    aria-label={t('播放速度', 'Playback speed')}
+                    aria-label={t('播放速度')}
                   >
                     {playbackRate}x
                   </button>
@@ -1195,7 +1225,7 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
                     type="button"
                     className="video-player-ctrl-btn"
                     onClick={toggleMute}
-                    aria-label={muted ? t('取消静音', 'Unmute') : t('静音', 'Mute')}
+                    aria-label={muted ? t('取消静音') : t('静音')}
                   >
                     {muted || volume === 0 ? <VolumeX size={16} strokeWidth={2} /> : <Volume2 size={16} strokeWidth={2} />}
                   </button>
@@ -1215,7 +1245,7 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
                   type="button"
                   className="video-player-ctrl-btn"
                   onClick={handleFullscreen}
-                  aria-label={isFullscreen ? t('退出全屏', 'Exit fullscreen') : t('全屏', 'Fullscreen')}
+                  aria-label={isFullscreen ? t('退出全屏') : t('全屏')}
                 >
                   {isFullscreen ? <Minimize size={16} strokeWidth={2} /> : <Maximize size={16} strokeWidth={2} />}
                 </button>
@@ -1228,6 +1258,7 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
         <TipModal
           recipientName={post.author}
           context="post"
+          postId={post.id}
           postTitle={post.title}
           onClose={() => setShowTip(false)}
         />
@@ -1296,10 +1327,10 @@ export function ConfirmDeleteModal({ postId: _postId, onConfirm, onCancel }: {
   const { t } = useApp();
   return (
     <Ios26Alert
-      title={t('删除帖子', 'Delete post')}
-      message={t('确定要删除该帖子吗？', 'Are you sure you want to delete this post?')}
-      cancelLabel={t('取消', 'Cancel')}
-      confirmLabel={t('删除', 'Delete')}
+      title={t('删除帖子')}
+      message={t('确定要删除该帖子吗？')}
+      cancelLabel={t('取消')}
+      confirmLabel={t('删除')}
       onCancel={onCancel}
       onConfirm={onConfirm}
     />
@@ -1312,9 +1343,9 @@ export function ConfirmUnfollowModal({ author, onConfirm, onCancel }: {
   const { t } = useApp();
   return (
     <Ios26Alert
-      title={t(`不再关注 ${author}？`, `Unfollow ${author}?`)}
-      cancelLabel={t('取消', 'Cancel')}
-      confirmLabel={t('确定', 'Confirm')}
+      title={t('不再关注 {author}？', { author })}
+      cancelLabel={t('取消')}
+      confirmLabel={t('确定')}
       onCancel={onCancel}
       onConfirm={onConfirm}
     />
@@ -1345,19 +1376,19 @@ export function ConnectWalletModal({ onConnect, onClose }: {
             <Wallet size={26} strokeWidth={2.2} />
           </div>
           <h2 className="connect-wallet-modal-title" id="connect-wallet-title">
-            {t('连接钱包以继续', 'Connect wallet to continue')}
+            {t('连接钱包以继续')}
           </h2>
           <p className="connect-wallet-modal-message" id="connect-wallet-message">
-            {t('就差一步，连接钱包即可继续', "Just one step away — connect your wallet to continue")}
+            {t('就差一步，连接钱包即可继续')}
           </p>
         </div>
         <div className="connect-wallet-modal-actions">
           <button type="button" className="planet-confirm-btn" onClick={onConnect}>
             <Wallet size={16} strokeWidth={2} />
-            {t('连接钱包', 'Connect Wallet')}
+            {t('连接钱包')}
           </button>
           <button type="button" className="gemini-stake-btn gemini-stake-btn--ghost" onClick={onClose}>
-            {t('再看一看', 'Maybe later')}
+            {t('再看一看')}
           </button>
         </div>
       </div>
@@ -1371,10 +1402,10 @@ export function ConfirmDeleteDraftModal({ onConfirm, onCancel }: {
   const { t } = useApp();
   return (
     <Ios26Alert
-      title={t('删除草稿', 'Delete draft')}
-      message={t('确定要删除该草稿吗？', 'Are you sure you want to delete this draft?')}
-      cancelLabel={t('取消', 'Cancel')}
-      confirmLabel={t('删除', 'Delete')}
+      title={t('删除草稿')}
+      message={t('确定要删除该草稿吗？')}
+      cancelLabel={t('取消')}
+      confirmLabel={t('删除')}
       onCancel={onCancel}
       onConfirm={onConfirm}
     />
@@ -1401,18 +1432,18 @@ export function ChannelCreatedSuccessModal({ onSetTiers, onDismiss }: {
             <Check size={28} strokeWidth={2.2} />
           </div>
           <h2 className="channel-success-title" id="channel-success-title">
-            {t('频道开通成功', 'Channel created')}
+            {t('频道开通成功')}
           </h2>
           <p className="channel-success-message" id="channel-success-message">
-            {t('设置会员档位后，用户订阅即可为你带来收益', 'Set membership tiers — earn when users subscribe')}
+            {t('设置会员档位后，用户订阅即可为你带来收益')}
           </p>
         </div>
         <div className="channel-success-actions">
           <button type="button" className="planet-confirm-btn" onClick={onSetTiers}>
-            {t('设置会员档位', 'Set up tiers')}
+            {t('设置会员档位')}
           </button>
           <button type="button" className="gemini-stake-btn gemini-stake-btn--ghost" onClick={onDismiss}>
-            {t('暂不设置', 'Not now')}
+            {t('暂不设置')}
           </button>
         </div>
       </div>
@@ -1430,14 +1461,16 @@ export function TipModal({
   recipientName,
   context,
   postTitle,
+  postId,
   onClose,
 }: {
   recipientName: string;
   context: 'post' | 'author';
   postTitle?: string;
+  postId?: string;
   onClose: () => void;
 }) {
-  const { t, showToast } = useApp();
+  const { t, showToast, recordOutgoingTip } = useApp();
   const [selected, setSelected] = useState<number | null>(null);
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done'>('select');
 
@@ -1446,28 +1479,35 @@ export function TipModal({
     setStep('paying');
     setTimeout(() => {
       setStep('done');
+      recordOutgoingTip({
+        recipientName,
+        amount: selected,
+        context,
+        postId: context === 'post' ? postId : undefined,
+        postTitle: context === 'post' ? postTitle : undefined,
+      });
       setTimeout(() => {
-        showToast(t('打赏成功！感谢你的支持', 'Tip sent! Thank you for your support'));
+        showToast(t('打赏成功！感谢你的支持'));
         onClose();
       }, 800);
     }, 1300);
   };
 
   const titleLabel = context === 'author'
-    ? t(`打赏 ${recipientName}`, `Tip ${recipientName}`)
-    : t('打赏此帖', 'Tip this post');
+    ? t('打赏 {recipientName}', { recipientName })
+    : t('打赏此帖');
 
   const tipRemark = context === 'post' && postTitle
     ? postTitle.split('\n')[0]
-    : t(`打赏给 ${recipientName}`, `Tip to ${recipientName}`);
+    : t('打赏给 {recipientName}', { recipientName });
 
   // Full-page confirm/paying/done
   if (step !== 'select') {
     return (
       <PaymentConfirmPage
         pageStep={step}
-        icon={<div className="pay-page-brand-icon"><HandCoins size={28} strokeWidth={2} /></div>}
-        productName={t('知识宇宙', 'Knowledge Universe')}
+        icon={<div className="pay-page-brand-icon pay-page-brand-icon--tip"><HandCoins size={28} strokeWidth={2} /></div>}
+        productName={t('知识宇宙')}
         remark={tipRemark}
         amountText={`${selected} PB`}
         networkFee="1 PB"
@@ -1484,7 +1524,7 @@ export function TipModal({
       <div className="payment-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">{titleLabel}</span>
-          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
@@ -1513,8 +1553,8 @@ export function TipModal({
           onClick={() => selected && setStep('confirm')}
         >
           {selected
-            ? t(`确认打赏 ${selected} PB`, `Confirm Tip ${selected} PB`)
-            : t('请选择数额', 'Select an amount')}
+            ? t('确认打赏 {selected} PB', { selected })
+            : t('请选择数额')}
         </button>
       </div>
     </div>
@@ -1535,7 +1575,7 @@ export function CheckInModal({
   onClose: () => void;
 }) {
   const { t, language, walletConnected, connectWallet } = useApp();
-  const zh = language === 'zh-CN';
+  const zh = isChinese(language);
   const [status, setStatus] = useState<'idle' | 'done'>('idle');
   // 签到本身就是"连接钱包"的入口按钮，点击直接连接（不弹二次确认）；连接成功后自动补上领取
   const [pendingGuestClaim, setPendingGuestClaim] = useState(false);
@@ -1576,10 +1616,10 @@ export function CheckInModal({
 
   return (
     <div className="sheet-backdrop" onClick={status === 'idle' ? onClose : undefined}>
-      <div className="checkin-modal" role="dialog" aria-modal="true" aria-label={t('每日签到', 'Daily check-in')} onClick={e => e.stopPropagation()}>
+      <div className="checkin-modal" role="dialog" aria-modal="true" aria-label={t('每日签到')} onClick={e => e.stopPropagation()}>
         <div className="checkin-modal-header">
-          <span className="checkin-hero-title">{t('每日签到', 'Daily check-in')}</span>
-          <button type="button" className="modal-close checkin-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+          <span className="checkin-hero-title">{t('每日签到')}</span>
+          <button type="button" className="modal-close checkin-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
@@ -1589,7 +1629,7 @@ export function CheckInModal({
             <CalendarCheck size={28} strokeWidth={1.9} />
           </div>
           <span className="checkin-hero-sub">
-            {t(`连续签到，免费领${rewardName}`, `Check in daily for free ${rewardName}`)}
+            {t('连续签到，免费领{rewardName}', { rewardName })}
           </span>
         </div>
 
@@ -1598,18 +1638,15 @@ export function CheckInModal({
             <Flame size={13} strokeWidth={2.2} aria-hidden="true" />
             <span>
               {showAsDone
-                ? t(`已连续签到 ${streakCount} 天`, `${streakCount}-day check-in streak`)
-                : t(`连续签到第 ${streakCount} 天`, `Check-in streak: day ${streakCount}`)}
+                ? t('已连续签到 {streakCount} 天', { streakCount })
+                : t('连续签到第 {streakCount} 天', { streakCount })}
             </span>
           </div>
         )}
 
         {walletConnected && preview.isBroken && status === 'idle' && !alreadyClaimed && (
           <div className="checkin-break" role="status">
-            {t(
-              `签到中断了，已扣除 ${preview.penalty} ${symbol}，今天起重新累积`,
-              `Your streak ended — ${preview.penalty} ${symbol} deducted. Starting fresh today.`,
-            )}
+            {t('签到中断了，已扣除 {penalty} {symbol}，今天起重新累积', { penalty: preview.penalty, symbol })}
           </div>
         )}
 
@@ -1625,7 +1662,7 @@ export function CheckInModal({
                 className={`checkin-day${claimed ? ' is-claimed' : ''}${isToday ? ' is-today' : ''}`}
               >
                 <span className="checkin-day-label">
-                  {isCap ? t(`第${day}天起`, `Day ${day}+`) : t(`第${day}天`, `Day ${day}`)}
+                  {isCap ? t('第{day}天起', { day }) : t('第{day}天', { day })}
                 </span>
                 <span className="checkin-day-token" aria-hidden="true">
                   {claimed ? <Check size={15} strokeWidth={2.6} /> : <Gift size={14} strokeWidth={1.9} />}
@@ -1640,10 +1677,7 @@ export function CheckInModal({
         </div>
 
         <p className="checkin-rule">
-          {t(
-            `第 1 天领 1 ${symbol}，往后每天多领 1，第 ${CHECK_IN_MAX_DAILY} 天起每天稳定领 ${CHECK_IN_MAX_DAILY} ${symbol}；中断后会扣除 ${CHECK_IN_MAX_DAILY} ${symbol}，并从第 1 天重新开始。`,
-            `Day 1 gives 1 ${symbol}, then +1 each day, up to ${CHECK_IN_MAX_DAILY} ${symbol} per day from Day ${CHECK_IN_MAX_DAILY}. Miss a day and ${CHECK_IN_MAX_DAILY} ${symbol} is deducted, restarting from Day 1.`,
-          )}
+          {t('第 1 天领 1 {symbol}，往后每天多领 1，第 {CHECK_IN_MAX_DAILY} 天起每天稳定领 {CHECK_IN_MAX_DAILY} {symbol}；中断后会扣除 {CHECK_IN_MAX_DAILY} {symbol}，并从第 1 天重新开始。', { symbol, CHECK_IN_MAX_DAILY })}
         </p>
 
         {status === 'done' ? (
@@ -1652,7 +1686,7 @@ export function CheckInModal({
               <Check size={20} strokeWidth={3} />
             </span>
             <span className="checkin-done-text">
-              {t(`已领取 +${preview.reward} ${symbol}`, `Claimed +${preview.reward} ${symbol}`)}
+              {t('已领取 +{reward} {symbol}', { reward: preview.reward, symbol })}
             </span>
           </div>
         ) : alreadyClaimed ? (
@@ -1662,24 +1696,24 @@ export function CheckInModal({
                 <Check size={20} strokeWidth={3} />
               </span>
               <span className="checkin-done-text">
-                {t('今日已签到，明天再来', "Checked in today — see you tomorrow")}
+                {t('今日已签到，明天再来')}
               </span>
             </div>
             <button type="button" className="checkin-ghost-btn" onClick={onClose}>
-              {t('知道了', 'Got it')}
+              {t('知道了')}
             </button>
           </>
         ) : (
           <button type="button" className="checkin-claim-btn" onClick={handleClaim}>
             {walletConnected
-              ? t(`领取今日奖励 +${preview.reward} ${symbol}`, `Claim today's reward +${preview.reward} ${symbol}`)
-              : t('连接钱包，领取签到奖励', 'Connect wallet to claim your reward')}
+              ? t('领取今日奖励 +{reward} {symbol}', { reward: preview.reward, symbol })
+              : t('连接钱包，领取签到奖励')}
           </button>
         )}
 
         {walletConnected && (
           <span className="checkin-balance">
-            {t(`累计已领 ${shownBalance} ${symbol}`, `Total earned: ${shownBalance} ${symbol}`)}
+            {t('累计已领 {shownBalance} {symbol}', { shownBalance, symbol })}
           </span>
         )}
       </div>
@@ -1718,8 +1752,8 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
       <PaymentConfirmPage
         pageStep={step}
         icon={<div className="pay-page-brand-icon"><KnowledgePlanetIcon className="gemini-icon" /></div>}
-        productName={t('知识宇宙', 'Knowledge Universe')}
-        remark={t(`订阅《${channel.name}》· ${selectedTier.name}`, `Subscribe to "${channel.name}" · ${selectedTier.name}`)}
+        productName={t('知识宇宙')}
+        remark={t('订阅《{name}》· {name2}', { name: channel.name, name2: selectedTier.name })}
         amountText={`${selectedTier.price} PB`}
         networkFee="1 PB"
         tokenFee={`${selectedTier.price} PB`}
@@ -1734,8 +1768,8 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="payment-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
-          <span className="sheet-title">{t(`订阅《${channel.name}》`, `Subscribe to "${channel.name}"`)}</span>
-          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+          <span className="sheet-title">{t('订阅《{name}》', { name: channel.name })}</span>
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
@@ -1754,11 +1788,11 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
                 className={`stake-tier-option${selected === idx ? ' stake-tier-option--active' : ''}`}
                 onClick={() => setSelected(idx)}
               >
-                <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月', 'mo')}</span>
+                <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月')}</span>
                 <span className="stake-tier-option__desc">
                   {isCurrent
-                    ? (tier.archived ? t('当前档位（已下架，不影响你的权限）', 'Current tier (discontinued — your access is unaffected)') : t('当前档位', 'Current tier'))
-                    : t(`可看全部 ${tier.name} 及以下档位专属内容`, `Access all content for ${tier.name} and below`)}
+                    ? (tier.archived ? t('当前档位（已下架，不影响你的权限）') : t('当前档位'))
+                    : t('可看全部 {name} 及以下档位专属内容', { name: tier.name })}
                 </span>
               </button>
             );
@@ -1773,9 +1807,9 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
         >
           {selected !== null
             ? (currentTierIndex != null && selected > currentTierIndex
-              ? t(`升级订阅 · ${channel.tiers[selected].price} PB/月`, `Upgrade · ${channel.tiers[selected].price} PB/mo`)
-              : t(`订阅 · ${channel.tiers[selected].price} PB/月`, `Subscribe · ${channel.tiers[selected].price} PB/mo`))
-            : t('请选择档位', 'Select a tier')}
+              ? t('升级订阅 · {price} PB/月', { price: channel.tiers[selected].price })
+              : t('订阅 · {price} PB/月', { price: channel.tiers[selected].price }))
+            : t('请选择档位')}
         </button>
 
         {currentTierIndex != null && (
@@ -1784,17 +1818,17 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
             className="channel-unsub-btn"
             onClick={() => setConfirmUnsub(true)}
           >
-            {t('取消订阅', 'Cancel subscription')}
+            {t('取消订阅')}
           </button>
         )}
       </div>
 
       {confirmUnsub && (
         <Ios26Alert
-          title={t('取消订阅？', 'Cancel subscription?')}
-          message={t('取消后将立即失去该频道的会员专属内容访问权限。', 'You will immediately lose access to this channel’s member-only content.')}
-          cancelLabel={t('再想想', 'Keep it')}
-          confirmLabel={t('取消订阅', 'Cancel subscription')}
+          title={t('取消订阅？')}
+          message={t('取消后将立即失去该频道的会员专属内容访问权限。')}
+          cancelLabel={t('再想想')}
+          confirmLabel={t('取消订阅')}
           onCancel={() => setConfirmUnsub(false)}
           onConfirm={() => { unsubscribeFromChannel(channelId); onClose(); }}
         />
@@ -1857,26 +1891,23 @@ function isChannelTierPriceInvalid(tiers: ChannelTier[], idx: number): boolean {
 function channelTierPriceError(
   tiers: ChannelTier[],
   idx: number,
-  t: (zh: string, en: string) => string,
+  t: (key: string, params?: Record<string, string | number>) => string,
 ): string | null {
   if (tiers[idx].archived) return null;
   const price = tiers[idx].price;
   if (price <= 0) {
-    return t('月费不可为 0', 'Price cannot be 0');
+    return t('月费不可为 0');
   }
   const prevPrice = lastActivePrice(tiers, idx);
   if (prevPrice != null && price <= prevPrice) {
-    return t(
-      `须高于上一档（${prevPrice} PB）`,
-      `Must be higher than the previous tier (${prevPrice} PB)`,
-    );
+    return t('须高于上一档（{prevPrice} PB）', { prevPrice });
   }
   return null;
 }
 
 export function CreateChannelModal({ existingChannel, onClose }: { existingChannel?: Channel; onClose: () => void }) {
   const { t, createChannel, updateChannel, userProfile, deductSup, showToast } = useApp();
-  const defaultChannelName = t(`${userProfile.nickname}的频道`, `${userProfile.nickname}'s Channel`);
+  const defaultChannelName = t('{nickname}的频道', { nickname: userProfile.nickname });
   const [paying, setPaying] = useState<'idle' | 'loading' | 'failed'>('idle');
   const [failReason, setFailReason] = useState('');
   const channelSupCost = SUP_COST_BY_TIER[1000];
@@ -1899,7 +1930,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   })();
   const canEditTierSettings = tierSettingsCooldownRemainingDays <= 0;
   const notifyTierSettingsLocked = () => {
-    showToast(t('档位设置 30 天内只能修改一次，请稍后再试', 'Tier settings can only be changed once every 30 days, please try again later'));
+    showToast(t('档位设置 30 天内只能修改一次，请稍后再试'));
   };
 
   const activeTierCount = tiers.filter(tr => !tr.archived).length;
@@ -1952,7 +1983,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
     setTimeout(() => {
       const shouldFail = Math.random() < 0.12;
       if (shouldFail) {
-        setFailReason(t('余额不足，请充值后重试', 'Insufficient balance, please top up and retry'));
+        setFailReason(t('余额不足，请充值后重试'));
         setPaying('failed');
         return;
       }
@@ -1966,22 +1997,22 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
 
   return (
     <div className="sheet-backdrop" onClick={closeIfIdle}>
-      <div className={`edit-profile-sheet${!isEdit ? ' edit-profile-sheet--channel' : ''}`} role="dialog" aria-label={t('开通频道', 'Create Channel')} onClick={e => e.stopPropagation()}>
+      <div className={`edit-profile-sheet${!isEdit ? ' edit-profile-sheet--channel' : ''}`} role="dialog" aria-label={t('开通频道')} onClick={e => e.stopPropagation()}>
         <div className="edit-profile-header">
-          <button type="button" className="edit-profile-close" onClick={closeIfIdle} disabled={paying === 'loading'} aria-label={t('关闭', 'Close')}>
+          <button type="button" className="edit-profile-close" onClick={closeIfIdle} disabled={paying === 'loading'} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
-          <span className="edit-profile-title">{isEdit ? t('管理频道', 'Manage Channel') : t('开通频道', 'Create Channel')}</span>
+          <span className="edit-profile-title">{isEdit ? t('管理频道') : t('开通频道')}</span>
           {isEdit ? (
             <button
               type="button"
               className="edit-profile-save edit-profile-save--icon"
               disabled={!canSubmit || paying === 'loading'}
               onClick={handleSubmit}
-              aria-label={t('保存', 'Save')}
+              aria-label={t('保存')}
             >
               <Save size={16} strokeWidth={2.25} aria-hidden />
-              {t('保存', 'Save')}
+              {t('保存')}
             </button>
           ) : (
             <div className="edit-profile-header-spacer" aria-hidden />
@@ -1990,20 +2021,20 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
 
         <div className="edit-profile-body">
           <div className="edit-profile-field">
-            <label className="edit-profile-label" htmlFor="channel-name">{t('频道名称', 'Channel Name')}</label>
+            <label className="edit-profile-label" htmlFor="channel-name">{t('频道名称')}</label>
             <input
               id="channel-name" className="edit-profile-input" value={name} maxLength={24}
               onChange={e => setName(e.target.value)}
-              placeholder={t('给频道起个名字', 'Name your channel')}
+              placeholder={t('给频道起个名字')}
               autoComplete="off"
             />
           </div>
           <div className="edit-profile-field">
-            <label className="edit-profile-label" htmlFor="channel-desc">{t('简介', 'Description')}</label>
+            <label className="edit-profile-label" htmlFor="channel-desc">{t('简介')}</label>
             <input
               id="channel-desc" className="edit-profile-input" value={description} maxLength={60}
               onChange={e => setDescription(e.target.value)}
-              placeholder={t('一句话介绍频道内容', 'Describe your channel')}
+              placeholder={t('一句话介绍频道内容')}
               autoComplete="off"
             />
           </div>
@@ -2011,15 +2042,15 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
           {isEdit && (
           <div className="edit-profile-field">
             <span className="edit-profile-label">
-              {t(`会员档位（最多 ${MAX_CHANNEL_TIERS} 档）`, `Membership tiers (up to ${MAX_CHANNEL_TIERS})`)}
+              {t('会员档位（最多 {MAX_CHANNEL_TIERS} 档）', { MAX_CHANNEL_TIERS })}
             </span>
             <p className="channel-tier-section-hint">
-              {t('不添加档位时，频道内容对所有人免费开放', 'Without tiers, your channel stays free for everyone')}
+              {t('不添加档位时，频道内容对所有人免费开放')}
             </p>
             {tiers.length > 0 && (
               <div className="channel-tier-row channel-tier-row--head" aria-hidden>
-                <span className="channel-tier-col-label">{t('档位', 'Tier')}</span>
-                <span className="channel-tier-col-label channel-tier-col-label--price">{t('月订阅费', 'Monthly fee')}</span>
+                <span className="channel-tier-col-label">{t('档位')}</span>
+                <span className="channel-tier-col-label channel-tier-col-label--price">{t('月订阅费')}</span>
                 <span className="channel-tier-col-label channel-tier-col-label--action" />
               </div>
             )}
@@ -2029,11 +2060,11 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                   <div key={tier.id} className="channel-tier-block channel-tier-block--archived">
                     <div className="channel-tier-row">
                       <span className="channel-tier-name-label">{tier.name}</span>
-                      <span className="channel-tier-archived-price">{tier.price} PB/{t('月', 'mo')}</span>
-                      <span className="channel-tier-archived-badge">{t('已下架', 'Discontinued')}</span>
+                      <span className="channel-tier-archived-price">{tier.price} PB/{t('月')}</span>
+                      <span className="channel-tier-archived-badge">{t('已下架')}</span>
                     </div>
                     <p className="channel-tier-archived-hint">
-                      {t('不再接受新订阅，已订阅用户保留原价与权限', 'No new subscribers; existing members keep their price and access')}
+                      {t('不再接受新订阅，已订阅用户保留原价与权限')}
                     </p>
                   </div>
                 );
@@ -2054,17 +2085,17 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                           const raw = Number(e.target.value);
                           updateTierPrice(idx, Number.isFinite(raw) ? Math.max(0, raw) : 0);
                         }}
-                        placeholder={t('月费', 'Fee')}
-                        aria-label={t(`${tier.name} 月订阅费（PB）`, `${tier.name} monthly subscription fee (PB)`)}
+                        placeholder={t('月费')}
+                        aria-label={t('{name} 月订阅费（PB）', { name: tier.name })}
                         aria-invalid={priceError ? true : undefined}
                       />
-                      <span className="channel-tier-price-unit">PB/{t('月', 'mo')}</span>
+                      <span className="channel-tier-price-unit">PB/{t('月')}</span>
                     </div>
                     <button
                       type="button"
                       className={`draft-item-delete channel-tier-delete${!canEditTierSettings ? ' channel-tier-delete--locked' : ''}`}
                       onClick={() => removeTier(idx)}
-                      aria-label={t('下架档位', 'Discontinue tier')}
+                      aria-label={t('下架档位')}
                     >
                       <X size={14} strokeWidth={2} />
                     </button>
@@ -2082,7 +2113,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                 onClick={addTier}
               >
                 <Plus size={16} strokeWidth={2.5} aria-hidden />
-                {t('新增档位', 'Add tier')}
+                {t('新增档位')}
               </button>
             )}
           </div>
@@ -2090,14 +2121,14 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
 
           {!isEdit && (
             <div className="edit-profile-field">
-              <span className="edit-profile-label">{t('费用明细', 'Fee breakdown')}</span>
+              <span className="edit-profile-label">{t('费用明细')}</span>
               <div className="pay-combo-breakdown">
                 <div className="pay-combo-row">
-                  <span className="pay-combo-label">{t('PB 消耗', 'PB cost')}</span>
+                  <span className="pay-combo-label">{t('PB 消耗')}</span>
                   <span className="pay-combo-value">{formatSuperAmount(1000)} PB</span>
                 </div>
                 <div className="pay-combo-row">
-                  <span className="pay-combo-label">{t('SUP 消耗', 'SUP cost')}</span>
+                  <span className="pay-combo-label">{t('SUP 消耗')}</span>
                   <span className="pay-combo-value">{formatSupAmount(channelSupCost)} SUP</span>
                 </div>
                 {paying === 'failed' && (
@@ -2120,12 +2151,12 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
             {paying === 'loading'
               ? <span className="spinner" />
               : paying === 'failed'
-                ? t('重试', 'Retry')
-                : t('开通频道', 'Create Channel')}
+                ? t('重试')
+                : t('开通频道')}
           </button>
           {paying === 'idle' && (
             <p className="channel-create-footer-hint">
-              {t('开通后免费产生一个知识宇宙节点', 'A Knowledge Universe node is created for free when you open a channel')}
+              {t('开通后免费产生一个知识宇宙节点')}
             </p>
           )}
         </div>

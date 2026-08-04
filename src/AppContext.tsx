@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, PbTransactionReason, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 
 export type AppContextValue = {
   navigate: (route: Route) => void;
@@ -17,13 +17,16 @@ export type AppContextValue = {
   toggleFollow: (author: string) => void;
   language: Language;
   setLanguage: Dispatch<SetStateAction<Language>>;
-  t: (zh: string, en: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   posts: Post[];
   repostedPostIds: Set<string>;
   likedPostIds: Set<string>;
   savedPostIds: Set<string>;
   dislikedPostIds: Set<string>;
   togglePostAction: (postId: string, action: PostAction) => void;
+  /** 当前用户发出的打赏记录（新→旧） */
+  outgoingTips: OutgoingTip[];
+  recordOutgoingTip: (tip: Omit<OutgoingTip, 'id' | 'createdAt'>) => void;
   requestPostInteraction: (
     postId: string,
     action: InteractionAction,

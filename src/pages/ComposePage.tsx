@@ -5,6 +5,7 @@ import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { CURRENT_USER } from '../mockData';
 import type { Draft, Post, StakeTier } from '../types';
 import { STAKE_TIERS, stakeTierDescription, stakeTierLabel } from '../stakeConfig';
+import { isChinese } from '../i18n';
 
 const MAX_POST_CHARS = 500;
 
@@ -190,7 +191,7 @@ export function ComposePage({
     } else {
       saveDraft(draftData);
     }
-    showToast(t('草稿已保存', 'Draft saved'));
+    showToast(t('草稿已保存'));
     onClose();
   };
 
@@ -230,11 +231,11 @@ export function ComposePage({
 
   const isTyped = kind !== 'text';
   const kindLabel: Record<Post['kind'], string> = {
-    text: t('纯文字', 'Text'), image: t('图文', 'Photo'), video: t('视频', 'Video'), article: t('文章', 'Article'),
+    text: t('纯文字'), image: t('图文'), video: t('视频'), article: t('文章'),
   };
 
   const blockDefs = [
-    { tag: 'p',  label: t('正文', 'Body') },
+    { tag: 'p',  label: t('正文') },
     { tag: 'h1', label: 'H1' },
     { tag: 'h2', label: 'H2' },
     { tag: 'h3', label: 'H3' },
@@ -248,7 +249,7 @@ export function ComposePage({
             className="back-btn"
             type="button"
             onClick={(e) => { e.stopPropagation(); handleCloseAttempt(); }}
-            aria-label={t('关闭', 'Close')}
+            aria-label={t('关闭')}
             aria-expanded={exitMenuOpen}
             aria-haspopup="menu"
           >
@@ -263,7 +264,7 @@ export function ComposePage({
                   onClick={() => { setExitMenuOpen(false); handleSaveDraft(); }}
                 >
                   <Save size={14} strokeWidth={2.2} />
-                  {t('保存草稿', 'Save draft')}
+                  {t('保存草稿')}
                 </button>
               )}
               <button
@@ -273,13 +274,13 @@ export function ComposePage({
                 onClick={() => { setExitMenuOpen(false); onClose(); }}
               >
                 <Trash2 size={14} strokeWidth={2.2} />
-                {isEditMode ? t('放弃修改', 'Discard changes') : t('放弃', 'Discard')}
+                {isEditMode ? t('放弃修改') : t('放弃')}
               </button>
             </div>
           )}
         </div>
         <span className="page-title">
-          {isEditMode ? t('编辑帖子', 'Edit post') : draft ? t('编辑草稿', 'Edit draft') : t('发帖', 'Create post')}
+          {isEditMode ? t('编辑帖子') : draft ? t('编辑草稿') : t('发帖')}
         </span>
         <div className="compose-header-actions">
           {canSaveDraft && (
@@ -287,10 +288,10 @@ export function ComposePage({
               className="draft-save-btn"
               type="button"
               onClick={handleSaveDraft}
-              aria-label={t('保存草稿', 'Save draft')}
+              aria-label={t('保存草稿')}
             >
               <Save size={14} strokeWidth={2} />
-              {t('保存草稿', 'Save Draft')}
+              {t('保存草稿2')}
             </button>
           )}
           <button
@@ -300,7 +301,7 @@ export function ComposePage({
             disabled={!canPublish || publishing}
           >
             {isEditMode ? <Save size={14} strokeWidth={2.2} /> : <Send size={14} strokeWidth={2.2} />}
-            {publishing ? t('发布中…', 'Publishing…') : isEditMode ? t('保存', 'Save') : t('发布', 'Publish')}
+            {publishing ? t('发布中…') : isEditMode ? t('保存') : t('发布')}
           </button>
         </div>
       </div>
@@ -326,14 +327,14 @@ export function ComposePage({
             <input
               className="compose-title-input"
               type="text"
-              placeholder={t('文章标题…', 'Article title…')}
+              placeholder={t('文章标题…')}
               value={articleTitle}
               onChange={e => setArticleTitle(e.target.value)}
             />
 
             <div className="compose-cover-meta">
-              <span className="compose-cover-label">{t('封面', 'Cover')}</span>
-              <span className="compose-cover-optional">{t('（选填）', '(optional)')}</span>
+              <span className="compose-cover-label">{t('封面')}</span>
+              <span className="compose-cover-optional">{t('（选填）')}</span>
             </div>
 
             {hasCover ? (
@@ -342,7 +343,7 @@ export function ComposePage({
                   className="compose-img-remove"
                   type="button"
                   onClick={() => setHasCover(false)}
-                  aria-label={t('移除封面', 'Remove cover')}
+                  aria-label={t('移除封面')}
                 >
                   <X size={12} strokeWidth={2.5} />
                 </button>
@@ -354,17 +355,17 @@ export function ComposePage({
                 onClick={() => setHasCover(true)}
               >
                 <Plus size={16} strokeWidth={2} />
-                {t('添加封面图片', 'Add cover image')}
+                {t('添加封面图片')}
               </button>
             )}
 
             {/* 格式工具栏 */}
-            <div className="article-fmt-bar" role="toolbar" aria-label={t('格式工具栏', 'Formatting tools')}>
+            <div className="article-fmt-bar" role="toolbar" aria-label={t('格式工具栏')}>
               <button
                 type="button"
                 className={`afmt-btn afmt-btn--bold${activeFormats.has('bold') ? ' afmt-btn--active' : ''}`}
                 onClick={() => execFormat('bold')}
-                aria-label={t('加粗', 'Bold')}
+                aria-label={t('加粗')}
                 aria-pressed={activeFormats.has('bold')}
               >
                 <Bold size={14} strokeWidth={2.2} />
@@ -373,7 +374,7 @@ export function ComposePage({
                 type="button"
                 className={`afmt-btn afmt-btn--ital${activeFormats.has('italic') ? ' afmt-btn--active' : ''}`}
                 onClick={() => execFormat('italic')}
-                aria-label={t('斜体', 'Italic')}
+                aria-label={t('斜体')}
                 aria-pressed={activeFormats.has('italic')}
               >
                 <Italic size={14} strokeWidth={2.2} />
@@ -382,7 +383,7 @@ export function ComposePage({
                 type="button"
                 className={`afmt-btn${activeFormats.has('underline') ? ' afmt-btn--active' : ''}`}
                 onClick={() => execFormat('underline')}
-                aria-label={t('下划线', 'Underline')}
+                aria-label={t('下划线')}
                 aria-pressed={activeFormats.has('underline')}
               >
                 <Underline size={14} strokeWidth={2.2} />
@@ -392,7 +393,7 @@ export function ComposePage({
                 type="button"
                 className={`afmt-btn afmt-btn--text${currentBlock === 'h1' ? ' afmt-btn--active' : ''}`}
                 onClick={() => handleBlock('h1')}
-                aria-label={t('标题 1', 'Heading 1')}
+                aria-label={t('标题 1')}
               >
                 H1
               </button>
@@ -400,7 +401,7 @@ export function ComposePage({
                 type="button"
                 className={`afmt-btn afmt-btn--text${currentBlock === 'h2' ? ' afmt-btn--active' : ''}`}
                 onClick={() => handleBlock('h2')}
-                aria-label={t('标题 2', 'Heading 2')}
+                aria-label={t('标题 2')}
               >
                 H2
               </button>
@@ -408,7 +409,7 @@ export function ComposePage({
                 type="button"
                 className={`afmt-btn afmt-btn--text${currentBlock === 'h3' ? ' afmt-btn--active' : ''}`}
                 onClick={() => handleBlock('h3')}
-                aria-label={t('标题 3', 'Heading 3')}
+                aria-label={t('标题 3')}
               >
                 H3
               </button>
@@ -417,7 +418,7 @@ export function ComposePage({
                 type="button"
                 className={`afmt-btn${activeFormats.has('ul') ? ' afmt-btn--active' : ''}`}
                 onClick={() => execFormat('insertUnorderedList')}
-                aria-label={t('无序列表', 'Bullet list')}
+                aria-label={t('无序列表')}
                 aria-pressed={activeFormats.has('ul')}
               >
                 <List size={14} strokeWidth={2.2} />
@@ -426,7 +427,7 @@ export function ComposePage({
                 type="button"
                 className={`afmt-btn${activeFormats.has('ol') ? ' afmt-btn--active' : ''}`}
                 onClick={() => execFormat('insertOrderedList')}
-                aria-label={t('有序列表', 'Numbered list')}
+                aria-label={t('有序列表')}
                 aria-pressed={activeFormats.has('ol')}
               >
                 <ListOrdered size={14} strokeWidth={2.2} />
@@ -435,7 +436,7 @@ export function ComposePage({
                 type="button"
                 className={`afmt-btn${currentBlock === 'blockquote' ? ' afmt-btn--active' : ''}`}
                 onClick={() => handleBlock('blockquote')}
-                aria-label={t('引用', 'Blockquote')}
+                aria-label={t('引用')}
               >
                 <Quote size={14} strokeWidth={2.2} />
               </button>
@@ -446,10 +447,10 @@ export function ComposePage({
               className="rte-editor"
               contentEditable
               suppressContentEditableWarning
-              data-placeholder={t('开始写文章…', 'Start writing your article…')}
+              data-placeholder={t('开始写文章…')}
               role="textbox"
               aria-multiline="true"
-              aria-label={t('文章内容编辑器', 'Article content editor')}
+              aria-label={t('文章内容编辑器')}
               onInput={() => setArticleBodyHasContent(!!editorRef.current?.textContent?.trim())}
               onKeyDown={e => {
                 if (e.key === 'Tab') {
@@ -468,15 +469,15 @@ export function ComposePage({
             <div className="compose-input-wrap">
               <textarea
                 className={`compose-input${isOverLimit ? ' compose-input--error' : ''}${isEditMode ? ' compose-input--readonly' : ''}`}
-                placeholder={t('分享你的知识…', 'Share your knowledge…')}
+                placeholder={t('分享你的知识…')}
                 value={text}
                 onChange={e => { if (!isEditMode) setText(e.target.value); }}
                 readOnly={isEditMode}
-                aria-label={t('帖子内容', 'Post content')}
+                aria-label={t('帖子内容')}
               />
               {isEditMode ? (
                 <p className="compose-readonly-hint">
-                  {t('已发布内容不可修改，仅支持调整可见档位', 'Published content can’t be edited — only the visible tier can be adjusted')}
+                  {t('已发布内容不可修改，仅支持调整可见档位')}
                 </p>
               ) : (
                 <>
@@ -487,7 +488,7 @@ export function ComposePage({
                   </div>
                   {isOverLimit && (
                     <p className="compose-char-error">
-                      {t(`超出字数限制 ${text.length - MAX_POST_CHARS} 字`, `${text.length - MAX_POST_CHARS} characters over limit`)}
+                      {t('超出字数限制 {MAX_POST_CHARS} 字', { MAX_POST_CHARS: text.length - MAX_POST_CHARS })}
                     </p>
                   )}
                 </>
@@ -515,7 +516,7 @@ export function ComposePage({
                       <button
                         className="compose-img-remove"
                         onClick={() => handleRemoveImage(i)}
-                        aria-label={t('移除图片', 'Remove image')}
+                        aria-label={t('移除图片')}
                       >
                         <X size={10} strokeWidth={2.5} />
                       </button>
@@ -526,7 +527,7 @@ export function ComposePage({
                       type="button"
                       className="compose-img-add"
                       onClick={handleAddImage}
-                      aria-label={t('拍照或从相册选择图片', 'Take a photo or choose from your library')}
+                      aria-label={t('拍照或从相册选择图片')}
                     >
                       <Camera size={18} strokeWidth={2} />
                     </button>
@@ -546,12 +547,12 @@ export function ComposePage({
                 ) : (
                   <div className="compose-video-play"><span /></div>
                 )}
-                <span className="compose-video-label">{t('已添加视频', 'Video added')}</span>
+                <span className="compose-video-label">{t('已添加视频')}</span>
                 <button
                   className="compose-video-remove"
                   type="button"
                   onClick={() => setHasVideo(false)}
-                  aria-label={t('移除视频', 'Remove video')}
+                  aria-label={t('移除视频')}
                 >
                   <X size={14} strokeWidth={2} />
                 </button>
@@ -565,7 +566,7 @@ export function ComposePage({
           <div className="compose-section compose-stake-section compose-stake-section--channel">
             <div className="compose-stake-heading">
               <Radio size={16} strokeWidth={2} />
-              <span>{t(`同步至我的频道《${myChannel.name}》`, `Sync to my channel "${myChannel.name}"`)}</span>
+              <span>{t('同步至我的频道《{name}》', { name: myChannel.name })}</span>
               <button
                 type="button"
                 className={`toggle-switch${publishToChannel ? ' toggle-switch--on' : ''}`}
@@ -580,9 +581,9 @@ export function ComposePage({
             {publishToChannel && myChannel.tiers.length > 0 && (
               <>
                 <p className="compose-stake-hint">
-                  {t('选择可见的最低会员档位', 'Choose the minimum tier required to view')}
+                  {t('选择可见的最低会员档位')}
                 </p>
-                <div className="stake-tier-list" role="radiogroup" aria-label={t('可见档位', 'Visible tier')}>
+                <div className="stake-tier-list" role="radiogroup" aria-label={t('可见档位')}>
                   <button
                     type="button"
                     role="radio"
@@ -590,8 +591,8 @@ export function ComposePage({
                     className={`stake-tier-option stake-tier-option--channel${minTierIndex === undefined ? ' stake-tier-option--active' : ''}`}
                     onClick={() => setMinTierIndex(undefined)}
                   >
-                    <span className="stake-tier-option__amount">{t('不限档位', 'No tier restriction')}</span>
-                    <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子', 'No channel subscription needed to see this post')}</span>
+                    <span className="stake-tier-option__amount">{t('不限档位')}</span>
+                    <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子')}</span>
                   </button>
                   {myChannel.tiers.map((tier, idx) => {
                     // 已下架档位不再作为新内容的门槛可选项——新访客买不到这一档，
@@ -606,8 +607,8 @@ export function ComposePage({
                         className={`stake-tier-option stake-tier-option--channel${minTierIndex === idx ? ' stake-tier-option--active' : ''}`}
                         onClick={() => setMinTierIndex(idx)}
                       >
-                        <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月', 'mo')}</span>
-                        <span className="stake-tier-option__desc">{t(`需订阅达到 ${tier.name} 及以上`, `Requires ${tier.name} subscription or above`)}</span>
+                        <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月')}</span>
+                        <span className="stake-tier-option__desc">{t('需订阅达到 {name} 及以上2', { name: tier.name })}</span>
                       </button>
                     );
                   })}
@@ -623,14 +624,14 @@ export function ComposePage({
           <div className="compose-section compose-stake-section compose-stake-section--channel">
             <div className="compose-stake-heading">
               <Radio size={16} strokeWidth={2} />
-              <span>{t(`可见档位《${editPostChannel.name}》`, `Visible tier — "${editPostChannel.name}"`)}</span>
+              <span>{t('可见档位《{name}》', { name: editPostChannel.name })}</span>
             </div>
             <p className="compose-stake-hint">
               {originalMinTierIndex === undefined
-                ? t('该帖已不限档位，无需订阅即可查看', 'This post already has no tier restriction')
-                : t('只能调整为更宽松的档位，不能提高门槛', 'You can only loosen the tier requirement, not raise it')}
+                ? t('该帖已不限档位，无需订阅即可查看')
+                : t('只能调整为更宽松的档位，不能提高门槛')}
             </p>
-            <div className="stake-tier-list" role="radiogroup" aria-label={t('可见档位', 'Visible tier')}>
+            <div className="stake-tier-list" role="radiogroup" aria-label={t('可见档位')}>
               <button
                 type="button"
                 role="radio"
@@ -638,8 +639,8 @@ export function ComposePage({
                 className={`stake-tier-option stake-tier-option--channel${editMinTierIndex === undefined ? ' stake-tier-option--active' : ''}`}
                 onClick={() => setEditMinTierIndex(undefined)}
               >
-                <span className="stake-tier-option__amount">{t('不限档位', 'No tier restriction')}</span>
-                <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子', 'No channel subscription needed to see this post')}</span>
+                <span className="stake-tier-option__amount">{t('不限档位')}</span>
+                <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子')}</span>
               </button>
               {editPostChannel.tiers.map((tier, idx) => {
                 if (tier.archived && editMinTierIndex !== idx) return null;
@@ -653,8 +654,8 @@ export function ComposePage({
                     className={`stake-tier-option stake-tier-option--channel${editMinTierIndex === idx ? ' stake-tier-option--active' : ''}`}
                     onClick={() => setEditMinTierIndex(idx)}
                   >
-                    <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月', 'mo')}</span>
-                    <span className="stake-tier-option__desc">{t(`需订阅达到 ${tier.name} 及以上`, `Requires ${tier.name} subscription or above`)}</span>
+                    <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月')}</span>
+                    <span className="stake-tier-option__desc">{t('需订阅达到 {name} 及以上2', { name: tier.name })}</span>
                   </button>
                 );
               })}
@@ -667,15 +668,15 @@ export function ComposePage({
           <div className="compose-section compose-stake-section">
             <div className="compose-stake-heading">
               <KnowledgePlanetIcon width={16} height={16} />
-              <span>{t('参与知识宇宙', 'Join Knowledge Universe')}</span>
+              <span>{t('参与知识宇宙')}</span>
             </div>
             <p className="compose-stake-hint">
-              {t('选择质押面额，创建可链接的知识宇宙节点；可选择不加入', 'Pick a stake tier to create a linkable node; opting out is allowed')}
+              {t('选择质押面额，创建可链接的知识宇宙节点；可选择不加入')}
             </p>
-            <div className="stake-tier-list" role="radiogroup" aria-label={t('知识宇宙面额', 'Knowledge Universe stake tier')}>
+            <div className="stake-tier-list" role="radiogroup" aria-label={t('知识宇宙面额')}>
               {STAKE_TIERS.map(tier => {
                 const active = stakeTier === tier;
-                const zh = language === 'zh-CN';
+                const zh = isChinese(language);
                 return (
                   <button
                     key={tier}
@@ -686,10 +687,10 @@ export function ComposePage({
                     onClick={() => setStakeTier(tier)}
                   >
                     <span className="stake-tier-option__amount">
-                      {stakeTierLabel(tier, language === 'zh-CN')}
+                      {stakeTierLabel(tier, zh)}
                     </span>
                     <span className="stake-tier-option__desc">
-                      {stakeTierDescription(tier, language === 'zh-CN')}
+                      {stakeTierDescription(tier, zh)}
                     </span>
                   </button>
                 );
@@ -704,15 +705,15 @@ export function ComposePage({
             <div className="visibility-row">
               <span className="visibility-label">
                 <Eye size={16} strokeWidth={2} aria-hidden="true" />
-                {t('免费可见比例', 'Free preview')}
+                {t('免费可见比例')}
               </span>
               <div className="visibility-opts">
                 {[
-                  { v: 0, label: t('完全隐藏', 'Hidden') },
+                  { v: 0, label: t('完全隐藏') },
                   { v: 10, label: '10%' as const },
                   { v: 30, label: '30%' as const },
                   { v: 50, label: '50%' as const },
-                  { v: 100, label: t('公开', 'Public') },
+                  { v: 100, label: t('公开') },
                 ].map(({ v, label }) => (
                   <button
                     key={v}
@@ -727,7 +728,7 @@ export function ComposePage({
             </div>
             {publishToChannel && stakeTier > 0 && (
               <p className="compose-stake-hint">
-                {t('建议单条解锁价为该档月费的 2–10 倍', 'Suggested unlock price: 2–10× the tier’s monthly fee')}
+                {t('建议单条解锁价为该档月费的 2–10 倍')}
               </p>
             )}
           </div>

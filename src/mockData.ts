@@ -1,4 +1,4 @@
-import type { ActivityGroup, Channel, ChannelSubscriber, DmConversation, Post, PostActors, Reply } from './types';
+import type { ActivityGroup, Channel, ChannelSubscriber, DmConversation, OutgoingTip, Post, PostActors, Reply } from './types';
 
 export type UserListItem = {
   name: string;
@@ -548,6 +548,51 @@ export const POST_REPLIES: Record<string, Reply[]> = {
 // 模块级存储：SPA 导航不重载模块，下次进入页面时可读到上次点赞结果
 export const replyLikesStore: Record<string, number> = {};
 export const likedReplyIdsStore = new Set<string>();
+
+/** 当前用户发出的打赏 mock：含帖子打赏与用户主页打赏两类 */
+export const MOCK_OUTGOING_TIPS: OutgoingTip[] = [
+  {
+    id: 'ot1',
+    recipientName: 'AI 效率研究所',
+    amount: 100,
+    context: 'post',
+    postId: 'p1',
+    postTitle: 'AI 产品截图 × 提示词模板合集。精选 12 款工具的实测截图，附 3 个月高频使用总结的提示词模板，拿来即用。',
+    createdAt: Date.now() - 2 * 60 * 60 * 1000,
+  },
+  {
+    id: 'ot2',
+    recipientName: '阿May的研究笔记',
+    amount: 50,
+    context: 'author',
+    createdAt: Date.now() - 5 * 60 * 60 * 1000,
+  },
+  {
+    id: 'ot3',
+    recipientName: '产品大叔严磊',
+    amount: 500,
+    context: 'post',
+    postId: 'p7',
+    postTitle: '我是如何把一个 B 端产品用户留存从 12% 提到 67% 的？\n18 个月的数据与方法论，视频完整复盘。',
+    createdAt: Date.now() - 26 * 60 * 60 * 1000,
+  },
+  {
+    id: 'ot4',
+    recipientName: '极客前沿',
+    amount: 10,
+    context: 'author',
+    createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
+  },
+  {
+    id: 'ot5',
+    recipientName: '游牧开发者',
+    amount: 50,
+    context: 'post',
+    postId: 'p4',
+    postTitle: '做了 3 年独立产品，总结出一个反直觉的规律：\n用户不是因为功能多而留下，而是因为有一件事做得极好。',
+    createdAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
+  },
+];
 
 // ── 互动通知（针对当前用户帖子 p9）──────────────────────────────
 export const ACTIVITY_GROUPS: ActivityGroup[] = [

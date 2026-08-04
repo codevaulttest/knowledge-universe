@@ -29,25 +29,25 @@ export function BottomNav({ route, setTab }: {
         type="button"
         className={`nav-item${isHome ? ' nav-item--active' : ''}`}
         onClick={() => { if (!isHome) navigate({ page: 'P0', tab: 0 }); else setTab(0); }}
-        aria-label={t('首页', 'Home')}
+        aria-label={t('首页')}
       >
         <Home size={20} strokeWidth={2} />
-        <span className="nav-label">{t('首页', 'Home')}</span>
+        <span className="nav-label">{t('首页')}</span>
       </button>
       <button
         type="button"
         className={`nav-item nav-item--planet${isPlanet ? ' nav-item--active' : ''}`}
         onClick={() => requireWallet(() => { if (!isPlanet) navigateRoot({ page: 'P_PLANET' }); })}
-        aria-label={t('知识宇宙', 'Knowledge Universe')}
+        aria-label={t('知识宇宙')}
       >
         <KnowledgePlanetIcon className="knowledge-planet-icon" />
-        <span className="nav-label">{t('知识宇宙', 'Universe')}</span>
+        <span className="nav-label">{t('知识宇宙2')}</span>
       </button>
       <button
         type="button"
         className="nav-item nav-item--compose"
         onClick={() => openCompose()}
-        aria-label={t('发帖', 'Create post')}
+        aria-label={t('发帖')}
       >
         <Plus size={22} strokeWidth={2} />
       </button>
@@ -55,11 +55,11 @@ export function BottomNav({ route, setTab }: {
         type="button"
         className={`nav-item${isDm ? ' nav-item--active' : ''}`}
         onClick={() => requireWallet(() => navigate({ page: 'P_DM' }))}
-        aria-label={t('消息', 'Messages')}
+        aria-label={t('消息')}
         style={{ position: 'relative' }}
       >
         <MessageCircle size={20} strokeWidth={2} />
-        <span className="nav-label">{t('消息', 'Messages')}</span>
+        <span className="nav-label">{t('消息')}</span>
         {unreadDmCount > 0 && (
           <span className="nav-inbox-dot">{unreadDmCount > 9 ? '9+' : unreadDmCount}</span>
         )}
@@ -68,10 +68,10 @@ export function BottomNav({ route, setTab }: {
         type="button"
         className={`nav-item${isMine ? ' nav-item--active' : ''}`}
         onClick={() => requireWallet(() => navigateRoot({ page: 'P6', authorName: CURRENT_USER }))}
-        aria-label={t('我', 'Me')}
+        aria-label={t('我')}
       >
         <User size={20} strokeWidth={2} />
-        <span className="nav-label">{t('我', 'Me')}</span>
+        <span className="nav-label">{t('我')}</span>
       </button>
     </nav>
   );

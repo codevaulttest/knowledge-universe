@@ -5,7 +5,7 @@ import { CURRENT_USER, getGenesisTier, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
 import { ArticleFeedCard, AuthorName, Avatar, GenesisBadge, GeminiNodeBadge, MediaPlaceholder, PostContent } from './shared';
 import { TipModal, Ios26Alert } from './Overlays';
-import { localizeTime } from '../i18n';
+import { isChinese, localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
 
 // ── ActorsSheet（帖子互动名单浮层）────────────────────────────
@@ -14,7 +14,7 @@ export function ActorsSheet({ postId, initialTab, onClose }: {
   initialTab: PostAction | 'link' | 'tip';
   onClose: () => void;
 }) {
-  const { navigate, followedAuthors, toggleFollow, t } = useApp();
+  const { navigate, followedAuthors, toggleFollow, t, language } = useApp();
   const [tab, setTab] = useState<PostAction | 'link' | 'tip'>(initialTab);
   const actors = POST_ACTORS[postId];
 
@@ -41,14 +41,14 @@ export function ActorsSheet({ postId, initialTab, onClose }: {
               className={`actors-sheet-tab${tab === tb.key ? ' actors-sheet-tab--active' : ''}`}
               onClick={() => setTab(tb.key)}
             >
-              {t(tb.zh, tb.en)}
+              {isChinese(language) ? tb.zh : tb.en}
             </button>
           ))}
         </nav>
 
         <div className="actors-sheet-list">
           {list.length === 0 ? (
-            <p className="actors-empty">{t('暂无数据', 'No data yet')}</p>
+            <p className="actors-empty">{t('暂无数据')}</p>
           ) : list.map(entry => {
             const isFollowing = followedAuthors.has(entry.user);
             const isSelf = entry.user === CURRENT_USER;
@@ -80,7 +80,7 @@ export function ActorsSheet({ postId, initialTab, onClose }: {
                     className={`follow-btn follow-btn--sm${isFollowing ? ' follow-btn--following' : ''}`}
                     onClick={e => { e.stopPropagation(); toggleFollow(entry.user); }}
                   >
-                    {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注', 'Following')}</span> : t('关注', 'Follow')}
+                    {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注')}</span> : t('关注')}
                   </button>
                 )}
               </div>
@@ -112,7 +112,9 @@ export function Actions({ post, onComment, extra }: {
         e.stopPropagation();
         togglePostAction(post.id, action);
       }}
-      aria-label={t(`${active ? '取消' : ''}${label}，当前 ${count}`, `${active ? 'Remove ' : ''}${label}, current count ${count}`)}
+      aria-label={active
+        ? t('取消{label}，当前 {count}', { label, count })
+        : t('{label}，当前 {count}', { label, count })}
       aria-pressed={active}
     >
       {icon}{showCount && formatCount(count, language)}
@@ -147,7 +149,7 @@ export function Actions({ post, onComment, extra }: {
             onComment(e);
           }}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onComment(e as unknown as React.MouseEvent); }}
-          aria-label={t(`查看 ${post.replies} 条评论`, `View ${post.replies} comments`)}
+          aria-label={t('查看 {replies} 条评论', { replies: post.replies })}
         >
           <MessageCircle size={18} strokeWidth={2.25} />{formatCount(post.replies, language)}
         </span>
@@ -158,23 +160,25 @@ export function Actions({ post, onComment, extra }: {
             e.stopPropagation();
             setConfirmShare(active ? 'unrepost' : 'repost');
           }}
-          aria-label={t(`${active ? '取消转发' : '转发'}，当前 ${post.shares}`, `${active ? 'Remove repost' : 'Repost'}, current count ${post.shares}`)}
+          aria-label={active
+            ? t('取消转发，当前 {shares}', { shares: post.shares })
+            : t('转发，当前 {shares}', { shares: post.shares })}
           aria-pressed={active}
         >
           <Repeat2 size={18} strokeWidth={2.25} />{formatCount(post.shares, language)}
         </button>
-        {actionButton('like', likedPostIds.has(post.id), t('点赞', 'like'), post.likes, <ThumbsUp size={18} strokeWidth={2.25} />)}
-        {actionButton('dislike', dislikedPostIds.has(post.id), t('踩', 'dislike'), post.dislikes ?? 0, <ThumbsDown size={18} strokeWidth={2.25} />, isOwn)}
-        {actionButton('save', savedPostIds.has(post.id), t('收藏', 'save'), post.saves, <Bookmark size={18} strokeWidth={2.25} />)}
+        {actionButton('like', likedPostIds.has(post.id), t('点赞'), post.likes, <ThumbsUp size={18} strokeWidth={2.25} />)}
+        {actionButton('dislike', dislikedPostIds.has(post.id), t('踩'), post.dislikes ?? 0, <ThumbsDown size={18} strokeWidth={2.25} />, isOwn)}
+        {actionButton('save', savedPostIds.has(post.id), t('收藏'), post.saves, <Bookmark size={18} strokeWidth={2.25} />)}
         {extra && <div className="actions-extra" onClick={e => e.stopPropagation()}>{extra}</div>}
       </div>
 
       {confirmShare === 'repost' && (
         <Ios26Alert
-          title={t('确认转发？', 'Repost this post?')}
+          title={t('确认转发？')}
           message={post.title.slice(0, 40) + (post.title.length > 40 ? '…' : '')}
-          cancelLabel={t('取消', 'Cancel')}
-          confirmLabel={t('转发', 'Repost')}
+          cancelLabel={t('取消')}
+          confirmLabel={t('转发')}
           onCancel={() => setConfirmShare(null)}
           onConfirm={doRepost}
         />
@@ -182,10 +186,10 @@ export function Actions({ post, onComment, extra }: {
 
       {confirmShare === 'unrepost' && (
         <Ios26Alert
-          title={t('取消转发？', 'Remove repost?')}
+          title={t('取消转发？')}
           message={post.title.slice(0, 40) + (post.title.length > 40 ? '…' : '')}
-          cancelLabel={t('取消', 'Cancel')}
-          confirmLabel={t('取消转发', 'Remove repost')}
+          cancelLabel={t('取消')}
+          confirmLabel={t('取消转发')}
           onCancel={() => setConfirmShare(null)}
           onConfirm={doUnrepost}
         />
@@ -242,7 +246,7 @@ export function PostCard({
         navigate({ page: 'P2', postId: post.id });
       }}
       role="button" tabIndex={0}
-      aria-label={t(`查看帖子：${post.author} — ${post.title.slice(0, 20)}`, `View post by ${post.author}: ${post.title.slice(0, 20)}`)}
+      aria-label={t('查看帖子：{author} — {slice}', { author: post.author, slice: post.title.slice(0, 20) })}
     >
       {repostedBy && (
         <div
@@ -255,8 +259,8 @@ export function PostCard({
           <Repeat2 size={13} strokeWidth={2.4} className="repost-banner-icon" />
           <span className="repost-banner-text">
             {repostedBy.name === CURRENT_USER
-              ? t('你转发了', 'You reposted this')
-              : t(`${repostedBy.name} 转发了`, `${repostedBy.name} reposted this`)}
+              ? t('你转发了')
+              : t('{name} 转发了', { name: repostedBy.name })}
           </span>
         </div>
       )}
@@ -270,13 +274,13 @@ export function PostCard({
           <div className="author-meta-row">
             <span className="author-time">{localizeTime(post.time, language)}</span>
             {channel && (
-              <span className="post-channel-badge" aria-label={t(`归属频道《${channel.name}》`, `Published to channel "${channel.name}"`)}>
+              <span className="post-channel-badge" aria-label={t('归属频道《{name}》', { name: channel.name })}>
                 <Radio size={11} strokeWidth={2.2} />
                 {channel.name}
               </span>
             )}
             {isOwn && requiredTier && (
-              <span className="post-tier-badge" aria-label={t(`需订阅达到 ${requiredTier.name} 及以上`, `Requires ${requiredTier.name} or above`)}>
+              <span className="post-tier-badge" aria-label={t('需订阅达到 {name} 及以上', { name: requiredTier.name })}>
                 <Gem size={11} strokeWidth={2.2} />
                 {requiredTier.name}
               </span>
@@ -284,10 +288,10 @@ export function PostCard({
             {isOwn && post.isNode && (
               <span className="post-visibility-badge">
                 {post.visiblePercent === 100
-                  ? t('公开', 'Public')
+                  ? t('公开')
                   : post.visiblePercent === 0
-                    ? t('完全隐藏', 'Hidden')
-                    : t(`${post.visiblePercent}% 可见`, `${post.visiblePercent}% visible`)}
+                    ? t('完全隐藏')
+                    : t('{visiblePercent}% 可见', { visiblePercent: post.visiblePercent })}
               </span>
             )}
           </div>
@@ -306,16 +310,16 @@ export function PostCard({
               <div className="more-dropdown" onClick={e => e.stopPropagation()}>
                 {hasActors && (
                   <button type="button" onClick={() => { setMoreOpen(false); setActorsTab('like'); }}>
-                    <Users size={14} strokeWidth={2.2} /> {t('查看互动', 'View interactions')}
+                    <Users size={14} strokeWidth={2.2} /> {t('查看互动')}
                   </button>
                 )}
                 {post.channelId && (
                   <button type="button" onClick={() => { setMoreOpen(false); openEditPost(post.id); }}>
-                    <Pencil size={14} strokeWidth={2.2} /> {t('编辑', 'Edit')}
+                    <Pencil size={14} strokeWidth={2.2} /> {t('编辑')}
                   </button>
                 )}
                 <button type="button" onClick={() => { setMoreOpen(false); requestDeletePost(post.id); }} className="more-dropdown__danger">
-                  <Trash2 size={14} strokeWidth={2.2} /> {t('删除', 'Delete')}
+                  <Trash2 size={14} strokeWidth={2.2} /> {t('删除')}
                 </button>
               </div>
             )}
@@ -326,9 +330,9 @@ export function PostCard({
             type="button"
             className={`follow-btn follow-btn--sm${isFollowing ? ' follow-btn--following' : ''}`}
             onClick={(e) => { e.stopPropagation(); toggleFollow(post.author); }}
-            aria-label={isFollowing ? t(`取消关注 ${post.author}`, `Unfollow ${post.author}`) : t(`关注 ${post.author}`, `Follow ${post.author}`)}
+            aria-label={isFollowing ? t('取消关注 {author}', { author: post.author }) : t('关注 {author}', { author: post.author })}
           >
-            {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注', 'Following')}</span> : t('+ 关注', '+ Follow')}
+            {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注')}</span> : t('+ 关注')}
           </button>
         )}
       </div>
@@ -341,7 +345,7 @@ export function PostCard({
             collapseLines={4}
             alwaysExpand={isOwn}
             forceLocked={channelLocked}
-            lockLabel={channelLocked ? t(`订阅『${requiredTier!.name}』解锁`, `Subscribe "${requiredTier!.name}" to unlock`) : undefined}
+            lockLabel={channelLocked ? t('订阅『{name}』解锁', { name: requiredTier!.name }) : undefined}
             onUnlockOverride={channelLocked ? openChannelGate : undefined}
           />
           <MediaPlaceholder
@@ -387,8 +391,8 @@ export function PostCard({
             onClick={hasActors ? (e) => { e.stopPropagation(); setActorsTab('tip'); } : undefined}
             onKeyDown={hasActors ? (e) => { if (e.key === 'Enter' || e.key === ' ') setActorsTab('tip'); } : undefined}
             aria-label={hasActors
-              ? t(`查看打赏详情，已收到 ${post.tipsReceived ?? 0} PB`, `View tip details, received ${post.tipsReceived ?? 0} PB`)
-              : t(`已收到打赏 ${post.tipsReceived ?? 0} PB`, `Received ${post.tipsReceived ?? 0} PB in tips`)}
+              ? t('查看打赏详情，已收到 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })
+              : t('已收到打赏 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
           >
             <HandCoins size={18} strokeWidth={2.25} />
             {post.tipsReceived ?? 0} PB
@@ -398,7 +402,7 @@ export function PostCard({
             type="button"
             className="detail-tip-btn"
             onClick={(e) => { e.stopPropagation(); requireWallet(() => setShowTip(true)); }}
-            aria-label={t(`打赏此帖，当前 ${post.tipsReceived ?? 0}`, `Tip this post, current count ${post.tipsReceived ?? 0}`)}
+            aria-label={t('打赏此帖，当前 {tipsReceived}', { tipsReceived: post.tipsReceived ?? 0 })}
           >
             <HandCoins size={18} strokeWidth={2.25} />
             {formatCount(post.tipsReceived ?? 0, language)}
@@ -413,6 +417,7 @@ export function PostCard({
       <TipModal
         recipientName={post.author}
         context="post"
+        postId={post.id}
         postTitle={post.title}
         onClose={() => setShowTip(false)}
       />

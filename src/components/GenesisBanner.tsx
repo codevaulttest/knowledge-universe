@@ -5,7 +5,7 @@ import { useApp } from '../AppContext';
 const DISMISS_KEY = 'ku-bsp-superstar-banner-dismissed';
 
 export function GenesisBanner() {
-  const { t, showToast } = useApp();
+  const { t, navigateRoot } = useApp();
   const [dismissed, setDismissed] = useState(() => {
     try { return sessionStorage.getItem(DISMISS_KEY) === '1'; } catch { return false; }
   });
@@ -13,7 +13,8 @@ export function GenesisBanner() {
   if (dismissed) return null;
 
   const handleEnter = () => {
-    showToast(t('打开“BSP 巨星投流计划”', 'Opening "BSP Big Star Plan"'), 'demo');
+    // 与知识宇宙页「BSP 巨星投流」快捷入口一致：进入该页并打开投流弹层
+    navigateRoot({ page: 'P_PLANET', openBsp: true });
   };
 
   const handleDismiss = (e: React.MouseEvent) => {
@@ -28,18 +29,18 @@ export function GenesisBanner() {
       className="genesis-banner"
       data-layer="genesis-banner"
       onClick={handleEnter}
-      aria-label={t('进入 BSP 巨星投流计划', 'Open BSP Big Star Plan')}
+      aria-label={t('进入 BSP 巨星投流计划')}
     >
       <img className="genesis-banner-bg" src="/img/bsp-superstar-banner.webp" alt="" aria-hidden="true" />
       <span className="genesis-banner-content">
-        <span className="genesis-banner-eyebrow">{t('全新上线', 'Now Live')}</span>
-        <span className="genesis-banner-title">{t('BSP 巨星投流计划', 'BSP Big Star Plan')}</span>
+        <span className="genesis-banner-eyebrow">{t('全新上线')}</span>
+        <span className="genesis-banner-title">{t('BSP 巨星投流计划')}</span>
         <span className="genesis-banner-sub">
-          {t('投流支持创作者', 'Back creators with traffic')}
-          <span className="genesis-banner-scarcity-left">{t('· 1 年长期扶持', '· 1-year support')}</span>
+          {t('投流支持创作者')}
+          <span className="genesis-banner-scarcity-left">{t('· 1 年长期扶持')}</span>
         </span>
         <span className="genesis-banner-cta">
-          {t('立即投流', 'Invest now')}
+          {t('立即投流')}
           <ArrowRight size={14} strokeWidth={2.4} />
         </span>
       </span>
@@ -47,7 +48,7 @@ export function GenesisBanner() {
         className="genesis-banner-close"
         role="button"
         tabIndex={0}
-        aria-label={t('关闭', 'Dismiss')}
+        aria-label={t('关闭2')}
         onClick={handleDismiss}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleDismiss(e as unknown as React.MouseEvent); }}
       >

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_PB_AIRDROP_AMOUNT, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
-import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, PayCtx, PbTransactionReason, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import { postHasStake } from './stakeConfig';
+import { translate } from './locales';
+import { isChinese } from './i18n';
 import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, CheckInModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { commitClaim, getClaimPreview, CHECK_IN_REWARD, type ClaimPreview } from './checkInConfig';
@@ -29,6 +31,7 @@ export default function App() {
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set(['p2', 'p5', 'im3']));
   const [dislikedPostIds, setDislikedPostIds] = useState<Set<string>>(new Set());
+  const [outgoingTips, setOutgoingTips] = useState<OutgoingTip[]>(() => [...MOCK_OUTGOING_TIPS]);
   const [toastMsg, setToastMsg] = useState<{ msg: string; type?: 'demo' } | null>(null);
   const [paySheet, setPaySheet] = useState<PayCtx | null>(null);
   const [stakeModal, setStakeModal] = useState<StakeModalRequest | null>(null);
@@ -60,7 +63,7 @@ export default function App() {
   const connectWallet = () => {
     setWalletConnected(true);
     setShowConnectWallet(false);
-    showToast(t('钱包已连接', 'Wallet connected'));
+    showToast(t('钱包已连接'));
     const pending = pendingWalletActionRef.current;
     pendingWalletActionRef.current = null;
     pending?.();
@@ -89,11 +92,11 @@ export default function App() {
   const [airdropClaimed, setAirdropClaimed] = useState(false);
 
   const bindInviter = (code: string) => {
-    if (inviterAddress) return { ok: false, message: t('已绑定邀请人，无法更换', 'Inviter already bound') };
-    if (!/^\d{6}$/.test(code)) return { ok: false, message: t('请输入 6 位数字邀请码', 'Enter a 6-digit invite code') };
-    if (code === MOCK_MY_INVITE_CODE) return { ok: false, message: t('不能绑定自己的邀请码', "You can't bind your own invite code") };
+    if (inviterAddress) return { ok: false, message: t('已绑定邀请人，无法更换') };
+    if (!/^\d{6}$/.test(code)) return { ok: false, message: t('请输入 6 位数字邀请码') };
+    if (code === MOCK_MY_INVITE_CODE) return { ok: false, message: t('不能绑定自己的邀请码') };
     setInviterAddress(resolveInviterAddress(code));
-    showToast(t('绑定成功', 'Inviter bound'));
+    showToast(t('绑定成功'));
     return { ok: true, message: '' };
   };
 
@@ -101,7 +104,7 @@ export default function App() {
     if (airdropClaimed || Date.now() > getAirdropDeadline()) return;
     setPbBalance(prev => prev + MOCK_PB_AIRDROP_AMOUNT);
     setAirdropClaimed(true);
-    showToast(t(`领取成功，+${MOCK_PB_AIRDROP_AMOUNT} PB`, `Claimed +${MOCK_PB_AIRDROP_AMOUNT} PB`));
+    showToast(t('领取成功，+{MOCK_PB_AIRDROP_AMOUNT} PB', { MOCK_PB_AIRDROP_AMOUNT }));
   };
 
   const deductPb = (amount: number, _reason: PbTransactionReason) => {
@@ -206,7 +209,7 @@ export default function App() {
     });
   };
 
-  const t = (zh: string, en: string) => language === 'zh-CN' ? zh : en;
+  const t = useCallback((key: string, params?: Record<string, string | number>) => translate(language, key, params), [language]);
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -229,11 +232,8 @@ export default function App() {
     requireWallet(() => {
       commitClaim(checkInPreview);
       setCheckInClaimable(false);
-      const symbol = language === 'zh-CN' ? CHECK_IN_REWARD.symbol.zh : CHECK_IN_REWARD.symbol.en;
-      showToast(t(
-        `领取成功！+${checkInPreview.reward} ${symbol}`,
-        `Claimed! +${checkInPreview.reward} ${symbol}`,
-      ));
+      const symbol = isChinese(language) ? CHECK_IN_REWARD.symbol.zh : CHECK_IN_REWARD.symbol.en;
+      showToast(t('领取成功！+{reward} {symbol}', { reward: checkInPreview.reward, symbol }));
     });
   };
 
@@ -255,7 +255,7 @@ export default function App() {
   const openLink = (postId: string, mode: 'link' | 'unlock' = 'link') => {
     requireWallet(() => {
       if (linkedPostIds.has(postId)) {
-        showToast(t('已链接，无需重复操作', 'Already linked'));
+        showToast(t('已链接，无需重复操作'));
         return;
       }
       const post = posts.find(p => p.id === postId);
@@ -274,8 +274,8 @@ export default function App() {
       p.id === postId ? { ...p, links: p.links + 1, visiblePercent: 100 } : p
     ));
     showToast(hadPaywall
-      ? t('链接成功！子节点已创建，全文已解锁', 'Linked! Child node created, full content unlocked')
-      : t('链接成功！子节点已创建', 'Linked! Child node created')
+      ? t('链接成功！子节点已创建，全文已解锁')
+      : t('链接成功！子节点已创建')
     );
   };
 
@@ -334,7 +334,7 @@ export default function App() {
       return next;
     });
     setConfirmUnfollow(null);
-    showToast(t('已取消关注', 'Unfollowed'));
+    showToast(t('已取消关注'));
   };
 
   const togglePostAction = (postId: string, action: PostAction) => {
@@ -344,12 +344,12 @@ export default function App() {
       const countKey: 'shares' | 'likes' | 'dislikes' | 'saves' = action === 'share' ? 'shares' : action === 'like' ? 'likes' : action === 'dislike' ? 'dislikes' : 'saves';
       const active = actionState.has(postId);
       const labels = action === 'share'
-        ? [t('已取消转发', 'Repost removed'), t('转发成功', 'Reposted')]
+        ? [t('已取消转发'), t('转发成功')]
         : action === 'like'
-          ? [t('已取消点赞', 'Like removed'), t('已点赞', 'Liked')]
+          ? [t('已取消点赞'), t('已点赞')]
           : action === 'dislike'
-            ? [t('已取消踩', 'Dislike removed'), t('已踩', 'Disliked')]
-            : [t('已取消收藏', 'Removed from saved'), t('已收藏', 'Saved')];
+            ? [t('已取消踩'), t('已踩')]
+            : [t('已取消收藏'), t('已收藏')];
 
       // 点赞与踩互斥：激活其中一个时，若另一个已激活则一并取消
       const opposite = action === 'like' ? 'dislike' : action === 'dislike' ? 'like' : undefined;
@@ -381,9 +381,17 @@ export default function App() {
     });
   };
 
+  const recordOutgoingTip = (tip: Omit<OutgoingTip, 'id' | 'createdAt'>) => {
+    setOutgoingTips(prev => [{
+      ...tip,
+      id: `tip-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      createdAt: Date.now(),
+    }, ...prev]);
+  };
+
   const deletePost = (postId: string) => {
     setPosts(prev => prev.filter(p => p.id !== postId));
-    showToast(t('帖子已删除', 'Post deleted'));
+    showToast(t('帖子已删除'));
   };
 
   const requestDeletePost = (postId: string, onAfterDelete?: () => void) => {
@@ -399,7 +407,7 @@ export default function App() {
       ? { ...p, title: newTitle, ...(tierUpdate ? { minTierIndex: tierUpdate.minTierIndex } : {}) }
       : p));
     setEditPostId(null);
-    showToast(t('已保存', 'Saved'));
+    showToast(t('已保存'));
   };
 
   const incrementReplies = useCallback((postId: string) => {
@@ -457,7 +465,7 @@ export default function App() {
         tiersChangedAt: tiersChanged ? Date.now() : c.tiersChangedAt,
       };
     }));
-    showToast(t('频道信息已更新', 'Channel updated'));
+    showToast(t('频道信息已更新'));
   };
 
   const openChannelSubscribe = (channelId: string) => {
@@ -472,7 +480,7 @@ export default function App() {
       : c));
     const channel = channels.find(c => c.id === channelId);
     const tierName = channel?.tiers[tierIndex]?.name ?? '';
-    showToast(t(`订阅成功！已解锁「${tierName}」专属内容`, `Subscribed! "${tierName}" content unlocked`));
+    showToast(t('订阅成功！已解锁「{tierName}」专属内容', { tierName }));
   };
 
   const unsubscribeFromChannel = (channelId: string) => {
@@ -484,7 +492,7 @@ export default function App() {
     setChannels(prev => prev.map(c => c.id === channelId
       ? { ...c, subscriberCount: Math.max(0, c.subscriberCount - 1) }
       : c));
-    showToast(t('已取消订阅', 'Unsubscribed'));
+    showToast(t('已取消订阅'));
   };
 
   const handlePaySuccess = () => {
@@ -498,7 +506,7 @@ export default function App() {
         const newPost: Post = {
           id: `p-${Date.now()}`,
           author: CURRENT_USER,
-          time: t('刚刚', 'Just now'),
+          time: t('刚刚'),
           title: pendingNewPost.title,
           kind: pendingNewPost.kind,
           articleHasCover: pendingNewPost.articleHasCover,
@@ -521,11 +529,11 @@ export default function App() {
       }
       setComposeOpen(false);
       setComposeDraftId(null);
-      showToast(t('发布成功！知识宇宙节点已生成', 'Published! Knowledge Universe node created'));
+      showToast(t('发布成功！知识宇宙节点已生成'));
     } else if (ctx === 'repost') {
-      showToast(t('转发成功！子节点已创建', 'Reposted! Child node created'));
+      showToast(t('转发成功！子节点已创建'));
     } else if (ctx === 'interaction') {
-      showToast(t('子节点已创建', 'Child node created'));
+      showToast(t('子节点已创建'));
     }
     pendingPaySuccessRef.current?.();
     pendingPaySuccessRef.current = null;
@@ -591,7 +599,7 @@ export default function App() {
     const newPost: Post = {
       id: `p-${Date.now()}`,
       author: CURRENT_USER,
-      time: t('刚刚', 'Just now'),
+      time: t('刚刚'),
       title: data.title,
       kind: data.kind,
       articleHasCover: data.articleHasCover,
@@ -613,8 +621,8 @@ export default function App() {
     setComposeOpen(false);
     setComposeDraftId(null);
     showToast(data.isNode
-      ? t('发布成功！知识宇宙节点已生成', 'Published! Knowledge Universe node created')
-      : t('发布成功！帖子已公开', 'Published! Your post is now public')
+      ? t('发布成功！知识宇宙节点已生成')
+      : t('发布成功！帖子已公开')
     );
   };
 
@@ -623,6 +631,7 @@ export default function App() {
     linkedPostIds, followedAuthors, toggleFollow,
     language, setLanguage, t,
     posts, repostedPostIds, likedPostIds, savedPostIds, dislikedPostIds, togglePostAction,
+    outgoingTips, recordOutgoingTip,
     requestPostInteraction, beginPaidInteraction,
     deletePost, requestDeletePost,
     openEditPost, updatePost, incrementReplies,
@@ -655,7 +664,7 @@ export default function App() {
         {route.page === 'P6' && <ProfilePage authorName={route.authorName} />}
         {route.page === 'P7' && <ActivityPage />}
         {route.page === 'P_SEARCH' && <SearchPage />}
-        {route.page === 'P_PLANET' && <KnowledgePlanetPage initialSearch={route.searchNodeCode} />}
+        {route.page === 'P_PLANET' && <KnowledgePlanetPage initialSearch={route.searchNodeCode} openBsp={route.openBsp} />}
         {route.page === 'P_DM' && <DmListPage />}
         {route.page === 'P_DM_CHAT' && <DmChatPage peerId={route.peerId} />}
 
@@ -665,7 +674,7 @@ export default function App() {
         {/* 覆盖层：发帖居中弹窗 */}
         {composeOpen && (
           <div className="sheet-backdrop" onClick={() => composeCloseHandler.current()}>
-            <div className="compose-modal" role="dialog" aria-modal="true" aria-label={t('发帖', 'Create post')} onClick={e => e.stopPropagation()}>
+            <div className="compose-modal" role="dialog" aria-modal="true" aria-label={t('发帖')} onClick={e => e.stopPropagation()}>
               <ComposePage
                 onClose={() => { setComposeOpen(false); setComposeDraftId(null); }}
                 onRegisterCloseHandler={handler => { composeCloseHandler.current = handler; }}
@@ -680,7 +689,7 @@ export default function App() {
           const editPost = posts.find(p => p.id === editPostId);
           return editPost ? (
             <div className="sheet-backdrop" onClick={() => editComposeCloseHandler.current()}>
-              <div className="compose-modal" role="dialog" aria-modal="true" aria-label={t('编辑帖子', 'Edit post')} onClick={e => e.stopPropagation()}>
+              <div className="compose-modal" role="dialog" aria-modal="true" aria-label={t('编辑帖子')} onClick={e => e.stopPropagation()}>
                 <ComposePage
                   onClose={() => setEditPostId(null)}
                   onRegisterCloseHandler={handler => { editComposeCloseHandler.current = handler; }}

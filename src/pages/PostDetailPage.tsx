@@ -55,7 +55,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
     }
   }, [scrollToComments]);
 
-  if (!post) return <div className="page"><PageHeader onBack={goBack} /><div className="empty-state">{t('帖子不存在', 'Post not found')}</div></div>;
+  if (!post) return <div className="page"><PageHeader onBack={goBack} /><div className="empty-state">{t('帖子不存在')}</div></div>;
 
   const isOwn = post.author === CURRENT_USER;
   const displayName = isOwn ? userProfile.nickname : post.author;
@@ -137,7 +137,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
               />
               {moreOpen && (
                 <div className="more-dropdown" onClick={e => e.stopPropagation()}>
-                  <button type="button" onClick={handleDelete}><Trash2 size={14} strokeWidth={2.2} /> {t('删除', 'Delete')}</button>
+                  <button type="button" onClick={handleDelete}><Trash2 size={14} strokeWidth={2.2} /> {t('删除')}</button>
                 </div>
               )}
             </div>
@@ -187,7 +187,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
                 type="button"
                 className="detail-tip-btn"
                 onClick={() => requireWallet(() => setShowTip(true))}
-                aria-label={t('打赏此帖', 'Tip this post')}
+                aria-label={t('打赏此帖')}
               >
                 <HandCoins size={15} strokeWidth={2} />
               </button>
@@ -198,12 +198,12 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
         {/* 回复列表（全量可见，不受 N% 限制）*/}
         <div className="reply-section" ref={repliesSectionRef}>
           <div className="reply-section-title">
-            {t(`${displayReplies.length} 条评论`, `${displayReplies.length} comments`)}
+            {t('{length} 条评论', { length: displayReplies.length })}
           </div>
           {displayReplies.length === 0 && (
             <div className="empty-state" style={{ padding: '24px 0' }}>
-              <p>{t('还没有评论', 'No comments yet')}</p>
-              <p className="empty-sub">{t('成为第一个发表评论的人', 'Be the first to comment')}</p>
+              <p>{t('还没有评论')}</p>
+              <p className="empty-sub">{t('成为第一个发表评论的人')}</p>
             </div>
           )}
           {displayReplies.map((r) => {
@@ -238,7 +238,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
             );
           })}
           {displayReplies.length > 0 && (
-            <div className="feed-end">— {t('已经到底了', "You're all caught up")} —</div>
+            <div className="feed-end">— {t('已经到底了')} —</div>
           )}
         </div>
 
@@ -248,6 +248,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
         <TipModal
           recipientName={post.author}
           context="post"
+          postId={post.id}
           postTitle={post.title}
           onClose={() => setShowTip(false)}
         />
@@ -264,7 +265,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
         )}
         <input
           className="reply-input"
-          placeholder={t(`回复 ${post.author}…`, `Reply to ${post.author}…`)}
+          placeholder={t('回复 {author}…', { author: post.author })}
           value={replyText}
           onChange={e => setReplyText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleSendReply(); }}
@@ -281,7 +282,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
           }}
         />
         <button className="reply-send" type="button" onClick={handleSendReply} disabled={!replyText.trim()}>
-          {t('发送', 'Send')}
+          {t('发送')}
         </button>
       </div>
 

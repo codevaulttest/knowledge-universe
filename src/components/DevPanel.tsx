@@ -28,11 +28,11 @@ export function DevPanel({ children }: DevPanelProps) {
       {open && (
         <div className="planet-dev-menu" role="menu">
           <div className="planet-dev-menu-header">
-            <span className="planet-dev-menu-title">{t('开发工具', 'Developer tools')}</span>
+            <span className="planet-dev-menu-title">{t('开发工具')}</span>
             <button
               type="button"
               className="planet-dev-menu-close"
-              aria-label={t('关闭开发工具（刷新页面后重新出现）', 'Close developer tools (reappears after page refresh)')}
+              aria-label={t('关闭开发工具（刷新页面后重新出现）')}
               onClick={() => { setOpen(false); setVisible(false); }}
             >
               <X size={14} strokeWidth={2.5} aria-hidden="true" />
@@ -45,9 +45,9 @@ export function DevPanel({ children }: DevPanelProps) {
             aria-checked={!walletConnected}
             onClick={() => walletConnected ? disconnectWallet() : connectWallet()}
           >
-            <span>{t('游客模式', 'Guest mode')}</span>
+            <span>{t('游客模式')}</span>
             <span className={`planet-dev-menu-toggle${!walletConnected ? ' planet-dev-menu-toggle--on' : ''}`}>
-              {!walletConnected ? t('开', 'On') : t('关', 'Off')}
+              {!walletConnected ? t('开') : t('关')}
             </span>
           </button>
           {children}
@@ -58,7 +58,7 @@ export function DevPanel({ children }: DevPanelProps) {
         className="planet-dev-pill"
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label={t('开发工具', 'Developer tools')}
+        aria-label={t('开发工具')}
         onClick={() => setOpen(value => !value)}
       >
         <Wrench size={14} strokeWidth={2} aria-hidden="true" />

@@ -50,7 +50,7 @@ export type Route =
   | { page: 'P6'; authorName: string }
   | { page: 'P7' }
   | { page: 'P_SEARCH' }
-  | { page: 'P_PLANET'; searchNodeCode?: string }
+  | { page: 'P_PLANET'; searchNodeCode?: string; openBsp?: boolean }
   | { page: 'P_DM' }
   | { page: 'P_DM_CHAT'; peerId: string };
 
@@ -168,7 +168,7 @@ export type PayCtx = {
   action?: InteractionAction;
   stakeTier: StakeTier;
 };
-export type Language = 'zh-CN' | 'en';
+export type Language = 'zh-CN' | 'en' | 'zh-TW' | 'ko' | 'ja' | 'ru' | 'es' | 'fr' | 'pt' | 'th' | 'vi';
 
 /** 站内 SUP 流水原因（展示文案在页面层按语言映射） */
 export type SupTransactionReason =
@@ -194,6 +194,18 @@ export type SupTransaction = {
   amount: number;
   time: string;
   reason: SupTransactionReason;
+};
+
+/** 当前用户发出的打赏记录（帖子打赏 / 主页打赏）。 */
+export type OutgoingTip = {
+  id: string;
+  recipientName: string;
+  amount: number;
+  context: 'post' | 'author';
+  /** context === 'post' 时有值，用于回跳详情 */
+  postId?: string;
+  postTitle?: string;
+  createdAt: number;
 };
 
 export type PostAction = 'share' | 'like' | 'save' | 'dislike';

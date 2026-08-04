@@ -4,7 +4,7 @@ import type { Language } from './types';
 export function formatCount(n: number, language: Language): string {
   const sign = n < 0 ? '-' : '';
   const abs = Math.abs(n);
-  if (language === 'zh-CN') {
+  if (language === 'zh-CN' || language === 'zh-TW') {
     if (abs < 10000) return sign + String(abs);
     if (abs < 100000000) return sign + trimUnit(abs / 10000) + '万';
     if (abs < 1000000000000) return sign + trimUnit(abs / 100000000) + '亿';

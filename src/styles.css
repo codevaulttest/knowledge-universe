@@ -933,11 +933,16 @@ button {
   padding: 0;
   overflow: hidden;
 }
+.lightbox-track {
+  display: flex;
+  width: 100%;
+  will-change: transform;
+}
 .lightbox-media {
   position: relative;
+  flex: 0 0 100%;
   width: 100%;
   aspect-ratio: 4 / 3;
-  flex: 0 0 auto;
 }
 .lightbox-img {
   width: 100%;
@@ -1185,6 +1190,13 @@ button {
   gap: 6px;
 }
 .actions svg { color: var(--ku-color-text-primary); }
+/* 打赏图标/数字不受 actions 默认深色覆盖，统一金色 */
+.actions .detail-tip-btn,
+.actions .detail-tip-btn svg,
+.actions .post-tip-received,
+.actions .post-tip-received svg {
+  color: var(--ku-color-genesis-gold);
+}
 .actions-extra { display: flex; align-items: center; }
 .post-action {
   color: var(--ku-color-text-action);
@@ -2193,6 +2205,31 @@ button {
   color: var(--ku-color-text-meta);
   line-height: 1.45;
 }
+.lang-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lang-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  text-align: left;
+  transition: border-color 0.12s, background 0.12s;
+}
+.lang-option__label {
+  font: 600 14px/1 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
+.lang-option__check {
+  color: var(--ku-color-primary);
+  flex-shrink: 0;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    P1.x 支付浮层
@@ -2444,6 +2481,10 @@ button {
   background: var(--ku-gradient-primary);
   color: var(--ku-color-on-primary);
   box-shadow: var(--ku-shadow-primary);
+}
+.pay-page-brand-icon--tip {
+  background: linear-gradient(135deg, var(--ku-planet2-color-genesis-gold-light) 0%, var(--ku-color-genesis-gold) 100%);
+  box-shadow: none;
 }
 
 /* 金额大字 */
@@ -3317,6 +3358,14 @@ button {
 }
 .video-player-action-item--active { background: rgba(59, 201, 183, 0.12); }
 .video-player-action-item--active svg { fill: var(--ku-color-primary); }
+.video-player-action-item--tip,
+.video-player-action-item--tip svg {
+  color: var(--ku-planet2-color-genesis-gold-light);
+}
+.video-player-action-item--tip:hover,
+.video-player-action-item--tip:hover svg {
+  color: var(--ku-color-genesis-gold-bg);
+}
 .video-player-action-item.reply-trigger { cursor: pointer; }
 .video-player-action-item.reply-trigger:hover { color: #fff; }
 .video-player-controls {
@@ -3645,6 +3694,16 @@ button {
   padding: 16px var(--ku-feed-padding-x);
 }
 .profile-header .avatar { width: 46px; height: 46px; }
+.profile-avatar-edit-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.profile-avatar-edit-btn:active {
+  opacity: 0.85;
+}
 
 /* ── 我的页头部：创世大爆炸插画背景，覆盖身份行 + 关注/粉丝行，需保证浅色文字/图标对比度 ── */
 .profile-hero {
@@ -3667,6 +3726,10 @@ button {
   z-index: 0;
 }
 .profile-hero > * { position: relative; z-index: 1; }
+/* 他人主页：hero 顶部叠了浮动返回按钮（48px 高），需让身份行避让，不与头像重叠 */
+.profile-hero--with-header .profile-header--hero {
+  padding-top: 56px;
+}
 .profile-header--hero {
   padding: 22px var(--ku-feed-padding-x) 14px;
 }
@@ -3710,6 +3773,11 @@ button {
 .profile-hero .channel-info-bar {
   margin: 0 var(--ku-feed-padding-x) 30px;
   background: var(--ku-color-on-primary);
+}
+/* 他人主页有 CTA 行时：频道条与按钮之间改由 CTA 自己的上间距控制，避免 30px + 负 margin 叠出头重脚轻 */
+.profile-hero:has(.profile-actions--hero) .channel-info-bar,
+.profile-hero:has(.profile-actions--hero) .channel-create-entry--subtle {
+  margin-bottom: 16px;
 }
 .profile-hero .channel-info-bar-name {
   color: var(--ku-color-text-primary);
@@ -3906,13 +3974,53 @@ button {
   justify-content: center;
 }
 
-/* 他人主页：操作行延伸进头部背景插画区块，去掉分隔线（改由下方标签栏的圆角卡片收边） */
+/* 他人主页：操作行延伸进头部背景插画区块，去掉分隔线（改由下方标签栏的圆角卡片收边）。
+   上下各留约 16px 可见气口（下：padding-bottom 28 − 标签栏叠压 12），避免原先上 26 / 下 14 的头重脚轻 */
 .profile-actions--hero {
   border-bottom: none;
-  padding-bottom: 18px;
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 28px;
 }
+/* 打赏：实心金色，与关注实心主色同级强调 */
 .profile-actions--hero .profile-tip-btn {
+  background: var(--ku-color-genesis-gold);
+  border-color: var(--ku-color-genesis-gold);
+  color: var(--ku-color-on-primary);
+}
+.profile-actions--hero .profile-tip-btn svg {
+  color: var(--ku-color-on-primary);
+}
+/* 私信：白底中性描边 + 次要文本色 */
+.profile-actions--hero .profile-dm-btn {
   background: var(--ku-color-on-primary);
+  border-color: var(--ku-color-border-control);
+  color: var(--ku-color-text-secondary);
+}
+/* 关注保持主色实心；已关注在星云背景上改白底中性，与未关注同盒宽（双标签叠放） */
+.profile-actions--hero .follow-btn {
+  display: inline-grid;
+  justify-items: center;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.profile-actions--hero .follow-btn .profile-follow-face {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  visibility: hidden;
+  pointer-events: none;
+}
+.profile-actions--hero .follow-btn .profile-follow-face[data-active] {
+  visibility: visible;
+}
+.profile-actions--hero .follow-btn--following {
+  background: var(--ku-color-on-primary);
+  border-color: var(--ku-color-border-control);
+  color: var(--ku-color-text-secondary);
 }
 
 .profile-stats {
@@ -4653,6 +4761,9 @@ button {
   color: #fff;
   border: 2px solid var(--ku-color-bg-phone);
 }
+.activity-type-icon--tip {
+  background: var(--ku-color-genesis-gold);
+}
 .activity-avatars--1 .activity-type-icon { left: var(--ku-activity-avatar-step); }
 .activity-avatars--2 .activity-type-icon { left: calc(var(--ku-activity-avatar-step) * 2); }
 .activity-avatars--3 .activity-type-icon { left: calc(var(--ku-activity-avatar-step) * 3); }
@@ -4797,12 +4908,12 @@ button {
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
-  color: var(--ku-color-primary);
+  color: var(--ku-color-genesis-gold);
   font: 600 14px/1 var(--ku-font-family);
   white-space: nowrap;
 }
 .actors-item-amount svg {
-  color: var(--ku-color-primary);
+  color: var(--ku-color-genesis-gold);
 }
 
 
@@ -4843,6 +4954,62 @@ button {
   transition: opacity 0.12s;
 }
 .draft-item:active { opacity: 0.82; }
+.tip-history-list {
+  padding-top: 4px;
+}
+.tip-history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  border-bottom: 1px solid var(--ku-color-border);
+  transition: opacity 0.12s;
+  font: inherit;
+  color: inherit;
+}
+.tip-history-item:active { opacity: 0.82; }
+.tip-history-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-genesis-gold-bg);
+  color: var(--ku-color-genesis-gold);
+  flex-shrink: 0;
+}
+.tip-history-item-body {
+  flex: 1;
+  min-width: 0;
+}
+.tip-history-item-title {
+  font: var(--ku-text-post-body);
+  color: var(--ku-color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.tip-history-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-meta);
+}
+.tip-history-item-amount {
+  flex-shrink: 0;
+  font: var(--ku-text-meta);
+  font-weight: 600;
+  color: var(--ku-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
 .draft-item-body {
   flex: 1;
   min-width: 0;
@@ -5724,23 +5891,42 @@ button {
   margin-left: 3px;
 }
 
-/* ─── 博主主页打赏按钮 ─── */
-.profile-tip-btn {
+/* ─── 博主主页打赏 / 私信按钮 ─── */
+.profile-tip-btn,
+.profile-dm-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
   border-radius: 999px;
-  border: 1.5px solid var(--ku-color-primary);
   background: none;
-  color: var(--ku-color-primary);
   font: 600 13px/1 var(--ku-font-family);
   cursor: pointer;
   transition: background var(--ku-motion-fast);
 }
 
+.profile-tip-btn {
+  border: 1.5px solid var(--ku-color-genesis-gold);
+  background: var(--ku-color-genesis-gold);
+  color: var(--ku-color-on-primary);
+}
+
 .profile-tip-btn:hover {
-  background: var(--ku-color-primary-alpha-06);
+  background: var(--ku-planet2-color-genesis-gold-light);
+  border-color: var(--ku-planet2-color-genesis-gold-light);
+}
+
+.profile-tip-btn svg {
+  color: var(--ku-color-on-primary);
+}
+
+.profile-dm-btn {
+  border: 1.5px solid var(--ku-color-border-control);
+  color: var(--ku-color-text-secondary);
+}
+
+.profile-dm-btn:hover {
+  background: var(--ku-color-bg-subtle);
 }
 
 .profile-icon-btn {
@@ -5770,7 +5956,7 @@ button {
   padding: 0;
   border: none;
   background: none;
-  color: var(--ku-color-text-action);
+  color: var(--ku-color-genesis-gold);
   font: var(--ku-text-action);
   cursor: pointer;
   flex-shrink: 0;
@@ -5780,7 +5966,11 @@ button {
 }
 
 .detail-tip-btn:hover {
-  color: var(--ku-color-primary);
+  color: var(--ku-color-genesis-gold);
+  opacity: 0.85;
+}
+.detail-tip-btn:hover svg {
+  color: var(--ku-color-genesis-gold);
 }
 .detail-tip-btn:active { transform: scale(0.92); }
 
@@ -5790,7 +5980,7 @@ button {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  color: var(--ku-color-primary);
+  color: var(--ku-color-genesis-gold);
   font: var(--ku-text-action);
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
@@ -5801,8 +5991,9 @@ button {
 .post-tip-received[role="button"]:active {
   transform: scale(0.92);
 }
+.detail-tip-btn svg,
 .post-tip-received svg {
-  color: var(--ku-color-primary);
+  color: var(--ku-color-genesis-gold);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -9325,6 +9516,10 @@ button {
   gap: var(--ku-planet2-space-sm);
 }
 
+.bsp-record-detail-row--address {
+  align-items: flex-start;
+}
+
 .bsp-record-label {
   flex-shrink: 0;
   font: var(--ku-text-body-sm);
@@ -9344,6 +9539,12 @@ button {
   font-weight: 400;
   color: var(--ku-color-text-secondary);
   text-align: right;
+}
+
+.bsp-record-value--address {
+  /* 约半宽换行，完整地址稳定落成两行；字号继承下方字段的 body-sm */
+  max-width: 20ch;
+  word-break: break-all;
 }
 
 .bsp-record-period-dates {
@@ -9392,9 +9593,16 @@ button {
   position: relative;
   z-index: 1;
   margin: 0;
-  font: 700 32px/1.2 var(--ku-font-brand);
-  letter-spacing: 0.08em;
+  /* 默认无衬线：英文等拉丁文案（Wisverse）不走品牌隶书 */
+  font: 700 32px/1.2 var(--ku-font-family);
+  letter-spacing: 0.02em;
   color: var(--ku-color-on-primary);
+}
+/* 中文品牌名「知识宇宙」沿用隶书 */
+html[lang="zh-CN"] .planet-hero-title,
+html[lang="zh-TW"] .planet-hero-title {
+  font-family: var(--ku-font-brand);
+  letter-spacing: 0.08em;
 }
 
 /* 公告横幅叠压在 hero 底边（负 margin 需盖过 .planet-content 的 flex gap 才能真正压上插画）；

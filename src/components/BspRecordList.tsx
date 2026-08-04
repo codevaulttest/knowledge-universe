@@ -1,7 +1,6 @@
 import { ChevronRight, Crown, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { BSP_UNIT_PB, bspRemainingDays, type BspInvestment } from '../bspConfig';
-import { shortenAddress } from '../formatAddress';
 
 export function BspRecordSummary({
   investments,
@@ -24,24 +23,21 @@ export function BspRecordSummary({
         type="button"
         className="planet-node-card bsp-record-summary"
         onClick={hasRecords ? onOpen : onOpenInvest}
-        aria-label={hasRecords ? t('查看全部投流记录', 'View all investments') : t('开始 BSP 巨星投流', 'Start BSP investment')}
+        aria-label={hasRecords ? t('查看全部投流记录') : t('开始 BSP 巨星投流')}
       >
         <span className="bsp-record-summary-icon" aria-hidden>
           <Crown size={20} strokeWidth={2} />
         </span>
         <span className="bsp-record-summary-content">
-          <span className="bsp-record-summary-title">{t('我的投流记录', 'My Investments')}</span>
+          <span className="bsp-record-summary-title">{t('我的投流记录')}</span>
           <span className="bsp-record-summary-meta">
             {hasRecords
-              ? t(
-                  `${activeInvestmentCount} 笔进行中`,
-                  `${activeInvestmentCount} active`,
-                )
-              : t('暂无记录，点击开始投放', 'No records yet — tap to invest')}
+              ? t('{activeInvestmentCount} 笔进行中', { activeInvestmentCount })
+              : t('暂无记录，点击开始投放')}
           </span>
         </span>
         <span className="bsp-record-summary-action">
-          {t(hasRecords ? '查看全部' : '去投放', hasRecords ? 'View all' : 'Invest')}
+          {hasRecords ? t('查看全部') : t('去投放')}
           <ChevronRight size={16} strokeWidth={2.2} aria-hidden />
         </span>
       </button>
@@ -63,9 +59,9 @@ export function BspRecordList({
   return (
     <div className="planet-section">
       <div className="planet-section-header">
-        <span className="planet-section-title">{t('我的投流记录', 'My Investments')}</span>
+        <span className="planet-section-title">{t('我的投流记录')}</span>
         <span className="planet-section-badge">{investments.length}</span>
-        <button type="button" className="back-btn bsp-record-list-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
+        <button type="button" className="back-btn bsp-record-list-close" onClick={onClose} aria-label={t('关闭')}>
           <X size={18} strokeWidth={2} />
         </button>
       </div>
@@ -73,12 +69,12 @@ export function BspRecordList({
       {investments.length === 0 ? (
         <div className="planet-nodes-empty" data-layer="bsp-empty">
           <Crown width={40} height={40} strokeWidth={1.5} className="planet-nodes-empty-icon" />
-          <span className="planet-nodes-empty-title">{t('还没有投流记录', 'No investments yet')}</span>
+          <span className="planet-nodes-empty-title">{t('还没有投流记录')}</span>
           <p className="planet-nodes-empty-text">
-            {t('点击「BSP 巨星投流」开始你的第一笔投放', 'Tap "BSP Big Star Plan" to make your first one')}
+            {t('点击「BSP 巨星投流」开始你的第一笔投放')}
           </p>
           <button type="button" className="planet-nodes-empty-link" onClick={onOpenInvest}>
-            {t('去投放', 'Invest now')}
+            {t('去投放')}
           </button>
         </div>
       ) : (
@@ -102,39 +98,39 @@ function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
       {inv.beneficiaryKind === 'self' ? (
         <span className="planet-node-origin-tag planet-node-origin-tag--bsp-self">
           <Crown size={12} strokeWidth={2.5} aria-hidden />
-          {t('自投', 'Self')}
+          {t('自投')}
         </span>
       ) : (
         <span className="planet-node-origin-tag planet-node-origin-tag--bsp-proxy">
           <Crown size={12} strokeWidth={2.5} aria-hidden />
-          {t('代投', 'For others')}
+          {t('代投')}
         </span>
       )}
 
       <div className="bsp-record-primary-row">
-        <span className="bsp-record-label">{t('本次投流', 'Investment')}</span>
+        <span className="bsp-record-label">{t('本次投流')}</span>
         <span className="bsp-record-headline">{paidPb} PB</span>
       </div>
 
-      <div className="bsp-record-detail-row">
-        <span className="bsp-record-label">{t('投放对象', 'Beneficiary')}</span>
-        <span className="bsp-record-value">
-          {shortenAddress(inv.beneficiaryAddress)}
+      <div className="bsp-record-detail-row bsp-record-detail-row--address">
+        <span className="bsp-record-label">{t('投放对象')}</span>
+        <span className="bsp-record-value bsp-record-value--address">
+          {inv.beneficiaryAddress}
         </span>
       </div>
 
       <div className="bsp-record-detail-row">
-        <span className="bsp-record-label">{t('Gas 费', 'Gas fee')}</span>
+        <span className="bsp-record-label">{t('Gas 费')}</span>
         <span className="bsp-record-value">{paidSup} SUP</span>
       </div>
 
       <div className="bsp-record-detail-row">
-        <span className="bsp-record-label">{t('投放时间', 'Investment time')}</span>
+        <span className="bsp-record-label">{t('投放时间')}</span>
         <span className="bsp-record-value">{inv.createdAt}</span>
       </div>
 
       <div className="bsp-record-detail-row">
-        <span className="bsp-record-label">{t('生效期', 'Active period')}</span>
+        <span className="bsp-record-label">{t('生效期')}</span>
         <span className="bsp-record-value bsp-record-period-dates">{inv.startDate} → {inv.endDate}</span>
       </div>
 

@@ -123,10 +123,7 @@ export function BspInvestSheet({
       };
       onConfirmed(record);
       showToast(
-        t(
-          `投流成功，已投放 ${formatTokenAmount(pbCost)} PB，明日 00:00 起为你保底每日 ${formatTokenAmount(dailyGuarantee)} PB`,
-          `Investment confirmed — ${formatTokenAmount(pbCost)} PB invested, guaranteeing ${formatTokenAmount(dailyGuarantee)} PB/day from midnight`
-        )
+        t('投流成功，已投放 {pbCost} PB，明日 00:00 起为你保底每日 {dailyGuarantee} PB', { pbCost: formatTokenAmount(pbCost), dailyGuarantee: formatTokenAmount(dailyGuarantee) })
       );
       setPaying(false);
       onClose();
@@ -137,19 +134,19 @@ export function BspInvestSheet({
     <div className="sheet-backdrop" onClick={() => !paying && onClose()}>
       <div className="payment-sheet bsp-invest-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
-          <span className="sheet-title">{t('BSP 巨星投流', 'BSP Big Star Plan')}</span>
+          <span className="sheet-title">{t('BSP 巨星投流')}</span>
           <span
             role="button"
             tabIndex={0}
             className="asset-overview-info-btn"
             onClick={onOpenRules}
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onOpenRules(); }}
-            aria-label={t('查看保底规则', 'View floor rules')}
+            aria-label={t('查看保底规则')}
             style={{ marginLeft: 8 }}
           >
             <Info size={13} strokeWidth={2} />
           </span>
-          <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭', 'Close')} disabled={paying}>
+          <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')} disabled={paying}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
@@ -157,7 +154,7 @@ export function BspInvestSheet({
 
         <div className="stake-code-block">
           <div className="stake-code-label-row">
-            <span className="stake-code-label">{t('投放对象', 'Beneficiary')}</span>
+            <span className="stake-code-label">{t('投放对象')}</span>
           </div>
           <div className="create-scale-toggle">
             <button
@@ -166,7 +163,7 @@ export function BspInvestSheet({
               disabled={paying}
               onClick={() => handleSelectMode('self')}
             >
-              {t('投给自己', 'Myself')}
+              {t('投给自己')}
             </button>
             <button
               type="button"
@@ -174,14 +171,14 @@ export function BspInvestSheet({
               disabled={paying}
               onClick={() => handleSelectMode('other')}
             >
-              {t('投给他人', 'Someone else')}
+              {t('投给他人')}
             </button>
           </div>
         </div>
 
         {mode === 'self' ? (
           <div className="planet-upgrade-row planet-upgrade-row--address">
-            <span className="planet-upgrade-row-label">{t('我的钱包地址', 'My wallet address')}</span>
+            <span className="planet-upgrade-row-label">{t('我的钱包地址')}</span>
             <span className="planet-upgrade-row-value bsp-self-address">{myAddress}</span>
           </div>
         ) : (
@@ -193,11 +190,11 @@ export function BspInvestSheet({
                   type="text"
                   value={addressInput}
                   onChange={e => handleAddressChange(e.target.value)}
-                  placeholder={t('请输入对方钱包地址', "Enter the recipient's wallet address")}
+                  placeholder={t('请输入对方钱包地址')}
                   disabled={paying}
                 />
                 <button type="button" className="stake-code-paste-btn" onClick={handlePasteAddress} disabled={paying}>
-                  {t('粘贴', 'Paste')}
+                  {t('粘贴')}
                 </button>
               </div>
               <button
@@ -206,19 +203,19 @@ export function BspInvestSheet({
                 onClick={handleVerifyAddress}
                 disabled={!addressInput.trim() || verifying || paying}
               >
-                {verifying ? <Loader2 size={14} strokeWidth={2} className="planet-spin" /> : t('校验', 'Verify')}
+                {verifying ? <Loader2 size={14} strokeWidth={2} className="planet-spin" /> : t('校验')}
               </button>
             </div>
             {addressStatus === '3' && (
               <span className="stake-code-status stake-code-status--ok">
                 <ShieldCheck size={13} strokeWidth={2} />
-                {t('地址校验通过', 'Address verified')}
+                {t('地址校验通过')}
               </span>
             )}
             {addressStatus === '4' && (
               <span className="stake-code-status stake-code-status--fail">
                 <ShieldX size={13} strokeWidth={2} />
-                {t("该地址未在知识宇宙注册，请确认地址是否正确", "This address isn't registered on Wisverse — please confirm it's correct")}
+                {t('该地址未在知识宇宙注册，请确认地址是否正确')}
               </span>
             )}
           </div>
@@ -226,7 +223,7 @@ export function BspInvestSheet({
 
         <div className="stake-code-block">
           <div className="stake-code-label-row">
-            <span className="stake-code-label">{t('投放数量', 'Units')}</span>
+            <span className="stake-code-label">{t('投放数量')}</span>
           </div>
           <div className="create-qty-block">
             <button
@@ -234,7 +231,7 @@ export function BspInvestSheet({
               className="create-qty-btn"
               disabled={paying || units <= 1}
               onClick={() => setUnitsInput(String(Math.max(1, units - 1)))}
-              aria-label={t('减少', 'Decrease')}
+              aria-label={t('减少')}
             >
               <Minus size={18} strokeWidth={2} />
             </button>
@@ -252,25 +249,25 @@ export function BspInvestSheet({
               className="create-qty-btn"
               disabled={paying || units >= BSP_QTY_MAX}
               onClick={() => setUnitsInput(String(Math.min(BSP_QTY_MAX, units + 1)))}
-              aria-label={t('增加', 'Increase')}
+              aria-label={t('增加')}
             >
               <Plus size={18} strokeWidth={2} />
             </button>
-            <span className="bsp-qty-unit">{t('× 1000 PB', '× 1,000 PB')}</span>
+            <span className="bsp-qty-unit">{t('× 1000 PB')}</span>
           </div>
         </div>
 
         <div className="planet-upgrade-sep" />
 
         <div className="planet-upgrade-row">
-          <span className="planet-upgrade-row-label">{t('投放消耗', 'Investment')}</span>
+          <span className="planet-upgrade-row-label">{t('投放消耗')}</span>
           <div className="planet-upgrade-cost">
             <span className="planet-upgrade-cost-num">{formatTokenAmount(pbCost)}</span>
             <span className="planet-upgrade-cost-unit"> PB</span>
           </div>
         </div>
         <div className="planet-upgrade-row">
-          <span className="planet-upgrade-row-label">{t('Gas 费', 'Gas fee')}</span>
+          <span className="planet-upgrade-row-label">{t('Gas 费')}</span>
           <div className="planet-upgrade-cost">
             <span className="planet-upgrade-cost-num">{formatSupAmount(supCost)}</span>
             <span className="planet-upgrade-cost-unit"> SUP</span>
@@ -280,44 +277,35 @@ export function BspInvestSheet({
         {pbInsufficient && (
           <div className="sup-deposit-warning">
             <span>
-              {t(
-                `PB 余额不足，当前 ${formatTokenAmount(pbBalance)} PB，本次需 ${formatTokenAmount(pbCost)} PB`,
-                `Not enough PB — you have ${formatTokenAmount(pbBalance)}, this needs ${formatTokenAmount(pbCost)}`
-              )}
+              {t('PB 余额不足，当前 {pbBalance} PB，本次需 {pbCost} PB', { pbBalance: formatTokenAmount(pbBalance), pbCost: formatTokenAmount(pbCost) })}
             </span>
           </div>
         )}
         {!pbInsufficient && supInsufficient && (
           <div className="sup-deposit-warning">
             <span>
-              {t(
-                `SUP 余额不足，当前 ${formatSupAmount(supBalance)} SUP，本次需 ${formatSupAmount(supCost)} SUP`,
-                `Not enough SUP — you have ${formatSupAmount(supBalance)}, this needs ${formatSupAmount(supCost)}`
-              )}
+              {t('SUP 余额不足，当前 {supBalance} SUP，本次需 {supCost} SUP', { supBalance: formatSupAmount(supBalance), supCost: formatSupAmount(supCost) })}
             </span>
           </div>
         )}
 
         <div className="create-confirm-card">
-          <span className="create-confirm-label">{t('每日打赏保底', 'Daily tip floor')}</span>
-          <span className="create-confirm-value">{t(`${formatTokenAmount(dailyGuarantee)} PB / 天`, `${formatTokenAmount(dailyGuarantee)} PB / day`)}</span>
+          <span className="create-confirm-label">{t('每日打赏保底')}</span>
+          <span className="create-confirm-value">{t('{dailyGuarantee} PB / 天', { dailyGuarantee: formatTokenAmount(dailyGuarantee) })}</span>
           <span className="create-confirm-channel">
-            {t('支付成功后，次日生效，为期 1 年', 'Effective the day after payment for 1 year')}
+            {t('支付成功后，次日生效，为期 1 年')}
           </span>
         </div>
 
         <div className="create-delay-note">
           <Info size={14} strokeWidth={2} aria-hidden />
           <span>
-            {t(
-              '受益人当天需至少发布 1 篇内容，才触发当日保底。',
-              'The beneficiary must publish at least one post that day to trigger the floor.'
-            )}
+            {t('受益人当天需至少发布 1 篇内容，才触发当日保底。')}
           </span>
         </div>
 
         <button type="button" className="planet-confirm-btn" onClick={handlePay} disabled={!canPay}>
-          {paying ? <Loader2 size={16} strokeWidth={2} className="planet-spin" /> : t('确认支付', 'Confirm Payment')}
+          {paying ? <Loader2 size={16} strokeWidth={2} className="planet-spin" /> : t('确认支付2')}
         </button>
       </div>
     </div>

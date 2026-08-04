@@ -14,13 +14,13 @@ export function DmListPage() {
   return (
     <div className="page">
       <PageHeader
-        title={t(totalUnread > 0 ? `私信 (${totalUnread})` : '私信', totalUnread > 0 ? `Messages (${totalUnread})` : 'Messages')}
+        title={totalUnread > 0 ? t('私信 ({count})', { count: totalUnread }) : t('私信')}
         onBack={canGoBack ? goBack : undefined}
       />
       <div className="scroll-area">
         {conversations.length === 0 ? (
           <div className="empty-state" style={{ paddingTop: 60 }}>
-            <p>{t('暂无私信', 'No messages yet')}</p>
+            <p>{t('暂无私信')}</p>
           </div>
         ) : (
           <div className="dm-list">
@@ -103,7 +103,7 @@ export function DmChatPage({ peerId }: { peerId: string }) {
       setMessages(prev => [...prev, {
         id: `msg-${Date.now()}-r`,
         from: 'peer',
-        text: t('收到，稍后回复你 😊', "Got it, I'll reply soon 😊"),
+        text: t('收到，稍后回复你 😊'),
         time: '刚刚',
       }]);
     }, 1200);
@@ -112,10 +112,10 @@ export function DmChatPage({ peerId }: { peerId: string }) {
   return (
     <div className="page dm-chat-page">
       <div className="dm-chat-header">
-        <button type="button" className="dm-chat-back" onClick={goBack} aria-label={t('返回', 'Back')}>
+        <button type="button" className="dm-chat-back" onClick={goBack} aria-label={t('返回')}>
           <ArrowLeft size={20} strokeWidth={2} />
         </button>
-        <button type="button" className="dm-peer-profile-btn" onClick={() => navigate({ page: 'P6', authorName: conv.peer })} aria-label={t('查看主页', 'View profile')}>
+        <button type="button" className="dm-peer-profile-btn" onClick={() => navigate({ page: 'P6', authorName: conv.peer })} aria-label={t('查看主页')}>
           <Avatar index={conv.peerAvatarIdx} seed={conv.peer} />
         </button>
         <AuthorName name={conv.peer} className="dm-chat-peer-name" />
@@ -131,11 +131,11 @@ export function DmChatPage({ peerId }: { peerId: string }) {
               )}
               <div className={`dm-bubble-row${msg.from === 'me' ? ' dm-bubble-row--me' : ''}`}>
                 {msg.from === 'peer' ? (
-                  <button type="button" className="dm-peer-profile-btn" onClick={() => navigate({ page: 'P6', authorName: conv.peer })} aria-label={t('查看主页', 'View profile')}>
+                  <button type="button" className="dm-peer-profile-btn" onClick={() => navigate({ page: 'P6', authorName: conv.peer })} aria-label={t('查看主页')}>
                     <Avatar index={conv.peerAvatarIdx} seed={conv.peer} />
                   </button>
                 ) : (
-                  <button type="button" className="dm-peer-profile-btn" onClick={() => navigate({ page: 'P6', authorName: CURRENT_USER })} aria-label={t('查看主页', 'View profile')}>
+                  <button type="button" className="dm-peer-profile-btn" onClick={() => navigate({ page: 'P6', authorName: CURRENT_USER })} aria-label={t('查看主页')}>
                     <Avatar index={0} seed={CURRENT_USER} />
                   </button>
                 )}
@@ -152,7 +152,7 @@ export function DmChatPage({ peerId }: { peerId: string }) {
       <div className="dm-chat-composer">
         <input
           className="dm-chat-input"
-          placeholder={t('发送消息…', 'Send a message…')}
+          placeholder={t('发送消息…')}
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') requireWallet(send); }}
@@ -162,7 +162,7 @@ export function DmChatPage({ peerId }: { peerId: string }) {
           className="dm-chat-send"
           onClick={() => requireWallet(send)}
           disabled={!text.trim()}
-          aria-label={t('发送', 'Send')}
+          aria-label={t('发送')}
         >
           <Send size={18} strokeWidth={2} />
         </button>

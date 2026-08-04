@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronRight, Megaphone, Pin, X } from 'lucide-react';
 import { useApp } from '../AppContext';
+import { isChinese } from '../i18n';
 import { MOCK_PLANET_ANNOUNCEMENT } from '../mockData';
 
 const SUBSIDY_RELEASE_DAYS = '100';
@@ -22,11 +23,12 @@ function renderWithDays(text: string): ReactNode {
 
 /** 页顶单条公告：跑马灯入口；详情对齐 genesis_node 加权补贴规则弹窗 */
 export function PlanetAnnouncementBanner() {
-  const { t } = useApp();
+  const { t, language } = useApp();
+  const pickLang = (zh: string, en: string) => isChinese(language) ? zh : en;
   const [detailOpen, setDetailOpen] = useState(false);
   const a = MOCK_PLANET_ANNOUNCEMENT;
 
-  const title = t(a.titleZh, a.titleEn);
+  const title = pickLang(a.titleZh, a.titleEn);
 
   return (
     <>
@@ -35,7 +37,7 @@ export function PlanetAnnouncementBanner() {
           type="button"
           className="planet-announcement-main"
           onClick={() => setDetailOpen(true)}
-          aria-label={t(`查看公告：${title}`, `View announcement: ${title}`)}
+          aria-label={t('查看公告：{title}', { title })}
         >
           <span className="planet-announcement-icon" aria-hidden="true">
             <Megaphone size={16} strokeWidth={2} />
@@ -61,13 +63,13 @@ export function PlanetAnnouncementBanner() {
           >
             <div className="sheet-header">
               <span id="planet-announcement-detail-title" className="sheet-title">
-                {t(a.sheetTitleZh, a.sheetTitleEn)}
+                {pickLang(a.sheetTitleZh, a.sheetTitleEn)}
               </span>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
                 onClick={() => setDetailOpen(false)}
-                aria-label={t('关闭', 'Close')}
+                aria-label={t('关闭')}
               >
                 <X size={18} strokeWidth={2} />
               </button>
@@ -75,24 +77,24 @@ export function PlanetAnnouncementBanner() {
 
             <div className="planet-announce">
               <div className="planet-announce-hero">
-                <span className="planet-announce-badge">{t(a.badgeZh, a.badgeEn)}</span>
-                <div className="planet-announce-doc-title">{t(a.docTitleZh, a.docTitleEn)}</div>
+                <span className="planet-announce-badge">{pickLang(a.badgeZh, a.badgeEn)}</span>
+                <div className="planet-announce-doc-title">{pickLang(a.docTitleZh, a.docTitleEn)}</div>
                 <div className="planet-announce-meta">
-                  <span>{t(a.orgZh, a.orgEn)}</span>
-                  <span>{t(a.publishedAtZh, a.publishedAtEn)}</span>
+                  <span>{pickLang(a.orgZh, a.orgEn)}</span>
+                  <span>{pickLang(a.publishedAtZh, a.publishedAtEn)}</span>
                 </div>
               </div>
 
               <section className="planet-announce-section">
-                <h3 className="planet-announce-section-title">{t(a.coreTitleZh, a.coreTitleEn)}</h3>
+                <h3 className="planet-announce-section-title">{pickLang(a.coreTitleZh, a.coreTitleEn)}</h3>
                 <ul className="planet-announce-mech-list">
                   {a.coreItems.map(item => (
                     <li key={item.labelZh} className="planet-announce-mech-item">
                       <span className="planet-announce-para">
-                        <b className="planet-announce-mech-label">{t(item.labelZh, item.labelEn)}</b>
+                        <b className="planet-announce-mech-label">{pickLang(item.labelZh, item.labelEn)}</b>
                         {item.withDays
-                          ? renderWithDays(t(item.bodyZh, item.bodyEn))
-                          : t(item.bodyZh, item.bodyEn)}
+                          ? renderWithDays(pickLang(item.bodyZh, item.bodyEn))
+                          : pickLang(item.bodyZh, item.bodyEn)}
                       </span>
                     </li>
                   ))}
@@ -100,13 +102,13 @@ export function PlanetAnnouncementBanner() {
               </section>
 
               <section className="planet-announce-section">
-                <h3 className="planet-announce-section-title">{t(a.benefitTitleZh, a.benefitTitleEn)}</h3>
+                <h3 className="planet-announce-section-title">{pickLang(a.benefitTitleZh, a.benefitTitleEn)}</h3>
                 <div className="planet-announce-benefit-list">
                   {a.benefitRows.map(row => (
                     <div key={row.starZh} className="planet-announce-benefit-card">
-                      <div className="planet-announce-star">{t(row.starZh, row.starEn)}</div>
-                      <div className="planet-announce-benefit-title">{t(row.benefitZh, row.benefitEn)}</div>
-                      <div className="planet-announce-benefit-desc">{t(row.descZh, row.descEn)}</div>
+                      <div className="planet-announce-star">{pickLang(row.starZh, row.starEn)}</div>
+                      <div className="planet-announce-benefit-title">{pickLang(row.benefitZh, row.benefitEn)}</div>
+                      <div className="planet-announce-benefit-desc">{pickLang(row.descZh, row.descEn)}</div>
                     </div>
                   ))}
                 </div>
@@ -114,19 +116,19 @@ export function PlanetAnnouncementBanner() {
                 <div className="planet-announce-note">
                   <Pin size={16} strokeWidth={2} className="planet-announce-note-pin" aria-hidden="true" />
                   <span className="planet-announce-para planet-announce-note-text">
-                    <b>{t(a.noteLabelZh, a.noteLabelEn)}</b>
-                    {t(a.noteBodyZh, a.noteBodyEn)}
+                    <b>{pickLang(a.noteLabelZh, a.noteLabelEn)}</b>
+                    {pickLang(a.noteBodyZh, a.noteBodyEn)}
                   </span>
                 </div>
               </section>
 
               <div className="planet-announce-sign">
-                <div>{t(a.signTeamZh, a.signTeamEn)}</div>
-                <div className="planet-announce-sign-date">{t(a.signDateZh, a.signDateEn)}</div>
+                <div>{pickLang(a.signTeamZh, a.signTeamEn)}</div>
+                <div className="planet-announce-sign-date">{pickLang(a.signDateZh, a.signDateEn)}</div>
               </div>
 
               <div className="planet-announce-footer">
-                <span>{t(a.footerZh, a.footerEn)}</span>
+                <span>{pickLang(a.footerZh, a.footerEn)}</span>
               </div>
             </div>
           </div>

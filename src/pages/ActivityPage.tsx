@@ -3,6 +3,7 @@ import { Bookmark, HandCoins, Link, MessageCircle, Radio, Repeat2, ThumbsUp } fr
 import { useApp } from '../AppContext';
 import { ALL_POSTS } from '../mockData';
 import { Avatar, PageHeader } from '../components/shared';
+import { isChinese } from '../i18n';
 import type { ActivityGroup, ActivityType } from '../types';
 
 type FilterTab = 'all' | ActivityType;
@@ -99,7 +100,7 @@ function ActivityItem({
   onNavigateUser: (user: string, avatarIdx: number) => void;
 }) {
   const { language, t } = useApp();
-  const zh = language === 'zh-CN';
+  const zh = isChinese(language);
 
   return (
     <div
@@ -120,7 +121,7 @@ function ActivityItem({
             <Avatar index={a.avatarIdx} />
           </span>
         ))}
-        <span className="activity-type-icon">{ACTION_ICON[group.type]}</span>
+        <span className={`activity-type-icon${group.type === 'tip' ? ' activity-type-icon--tip' : ''}`}>{ACTION_ICON[group.type]}</span>
       </div>
       <div className="activity-content">
         <p className="activity-text">{groupText(group, zh)}</p>
@@ -148,7 +149,7 @@ export function ActivityPage() {
   const getPostTitle = (postId: string) => {
     // 通知引用的帖子可能被全局过滤（如长文不在 feed/主页展示），仍需从完整 mock 数据解析标题
     const post = posts.find(p => p.id === postId) ?? ALL_POSTS.find(p => p.id === postId);
-    if (!post) return t('（帖子已删除）', '(Post deleted)');
+    if (!post) return t('（帖子已删除）');
     const raw = post.title.replace(/\n/g, ' ');
     return raw.length > 36 ? raw.slice(0, 36) + '…' : raw;
   };
@@ -156,10 +157,10 @@ export function ActivityPage() {
   const getActivitySummary = (group: ActivityGroup) => {
     if (group.type === 'subscribe') {
       return group.tierName
-        ? t(`频道会员 · ${group.tierName}`, `Channel member · ${group.tierName}`)
-        : t('频道订阅', 'Channel subscription');
+        ? t('频道会员 · {tierName}', { tierName: group.tierName })
+        : t('频道订阅');
     }
-    return group.postId ? getPostTitle(group.postId) : t('（帖子已删除）', '(Post deleted)');
+    return group.postId ? getPostTitle(group.postId) : t('（帖子已删除）');
   };
 
   const tabs: { key: FilterTab; zh: string; en: string }[] = [
@@ -176,7 +177,7 @@ export function ActivityPage() {
   return (
     <div className="page">
       <PageHeader
-        title={t('通知', 'Notifications')}
+        title={t('通知')}
         onBack={goBack}
       />
       <div className="scroll-area">
@@ -188,14 +189,14 @@ export function ActivityPage() {
               className={`activity-filter-tab${filter === tab.key ? ' activity-filter-tab--active' : ''}`}
               onClick={() => setFilter(tab.key)}
             >
-              {language === 'zh-CN' ? tab.zh : tab.en}
+              {isChinese(language) ? tab.zh : tab.en}
             </button>
           ))}
         </nav>
 
         {filtered.length === 0 ? (
           <div className="empty-state">
-            <p>{t('暂无通知', 'No notifications yet')}</p>
+            <p>{t('暂无通知')}</p>
           </div>
         ) : (
           filtered.map(group => (

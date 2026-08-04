@@ -71,7 +71,7 @@ export function SearchPage() {
   return (
     <div className="page search-page">
       <div className="search-header">
-        <button type="button" className="back-btn" onClick={goBack} aria-label={t('返回', 'Back')}>
+        <button type="button" className="back-btn" onClick={goBack} aria-label={t('返回')}>
           <ArrowLeft size={22} strokeWidth={2} />
         </button>
         <div className="search-input-wrap">
@@ -80,7 +80,7 @@ export function SearchPage() {
             className="search-input"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder={t('搜索帖子、创作者、话题', 'Search posts, creators, topics')}
+            placeholder={t('搜索帖子、创作者、话题')}
             autoFocus
           />
           {query && (
@@ -88,7 +88,7 @@ export function SearchPage() {
               type="button"
               className="search-clear-btn"
               onClick={() => setQuery('')}
-              aria-label={t('清空搜索词', 'Clear search')}
+              aria-label={t('清空搜索词')}
             >
               <X size={14} strokeWidth={2.2} />
             </button>
@@ -102,9 +102,9 @@ export function SearchPage() {
             {recentSearches.length > 0 && (
               <section className="search-section">
                 <div className="search-section-head">
-                  <div className="search-section-label">{t('最近搜索', 'Recent searches')}</div>
+                  <div className="search-section-label">{t('最近搜索')}</div>
                   <button type="button" className="search-clear-all" onClick={clearRecentSearches}>
-                    {t('清空全部', 'Clear all')}
+                    {t('清空全部')}
                   </button>
                 </div>
                 <div className="search-chips">
@@ -117,7 +117,7 @@ export function SearchPage() {
                         type="button"
                         className="search-chip-remove"
                         onClick={() => removeRecentSearch(item)}
-                        aria-label={t(`删除最近搜索 ${item}`, `Remove recent search ${item}`)}
+                        aria-label={t('删除最近搜索 {item}', { item })}
                       >
                         <X size={12} strokeWidth={2.2} />
                       </button>
@@ -129,7 +129,7 @@ export function SearchPage() {
 
             <section className="search-section">
               <div className="search-section-head">
-                <div className="search-section-label">{t('热门话题', 'Trending')}</div>
+                <div className="search-section-label">{t('热门话题')}</div>
               </div>
               <div className="search-chips">
                 {TRENDING.map(item => (
@@ -145,32 +145,32 @@ export function SearchPage() {
           <div className="search-content">
             <div className="profile-empty-state" role="status" aria-live="polite">
               <span className="spinner" />
-              <p className="profile-empty-title">{t('搜索中...', 'Searching...')}</p>
+              <p className="profile-empty-title">{t('搜索中...')}</p>
             </div>
           </div>
         ) : (
           <>
-            <nav className="activity-filter-tabs" aria-label={t('搜索筛选', 'Search filters')}>
+            <nav className="activity-filter-tabs" aria-label={t('搜索筛选')}>
               <button
                 type="button"
                 className={`activity-filter-tab${tab === 'all' ? ' activity-filter-tab--active' : ''}`}
                 onClick={() => setTab('all')}
               >
-                {t('全部', 'All')}
+                {t('全部')}
               </button>
               <button
                 type="button"
                 className={`activity-filter-tab${tab === 'posts' ? ' activity-filter-tab--active' : ''}`}
                 onClick={() => setTab('posts')}
               >
-                {t('帖子', 'Posts')}
+                {t('帖子')}
               </button>
               <button
                 type="button"
                 className={`activity-filter-tab${tab === 'users' ? ' activity-filter-tab--active' : ''}`}
                 onClick={() => setTab('users')}
               >
-                {t('用户', 'Users')}
+                {t('用户')}
               </button>
             </nav>
 
@@ -178,14 +178,14 @@ export function SearchPage() {
               {!hasResults ? (
                 <div className="profile-empty-state">
                   <Search size={32} strokeWidth={1.3} className="profile-empty-icon" />
-                  <p className="profile-empty-title">{t('没有找到相关内容', 'No matching results')}</p>
-                  <p className="profile-empty-sub">{t('换个关键词试试，或试试热门话题', 'Try another keyword or explore a trending topic')}</p>
+                  <p className="profile-empty-title">{t('没有找到相关内容')}</p>
+                  <p className="profile-empty-sub">{t('换个关键词试试，或试试热门话题')}</p>
                 </div>
               ) : (
                 <>
                   {visiblePosts.length > 0 && (
                     <section className="search-results-group">
-                      {tab === 'all' && <div className="search-section-label">{t('帖子', 'Posts')}</div>}
+                      {tab === 'all' && <div className="search-section-label">{t('帖子')}</div>}
                       <div className="feed">
                         {visiblePosts.map((post, index) => (
                           <PostCard
@@ -201,7 +201,7 @@ export function SearchPage() {
 
                   {visibleUsers.length > 0 && (
                     <section className="search-results-group">
-                      {tab === 'all' && <div className="search-section-label">{t('用户', 'Users')}</div>}
+                      {tab === 'all' && <div className="search-section-label">{t('用户')}</div>}
                       <div className="search-user-list">
                         {visibleUsers.map(user => {
                           const isFollowing = followedAuthors.has(user.name);
@@ -229,7 +229,7 @@ export function SearchPage() {
                                     toggleFollow(user.name);
                                   }}
                                 >
-                                  {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注', 'Following')}</span> : t('关注', 'Follow')}
+                                  {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注')}</span> : t('关注')}
                                 </button>
                               )}
                             </div>

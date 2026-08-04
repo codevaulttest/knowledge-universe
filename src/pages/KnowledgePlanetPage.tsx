@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronRight, Copy, Crown, Gem, Info, Loader2, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
@@ -12,6 +12,7 @@ import { PageHeader, PullToRefresh } from '../components/shared';
 import { CURRENT_USER, MOCK_WALLET_ADDRESS } from '../mockData';
 import { SUP_COST_BY_TIER, formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import { bspPbCost, bspSupCost, bspEffectivePeriod, type BspInvestment } from '../bspConfig';
+import { isChinese } from '../i18n';
 
 // 面额（PB）：仅 1000 档支持五星升级；100 / 10 档不支持升级
 type NodeTier = 10 | 100 | 1000;
@@ -283,12 +284,13 @@ function seedNodesWithChannel(channels: { ownerName: string; id: string; name: s
   ];
 }
 
-export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string } = {}) {
+export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?: string; openBsp?: boolean } = {}) {
   const { showToast, t, language, channels, walletAddress, walletConnecting, connectWallet, goBack, canGoBack } = useApp();
-  const zh = language === 'zh-CN';
+  const zh = isChinese(language);
   const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
   const [bspRecords, setBspRecords] = useState<BspInvestment[]>(() => buildInitialBspInvestments(MOCK_WALLET_ADDRESS));
   const [bspSheetOpen, setBspSheetOpen] = useState(false);
+  const bspAutoOpenedRef = useRef(false);
   const [bspRulesOpen, setBspRulesOpen] = useState(false);
   const [bspRecordsOpen, setBspRecordsOpen] = useState(false);
   const [nodeSearch, setNodeSearch] = useState(initialSearch ?? '');
@@ -348,7 +350,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
   const createConfirmReady = step1Ready && step2Ready && !creating;
 
   const handleClaimDiamondNode = () => {
-    showToast(t('跳转「钻石节点」', 'Opening "Diamond Node"'), 'demo');
+    showToast(t('跳转「钻石节点」'), 'demo');
   };
 
   const handleOpenBsp = () => {
@@ -358,6 +360,17 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
     }
     setBspSheetOpen(true);
   };
+
+  // Feed 横幅「立即投流」等入口：进入本页后自动打开投流弹层（未连钱包则先走连接拦截）
+  useEffect(() => {
+    if (!openBsp || bspAutoOpenedRef.current) return;
+    if (!walletAddress) {
+      setConnectWalletSheetOpen(true);
+      return;
+    }
+    bspAutoOpenedRef.current = true;
+    setBspSheetOpen(true);
+  }, [openBsp, walletAddress]);
 
   const resetCreateSheet = () => {
     setCreateScaleMode('qty');
@@ -462,7 +475,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
         setNodes(prev => prev.map(n => (newIds.includes(n.id) ? { ...n, syncing: false } : n)));
       }, CREATE_SYNCING_MS);
 
-      showToast(t(`已提交开通 ${count} 个频道，列表同步中`, `Submitted ${count} channels — syncing list`));
+      showToast(t('已提交开通 {count} 个频道，列表同步中', { count }));
       setCreating(false);
       setCreateSheetOpen(false);
     }, 900);
@@ -522,7 +535,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
     setTransferring(true);
     setTimeout(() => {
       setNodes(prev => prev.filter(n => n.id !== node.id));
-      showToast(t(`节点 ${node.nodeCode} 转让成功`, `Node ${node.nodeCode} transferred`));
+      showToast(t('节点 {nodeCode} 转让成功', { nodeCode: node.nodeCode }));
       setTransferring(false);
       setTransferSheetNode(null);
     }, 1400);
@@ -573,9 +586,9 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
     : String(displayNodes.length);
 
   const sortLabel =
-    sortBy === 'star' ? t('按星级', 'By star')
-    : sortBy === 'oldest' ? t('最早优先', 'Oldest first')
-    : t('最新优先', 'Newest first');
+    sortBy === 'star' ? t('按星级')
+    : sortBy === 'oldest' ? t('最早优先')
+    : t('最新优先');
 
   const clearNodeFilters = () => {
     setStarFilter(null);
@@ -595,7 +608,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
       setNodes(prev => prev.map(n => (
         n.id === node.id ? { ...n, remark: undefined } : n
       )));
-      showToast(t('已取消收藏', 'Removed from favorites'));
+      showToast(t('已取消收藏2'));
       return;
     }
     setRemarkInput('');
@@ -616,7 +629,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
       n.id === nodeId ? { ...n, remark: remark || undefined } : n
     )));
     closeFavoriteSheet();
-    showToast(t('已收藏', 'Favorited'));
+    showToast(t('已收藏2'));
   };
 
   // 下拉刷新：demo 环境无真实后端，用短暂延迟模拟重新拉取余额 / 空投 / 节点数据，
@@ -625,7 +638,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
     await new Promise(resolve => setTimeout(resolve, 900));
     setNodes(seedNodesWithChannel(channels));
     setBspRecords(buildInitialBspInvestments(MOCK_WALLET_ADDRESS));
-    showToast(t('数据已刷新', 'Data refreshed'));
+    showToast(t('数据已刷新'));
   };
 
   return (
@@ -639,7 +652,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               把 hero 提到 .page 外层再用负 margin 顶起整页的写法，避免破坏本 app 固定视口 + 内部滚动的壳体结构） ── */}
           <div className="planet-hero">
             <img className="planet-hero-bg" src="/img/genesis-bigbang.webp" alt="" aria-hidden="true" />
-            <h1 className="planet-hero-title">{t('知识宇宙', 'Knowledge Universe')}</h1>
+            <h1 className="planet-hero-title">{t('知识宇宙')}</h1>
           </div>
 
           {/* ── 页顶公告：单条可关闭横幅，点开看全文；负 margin 叠压在 hero 底边上 ── */}
@@ -660,7 +673,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               <span className="planet-quick-action-icon">
                 <Crown size={20} strokeWidth={2} />
               </span>
-              <span className="planet-quick-action-label">{t('BSP 巨星投流', 'BSP Big Star Plan')}</span>
+              <span className="planet-quick-action-label">{t('BSP 巨星投流')}</span>
             </button>
             <button
               type="button"
@@ -670,16 +683,16 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               <span className="planet-quick-action-icon">
                 <Radio size={20} strokeWidth={2} />
               </span>
-              <span className="planet-quick-action-label">{t('抢先开通频道', 'Early Channel Access')}</span>
+              <span className="planet-quick-action-label">{t('抢先开通频道')}</span>
             </button>
           </div>
 
           {!walletAddress ? (
             <div className="planet-wallet-empty" data-layer="wallet-empty">
               <Wallet size={40} strokeWidth={1.5} aria-hidden="true" />
-              <span className="planet-wallet-empty-title">{t('尚未连接钱包', 'Wallet not connected')}</span>
+              <span className="planet-wallet-empty-title">{t('尚未连接钱包')}</span>
               <span className="planet-wallet-empty-sub">
-                {t('连接钱包后查看节点与管理频道', 'Connect your wallet to view nodes and manage channels')}
+                {t('连接钱包后查看节点与管理频道')}
               </span>
               <button
                 type="button"
@@ -691,7 +704,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                   ? <Loader2 size={16} strokeWidth={2} className="planet-spin" aria-hidden="true" />
                   : <Wallet size={16} strokeWidth={2} aria-hidden="true" />
                 }
-                <span>{walletConnecting ? t('连接中…', 'Connecting…') : t('连接钱包', 'Connect Wallet')}</span>
+                <span>{walletConnecting ? t('连接中…') : t('连接钱包')}</span>
               </button>
             </div>
           ) : (
@@ -707,12 +720,12 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
           {/* ── Node Section ── */}
           <div className="planet-section">
             <div className="planet-section-header">
-              <span className="planet-section-title">{t('我的节点', 'My Nodes')}</span>
+              <span className="planet-section-title">{t('我的节点')}</span>
               <span
                 className={`planet-section-badge${hasNodeListConstraints ? ' planet-section-badge--filtered' : ''}`}
                 aria-label={hasNodeListConstraints
-                  ? t(`共 ${displayNodes.length} 个节点，当前显示 ${filteredNodes.length} 个`, `${filteredNodes.length} of ${displayNodes.length} nodes`)
-                  : t(`共 ${displayNodes.length} 个节点`, `${displayNodes.length} nodes total`)}
+                  ? t('共 {length} 个节点，当前显示 {length2} 个', { length: displayNodes.length, length2: filteredNodes.length })
+                  : t('共 {length} 个节点', { length: displayNodes.length })}
               >
                 {nodeCountLabel}
               </span>
@@ -727,7 +740,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                   }}
                 >
                   <ArrowRightLeft size={13} strokeWidth={2.2} aria-hidden />
-                  {t('转让', 'Transfer')}
+                  {t('转让')}
                 </button>
               )}
             </div>
@@ -736,7 +749,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
           {showNoNodesEmpty ? (
             <div className="planet-nodes-empty" data-layer="nodes-empty">
               <KnowledgePlanetIcon width={40} height={40} strokeWidth={1.5} className="planet-nodes-empty-icon" />
-              <span className="planet-nodes-empty-title">{t('还没有节点', 'No nodes yet')}</span>
+              <span className="planet-nodes-empty-title">{t('还没有节点')}</span>
               <p className="planet-nodes-empty-text">
                 {zh ? (
                   <>
@@ -768,10 +781,10 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               type="text"
               value={nodeSearch}
               onChange={e => setNodeSearch(e.target.value)}
-              placeholder={t('搜索节点编号或备注…', 'Search by code or remark…')}
+              placeholder={t('搜索节点编号或备注…')}
             />
             {nodeSearch && (
-              <button className="planet-node-search-clear" onClick={() => setNodeSearch('')} aria-label={t('清除', 'Clear')}>
+              <button className="planet-node-search-clear" onClick={() => setNodeSearch('')} aria-label={t('清除')}>
                 <X size={13} strokeWidth={2.5} />
               </button>
             )}
@@ -783,11 +796,11 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               className={`planet-node-dropdown-trigger${showFavoritesOnly ? ' planet-node-dropdown-trigger--active' : ''}`}
               onClick={() => setShowFavoritesOnly(visible => !visible)}
               aria-pressed={showFavoritesOnly}
-              aria-label={showFavoritesOnly ? t('显示全部节点', 'Show all nodes') : t('仅显示已收藏节点', 'Show favorited nodes only')}
+              aria-label={showFavoritesOnly ? t('显示全部节点') : t('仅显示已收藏节点')}
             >
               <span className="planet-node-dropdown-value">
                 <Bookmark size={14} strokeWidth={2} fill={showFavoritesOnly ? 'currentColor' : 'none'} aria-hidden />
-                <span>{t('已收藏', 'Favorited')}</span>
+                <span>{t('已收藏2')}</span>
                 <span className="planet-node-filter-count">{favoriteCount}</span>
               </span>
             </button>
@@ -798,18 +811,18 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 onClick={() => setOpenDropdown(d => d === 'star' ? null : 'star')}
                 aria-expanded={openDropdown === 'star'}
                 aria-haspopup="listbox"
-                aria-label={t('星级筛选', 'Filter by star level')}
+                aria-label={t('星级筛选')}
               >
                 <span className="planet-node-dropdown-value">
                   {starFilter !== null ? (
                     <>
                       <StarDisplay level={starFilter} size={18} />
-                      <span>{t(`${starFilter} 星`, `${starFilter}★`)}</span>
+                      <span>{t('{starFilter} 星', { starFilter })}</span>
                     </>
                   ) : (
                     <>
                       <Star size={14} strokeWidth={2} aria-hidden />
-                      <span>{t('全部星级', 'All stars')}</span>
+                      <span>{t('全部星级')}</span>
                     </>
                   )}
                 </span>
@@ -826,7 +839,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                   >
                     <span className="planet-node-dropdown-item-leading">
                       <Star size={14} strokeWidth={2} aria-hidden />
-                      <span>{t('全部星级', 'All stars')}</span>
+                      <span>{t('全部星级')}</span>
                     </span>
                   </button>
                   {[5, 4, 3, 2, 1, 0].map(s => {
@@ -847,7 +860,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                       >
                         <span className="planet-node-dropdown-item-leading">
                           <StarDisplay level={s} size={22} />
-                          <span>{t(`${s} 星`, `${s}★`)}</span>
+                          <span>{t('{s} 星', { s })}</span>
                         </span>
                         <span className="planet-node-dropdown-item-count">{count}</span>
                       </button>
@@ -864,7 +877,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 onClick={() => setOpenDropdown(d => d === 'sort' ? null : 'sort')}
                 aria-expanded={openDropdown === 'sort'}
                 aria-haspopup="listbox"
-                aria-label={t('排序方式', 'Sort by')}
+                aria-label={t('排序方式')}
               >
                 <span className="planet-node-dropdown-value">
                   <ArrowUpDown size={14} strokeWidth={2} aria-hidden />
@@ -882,7 +895,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     onClick={() => { setSortBy('newest'); setOpenDropdown(null); }}
                   >
                     <span className="planet-node-dropdown-item-leading">
-                      <span>{t('最新优先', 'Newest first')}</span>
+                      <span>{t('最新优先')}</span>
                     </span>
                   </button>
                   <button
@@ -893,7 +906,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     onClick={() => { setSortBy('oldest'); setOpenDropdown(null); }}
                   >
                     <span className="planet-node-dropdown-item-leading">
-                      <span>{t('最早优先', 'Oldest first')}</span>
+                      <span>{t('最早优先')}</span>
                     </span>
                   </button>
                   <button
@@ -901,12 +914,12 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     role="option"
                     aria-selected={sortBy === 'star'}
                     disabled={starFilter !== null}
-                    title={starFilter !== null ? t('已按星级筛选，排序不生效', 'Already filtered by star — sorting has no effect') : undefined}
+                    title={starFilter !== null ? t('已按星级筛选，排序不生效') : undefined}
                     className={`planet-node-dropdown-item${sortBy === 'star' ? ' planet-node-dropdown-item--active' : ''}`}
                     onClick={() => { setSortBy('star'); setOpenDropdown(null); }}
                   >
                     <span className="planet-node-dropdown-item-leading">
-                      <span>{t('按星级', 'By star')}</span>
+                      <span>{t('按星级')}</span>
                     </span>
                   </button>
                 </div>
@@ -918,10 +931,10 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 type="button"
                 className="planet-node-filter-reset"
                 onClick={clearNodeFilters}
-                aria-label={t('重置筛选', 'Reset filters')}
+                aria-label={t('重置筛选')}
               >
                 <RotateCcw size={14} strokeWidth={2.2} />
-                {t('重置', 'Reset')}
+                {t('重置')}
               </button>
             )}
           </div>
@@ -942,13 +955,13 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             {filteredNodes.length === 0 ? (
               <div className="planet-node-empty">
                 <Search size={28} strokeWidth={1.5} />
-                <span>{t('未找到节点', 'No nodes found')}</span>
+                <span>{t('未找到节点')}</span>
                 <span className="planet-node-empty-sub">
                   {nodeSearch.trim()
-                    ? t(`编号或备注中不含「${nodeSearch}」`, `No code or remark contains "${nodeSearch}"`)
+                    ? t('编号或备注中不含「{nodeSearch}」', { nodeSearch })
                     : hasNodeFilters
-                      ? t('没有符合筛选条件的节点', 'No nodes match the current filters')
-                      : t('暂无节点', 'No nodes yet')}
+                      ? t('没有符合筛选条件的节点')
+                      : t('暂无节点')}
                 </span>
               </div>
             ) : filteredNodes.map((node) => (
@@ -959,13 +972,13 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 {node.origin === 'diamond' ? (
                   <span className="planet-node-origin-tag planet-node-origin-tag--diamond">
                     <Gem size={12} strokeWidth={2.5} aria-hidden />
-                    {t('钻石节点', 'Diamond')}
+                    {t('钻石节点')}
                     <span className="planet-node-origin-serial">#{node.serialNo}</span>
                   </span>
                 ) : (
                   <span className="planet-node-origin-tag planet-node-origin-tag--genesis">
                     <Sparkles size={12} strokeWidth={2.5} aria-hidden />
-                    {t('创世节点', 'Genesis')}
+                    {t('创世节点')}
                     <span className="planet-node-origin-serial">#{node.serialNo}</span>
                   </span>
                 )}
@@ -975,8 +988,8 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                   onClick={() => handleFavoriteClick(node)}
                   aria-pressed={favoriteNodeIds.has(node.id)}
                   aria-label={favoriteNodeIds.has(node.id)
-                    ? t(`取消收藏 ${node.nodeCode}`, `Unfavorite ${node.nodeCode}`)
-                    : t(`收藏 ${node.nodeCode}`, `Favorite ${node.nodeCode}`)}
+                    ? t('取消收藏 {nodeCode}', { nodeCode: node.nodeCode })
+                    : t('收藏 {nodeCode}', { nodeCode: node.nodeCode })}
                 >
                   <Bookmark size={18} strokeWidth={2} fill={favoriteNodeIds.has(node.id) ? 'currentColor' : 'none'} aria-hidden />
                 </button>
@@ -990,13 +1003,13 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     {node.syncing && (
                       <span className="planet-node-syncing-badge">
                         <Loader2 size={12} strokeWidth={2.5} className="planet-spin" aria-hidden />
-                        {t('同步中', 'Syncing')}
+                        {t('同步中')}
                       </span>
                     )}
                     <button
                       className={`planet-node-copy-btn${copiedId === node.id ? ' planet-node-copy-btn--done' : ''}`}
                       onClick={() => copyNodeCode(node)}
-                      aria-label={t('复制节点编号', 'Copy node code')}
+                      aria-label={t('复制节点编号')}
                     >
                       {copiedId === node.id ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} strokeWidth={2} />}
                     </button>
@@ -1018,14 +1031,14 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     }}
                   >
                     <span className="planet-node-child-count-label">
-                      {t('子节点', 'Children')}
+                      {t('子节点')}
                       <span
                         role="button"
                         tabIndex={0}
                         className="asset-overview-info-btn"
                         onClick={e => { e.stopPropagation(); setChildInfoOpen(true); }}
                         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); setChildInfoOpen(true); } }}
-                        aria-label={t('查看子节点说明', 'View sub-node info')}
+                        aria-label={t('查看子节点说明')}
                       >
                         <Info size={12} strokeWidth={2} />
                       </span>
@@ -1059,12 +1072,12 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             onClick={e => e.stopPropagation()}
           >
             <div className="sheet-header">
-              <span className="sheet-title">{t('抢先开通频道', 'Early Channel Access')}</span>
+              <span className="sheet-title">{t('抢先开通频道')}</span>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
                 onClick={closeCreateSheet}
-                aria-label={t('关闭', 'Close')}
+                aria-label={t('关闭')}
                 disabled={creating}
               >
                 <X size={18} strokeWidth={2} />
@@ -1073,15 +1086,12 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
 
             <div className="create-step-body">
               <div className="planet-pregen-note">
-                {t(
-                  '知识星球系统尚未正式上线，当前生成的是预留频道，系统上线后自动转为正式频道',
-                  'The Knowledge Planet system hasn’t launched yet — this creates a reserved channel that automatically becomes active at launch'
-                )}
+                {t('知识星球系统尚未正式上线，当前生成的是预留频道，系统上线后自动转为正式频道')}
               </div>
 
               <div className="stake-code-block">
                 <div className="stake-code-label-row">
-                  <span className="stake-code-label">{t('开通规模', 'Scale')}</span>
+                  <span className="stake-code-label">{t('开通规模')}</span>
                 </div>
                 <div className="create-scale-toggle">
                   <button
@@ -1090,7 +1100,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     disabled={creating}
                     onClick={() => handleSelectScaleMode('qty')}
                   >
-                    {t('按个数', 'By count')}
+                    {t('按个数')}
                   </button>
                   <button
                     type="button"
@@ -1098,7 +1108,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     disabled={creating}
                     onClick={() => handleSelectScaleMode('star')}
                   >
-                    {t('按星级包', 'By star pack')}
+                    {t('按星级包')}
                   </button>
                 </div>
               </div>
@@ -1110,7 +1120,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     className="create-qty-btn"
                     disabled={creating || createQty <= 1}
                     onClick={() => setCreateQty(q => Math.max(1, q - 1))}
-                    aria-label={t('减少', 'Decrease')}
+                    aria-label={t('减少')}
                   >
                     <Minus size={18} strokeWidth={2} />
                   </button>
@@ -1120,7 +1130,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     className="create-qty-btn"
                     disabled={creating || createQty >= PAID_QTY_MAX}
                     onClick={() => setCreateQty(q => Math.min(PAID_QTY_MAX, q + 1))}
-                    aria-label={t('增加', 'Increase')}
+                    aria-label={t('增加')}
                   >
                     <Plus size={18} strokeWidth={2} />
                   </button>
@@ -1138,9 +1148,9 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                       >
                         <StarDisplay level={pack.level} size={28} />
                         <span className="create-star-pack-copy">
-                          <span className="create-star-pack-title">{t(`${pack.level} 星包`, `${pack.level}-star pack`)}</span>
+                          <span className="create-star-pack-title">{t('{level} 星包', { level: pack.level })}</span>
                           <span className="create-star-pack-sub">
-                            {t(`一次生成 ${pack.qty} 个`, `Creates ${pack.qty} at once`)}
+                            {t('一次生成 {qty} 个', { qty: pack.qty })}
                           </span>
                         </span>
                         <span className="create-star-pack-qty font-mono">×{pack.qty}</span>
@@ -1148,42 +1158,42 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     );
                   })}
                   <span className="stake-code-caption">
-                    {t('星级包按晋升所需数量一次生成，不是把单个节点直接改成该星级', 'A star pack creates the count needed for that tier — it does not upgrade one node in place')}
+                    {t('星级包按晋升所需数量一次生成，不是把单个节点直接改成该星级')}
                   </span>
                 </div>
               )}
 
               <div className="stake-code-block">
                 <div className="stake-code-label-row">
-                  <span className="stake-code-label">{t('频道名称', 'Channel name')}</span>
-                  <span className="stake-code-required-tag">{t('必填', 'Required')}</span>
+                  <span className="stake-code-label">{t('频道名称2')}</span>
+                  <span className="stake-code-required-tag">{t('必填')}</span>
                 </div>
                 <input
                   className="stake-code-input stake-name-input"
                   type="text"
                   value={channelNameInput}
                   onChange={e => setChannelNameInput(e.target.value)}
-                  placeholder={t('给频道起个名字', 'Name your channel')}
+                  placeholder={t('给频道起个名字')}
                   disabled={creating}
                   maxLength={20}
                 />
                 {createCount > 1 && (
                   <span className="stake-code-caption">
-                    {t('批量时其余频道自动加序号，如 名称-2、名称-3', 'Extras get suffixes like Name-2, Name-3')}
+                    {t('批量时其余频道自动加序号，如 名称-2、名称-3')}
                   </span>
                 )}
               </div>
 
               <div className="stake-code-block">
                 <div className="stake-code-label-row">
-                  <span className="stake-code-label">{t('频道简介', 'Description')}</span>
-                  <span className="stake-code-optional-tag">{t('选填', 'Optional')}</span>
+                  <span className="stake-code-label">{t('频道简介')}</span>
+                  <span className="stake-code-optional-tag">{t('选填')}</span>
                 </div>
                 <textarea
                   className="stake-code-input stake-code-textarea"
                   value={channelDescInput}
                   onChange={e => setChannelDescInput(e.target.value)}
-                  placeholder={t('介绍一下你的频道', 'Introduce your channel')}
+                  placeholder={t('介绍一下你的频道')}
                   disabled={creating}
                   maxLength={100}
                   rows={3}
@@ -1192,8 +1202,8 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
 
               <div className="stake-code-block">
                 <div className="stake-code-label-row">
-                  <span className="stake-code-label">{t('节点码', 'Node code')}</span>
-                  <span className="stake-code-optional-tag">{t('选填', 'Optional')}</span>
+                  <span className="stake-code-label">{t('节点码')}</span>
+                  <span className="stake-code-optional-tag">{t('选填')}</span>
                 </div>
                 <div className="stake-code-row">
                   <div className="stake-code-input-wrap">
@@ -1202,7 +1212,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                       type="text"
                       value={nodeCodeInput}
                       onChange={e => handleNodeCodeChange(e.target.value)}
-                      placeholder={t('不填则跳过', 'Leave blank to skip')}
+                      placeholder={t('不填则跳过')}
                       disabled={creating}
                       maxLength={12}
                     />
@@ -1212,7 +1222,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                       onClick={handlePasteNodeCode}
                       disabled={creating}
                     >
-                      {t('粘贴', 'Paste')}
+                      {t('粘贴')}
                     </button>
                   </div>
                   <button
@@ -1223,51 +1233,51 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                   >
                     {verifying
                       ? <Loader2 size={14} strokeWidth={2} className="planet-spin" />
-                      : t('校验', 'Verify')
+                      : t('校验')
                     }
                   </button>
                 </div>
                 {codeCheckStatus === '3' && (
                   <span className="stake-code-status stake-code-status--ok">
                     <ShieldCheck size={13} strokeWidth={2} />
-                    {t('校验通过', 'Verified')}
+                    {t('校验通过')}
                     {(() => {
                       const owner = NODE_CODE_OWNER_ADDRESS[nodeCodeInput.trim().toUpperCase()];
-                      return owner ? t(`，对应地址尾号 ${owner.slice(-4)}`, `, owner address ending in ${owner.slice(-4)}`) : null;
+                      return owner ? t('，对应地址尾号 {slice}', { slice: owner.slice(-4) }) : null;
                     })()}
                   </span>
                 )}
                 {codeCheckStatus === '4' && (
                   <span className="stake-code-status stake-code-status--fail">
                     <ShieldX size={13} strokeWidth={2} />
-                    {t('校验未通过', 'Verification failed')}
+                    {t('校验未通过')}
                   </span>
                 )}
                 {codeCheckStatus === '1' && (
                   <span className="stake-code-caption">
-                    {t('填写后将无法修改，如无节点码可直接跳过', 'Cannot be changed once entered — skip if you don’t have one')}
+                    {t('填写后将无法修改，如无节点码可直接跳过')}
                   </span>
                 )}
               </div>
 
               <div className="create-confirm-card">
-                <span className="create-confirm-label">{t('费用明细', 'Cost breakdown')}</span>
+                <span className="create-confirm-label">{t('费用明细2')}</span>
                 <div className="planet-upgrade-row" style={{ paddingLeft: 0, paddingRight: 0 }}>
                   <span className="planet-upgrade-row-label">
                     {createScaleMode === 'star'
-                      ? t(`将生成 ${createCount} 个 · 目标 ${createStars} 星`, `Will create ${createCount} · target ${createStars}★`)
-                      : t(`将生成 ${createCount} 个节点（1 星）`, `Will create ${createCount} node(s) at 1★`)}
+                      ? t('将生成 {createCount} 个 · 目标 {createStars} 星', { createCount, createStars })
+                      : t('将生成 {createCount} 个节点（1 星）', { createCount })}
                   </span>
                 </div>
                 <div className="planet-upgrade-row" style={{ paddingLeft: 0, paddingRight: 0 }}>
-                  <span className="planet-upgrade-row-label">{t('所需 PB', 'PB required')}</span>
+                  <span className="planet-upgrade-row-label">{t('所需 PB')}</span>
                   <div className="planet-upgrade-cost">
                     <span className="planet-upgrade-cost-num">{formatTokenAmount(pbCost)}</span>
                     <span className="planet-upgrade-cost-unit"> PB</span>
                   </div>
                 </div>
                 <div className="planet-upgrade-row" style={{ paddingLeft: 0, paddingRight: 0 }}>
-                  <span className="planet-upgrade-row-label">{t('Gas 费', 'Gas fee')}</span>
+                  <span className="planet-upgrade-row-label">{t('Gas 费')}</span>
                   <div className="planet-upgrade-cost">
                     <span className="planet-upgrade-cost-num">{Number(supCost.toFixed(4))}</span>
                     <span className="planet-upgrade-cost-unit"> SUP</span>
@@ -1277,7 +1287,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
 
               <div className="create-delay-note">
                 <Info size={14} strokeWidth={2} aria-hidden />
-                <span>{t('节点生成时间有5分钟延迟，请耐心等待', 'Node generation takes about 5 minutes. Please wait.')}</span>
+                <span>{t('节点生成时间有5分钟延迟，请耐心等待')}</span>
               </div>
 
               <button
@@ -1288,7 +1298,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               >
                 {creating
                   ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
-                  : t('确认支付并开通', 'Confirm pay & open')
+                  : t('确认支付并开通')
                 }
               </button>
             </div>
@@ -1314,7 +1324,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             className="payment-sheet bsp-record-list-sheet"
             role="dialog"
             aria-modal="true"
-            aria-label={t('我的投流记录', 'My Investments')}
+            aria-label={t('我的投流记录')}
             onClick={event => event.stopPropagation()}
           >
             <BspRecordList
@@ -1343,34 +1353,34 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
           >
             <div className="sheet-header">
               <span className="sheet-title">
-                {t(`收藏 · ${remarkSheetNode.nodeCode}`, `Favorite · ${remarkSheetNode.nodeCode}`)}
+                {t('收藏 · {nodeCode}', { nodeCode: remarkSheetNode.nodeCode })}
               </span>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
                 onClick={closeFavoriteSheet}
-                aria-label={t('关闭', 'Close')}
+                aria-label={t('关闭')}
               >
                 <X size={18} strokeWidth={2} />
               </button>
             </div>
             <div className="stake-code-block">
               <div className="stake-code-label-row">
-                <span className="stake-code-label">{t('备注', 'Remark')}</span>
-                <span className="stake-code-optional-tag">{t('选填', 'Optional')}</span>
+                <span className="stake-code-label">{t('备注')}</span>
+                <span className="stake-code-optional-tag">{t('选填')}</span>
               </div>
               <input
                 className="stake-code-input stake-name-input"
                 type="text"
                 value={remarkInput}
                 onChange={e => setRemarkInput(e.target.value)}
-                placeholder={t('方便自己识别节点，如「主力收益」', 'Optional note to recognize this node')}
+                placeholder={t('方便自己识别节点，如「主力收益」')}
                 maxLength={20}
                 autoFocus
               />
             </div>
             <button className="planet-confirm-btn" type="button" onClick={confirmFavorite}>
-              {t('确认收藏', 'Confirm Favorite')}
+              {t('确认收藏')}
             </button>
           </div>
         </div>
@@ -1386,12 +1396,12 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             onClick={e => e.stopPropagation()}
           >
             <div className="sheet-header">
-              <span className="sheet-title">{t('抢先开通频道', 'Early Channel Access')}</span>
+              <span className="sheet-title">{t('抢先开通频道')}</span>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
                 onClick={() => setConnectWalletSheetOpen(false)}
-                aria-label={t('关闭', 'Close')}
+                aria-label={t('关闭')}
               >
                 <X size={18} strokeWidth={2} />
               </button>
@@ -1399,9 +1409,9 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
 
             <div className="planet-connect-sheet-body">
               <Wallet size={36} strokeWidth={1.5} aria-hidden="true" />
-              <span className="planet-connect-sheet-title">{t('请先连接钱包', 'Connect wallet first')}</span>
+              <span className="planet-connect-sheet-title">{t('请先连接钱包')}</span>
               <span className="planet-connect-sheet-sub">
-                {t('创建频道需要连接钱包后才能继续', 'You need to connect your wallet before creating a channel')}
+                {t('创建频道需要连接钱包后才能继续')}
               </span>
               <button
                 type="button"
@@ -1411,7 +1421,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               >
                 {walletConnecting
                   ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
-                  : t('连接钱包', 'Connect Wallet')
+                  : t('连接钱包')
                 }
               </button>
             </div>
@@ -1429,12 +1439,12 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             onClick={e => e.stopPropagation()}
           >
             <div className="sheet-header">
-              <span className="sheet-title">{t('选择要转让的节点', 'Select a node to transfer')}</span>
+              <span className="sheet-title">{t('选择要转让的节点')}</span>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
                 onClick={() => setTransferPickerOpen(false)}
-                aria-label={t('关闭', 'Close')}
+                aria-label={t('关闭')}
               >
                 <X size={18} strokeWidth={2} />
               </button>
@@ -1450,13 +1460,13 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                   setTransferPickerSearch(e.target.value);
                   setTransferPickerVisibleCount(TRANSFER_PICKER_PAGE_SIZE);
                 }}
-                placeholder={t('搜索节点编号或频道名…', 'Search by node code or channel…')}
+                placeholder={t('搜索节点编号或频道名…')}
               />
               {transferPickerSearch && (
                 <button
                   className="planet-node-search-clear"
                   onClick={() => setTransferPickerSearch('')}
-                  aria-label={t('清除', 'Clear')}
+                  aria-label={t('清除')}
                 >
                   <X size={13} strokeWidth={2.5} />
                 </button>
@@ -1466,7 +1476,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             <div className="planet-transfer-picker-list">
               {transferPickerVisible.length === 0 ? (
                 <div className="planet-transfer-picker-empty">
-                  {t('未找到匹配的节点', 'No matching nodes')}
+                  {t('未找到匹配的节点')}
                 </div>
               ) : (
                 <>
@@ -1493,7 +1503,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                       className="planet-transfer-picker-more-btn"
                       onClick={() => setTransferPickerVisibleCount(c => c + TRANSFER_PICKER_PAGE_SIZE)}
                     >
-                      {t(`加载更多（剩余 ${transferPickerFiltered.length - transferPickerVisible.length}）`, `Load more (${transferPickerFiltered.length - transferPickerVisible.length} left)`)}
+                      {t('加载更多（剩余 {length}）', { length: transferPickerFiltered.length - transferPickerVisible.length })}
                     </button>
                   )}
                 </>
@@ -1514,13 +1524,13 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
           >
             <div className="sheet-header">
               <span className="sheet-title">
-                {t(`转让节点 ${transferSheetNode.nodeCode}`, `Transfer Node ${transferSheetNode.nodeCode}`)}
+                {t('转让节点 {nodeCode}', { nodeCode: transferSheetNode.nodeCode })}
               </span>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
                 onClick={closeTransferSheet}
-                aria-label={t('关闭', 'Close')}
+                aria-label={t('关闭')}
                 disabled={transferring}
               >
                 <X size={18} strokeWidth={2} />
@@ -1528,16 +1538,13 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             </div>
 
             <div className="stake-hint">
-              {t(
-                '仅支持转让给已在知识宇宙注册过的用户。',
-                'Transfers are only supported to users already registered on Wisverse.'
-              )}
+              {t('仅支持转让给已在知识宇宙注册过的用户。')}
             </div>
 
             <div className="stake-code-block">
               <div className="stake-code-label-row">
-                <span className="stake-code-label">{t('接收方地址', 'Recipient address')}</span>
-                <span className="stake-code-required-tag">{t('必填', 'Required')}</span>
+                <span className="stake-code-label">{t('接收方地址')}</span>
+                <span className="stake-code-required-tag">{t('必填')}</span>
               </div>
               <div className="stake-code-row">
                 <div className="stake-code-input-wrap">
@@ -1546,7 +1553,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     type="text"
                     value={transferAddress}
                     onChange={e => handleTransferAddressChange(e.target.value)}
-                    placeholder={t('请输入接收方钱包地址', 'Enter recipient’s wallet address')}
+                    placeholder={t('请输入接收方钱包地址')}
                     disabled={transferring}
                   />
                   <button
@@ -1555,7 +1562,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                     onClick={handlePasteTransferAddress}
                     disabled={transferring}
                   >
-                    {t('粘贴', 'Paste')}
+                    {t('粘贴')}
                   </button>
                 </div>
                 <button
@@ -1566,20 +1573,20 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                 >
                   {transferVerifying
                     ? <Loader2 size={14} strokeWidth={2} className="planet-spin" />
-                    : t('校验', 'Verify')
+                    : t('校验')
                   }
                 </button>
               </div>
               {transferCheckStatus === '3' && (
                 <span className="stake-code-status stake-code-status--ok">
                   <ShieldCheck size={13} strokeWidth={2} />
-                  {t('地址校验通过', 'Address verified')}
+                  {t('地址校验通过')}
                 </span>
               )}
               {transferCheckStatus === '4' && (
                 <span className="stake-code-status stake-code-status--fail">
                   <ShieldX size={13} strokeWidth={2} />
-                  {t('该地址从未使用过知识宇宙，请确认地址是否正确', 'This address has never used Wisverse — please confirm it’s correct')}
+                  {t('该地址从未使用过知识宇宙，请确认地址是否正确')}
                 </span>
               )}
             </div>
@@ -1588,7 +1595,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
 
             <div className="planet-upgrade-row">
               <span className="planet-upgrade-row-label">
-                {t('转让价格', 'Transfer price')}
+                {t('转让价格')}
               </span>
               <div className="planet-upgrade-cost">
                 <span className="planet-upgrade-cost-num">
@@ -1598,7 +1605,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               </div>
             </div>
             <div className="planet-upgrade-row">
-              <span className="planet-upgrade-row-label">{t('Gas 费', 'Gas fee')}</span>
+              <span className="planet-upgrade-row-label">{t('Gas 费')}</span>
               <div className="planet-upgrade-cost">
                 <span className="planet-upgrade-cost-num">
                   {formatSupAmount(SUP_COST_BY_TIER[transferSheetNode.tier])}
@@ -1614,7 +1621,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             >
               {transferring
                 ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
-                : t('确认转让', 'Confirm Transfer')
+                : t('确认转让')
               }
             </button>
           </div>
@@ -1630,12 +1637,12 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             onClick={e => e.stopPropagation()}
           >
             <div className="sheet-header">
-              <span className="sheet-title">{t('子节点说明', 'About Sub-Nodes')}</span>
+              <span className="sheet-title">{t('子节点说明')}</span>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
                 onClick={() => setChildInfoOpen(false)}
-                aria-label={t('关闭', 'Close')}
+                aria-label={t('关闭')}
               >
                 <X size={18} strokeWidth={2} />
               </button>
@@ -1643,71 +1650,41 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
 
             <div className="pb-info-sheet-body">
               <p className="pb-info-sheet-para pb-info-sheet-heading">
-                {t(
-                  '关于知识宇宙"子节点"的定义与核算说明',
-                  'About the Definition and Calculation of "Sub-Nodes" in Wisverse'
-                )}
+                {t('关于知识宇宙"子节点"的定义与核算说明')}
               </p>
               <p className="pb-info-sheet-para">
-                {t(
-                  '在知识宇宙（双子星节点生态）中，"子节点"是衡量一个频道核心强度与星级晋升的根本指标。其具体定义与核算规则如下：',
-                  'In Wisverse (the Gemini node ecosystem), "sub-nodes" are the fundamental metric for measuring a channel’s core strength and star-tier promotion. The specific definition and calculation rules are as follows:'
-                )}
+                {t('在知识宇宙（双子星节点生态）中，"子节点"是衡量一个频道核心强度与星级晋升的根本指标。其具体定义与核算规则如下：')}
               </p>
               <p className="pb-info-sheet-para">
-                <strong className="pb-info-sheet-label">{t('唯一核心定义：', 'Sole core definition: ')}</strong>
-                {t(
-                  '子节点仅指直接使用 PB（公信力积分）进行消耗，并完成直接订阅链接到该频道的节点数量。',
-                  'A sub-node refers only to a node that directly consumed PB (Public Belief) and completed a direct subscription link to that channel.'
-                )}
+                <strong className="pb-info-sheet-label">{t('唯一核心定义：')}</strong>
+                {t('子节点仅指直接使用 PB（公信力积分）进行消耗，并完成直接订阅链接到该频道的节点数量。')}
               </p>
               <p className="pb-info-sheet-para">
-                <strong className="pb-info-sheet-label">{t('不计入范围：', 'Excluded from the count: ')}</strong>
-                {t(
-                  '凡是由平台系统推流、公域引流或非消耗PB产生的常规链接节点，一律不计入该频道的子节点考核基数。',
-                  'Any node linked through platform-driven distribution, public-domain traffic, or without consuming PB is not counted toward the channel’s sub-node total.'
-                )}
+                <strong className="pb-info-sheet-label">{t('不计入范围：')}</strong>
+                {t('凡是由平台系统推流、公域引流或非消耗PB产生的常规链接节点，一律不计入该频道的子节点考核基数。')}
               </p>
-              <p className="pb-info-sheet-para pb-info-sheet-subheading">{t('核心结论：', 'Key conclusion:')}</p>
+              <p className="pb-info-sheet-para pb-info-sheet-subheading">{t('核心结论：')}</p>
               <p className="pb-info-sheet-para">
-                {t(
-                  '子节点是纯粹的"直推硬资产"。只有通过深耕频道内容，吸引用户付出实质性PB消耗进行订阅链接，才能沉淀为有效的子节点。当该直系消耗订阅的子节点数量达到 60多个（约63-64个） 时，频道将 100% 锁死并晋升为五星频道。',
-                  'Sub-nodes are a pure "direct-referral hard asset." Only by cultivating channel content that drives users to spend PB on a subscription link can it accumulate as a valid sub-node. Once the number of directly-subscribed sub-nodes reaches about 60+ (roughly 63–64), the channel is 100% locked in and promoted to a five-star channel.'
-                )}
+                {t('子节点是纯粹的"直推硬资产"。只有通过深耕频道内容，吸引用户付出实质性PB消耗进行订阅链接，才能沉淀为有效的子节点。当该直系消耗订阅的子节点数量达到 60多个（约63-64个） 时，频道将 100% 锁死并晋升为五星频道。')}
               </p>
 
               <p className="pb-info-sheet-para pb-info-sheet-heading">
-                {t(
-                  '关于知识宇宙"定向广播"（Direction Broadcasting）机制说明',
-                  'About the "Direction Broadcasting" Mechanism in Wisverse'
-                )}
+                {t('关于知识宇宙"定向广播"（Direction Broadcasting）机制说明')}
               </p>
               <p className="pb-info-sheet-para">
-                {t(
-                  '在知识宇宙生态中，定向广播（Direction Broadcasting）是实现内容精准分发与流量价值放大的核心推流机制。其运作原理与激励规则如下：',
-                  'In the Wisverse ecosystem, Direction Broadcasting is the core distribution mechanism for precise content delivery and traffic value amplification. Its operating principles and incentive rules are as follows:'
-                )}
+                {t('在知识宇宙生态中，定向广播（Direction Broadcasting）是实现内容精准分发与流量价值放大的核心推流机制。其运作原理与激励规则如下：')}
               </p>
               <p className="pb-info-sheet-para">
-                <strong className="pb-info-sheet-label">{t('精准交叉推流：', 'Precision cross-distribution: ')}</strong>
-                {t(
-                  '频道发布的新内容，系统将优先向纵向深度达 25级的链接受众群体 进行交叉推流。这一设计确保了内容能率先触达组织架构内最核心、黏性最高的协同网络。',
-                  'When a channel publishes new content, the system prioritizes cross-distribution to the linked audience up to 25 levels deep. This ensures content first reaches the most core, highest-engagement network within the structure.'
-                )}
+                <strong className="pb-info-sheet-label">{t('精准交叉推流：')}</strong>
+                {t('频道发布的新内容，系统将优先向纵向深度达 25级的链接受众群体 进行交叉推流。这一设计确保了内容能率先触达组织架构内最核心、黏性最高的协同网络。')}
               </p>
               <p className="pb-info-sheet-para">
-                <strong className="pb-info-sheet-label">{t('行为激励机制：', 'Behavioral incentive mechanism: ')}</strong>
-                {t(
-                  '平台通过 AI 算法，根据受众对该内容的浏览、点赞、转发、收藏等真实互动行为进行多维评估。互动的热度与质量将直接转化为 PB（公信力积分）奖励，从而提升创作者与参与者的生态公信力权重。',
-                  'The platform uses an AI algorithm to evaluate the audience’s genuine interactions with the content — views, likes, reposts, and saves — across multiple dimensions. The heat and quality of engagement directly convert into PB rewards, raising the ecosystem trust weight of both creators and participants.'
-                )}
+                <strong className="pb-info-sheet-label">{t('行为激励机制：')}</strong>
+                {t('平台通过 AI 算法，根据受众对该内容的浏览、点赞、转发、收藏等真实互动行为进行多维评估。互动的热度与质量将直接转化为 PB（公信力积分）奖励，从而提升创作者与参与者的生态公信力权重。')}
               </p>
               <p className="pb-info-sheet-para">
-                <strong className="pb-info-sheet-label">{t('BSP 权重放大：', 'BSP weight amplification: ')}</strong>
-                {t(
-                  '依托 BSP（Big Star Plan，巨星投流计划）功能，高活跃度的定向广播将显著提升该频道的后续推流权重。权重越高，频道所获得的全局流量空投收益就越丰厚，从而实现"内容升级—流量反哺—收益倍增"的稳健闭环。',
-                  'Through the BSP (Big Star Plan) feature, high-activity Direction Broadcasting significantly raises a channel’s subsequent distribution weight. The higher the weight, the greater the channel’s global traffic airdrop rewards — forming a steady loop of "content upgrade → traffic feedback → reward multiplication."'
-                )}
+                <strong className="pb-info-sheet-label">{t('BSP 权重放大：')}</strong>
+                {t('依托 BSP（Big Star Plan，巨星投流计划）功能，高活跃度的定向广播将显著提升该频道的后续推流权重。权重越高，频道所获得的全局流量空投收益就越丰厚，从而实现"内容升级—流量反哺—收益倍增"的稳健闭环。')}
               </p>
             </div>
           </div>
@@ -1726,17 +1703,17 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             <div className="sheet-header planet-child-list-sheet-header">
               <div className="planet-child-list-sheet-heading">
                 <span className="sheet-title">
-                  {t(`子节点列表 · ${childListNode.nodeCode}`, `Sub-Nodes · ${childListNode.nodeCode}`)}
+                  {t('子节点列表 · {nodeCode}', { nodeCode: childListNode.nodeCode })}
                 </span>
                 <span className="planet-child-list-sheet-count">
-                  {t(`共 ${childListEntries.length} 个`, `${childListEntries.length} total`)}
+                  {t('共 {length} 个', { length: childListEntries.length })}
                 </span>
               </div>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
                 onClick={() => setChildListNode(null)}
-                aria-label={t('关闭', 'Close')}
+                aria-label={t('关闭')}
               >
                 <X size={18} strokeWidth={2} />
               </button>
@@ -1745,7 +1722,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
             <div className="planet-transfer-picker-list">
               {childListVisible.length === 0 ? (
                 <div className="planet-transfer-picker-empty">
-                  {t('该节点暂无子节点', 'No sub-nodes yet')}
+                  {t('该节点暂无子节点')}
                 </div>
               ) : (
                 <>
@@ -1766,7 +1743,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                                   setTimeout(() => setCopiedId(null), 1800);
                                 });
                               }}
-                              aria-label={t('复制编号', 'Copy code')}
+                              aria-label={t('复制编号')}
                             >
                               {copiedId === copyKey ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} strokeWidth={2} />}
                             </button>
@@ -1781,7 +1758,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
                       className="planet-transfer-picker-more-btn"
                       onClick={() => setChildListVisibleCount(c => c + TRANSFER_PICKER_PAGE_SIZE)}
                     >
-                      {t(`加载更多（剩余 ${childListEntries.length - childListVisible.length}）`, `Load more (${childListEntries.length - childListVisible.length} left)`)}
+                      {t('加载更多（剩余 {length}）', { length: childListEntries.length - childListVisible.length })}
                     </button>
                   )}
                 </>
@@ -1799,9 +1776,9 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               aria-checked={devForceEmptyNodes}
               onClick={() => setDevForceEmptyNodes(v => !v)}
             >
-              <span>{t('无节点空状态', 'Empty nodes preview')}</span>
+              <span>{t('无节点空状态')}</span>
               <span className={`planet-dev-menu-toggle${devForceEmptyNodes ? ' planet-dev-menu-toggle--on' : ''}`}>
-                {devForceEmptyNodes ? t('开', 'On') : t('关', 'Off')}
+                {devForceEmptyNodes ? t('开') : t('关')}
               </span>
             </button>
             <button
@@ -1811,9 +1788,9 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
               aria-checked={devBspInsufficient}
               onClick={() => setDevBspInsufficient(v => !v)}
             >
-              <span>{t('BSP 余额不足演示', 'BSP insufficient balance demo')}</span>
+              <span>{t('BSP 余额不足演示')}</span>
               <span className={`planet-dev-menu-toggle${devBspInsufficient ? ' planet-dev-menu-toggle--on' : ''}`}>
-                {devBspInsufficient ? t('开', 'On') : t('关', 'Off')}
+                {devBspInsufficient ? t('开') : t('关')}
               </span>
             </button>
       </DevPanel>

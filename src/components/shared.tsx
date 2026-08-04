@@ -15,7 +15,7 @@ export function VerifiedBadge({ size = 14 }: { size?: number }) {
       size={size}
       className="verified-badge"
       strokeWidth={2.25}
-      aria-label={t('已认证', 'Verified')}
+      aria-label={t('已认证')}
     />
   );
 }
@@ -24,12 +24,12 @@ export function VerifiedBadge({ size = 14 }: { size?: number }) {
 // 与频道会员小标（ChannelMemberBadge）视觉上刻意区分：不同图标 + 不同 token 色，避免用户混淆两套身份体系
 export function GenesisBadge({ tier, size = 12 }: { tier: 'silver' | 'gold'; size?: number }) {
   const { t } = useApp();
-  const label = t('创世', 'Genesis');
+  const label = t('创世');
   return (
     <span
       className={`genesis-owner-badge genesis-owner-badge--${tier}`}
-      aria-label={tier === 'gold' ? t('创世节点·金（10000 档）', 'Genesis Node · Gold (10000)') : t('创世节点·银（1000 档）', 'Genesis Node · Silver (1000)')}
-      title={tier === 'gold' ? t('创世节点·金', 'Genesis Node · Gold') : t('创世节点·银', 'Genesis Node · Silver')}
+      aria-label={tier === 'gold' ? t('创世节点·金（10000 档）') : t('创世节点·银（1000 档）')}
+      title={tier === 'gold' ? t('创世节点·金') : t('创世节点·银')}
     >
       <Crown size={size} strokeWidth={0} fill="currentColor" />
       <span className="genesis-owner-badge-text">{label}</span>
@@ -43,8 +43,8 @@ export function ChannelMemberBadge({ tierName, size = 12 }: { tierName: string; 
   return (
     <span
       className="channel-member-badge"
-      aria-label={t(`频道会员 · ${tierName}`, `Channel member · ${tierName}`)}
-      title={t(`频道会员 · ${tierName}`, `Channel member · ${tierName}`)}
+      aria-label={t('频道会员 · {tierName}', { tierName })}
+      title={t('频道会员 · {tierName}', { tierName })}
     >
       <Gem size={size} strokeWidth={2.4} />
       <span className="channel-member-badge-text">{tierName}</span>
@@ -119,7 +119,7 @@ export function Rating({ value, size = 28 }: { value: number; size?: number }) {
 
   return (
     <div
-      aria-label={t(`${level} 星`, `${level} ${level === 1 ? 'star' : 'stars'}`)}
+      aria-label={t('{level} 星', { level, unit: level === 1 ? 'star' : 'stars' })}
       style={{ position: 'relative', width: size, height: size, flexShrink: 0, filter: `drop-shadow(0 0 6px ${shadow})` }}
     >
       <Star size={size} fill={color} strokeWidth={0} style={{ display: 'block' }} />
@@ -230,10 +230,10 @@ export function PullToRefresh({
   const progress = Math.min(1, pullDistance / PTR_TRIGGER);
   const visiblePull = refreshing ? PTR_TRIGGER : pullDistance;
   const statusLabel = refreshing
-    ? t('刷新中…', 'Refreshing…')
+    ? t('刷新中…')
     : progress >= 1
-      ? t('松开刷新', 'Release to refresh')
-      : t('下拉刷新', 'Pull to refresh');
+      ? t('松开刷新')
+      : t('下拉刷新');
 
   return (
     <div className={className} ref={containerRef}>
@@ -267,7 +267,7 @@ export function PageHeader({ title, onBack, action, className }: { title?: strin
   return (
     <div className={`page-header${className ? ` ${className}` : ''}`} data-layer="page-header">
       {onBack && (
-        <button className="back-btn" type="button" onClick={onBack} aria-label={t('返回', 'Back')}>
+        <button className="back-btn" type="button" onClick={onBack} aria-label={t('返回')}>
           <ArrowLeft size={22} strokeWidth={2} />
         </button>
       )}
@@ -308,16 +308,16 @@ export function MediaPlaceholder({
           onClick={onArticleClick ? (e) => { e.stopPropagation(); onArticleClick(); } : undefined}
           role={onArticleClick ? 'button' : undefined}
           tabIndex={onArticleClick ? 0 : undefined}
-          aria-label={t('阅读文章', 'Read article')}
+          aria-label={t('阅读文章')}
           onKeyDown={onArticleClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onArticleClick(); } : undefined}
         >
           <div className="media-article-card-head">
             <span className="media-article-card-badge">
               <FileText size={14} strokeWidth={2} aria-hidden="true" />
-              {t('长文', 'Article')}
+              {t('长文')}
             </span>
             <span className="media-article-card-cta">
-              {t('阅读全文', 'Read article')}
+              {t('阅读全文')}
               <ChevronRight size={14} strokeWidth={2.2} aria-hidden="true" />
             </span>
           </div>
@@ -336,7 +336,7 @@ export function MediaPlaceholder({
         onClick={onArticleClick ? (e) => { e.stopPropagation(); onArticleClick(); } : undefined}
         role={onArticleClick ? 'button' : undefined}
         tabIndex={onArticleClick ? 0 : undefined}
-        aria-label={t('阅读文章', 'Read article')}
+        aria-label={t('阅读文章')}
         onKeyDown={onArticleClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onArticleClick(); } : undefined}
       />
     );
@@ -349,10 +349,10 @@ export function MediaPlaceholder({
         onClick={onVideoClick ? (e) => { e.stopPropagation(); onVideoClick(); } : undefined}
         role={onVideoClick ? 'button' : undefined}
         tabIndex={onVideoClick ? 0 : undefined}
-        aria-label={t('播放视频', 'Play video')}
+        aria-label={t('播放视频')}
         onKeyDown={onVideoClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onVideoClick(); } : undefined}
       >
-        <div className="video-text"><span>{t('RAG 技术', 'RAG Technology')}</span><span>{t('原理与实践', 'Theory & Practice')}</span><i /></div>
+        <div className="video-text"><span>{t('RAG 技术')}</span><span>{t('原理与实践')}</span><i /></div>
         <div className="play"><span /></div>
         <span className="duration">18:42</span>
       </div>
@@ -378,7 +378,7 @@ export function MediaPlaceholder({
             onClick={clickable ? (e) => { e.stopPropagation(); onImageClick!(i); } : undefined}
             role={clickable ? 'button' : undefined}
             tabIndex={clickable ? 0 : undefined}
-            aria-label={clickable ? (locked ? t('点击解锁查看图片', 'Unlock to view image') : t('查看大图', 'View full image')) : undefined}
+            aria-label={clickable ? (locked ? t('点击解锁查看图片') : t('查看大图')) : undefined}
             onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') onImageClick!(i); } : undefined}
           >
             {locked && (
@@ -387,7 +387,7 @@ export function MediaPlaceholder({
                 {clickable && (
                   <div className="img-lock-badge">
                     <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
-                    <span>{t('解锁', 'Unlock')}</span>
+                    <span>{t('解锁')}</span>
                   </div>
                 )}
               </div>
@@ -415,7 +415,7 @@ export function ArticleFeedCard({ post, onClick }: { post: Post; onClick?: () =>
       onClick={handleClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      aria-label={onClick ? t('阅读文章', 'Read article') : undefined}
+      aria-label={onClick ? t('阅读文章') : undefined}
       onKeyDown={onClick ? (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -488,9 +488,9 @@ export function PostContent({
             e.stopPropagation();
             setClamped(false);
           }}
-          aria-label={t('全文', 'Show full text')}
+          aria-label={t('全文')}
         >
-          {t('全文', 'Full text')}
+          {t('全文2')}
         </button>
       )}
       {isPaid && (
@@ -504,7 +504,7 @@ export function PostContent({
             onClick={(e) => { e.stopPropagation(); onUnlockOverride ? onUnlockOverride() : openLink(post.id, 'unlock'); }}
           >
             <Lock size={11} strokeWidth={2.5} />
-            <span>{lockLabel ?? t('解锁全部内容', 'Unlock full content')}</span>
+            <span>{lockLabel ?? t('解锁全部内容')}</span>
           </div>
         </>
       )}
@@ -533,12 +533,12 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
         }
       }}
       aria-label={onGoToPlanet
-        ? t(`查看知识宇宙节点 ${post.nodeId}，${post.rating} 星`, `View Knowledge Universe node ${post.nodeId}, ${post.rating} ${post.rating === 1 ? 'star' : 'stars'}`)
-        : t(`链接节点 ${post.nodeId}，${post.rating} 星`, `Link node ${post.nodeId}, ${post.rating} ${post.rating === 1 ? 'star' : 'stars'}`)}
+        ? t('查看知识宇宙节点 {nodeId}，{rating} 星', { nodeId: post.nodeId ?? '', rating: post.rating, unit: post.rating === 1 ? 'star' : 'stars' })
+        : t('链接节点 {nodeId}，{rating} 星', { nodeId: post.nodeId ?? '', rating: post.rating, unit: post.rating === 1 ? 'star' : 'stars' })}
     >
       <div className="gemini-left">
         <KnowledgePlanetIcon className="gemini-icon" />
-        <span className="gemini-label">{t('知识宇宙', 'Knowledge Universe')}</span>
+        <span className="gemini-label">{t('知识宇宙')}</span>
         <span className="gemini-sep">·</span>
         <Rating value={post.rating} />
         <span className="gemini-sep">·</span>
@@ -548,7 +548,7 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
             type="button"
             className="gemini-id-goto"
             onClick={(e) => { e.stopPropagation(); onGoToPlanet(); }}
-            aria-label={t(`在知识宇宙中查看节点 ${post.nodeId}`, `View node ${post.nodeId} in Knowledge Universe`)}
+            aria-label={t('在知识宇宙中查看节点 {nodeId}', { nodeId: post.nodeId ?? '' })}
           >
             <ChevronRight size={14} strokeWidth={2.5} />
           </button>
@@ -556,17 +556,17 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
       </div>
       {showChain && (
         isLinked ? (
-          <div className="gemini-chain gemini-chain--linked" aria-label={t(`已链接，共 ${post.links} 人`, `Linked by ${post.links} people`)}>
+          <div className="gemini-chain gemini-chain--linked" aria-label={t('已链接，共 {links} 人', { links: post.links })}>
             <CircleCheck size={14} strokeWidth={2.5} />
-            <span>{t('已链接', 'Linked')}</span>
+            <span>{t('已链接')}</span>
             <span className="gemini-chain-count">{post.links}</span>
           </div>
         ) : (
           <button type="button" className="gemini-chain"
             onClick={(e) => { e.stopPropagation(); handleLink(); }}
             aria-label={onViewLinks
-              ? t(`查看 ${post.links} 人链接了此节点`, `View ${post.links} people who linked this node`)
-              : t(`链接此节点，当前 ${post.links} 人已链接`, `Link this node, ${post.links} people linked`)}>
+              ? t('查看 {links} 人链接了此节点', { links: post.links })
+              : t('链接此节点，当前 {links} 人已链接', { links: post.links })}>
             <Link size={14} strokeWidth={2.5} />{post.links}
             <ChevronRight size={12} strokeWidth={2.5} />
           </button>
