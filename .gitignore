@@ -14,10 +14,18 @@ design-qa.md
 docs/
 design/
 
-# Firebase config
+# Firebase (config, cache, emulator/debug logs — never commit)
 .firebase/
 .firebaserc
 firebase.json
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
+pubsub-debug.log
+database-debug.log
+storage-debug.log
+.runtimeconfig.json
 
 # Nested standalone project (own git repo, not a submodule)
 genesis-node-diamond/
