@@ -2210,6 +2210,9 @@ button {
   flex-direction: column;
   gap: 8px;
 }
+.lang-sheet .sheet-header {
+  margin-bottom: 8px;
+}
 .lang-option {
   display: flex;
   align-items: center;

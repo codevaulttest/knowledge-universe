@@ -622,7 +622,7 @@ function LanguageSheet({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="payment-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+      <div className="payment-sheet lang-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">{t('选择语言')}</span>
           <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
