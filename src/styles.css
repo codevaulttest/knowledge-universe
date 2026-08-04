@@ -6184,6 +6184,25 @@ button {
   align-items: flex-start;
   gap: 6px;
 }
+
+.bsp-self-address {
+  width: 100%;
+  padding: var(--ku-planet2-space-sm);
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-page);
+  line-height: 1.4;
+}
+
+.bsp-invest-sheet .planet-upgrade-row--address {
+  align-items: stretch;
+  padding-inline: 0;
+}
+
+.bsp-invest-sheet .planet-upgrade-row--address .planet-upgrade-row-label {
+  align-self: center;
+}
+
 .recharge-address-copy {
   display: inline-flex;
   align-items: flex-start;
@@ -8097,6 +8116,7 @@ button {
   flex-direction: column;
   align-items: flex-end;
   gap: 6px;
+  transform: translateY(var(--ku-planet2-space-xs));
 }
 
 .planet-node-child-count {
@@ -9125,6 +9145,19 @@ button {
   color: var(--ku-color-text-meta);
 }
 
+.create-confirm-value {
+  margin-top: 6px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ku-color-text-primary);
+}
+
+.create-confirm-channel {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--ku-color-text-secondary);
+}
+
 .create-delay-note {
   display: flex;
   align-items: flex-start;
@@ -9241,10 +9274,19 @@ button {
   color: var(--ku-color-text-meta);
 }
 
+/* 投放数量区由 stake-code-block 提供与分隔线之间的标准留白，避免与自身底部外边距叠加。 */
+.bsp-invest-sheet .create-qty-block {
+  margin-bottom: 0;
+}
+
 .bsp-record-card {
   flex-direction: column;
   align-items: stretch;
   gap: var(--ku-planet2-space-xs);
+}
+
+.bsp-record-list-close {
+  margin-left: auto;
 }
 
 .planet-node-origin-tag--bsp-self {
@@ -9344,4 +9386,3 @@ button {
   z-index: 1;
   margin-top: calc(-1 * (var(--ku-planet2-space-lg) + 28px));
 }
-

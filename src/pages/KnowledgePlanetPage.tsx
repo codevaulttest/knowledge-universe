@@ -1277,7 +1277,7 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
 
               <div className="create-delay-note">
                 <Info size={14} strokeWidth={2} aria-hidden />
-                <span>{t('节点生成约有延迟，提交后列表先显示「同步中」，稍后自动变为可用', 'Nodes may take a moment — the list shows Syncing first, then becomes ready')}</span>
+                <span>{t('节点生成时间有5分钟延迟，请耐心等待', 'Node generation takes about 5 minutes. Please wait.')}</span>
               </div>
 
               <button
@@ -1319,7 +1319,6 @@ export function KnowledgePlanetPage({ initialSearch }: { initialSearch?: string 
           >
             <BspRecordList
               investments={bspRecords}
-              onOpenRules={() => setBspRulesOpen(true)}
               onOpenInvest={() => {
                 setBspRecordsOpen(false);
                 handleOpenBsp();

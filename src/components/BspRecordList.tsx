@@ -1,4 +1,4 @@
-import { ChevronRight, Crown, Info, X } from 'lucide-react';
+import { ChevronRight, Crown, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { BSP_UNIT_PB, bspRemainingDays, type BspInvestment } from '../bspConfig';
 import { shortenAddress } from '../formatAddress';
@@ -51,12 +51,10 @@ export function BspRecordSummary({
 
 export function BspRecordList({
   investments,
-  onOpenRules,
   onOpenInvest,
   onClose,
 }: {
   investments: BspInvestment[];
-  onOpenRules: () => void;
   onOpenInvest: () => void;
   onClose: () => void;
 }) {
@@ -67,11 +65,7 @@ export function BspRecordList({
       <div className="planet-section-header">
         <span className="planet-section-title">{t('我的投流记录', 'My Investments')}</span>
         <span className="planet-section-badge">{investments.length}</span>
-        <button type="button" className="planet-node-transfer-entry" onClick={onOpenRules}>
-          <Info size={13} strokeWidth={2.2} aria-hidden />
-          {t('保底说明', 'Floor rules')}
-        </button>
-        <button type="button" className="back-btn" onClick={onClose} aria-label={t('关闭', 'Close')}>
+        <button type="button" className="back-btn bsp-record-list-close" onClick={onClose} aria-label={t('关闭', 'Close')}>
           <X size={18} strokeWidth={2} />
         </button>
       </div>
@@ -135,7 +129,7 @@ function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
       </div>
 
       <div className="bsp-record-detail-row">
-        <span className="bsp-record-label">{t('支付时间', 'Paid at')}</span>
+        <span className="bsp-record-label">{t('投放时间', 'Investment time')}</span>
         <span className="bsp-record-value">{inv.createdAt}</span>
       </div>
 

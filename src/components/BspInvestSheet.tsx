@@ -182,7 +182,7 @@ export function BspInvestSheet({
         {mode === 'self' ? (
           <div className="planet-upgrade-row planet-upgrade-row--address">
             <span className="planet-upgrade-row-label">{t('我的钱包地址', 'My wallet address')}</span>
-            <span className="planet-upgrade-row-value">{myAddress}</span>
+            <span className="planet-upgrade-row-value bsp-self-address">{myAddress}</span>
           </div>
         ) : (
           <div className="stake-code-block">
