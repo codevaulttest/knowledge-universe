@@ -7054,6 +7054,15 @@ button {
   min-width: 0;
 }
 
+/* 图标列固定宽度，与图标自身尺寸解耦，保证各行文字左对齐 */
+.asset-overview-icon-col {
+  width: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .asset-overview-airdrop-info {
   flex: 1;
   min-width: 0;
@@ -7189,7 +7198,7 @@ button {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: var(--ku-planet2-space-xs);
+  gap: var(--ku-planet2-space-sm);
   padding: var(--ku-planet2-space-xs) 0 2px;
   background: none;
   border: none;
@@ -7220,7 +7229,7 @@ button {
 .asset-overview-toggle-left {
   display: flex;
   align-items: center;
-  gap: var(--ku-planet2-space-xs);
+  gap: var(--ku-planet2-space-sm);
   min-width: 0;
   font-size: 14px;
   color: var(--ku-color-text-secondary);
@@ -8624,7 +8633,7 @@ button {
 }
 
 .stake-hint {
-  padding: var(--ku-planet2-space-base) var(--ku-planet2-space-base) var(--ku-planet2-space-sm);
+  padding: var(--ku-planet2-space-base) 0 var(--ku-planet2-space-sm);
   font-size: 14px;
   line-height: 1.5;
   color: var(--ku-color-text-meta);
@@ -9490,67 +9499,37 @@ button {
   color: var(--ku-color-on-primary);
 }
 
+.bsp-record-primary-row,
+.bsp-record-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ku-planet2-space-sm);
+}
+
+.bsp-record-label {
+  flex-shrink: 0;
+  font: var(--ku-text-body-sm);
+  font-weight: 400;
+  color: var(--ku-color-text-meta);
+}
+
 .bsp-record-headline {
   font-size: 16px;
   font-weight: 700;
   color: var(--ku-color-text-primary);
 }
 
-.bsp-record-target {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--ku-color-text-secondary);
-}
-
-.bsp-record-period {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--ku-planet2-space-xs);
-  color: var(--ku-color-text-meta);
-}
-
-.bsp-record-target,
-.bsp-record-payment,
-.bsp-record-gas,
-.bsp-record-created-at,
-.bsp-record-period,
-.bsp-record-payment-status {
+.bsp-record-value {
+  min-width: 0;
   font: var(--ku-text-body-sm);
   font-weight: 400;
+  color: var(--ku-color-text-secondary);
+  text-align: right;
 }
 
 .bsp-record-period-dates {
   white-space: nowrap;
-}
-
-.bsp-record-payment {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ku-planet2-space-sm);
-  color: var(--ku-color-text-meta);
-}
-
-.bsp-record-payment--status-only {
-  justify-content: flex-end;
-}
-
-.bsp-record-gas {
-  color: var(--ku-color-text-meta);
-}
-
-.bsp-record-payment-status {
-  flex-shrink: 0;
-}
-
-.bsp-record-payment-status--paid {
-  color: var(--ku-color-success-text);
-}
-
-.bsp-record-created-at {
-  color: var(--ku-color-text-meta);
 }
 
 .planet-create-sheet .planet-confirm-btn {
@@ -9608,35 +9587,3 @@ button {
   margin-top: calc(-1 * (var(--ku-planet2-space-lg) + 28px));
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   桌面端滚动条改为贴浏览器窗口右边缘（而非贴 phone-shell 边缘）：
-   放弃 phone-shell 内部滚动，改用文档级滚动，phone-shell 随内容
-   自然增高；顶部栏 sticky、底部导航 fixed 以维持贴顶/贴底视觉。
-   置于文件末尾以保证在级联中覆盖前面同名选择器的基础规则。
-   ═══════════════════════════════════════════════════════════════ */
-@media (min-width: 600px) {
-  .phone-shell {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-  .page {
-    overflow: visible;
-    min-height: 100vh;
-  }
-  .scroll-area,
-  .dm-chat-scroll {
-    overflow-y: visible;
-  }
-  .feed-header,
-  .page-header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  .bottom-nav {
-    position: fixed;
-    left: calc(max(0px, (100vw - var(--ku-layout-max-width)) / 2) + var(--ku-nav-inset-x));
-    right: calc(max(0px, (100vw - var(--ku-layout-max-width)) / 2) + var(--ku-nav-inset-x));
-  }
-}

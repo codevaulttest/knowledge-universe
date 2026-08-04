@@ -1514,7 +1514,7 @@ export function TipModal({
         >
           {selected
             ? t(`确认打赏 ${selected} PB`, `Confirm Tip ${selected} PB`)
-            : t('请选择金额', 'Select an amount')}
+            : t('请选择数额', 'Select an amount')}
         </button>
       </div>
     </div>

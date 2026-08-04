@@ -100,9 +100,6 @@ export function BspRecordList({
 
 function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
   const { t } = useApp();
-  const paymentStatus = inv.status === 'paid'
-    ? t('支付成功', 'Paid')
-    : t('待支付', 'Pending');
   const paidPb = inv.paidPb.toLocaleString();
   const paidSup = inv.paidSup.toLocaleString();
 
@@ -120,30 +117,31 @@ function BspRecordCard({ investment: inv }: { investment: BspInvestment }) {
         </span>
       )}
 
-      <span className="bsp-record-headline">
-        {t(`本次投流 ${paidPb} PB`, `Investment ${paidPb} PB`)}
-      </span>
+      <div className="bsp-record-primary-row">
+        <span className="bsp-record-label">{t('本次投流', 'Investment')}</span>
+        <span className="bsp-record-headline">{paidPb} PB</span>
+      </div>
 
-      <span className="bsp-record-target">
-        {inv.beneficiaryKind === 'self'
-          ? t('投给自己', 'For myself')
-          : t(`投给 ${shortenAddress(inv.beneficiaryAddress)}`, `For ${shortenAddress(inv.beneficiaryAddress)}`)}
-      </span>
-
-      <div className="bsp-record-payment bsp-record-payment--status-only">
-        <span className={`bsp-record-payment-status${inv.status === 'paid' ? ' bsp-record-payment-status--paid' : ''}`}>
-          {paymentStatus}
+      <div className="bsp-record-detail-row">
+        <span className="bsp-record-label">{t('投放对象', 'Beneficiary')}</span>
+        <span className="bsp-record-value">
+          {shortenAddress(inv.beneficiaryAddress)}
         </span>
       </div>
 
-      <span className="bsp-record-gas">{t(`Gas 费 ${paidSup} SUP`, `Gas ${paidSup} SUP`)}</span>
+      <div className="bsp-record-detail-row">
+        <span className="bsp-record-label">{t('Gas 费', 'Gas fee')}</span>
+        <span className="bsp-record-value">{paidSup} SUP</span>
+      </div>
 
-      <span className="bsp-record-created-at">
-        {t(`支付时间 ${inv.createdAt}`, `Paid at ${inv.createdAt}`)}
-      </span>
+      <div className="bsp-record-detail-row">
+        <span className="bsp-record-label">{t('支付时间', 'Paid at')}</span>
+        <span className="bsp-record-value">{inv.createdAt}</span>
+      </div>
 
-      <div className="bsp-record-period">
-        <span className="bsp-record-period-dates">{t(`生效期 ${inv.startDate} → ${inv.endDate}`, `Active ${inv.startDate} → ${inv.endDate}`)}</span>
+      <div className="bsp-record-detail-row">
+        <span className="bsp-record-label">{t('生效期', 'Active period')}</span>
+        <span className="bsp-record-value bsp-record-period-dates">{inv.startDate} → {inv.endDate}</span>
       </div>
 
     </div>

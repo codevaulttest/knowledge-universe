@@ -266,7 +266,7 @@ export function BspInvestSheet({
         <div className="planet-upgrade-sep" />
 
         <div className="planet-upgrade-row">
-          <span className="planet-upgrade-row-label">{t('投放金额', 'Investment')}</span>
+          <span className="planet-upgrade-row-label">{t('投放消耗', 'Investment')}</span>
           <div className="planet-upgrade-cost">
             <span className="planet-upgrade-cost-num">{formatTokenAmount(pbCost)}</span>
             <span className="planet-upgrade-cost-unit"> PB</span>

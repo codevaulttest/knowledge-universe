@@ -19,7 +19,7 @@
   --ku-color-primary-dark:     #02bba9;
   --ku-color-on-primary:       #ffffff;
   --ku-color-compose-button-bg:#ffffff;
-  --ku-color-compose-button-icon:#1bcab4;
+  --ku-color-compose-button-icon:#007c70;
   --ku-gradient-primary:       linear-gradient(135deg, #05d0b9 0%, #10b69b 100%);
   --ku-shadow-primary:         0 4px 12px rgba(0, 200, 180, 0.25);
   --ku-shadow-compose-button:  0 8px 24px rgba(14, 22, 44, 0.10);
@@ -29,16 +29,16 @@
 
   /* Badge */
   --ku-color-badge-bg:         #d6fff6;
-  --ku-color-badge-text:       #00bda9;
+  --ku-color-badge-text:       #007c70;
 
   /* ═══════════════════════════════════════════════════
      文本颜色 (Text)
      ═══════════════════════════════════════════════════ */
 
   --ku-color-text-primary:     #07090d;  /* 正文、标题 */
-  --ku-color-text-secondary:   #8391aa;  /* 次要文本、muted */
-  --ku-color-text-meta:        #8795ad;  /* 作者时间戳、辅助说明 */
-  --ku-color-text-tab-inactive:#7d8da7;  /* 导航 Tab 未激活 */
+  --ku-color-text-secondary:   #5d6d85;  /* 次要文本、muted */
+  --ku-color-text-meta:        #62728a;  /* 作者时间戳、辅助说明 */
+  --ku-color-text-tab-inactive:#586a84;  /* 导航 Tab 未激活 */
   --ku-color-text-strong:      #111;     /* 节点头、强调文本 */
   --ku-color-text-action:      #060606;  /* 操作栏数字 */
 
@@ -47,12 +47,12 @@
      ═══════════════════════════════════════════════════ */
 
   --ku-color-success-bg:       #d9f7e6;
-  --ku-color-success-text:     #19b750;
+  --ku-color-success-text:     #137a36;
   --ku-color-warning-bg:       #fdf3d9;  /* 风险提示条底色（充值网络提醒等） */
   --ku-color-warning-text:     #92600a;
-  --ku-color-warning-icon:     #d69e2e;
+  --ku-color-warning-icon:     #985d00;
   --ku-color-heat:             #ff4824;  /* 热度火焰图标 */
-  --ku-color-text-danger:      #e74c3c;  /* 危险操作文字（删除等） */
+  --ku-color-text-danger:      #c62828;  /* 危险操作文字（删除等） */
   --ku-color-verified:         #1B6BFF;  /* 用户蓝 V 认证标识 */
   --ku-color-verified-check:   #ffffff;  /* 蓝 V 内勾色 */
   --ku-color-genesis-silver:      #94a3b8;  /* 创世节点·银（1000 档持有者）*/
@@ -232,8 +232,8 @@
   --ku-host-nav-item-padding-y:4px;
   --ku-host-nav-icon-size:     26px;
   --ku-host-nav-icon-gap:      1px;
-  --ku-host-nav-active:        #526cff;
-  --ku-host-nav-inactive:      #9ba0b5;
+  --ku-host-nav-active:        #4558c4;
+  --ku-host-nav-inactive:      #68758a;
   --ku-host-nav-border:        rgba(0, 0, 0, 0.06);
   --ku-host-nav-home-width:    134px;
   --ku-host-nav-home-height:   5px;
@@ -265,9 +265,9 @@
   --ku-gemini-bg:              #f4fbfb;
   --ku-gemini-bg-hover:        #edf8f8;
   --ku-gemini-border:          #dbf0f0;
-  --ku-gemini-text:            #009e8e;
-  --ku-gemini-id:              #8db7bb;
-  --ku-gemini-icon:            #00bda9;
+  --ku-gemini-text:            #007c70;
+  --ku-gemini-id:              #62728a;
+  --ku-gemini-icon:            #007c70;
   --ku-gemini-icon-size:       13px;
   --ku-text-gemini:            600 12px/1 var(--ku-font-family);
 
@@ -281,7 +281,7 @@
   --ku-unlock-bg:              #f4fbfb;
   --ku-unlock-bg-hover:        #edf8f8;
   --ku-unlock-border:          #dbf0f0;
-  --ku-unlock-text:            #009e8e;
+  --ku-unlock-text:            #007c70;
   --ku-text-unlock:            500 12px/1 var(--ku-font-family);
   --ku-lightbox-lock-overlay:  rgba(0, 0, 0, 0.62);
   --ku-lightbox-locked-filter: brightness(0.42) saturate(0.55);
@@ -324,7 +324,7 @@
   --ku-planet-tier-mid-bg:     var(--ku-color-primary-alpha-14); /* 100 PB —— 品牌主色，中档 */
   --ku-planet-tier-mid-text:   var(--ku-color-primary-dark);
   --ku-planet-tier-base-bg:    #eef1f6;                          /* 10 PB —— 灰，基础档 */
-  --ku-planet-tier-base-text:  #6b788e;
+  --ku-planet-tier-base-text:  #68758a;
 
   /* ═══════════════════════════════════════════════════
      创世节点运营 Banner (GenesisBanner)
@@ -345,7 +345,7 @@
      ═══════════════════════════════════════════════════ */
   --ku-planet2-color-primary-disabled: rgba(0, 205, 184, 0.35);
   --ku-planet2-color-claim-disabled:   #a8b8cc; /* 对齐 genesis-node-diamond 的空投领取禁用态 */
-  --ku-planet2-color-muted-soft:       #a8acb3;
+  --ku-planet2-color-muted-soft:       #68758a;
   --ku-planet2-color-surface-dark:     #0a0b0d;   /* 深色 hero / 高对比卡片背景 */
   --ku-planet2-color-surface-dark-elevated: #16181c;
   --ku-planet2-color-on-dark-soft:     rgba(255, 255, 255, 0.66);
@@ -411,7 +411,7 @@
   --ku-gemini-bg-hover:        #e8efff;
   --ku-gemini-border:          #c8daff;
   --ku-gemini-text:            #1259EE;
-  --ku-gemini-id:              #7ba0e0;
+  --ku-gemini-id:              #4f69a5;
   --ku-gemini-icon:            #1B6BFF;
 
   /* 付费内容遮罩 / 解锁区块（锁定图遮罩保持中性，不随主题变色） */

@@ -76,8 +76,10 @@ export function AssetOverviewCard() {
       <div className="asset-overview-card">
         <div className="asset-overview-airdrop-top">
           <div className="asset-overview-airdrop-left">
-            <span className="asset-overview-airdrop-icon">
-              <Gift size={20} strokeWidth={1.8} />
+            <span className="asset-overview-icon-col">
+              <span className="asset-overview-airdrop-icon">
+                <Gift size={20} strokeWidth={1.8} />
+              </span>
             </span>
             <div className="asset-overview-airdrop-info">
               <div className="asset-overview-airdrop-label-row">
@@ -140,8 +142,10 @@ export function AssetOverviewCard() {
           aria-label={t('查看 PB 说明', 'View PB info')}
         >
           <span className="asset-overview-toggle-left">
-            <span className="asset-overview-toggle-icon">
-              <Wallet size={14} strokeWidth={2} />
+            <span className="asset-overview-icon-col">
+              <span className="asset-overview-toggle-icon">
+                <Wallet size={14} strokeWidth={2} />
+              </span>
             </span>
             <span>{t('PB 余额', 'PB Balance')}</span>
             <Info size={13} strokeWidth={2} className="asset-overview-toggle-chevron" />
@@ -158,8 +162,10 @@ export function AssetOverviewCard() {
             onClick={() => setHistoryOpen(true)}
             aria-label={t('查看 SUP 流水', 'View SUP transaction history')}
           >
-            <span className="asset-overview-toggle-icon">
-              <Wallet size={14} strokeWidth={2} />
+            <span className="asset-overview-icon-col">
+              <span className="asset-overview-toggle-icon">
+                <Wallet size={14} strokeWidth={2} />
+              </span>
             </span>
             <span className="asset-overview-toggle-content">
               <span className="asset-overview-toggle-label-row">
