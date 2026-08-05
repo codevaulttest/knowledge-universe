@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, CalendarCheck, Radio, RefreshCw, Wallet } from 'lucide-react';
+import { Bell, CalendarCheck, RefreshCw, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
 import type { Channel, Post, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { GenesisBanner } from '../components/GenesisBanner';
-import { Avatar } from '../components/shared';
+import { ChannelCard } from '../components/shared';
 import { DevPanel } from '../components/DevPanel';
 
 type FeedEntry = { post: Post; repostedBy?: RepostedBy };
@@ -23,9 +23,10 @@ function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElemen
   const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const entries: FeedEntry[] = posts.map((post, i) => (
-    i === DEMO_REPOST_INDEX ? { post, repostedBy: DEMO_REPOSTER } : { post }
-  ));
+  // 下架的原帖不出现在公共 feed 里
+  const entries: FeedEntry[] = posts
+    .filter(post => !post.deleted)
+    .map((post, i) => (i === DEMO_REPOST_INDEX ? { post, repostedBy: DEMO_REPOSTER } : { post }));
   const hasMore = shownCount < entries.length;
 
   useEffect(() => {
@@ -73,7 +74,7 @@ function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElemen
 
 function FollowFeed({ followedAuthors }: { followedAuthors: Set<string> }) {
   const { posts, t } = useApp();
-  const followedPosts = posts.filter(p => followedAuthors.has(p.author));
+  const followedPosts = posts.filter(p => followedAuthors.has(p.author) && !p.deleted);
   if (followedPosts.length === 0) {
     return (
       <div className="empty-state">
@@ -167,24 +168,12 @@ function ChannelDiscoverFeed() {
           <p className="empty-sub">{t('去"发现"里看看有没有喜欢的频道')}</p>
         </div>
       ) : displayedChannels.map((channel, i) => (
-        <button
+        <ChannelCard
           key={channel.id}
-          type="button"
-          className="channel-discover-card"
-          onClick={() => navigate({ page: 'P6', authorName: channel.ownerName })}
-        >
-          <Avatar index={i % 3} seed={channel.avatarSeed} />
-          <div className="channel-discover-info">
-            <span className="channel-discover-name">
-              <Radio size={13} strokeWidth={2.2} />
-              {channel.name}
-            </span>
-            <span className="channel-discover-desc">{channel.description}</span>
-            <div className="channel-discover-meta">
-              <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
-            </div>
-          </div>
-        </button>
+          channel={channel}
+          index={i % 3}
+          onClick={() => navigate({ page: 'P_CHANNEL', channelId: channel.id })}
+        />
       ))}
     </section>
   );

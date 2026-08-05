@@ -1,38 +1,40 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Check, ChevronRight, CircleCheck, Edit3, FileText, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, Plus, Radio, Repeat2, Settings, ThumbsUp, Trash2, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Check, Edit3, FileText, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, Plus, Radio, Repeat2, ThumbsUp, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
 import type { Channel, ChannelSubscriber, Draft, Language, OutgoingTip, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
-import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, PageHeader } from '../components/shared';
+import { Avatar, AuthorName, ChannelCard, ChannelMemberBadge, GenesisBadge, PageHeader } from '../components/shared';
+import { useChannelListSearch } from '../components/channelSearch';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, subscribedChannelTiers, openChannelSubscribe, openCreateChannel, openManageChannel, requireWallet } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, openManageChannel, requireWallet } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
-  const channel = channels.find(c => c.ownerName === authorName);
+  // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
+  const ownerChannels = channels.filter(c => c.ownerName === authorName);
   const genesisTier = getGenesisTier(authorName);
-  const mySubscribedTierIndex = channel ? subscribedChannelTiers[channel.id] : undefined;
-  // 我的主页隐藏长文（article）类型的 mock 帖子
-  const myPosts = allPosts.filter(p => p.author === authorName && !(isOwn && p.kind === 'article'));
-  const savedPosts = allPosts.filter(p => savedPostIds.has(p.id));
-  const likedPosts = allPosts.filter(p => likedPostIds.has(p.id));
+  // 我的主页隐藏长文（article）类型的 mock 帖子；下架的原帖不出现在任何"帖子/收藏/赞过"列表里
+  const myPosts = allPosts.filter(p => p.author === authorName && !p.deleted && !(isOwn && p.kind === 'article'));
+  const savedPosts = allPosts.filter(p => savedPostIds.has(p.id) && !p.deleted);
+  const likedPosts = allPosts.filter(p => likedPostIds.has(p.id) && !p.deleted);
+  // 转发列表不过滤 deleted：下架的原帖仍需保留在转发者本人的「转发」列表里，改为占位展示
   const repostedPosts = allPosts.filter(p => repostedPostIds.has(p.id));
   const firstPost = allPosts.find(p => p.author === authorName);
 
-  // 当前用户转发的帖子（排除自己发布的），带「转发」标识
+  // 当前用户转发的帖子（排除自己发布的），带「转发」标识；原帖下架也保留，交给 PostCard 渲染占位态
   const ownRepostEntries: { post: (typeof allPosts)[number]; repostedBy: RepostedBy }[] = repostedPosts
     .filter(p => p.author !== CURRENT_USER)
     .map(post => ({ post, repostedBy: { name: CURRENT_USER, avatarIdx: 0 } }));
-  // 他人主页：该作者转发过的帖子（来自 mock 转发关系）
+  // 他人主页：该作者转发过的帖子（来自 mock 转发关系）；原帖下架后不在他人视角展示，直接过滤掉
   const theirAvatarIdx = ALL_USERS_MOCK.find(u => u.name === authorName)?.avatarIdx ?? 0;
   const theirRepostEntries: { post: (typeof allPosts)[number]; repostedBy: RepostedBy }[] = (AUTHOR_REPOSTS[authorName] ?? [])
     .map(id => allPosts.find(p => p.id === id))
-    .filter((p): p is (typeof allPosts)[number] => !!p && p.author !== authorName)
+    .filter((p): p is (typeof allPosts)[number] => !!p && !p.deleted && p.author !== authorName)
     .map(post => ({ post, repostedBy: { name: authorName, avatarIdx: theirAvatarIdx } }));
 
   // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 打赏，4 = 收藏，5 = 赞过
@@ -40,7 +42,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   // 他人主页内容筛选：'all' | 'free' | 'sub'
   const [contentFilter, setContentFilter] = useState<'all' | 'free' | 'sub'>('all');
   const [followListType, setFollowListType] = useState<'following' | 'followers' | null>(null);
-  const [showSubscribers, setShowSubscribers] = useState(false);
   const [confirmDeleteDraftId, setConfirmDeleteDraftId] = useState<string | null>(null);
   const [tipTarget, setTipTarget] = useState<{ context: 'post' | 'author'; postTitle?: string } | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -61,7 +62,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   }, [isOwn, language]);
 
   // 频道订阅门槛：不限档位（无 minTierIndex，无需订阅即可看到）/ 会员专属（设了 minTierIndex，需订阅达标才可见；是否收费另由知识宇宙单条付费决定）
-  const isChannelExclusive = (p: (typeof allPosts)[number]) => !!channel && p.channelId === channel.id && p.minTierIndex != null;
+  const isChannelExclusive = (p: (typeof allPosts)[number]) => !!p.channelId && ownerChannels.some(c => c.id === p.channelId) && p.minTierIndex != null;
   const filteredOtherPosts = (() => {
     if (contentFilter === 'free') return myPosts.filter(p => !isChannelExclusive(p));
     if (contentFilter === 'sub') return myPosts.filter(isChannelExclusive);
@@ -77,62 +78,57 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     : filteredOtherPosts.map(post => ({ post }));
   const displayedPosts = displayedEntries.map(e => e.post);
 
-  // 频道信息条 / 开通频道入口：他人主页展示在身份区下方；自己主页降级为次优先级，排在核心社交数据之后
-  const channelSection = channel ? (
-    <div className="channel-info-bar">
-      <div className="channel-info-bar-top">
-        <div className="channel-info-bar-left">
-          <span className="channel-info-bar-name">
-            <Radio size={13} strokeWidth={2.2} />
-            {channel.name}
-          </span>
-          {isOwn ? (
-            <button
-              type="button"
-              className="channel-info-bar-sub channel-info-bar-sub--btn"
-              onClick={() => setShowSubscribers(true)}
-              aria-label={t('查看 {subscriberCount} 位订阅用户', { subscriberCount: channel.subscriberCount })}
-            >
-              {t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}
-              <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
-            </button>
-          ) : (
-            <span className="channel-info-bar-sub">
-              {t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}
+  // 频道目录：他人主页展示在身份区下方；自己主页降级为次优先级，排在核心社交数据之后。
+  // 每个人可拥有任意数量频道，用搜索 + 每页 50 条「加载更多」承载千级规模
+  const channelListState = useChannelListSearch(ownerChannels);
+  const channelSection = (ownerChannels.length > 0 || isOwn) ? (
+    <div className="channel-directory">
+      {ownerChannels.length > 0 && (
+        <>
+          <div className="channel-directory-head">
+            <span className="channel-directory-count">
+              {t('{count} 个频道', { count: ownerChannels.length })}
             </span>
+          </div>
+          {ownerChannels.length > 1 && (
+            <div className="channel-directory-search-wrap">
+              <input
+                className="channel-directory-search-input"
+                type="text"
+                value={channelListState.search}
+                onChange={e => channelListState.setSearch(e.target.value)}
+                placeholder={t('搜索频道名称或简介')}
+                aria-label={t('搜索频道名称或简介')}
+              />
+            </div>
           )}
-        </div>
-        {isOwn ? (
-          <button type="button" className="channel-manage-btn" onClick={() => openManageChannel(channel.id)}>
-            <Settings size={13} strokeWidth={2.2} />
-            {t('管理频道2')}
-          </button>
-        ) : (mySubscribedTierIndex != null || channel.tiers.some(tr => !tr.archived)) ? (
-          <button
-            type="button"
-            className={`channel-manage-btn${mySubscribedTierIndex != null ? ' channel-manage-btn--subscribed' : ''}`}
-            onClick={() => openChannelSubscribe(channel.id)}
-          >
-            {mySubscribedTierIndex != null ? (
-              <>
-                <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
-                {t('已订阅 · {name}', { name: channel.tiers[mySubscribedTierIndex].name })}
-              </>
-            ) : (
-              <>
-                <Gem size={13} strokeWidth={2.2} aria-hidden="true" />
-                {t('订阅')}
-              </>
+          <div className="channel-directory-list">
+            {channelListState.visible.length === 0 ? (
+              <div className="channel-directory-empty">{t('没有找到匹配的频道')}</div>
+            ) : channelListState.visible.map((c, i) => (
+              <ChannelCard
+                key={c.id}
+                channel={c}
+                index={i % 3}
+                onClick={() => navigate({ page: 'P_CHANNEL', channelId: c.id })}
+                onManage={isOwn ? () => openManageChannel(c.id) : undefined}
+              />
+            ))}
+            {channelListState.hasMore && (
+              <button type="button" className="channel-directory-more-btn" onClick={channelListState.loadMore}>
+                {t('加载更多（剩余 {length}）', { length: channelListState.filteredCount - channelListState.visible.length })}
+              </button>
             )}
-          </button>
-        ) : null}
-      </div>
+          </div>
+        </>
+      )}
+      {isOwn && (
+        <button type="button" className="channel-create-entry channel-create-entry--subtle" onClick={openCreateChannel}>
+          <Radio size={14} strokeWidth={2.2} />
+          {t('开通频道 · 发布专属内容')}
+        </button>
+      )}
     </div>
-  ) : isOwn ? (
-    <button type="button" className="channel-create-entry channel-create-entry--subtle" onClick={openCreateChannel}>
-      <Radio size={14} strokeWidth={2.2} />
-      {t('开通频道 · 发布专属内容')}
-    </button>
   ) : null;
 
   return (
@@ -468,13 +464,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         />
       )}
 
-      {showSubscribers && channel && (
-        <SubscriberListModal
-          channel={channel}
-          onClose={() => setShowSubscribers(false)}
-        />
-      )}
-
       {tipTarget && (
         <TipModal
           recipientName={authorName}
@@ -755,7 +744,7 @@ function FollowListModal({
   );
 }
 
-function SubscriberListModal({
+export function SubscriberListModal({
   channel,
   onClose,
 }: {

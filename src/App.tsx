@@ -15,6 +15,7 @@ import { FeedPage } from './pages/FeedPage';
 import { KnowledgePlanetPage } from './pages/KnowledgePlanetPage';
 import { PostDetailPage } from './pages/PostDetailPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { ChannelPage } from './pages/ChannelPage';
 import { ActivityPage } from './pages/ActivityPage';
 import { DmListPage, DmChatPage } from './pages/DmPage';
 import { SearchPage } from './pages/SearchPage';
@@ -468,6 +469,12 @@ export default function App() {
     showToast(t('频道信息已更新'));
   };
 
+  // 开发工具：清空档位设置 30 天冷却期的记录时间，便于演示/测试
+  const resetChannelTierCooldown = (channelId: string) => {
+    setChannels(prev => prev.map(c => c.id === channelId ? { ...c, tiersChangedAt: undefined } : c));
+    showToast(t('已重置档位设置冷却期'));
+  };
+
   const openChannelSubscribe = (channelId: string) => {
     requireWallet(() => setChannelSubscribeId(channelId));
   };
@@ -644,7 +651,7 @@ export default function App() {
     userProfile, updateUserProfile,
     channels, subscribedChannelTiers,
     openChannelSubscribe, subscribeToChannelTier, unsubscribeFromChannel,
-    createChannel, updateChannel,
+    createChannel, updateChannel, resetChannelTierCooldown,
     openCreateChannel, createChannelOpen, closeCreateChannel,
     openManageChannel, closeManageChannel,
     supBalance, supHistory, deductSup,
@@ -662,6 +669,7 @@ export default function App() {
         {route.page === 'P0' && <FeedPage tab={tab} setTab={setTab} />}
         {route.page === 'P2' && <PostDetailPage postId={route.postId} scrollToComments={route.scrollToComments} />}
         {route.page === 'P6' && <ProfilePage authorName={route.authorName} />}
+        {route.page === 'P_CHANNEL' && <ChannelPage channelId={route.channelId} />}
         {route.page === 'P7' && <ActivityPage />}
         {route.page === 'P_SEARCH' && <SearchPage />}
         {route.page === 'P_PLANET' && <KnowledgePlanetPage initialSearch={route.searchNodeCode} openBsp={route.openBsp} />}

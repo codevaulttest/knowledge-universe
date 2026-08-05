@@ -39,13 +39,13 @@ export function stakeTierDescription(tier: StakeTier, zh: boolean): string {
   }
   if (tier === 10) {
     return zh
-      ? '空投上限 10 PB · 不支持升级'
-      : 'Airdrop cap 10 PB · No upgrade';
+      ? '空投上限 10 PB'
+      : 'Airdrop cap 10 PB';
   }
   if (tier === 100) {
     return zh
-      ? '空投上限 500 PB · 不支持升级'
-      : 'Airdrop cap 500 PB · No upgrade';
+      ? '空投上限 500 PB'
+      : 'Airdrop cap 500 PB';
   }
   return zh
     ? '空投无上限 · 支持升至 5 星'

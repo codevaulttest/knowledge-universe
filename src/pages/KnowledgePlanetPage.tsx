@@ -261,27 +261,26 @@ function ChildSlotDots({ count }: { count: 0 | 1 | 2 }) {
   );
 }
 
-// 用户开通的频道会同步产生一个来源为"频道开通"的 1000 PB 双子星节点（懒初始化，每次进入本页时依据最新 channels 状态重新推导）
+// 用户开通的每个频道都会同步产生一个来源为"频道开通"的 1000 PB 双子星节点（懒初始化，
+// 每次进入本页时依据最新 channels 状态按 channelId 重新推导，一个频道对应一个节点，避免遗漏或重复）
 function seedNodesWithChannel(channels: { ownerName: string; id: string; name: string; createdAt: string }[]): KnowledgeNode[] {
-  const ownChannel = channels.find(c => c.ownerName === CURRENT_USER);
-  if (!ownChannel) return INITIAL_NODES;
+  const ownChannels = channels.filter(c => c.ownerName === CURRENT_USER);
+  if (ownChannels.length === 0) return INITIAL_NODES;
   const maxGenesisSerial = Math.max(...INITIAL_NODES.filter(n => n.origin === 'genesis').map(n => n.serialNo));
-  return [
-    {
-      id: `channel-node-${ownChannel.id}`,
-      nodeCode: ownChannel.id.slice(-6).toUpperCase(),
-      tier: 1000,
-      stars: 1,
-      childCount: 0,
-      boundChildren: 0,
-      origin: 'genesis',
-      serialNo: maxGenesisSerial + 1,
-      purchaseSource: 'pb',
-      createdAt: ownChannel.createdAt,
-      channelName: ownChannel.name,
-    },
-    ...INITIAL_NODES,
-  ];
+  const channelNodes: KnowledgeNode[] = ownChannels.map((channel, i) => ({
+    id: `channel-node-${channel.id}`,
+    nodeCode: channel.id.slice(-6).toUpperCase(),
+    tier: 1000,
+    stars: 1,
+    childCount: 0,
+    boundChildren: 0,
+    origin: 'genesis',
+    serialNo: maxGenesisSerial + 1 + i,
+    purchaseSource: 'pb',
+    createdAt: channel.createdAt,
+    channelName: channel.name,
+  }));
+  return [...channelNodes, ...INITIAL_NODES];
 }
 
 export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?: string; openBsp?: boolean } = {}) {

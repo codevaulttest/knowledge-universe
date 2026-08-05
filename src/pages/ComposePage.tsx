@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react';
-import { Camera, Eye, FileText, Image, Plus, Radio, Save, Send, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
+import { Camera, Check, ChevronRight, Eye, FileText, Image, Plus, Radio, Save, Send, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
+import { useChannelListSearch } from '../components/channelSearch';
 import { CURRENT_USER } from '../mockData';
 import type { Draft, Post, StakeTier } from '../types';
 import { STAKE_TIERS, stakeTierDescription, stakeTierLabel } from '../stakeConfig';
@@ -22,11 +23,11 @@ export function ComposePage({
 }) {
   const { openPay, showToast, updatePost, saveDraft, updateDraft, stagePendingPost, publishPost, t, language, channels } = useApp();
   const isEditMode = !!editPost;
-  const myChannel = channels.find(c => c.ownerName === CURRENT_USER);
+  const myChannels = channels.filter(c => c.ownerName === CURRENT_USER);
   // 编辑已发布的频道帖子时，可见档位允许调整，但只能单向放宽（降低门槛/改成不限档位），
   // 不能收紧（提高门槛）——已经被看过的内容不能再收回去锁上，参考 YouTube 只支持
   // "会员专属 → 公开"、不支持反向操作的惯例
-  const editPostChannel = isEditMode && editPost?.channelId === myChannel?.id ? myChannel : undefined;
+  const editPostChannel = isEditMode && editPost?.channelId ? myChannels.find(c => c.id === editPost.channelId) : undefined;
   const originalMinTierIndex = editPost?.minTierIndex;
   const canLoosenTierTo = (candidateIdx: number | undefined) => {
     if (candidateIdx === undefined) return true;
@@ -44,7 +45,10 @@ export function ComposePage({
   const [text, setText] = useState(editPost?.title ?? draft?.title ?? '');
   const [stakeTier, setStakeTier] = useState<StakeTier>(initialStakeTier);
   const [visibility, setVisibility] = useState(draft?.visibility ?? 30);
-  const [publishToChannel, setPublishToChannel] = useState(false);
+  const [selectedChannelId, setSelectedChannelId] = useState<string | undefined>(undefined);
+  const [channelPickerOpen, setChannelPickerOpen] = useState(false);
+  const channelPicker = useChannelListSearch(myChannels);
+  const selectedChannel = myChannels.find(c => c.id === selectedChannelId);
   const [minTierIndex, setMinTierIndex] = useState<number | undefined>(undefined);
   const [imgCount, setImgCount] = useState(draft?.imgCount ?? 0);
   // 用户通过系统相册/拍照选中的图片，生成本地预览用的 object URL（草稿里已有的旧图没有真实文件，仅按数量占位展示）
@@ -161,8 +165,8 @@ export function ComposePage({
       stakeTier,
       articleHasCover: articleMode ? hasCover : undefined,
       imageCount: imgCount > 0 ? imgCount : undefined,
-      channelId: publishToChannel && myChannel ? myChannel.id : undefined,
-      minTierIndex: publishToChannel && myChannel ? minTierIndex : undefined,
+      channelId: selectedChannel ? selectedChannel.id : undefined,
+      minTierIndex: selectedChannel ? minTierIndex : undefined,
     };
     if (joinNode) {
       stagePendingPost(postData);
@@ -561,24 +565,25 @@ export function ComposePage({
           </>
         )}
 
-        {/* 同步至我的频道（仅频道主可见）—— 频道门槛优先于知识宇宙单条付费生效，所以放在前面 */}
-        {!isEditMode && myChannel && (
+        {/* 同步至频道（仅拥有频道时可见）—— 频道门槛优先于知识宇宙单条付费生效，所以放在前面。
+            一个人可拥有多个频道，用可搜索的单选选择器代替原来的单频道开关 */}
+        {!isEditMode && myChannels.length > 0 && (
           <div className="compose-section compose-stake-section compose-stake-section--channel">
             <div className="compose-stake-heading">
               <Radio size={16} strokeWidth={2} />
-              <span>{t('同步至我的频道《{name}》', { name: myChannel.name })}</span>
-              <button
-                type="button"
-                className={`toggle-switch${publishToChannel ? ' toggle-switch--on' : ''}`}
-                onClick={() => setPublishToChannel(v => !v)}
-                role="switch"
-                aria-checked={publishToChannel}
-                style={{ marginLeft: 'auto' }}
-              >
-                <span className="toggle-thumb" />
-              </button>
+              <span>{t('同步至频道')}</span>
             </div>
-            {publishToChannel && myChannel.tiers.length > 0 && (
+            <button
+              type="button"
+              className="compose-channel-picker-trigger"
+              onClick={() => setChannelPickerOpen(true)}
+            >
+              <span className="compose-channel-picker-trigger-label">
+                {selectedChannel ? selectedChannel.name : t('不同步到任何频道')}
+              </span>
+              <ChevronRight size={16} strokeWidth={2} aria-hidden />
+            </button>
+            {selectedChannel && selectedChannel.tiers.length > 0 && (
               <>
                 <p className="compose-stake-hint">
                   {t('选择可见的最低会员档位')}
@@ -594,7 +599,7 @@ export function ComposePage({
                     <span className="stake-tier-option__amount">{t('不限档位')}</span>
                     <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子')}</span>
                   </button>
-                  {myChannel.tiers.map((tier, idx) => {
+                  {selectedChannel.tiers.map((tier, idx) => {
                     // 已下架档位不再作为新内容的门槛可选项——新访客买不到这一档，
                     // 拿它做门槛会导致内容永远没人能解锁
                     if (tier.archived) return null;
@@ -726,7 +731,7 @@ export function ComposePage({
                 ))}
               </div>
             </div>
-            {publishToChannel && stakeTier > 0 && (
+            {selectedChannel && stakeTier > 0 && (
               <p className="compose-stake-hint">
                 {t('建议单条解锁价为该档月费的 2–10 倍')}
               </p>
@@ -734,6 +739,69 @@ export function ComposePage({
           </div>
         )}
       </div>
+
+      {/* 选择同步频道：支持搜索，避免频道数量达到千级时一次性渲染全部选项 */}
+      {channelPickerOpen && (
+        <div className="sheet-backdrop" onClick={() => setChannelPickerOpen(false)}>
+          <div className="payment-sheet channel-picker-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+            <div className="sheet-header">
+              <span className="sheet-title">{t('选择同步频道')}</span>
+              <button type="button" className="modal-close" onClick={() => setChannelPickerOpen(false)} aria-label={t('关闭')}>
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+            {myChannels.length > 1 && (
+              <div className="channel-directory-search-wrap channel-picker-search-wrap">
+                <input
+                  className="channel-directory-search-input"
+                  type="text"
+                  value={channelPicker.search}
+                  onChange={e => channelPicker.setSearch(e.target.value)}
+                  placeholder={t('搜索频道名称或简介')}
+                  aria-label={t('搜索频道名称或简介')}
+                />
+              </div>
+            )}
+            <div className="channel-picker-list">
+              <button
+                type="button"
+                className={`channel-picker-item${!selectedChannelId ? ' channel-picker-item--active' : ''}`}
+                onClick={() => { setSelectedChannelId(undefined); setChannelPickerOpen(false); }}
+              >
+                <span className="channel-picker-item-info">
+                  <span className="channel-picker-item-name">{t('不同步到任何频道')}</span>
+                </span>
+                {!selectedChannelId && <Check size={16} strokeWidth={2.5} aria-hidden />}
+              </button>
+              {channelPicker.visible.length === 0 ? (
+                <div className="channel-directory-empty">{t('没有找到匹配的频道')}</div>
+              ) : channelPicker.visible.map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`channel-picker-item${selectedChannelId === c.id ? ' channel-picker-item--active' : ''}`}
+                  onClick={() => {
+                    setSelectedChannelId(c.id);
+                    setMinTierIndex(undefined);
+                    setChannelPickerOpen(false);
+                  }}
+                >
+                  <span className="channel-picker-item-info">
+                    <span className="channel-picker-item-name">{c.name}</span>
+                    <span className="channel-picker-item-desc">{c.description}</span>
+                  </span>
+                  {selectedChannelId === c.id && <Check size={16} strokeWidth={2.5} aria-hidden />}
+                </button>
+              ))}
+              {channelPicker.hasMore && (
+                <button type="button" className="channel-directory-more-btn" onClick={channelPicker.loadMore}>
+                  {t('加载更多（剩余 {length}）', { length: channelPicker.filteredCount - channelPicker.visible.length })}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -525,6 +525,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
 
   const tiers: Exclude<StakeTier, 0>[] = [10, 100, 1000];
   const superAmount = SUPER_BY_TIER[selected];
+  const hasHiddenContent = post.visiblePercent < 100;
 
   const pay = () => {
     setStep('paying');
@@ -588,6 +589,12 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
             ? t('选择面额创建知识宇宙子节点，同步解锁全部内容')
             : t('选择链接面额，在此节点下生成子节点并加入空投激励网络')}
         </p>
+        {mode === 'link' && hasHiddenContent && (
+          <p className="link-modal-unlock-hint">
+            <Check size={14} className="link-modal-unlock-hint__icon" />
+            {t('链接后同步解锁本帖全部内容')}
+          </p>
+        )}
         <div className="stake-tier-list" style={{ marginBottom: 16 }}>
           {tiers.map(tier => (
             <button
@@ -604,7 +611,9 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
         <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" onClick={() => setStep('confirm')}>
           {mode === 'unlock'
             ? t('解锁并创建子节点 · {selected} PB', { selected })
-            : t('创建子节点并链接 · {selected} PB', { selected })}
+            : hasHiddenContent
+              ? t('解锁全文并链接 · {selected} PB', { selected })
+              : t('创建子节点并链接 · {selected} PB', { selected })}
         </button>
       </div>
     </div>
@@ -1841,12 +1850,19 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
 // CreateChannelModal — 开通频道 / 管理会员档位
 // ═══════════════════════════════════════════════════════════════
 
-const MAX_CHANNEL_TIERS = 5;
+const MAX_CHANNEL_TIERS = 3;
 const DEFAULT_CHANNEL_CATEGORY = 'AI / 大模型';
-const DEFAULT_TIER_PRICES = [100, 500, 2000, 5000, 10000] as const;
+const DEFAULT_TIER_PRICES = [100, 500, 2000] as const;
+// 档位名不可自定义，按档位顺序固定分配，不出现在此表里的位置（超出预设数量的历史档位）保持原名不动
+const DEFAULT_TIER_NAMES = ['金牌', '银牌', '铜牌'] as const;
 
-function nextTierName(index: number) {
-  return `Lv.${index + 1}`;
+// 仅对预设范围内、未下架的档位重新赋名；超出预设或已下架的档位保留原名不动
+function normalizeTierNames(tiers: ChannelTier[]): ChannelTier[] {
+  return tiers.map((tier, index) => {
+    if (tier.archived) return tier;
+    const preset = DEFAULT_TIER_NAMES[index];
+    return preset ? { ...tier, name: preset } : tier;
+  });
 }
 
 function defaultTierPreset(index: number): number {
@@ -1857,12 +1873,6 @@ function defaultTierPrice(index: number, tiers: ChannelTier[]): number {
   const preset = defaultTierPreset(index);
   if (index === 0) return preset;
   return Math.max(preset, tiers[index - 1].price + 1);
-}
-
-// 已下架的档位名称/位置一律冻结，不随其他档位增删重新编号
-// （minTierIndex、订阅记录都按数组下标引用，下架档位绝不能被移动或改名）
-function normalizeTierNames(tiers: ChannelTier[]): ChannelTier[] {
-  return tiers.map((tier, index) => tier.archived ? tier : { ...tier, name: nextTierName(index) });
 }
 
 function sanitizeTierPrices(tiers: ChannelTier[]): ChannelTier[] {
@@ -1938,13 +1948,12 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   const addTier = () => {
     if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
     if (activeTierCount >= MAX_CHANNEL_TIERS) return;
-    const nextIndex = tiers.length;
     setTiers(prev => normalizeTierNames([
       ...prev,
       {
         id: `tier-${Date.now()}`,
-        name: nextTierName(nextIndex),
-        price: defaultTierPrice(nextIndex, prev),
+        name: '',
+        price: defaultTierPrice(prev.length, prev),
       },
     ]));
   };
@@ -1988,7 +1997,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
         return;
       }
       deductSup(channelSupCost, 'channel_open');
-      createChannel({ name: name.trim(), description: description.trim(), category, tiers: normalizedTiers });
+      createChannel({ name: name.trim(), description: description.trim(), category, tiers });
       onClose();
     }, 1300);
   };

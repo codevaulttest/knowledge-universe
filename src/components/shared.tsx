@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, FileText, Gem, Link, Lock, RotateCcw, Star, Wallet } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, FileText, Gem, Link, Lock, Radio, RotateCcw, Settings, Star, Wallet } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { isVerifiedAuthor } from '../mockData';
-import type { Post } from '../types';
+import type { Channel, Post } from '../types';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
@@ -90,6 +90,49 @@ export function Avatar({ index, seed, onClick }: { index: number; seed?: string;
         colors={AVATAR_COLORS}
       />
     </div>
+  );
+}
+
+// ── ChannelCard（频道卡片：发现页推荐、个人主页频道目录共用同一套展示）──
+export function ChannelCard({
+  channel,
+  index,
+  onClick,
+  onManage,
+}: {
+  channel: Channel;
+  index: number;
+  onClick: () => void;
+  /** 传入后在卡片右侧展示「管理」快捷入口（仅频道主视角） */
+  onManage?: () => void;
+}) {
+  const { t } = useApp();
+  return (
+    <button type="button" className="channel-discover-card" onClick={onClick}>
+      <Avatar index={index} seed={channel.avatarSeed} />
+      <div className="channel-discover-info">
+        <span className="channel-discover-name">
+          <Radio size={13} strokeWidth={2.2} />
+          {channel.name}
+        </span>
+        <span className="channel-discover-desc">{channel.description}</span>
+        <div className="channel-discover-meta">
+          <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
+        </div>
+      </div>
+      {onManage && (
+        <span
+          className="channel-manage-btn channel-discover-manage-btn"
+          role="button"
+          tabIndex={0}
+          onClick={e => { e.stopPropagation(); onManage(); }}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); onManage(); } }}
+        >
+          <Settings size={13} strokeWidth={2.2} />
+          {t('管理频道2')}
+        </span>
+      )}
+    </button>
   );
 }
 

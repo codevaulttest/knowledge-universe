@@ -237,16 +237,20 @@ export function PostCard({
   const visibleImgCount = post.kind === 'image'
     ? (channelLocked ? 0 : imgUnlocked ? totalImgs : Math.floor(post.visiblePercent / 100 * totalImgs))
     : totalImgs;
+  // 原帖已下架：只在「转发」场景下出现（转发者本人的转发列表），渲染占位态，不展示原帖任何内容、不可点击进入详情
+  const isUnavailableRepost = !!repostedBy && !!post.deleted;
   return (
     <>
     <article
-      className="post" data-layer="feed-item"
+      className={`post${isUnavailableRepost ? ' post--unavailable-repost' : ''}`} data-layer="feed-item"
       onClick={() => {
+        if (isUnavailableRepost) return;
         onOpen?.(post);
         navigate({ page: 'P2', postId: post.id });
       }}
-      role="button" tabIndex={0}
-      aria-label={t('查看帖子：{author} — {slice}', { author: post.author, slice: post.title.slice(0, 20) })}
+      role={isUnavailableRepost ? undefined : 'button'}
+      tabIndex={isUnavailableRepost ? undefined : 0}
+      aria-label={isUnavailableRepost ? undefined : t('查看帖子：{author} — {slice}', { author: post.author, slice: post.title.slice(0, 20) })}
     >
       {repostedBy && (
         <div
@@ -264,6 +268,13 @@ export function PostCard({
           </span>
         </div>
       )}
+      {isUnavailableRepost ? (
+        <div className="repost-placeholder">
+          <span className="repost-placeholder-text">{t('该内容已不可用')}</span>
+          <span className="repost-placeholder-time">{localizeTime(post.time, language)}</span>
+        </div>
+      ) : (
+      <>
       <div className="author-row">
         <Avatar index={index} seed={avatarSeed} onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} />
         <div className="author-meta" onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') navigate({ page: 'P6', authorName: post.author }); }}>
@@ -409,6 +420,8 @@ export function PostCard({
           </button>
         )}
       />
+      </>
+      )}
     </article>
     {actorsTab && (
       <ActorsSheet postId={post.id} initialTab={actorsTab} onClose={() => setActorsTab(null)} />

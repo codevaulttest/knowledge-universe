@@ -26,6 +26,9 @@ export type Post = {
   // 该频道下需订阅达到 channel.tiers[minTierIndex] 及以上档位才可见；未设置=频道内全员免费公开
   // "会员专属再付费"场景：已满足 minTierIndex 后，仍复用现有 stakeTier/visiblePercent 付费解锁机制，无需额外字段
   minTierIndex?: number;
+  // 原帖已下架（作者删除/违规下架/账号注销等，UI 不区分具体原因）。
+  // 下架后不出现在任何公开列表（feed / 他人主页转发列表），仅在转发者本人的「转发」列表里保留占位记录。
+  deleted?: boolean;
 };
 
 
@@ -48,6 +51,7 @@ export type Route =
   | { page: 'P0'; tab: 0 | 1 | 2 }
   | { page: 'P2'; postId: string; scrollToComments?: boolean }
   | { page: 'P6'; authorName: string }
+  | { page: 'P_CHANNEL'; channelId: string }
   | { page: 'P7' }
   | { page: 'P_SEARCH' }
   | { page: 'P_PLANET'; searchNodeCode?: string; openBsp?: boolean }
@@ -57,7 +61,7 @@ export type Route =
 // ── 频道 / 会员档位 ──────────────────────────────────────────────
 export type ChannelTier = {
   id: string;
-  name: string; // 固定编号 Lv.1/Lv.2/Lv.3…（按档位顺序自动生成，不可自定义）
+  name: string; // 固定编号"金牌/银牌/铜牌"（按档位顺序自动生成，不可自定义）
   price: number; // PB/月，须 > 0，且高于上一档
   // 已下架：不再接受新订阅、不出现在发帖门槛/新用户订阅选择器里；但已订阅用户保留原价与权限，
   // 且该档位不能真删除（避免 minTierIndex / 订阅记录的数组下标错位），只能下架

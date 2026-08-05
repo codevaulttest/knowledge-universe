@@ -68,6 +68,8 @@ export type AppContextValue = {
   // 开通频道：一步完成——校验通过后直接建号（1000 PB + 100 PB + 0.1 SUP 由弹窗自身走支付动画后调用）
   createChannel: (data: NewChannelData) => string;
   updateChannel: (channelId: string, data: NewChannelData) => void;
+  // 开发工具：清空档位设置 30 天冷却期的记录时间，便于演示/测试
+  resetChannelTierCooldown: (channelId: string) => void;
   openCreateChannel: () => void;
   createChannelOpen: boolean;
   closeCreateChannel: () => void;
