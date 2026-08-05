@@ -58,6 +58,7 @@ export const ko: Record<string, string> = {
   '关注 {author}': '{author} 팔로우',
   '+ 关注': '+ 팔로우',
   '订阅『{name}』解锁': '「{name}」 구독하여 잠금 해제',
+  '升级到『{name}』解锁': '「{name}」(으)로 업그레이드하여 잠금 해제',
   '查看打赏详情，已收到 {tipsReceived} PB': '후원 상세 보기, 받은 금액 {tipsReceived} PB',
   '已收到打赏 {tipsReceived} PB': '{tipsReceived} PB 후원을 받았습니다',
   '打赏此帖，当前 {tipsReceived}': '이 게시글 후원하기, 현재 {tipsReceived}',

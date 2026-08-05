@@ -58,6 +58,7 @@ export const zhTW: Record<string, string> = {
   '关注 {author}': '關注 {author}',
   '+ 关注': '+ 關注',
   '订阅『{name}』解锁': '訂閱『{name}』解鎖',
+  '升级到『{name}』解锁': '升級到『{name}』解鎖',
   '查看打赏详情，已收到 {tipsReceived} PB': '查看打賞詳情，已收到 {tipsReceived} PB',
   '已收到打赏 {tipsReceived} PB': '已收到打賞 {tipsReceived} PB',
   '打赏此帖，当前 {tipsReceived}': '打賞此貼文，目前 {tipsReceived}',

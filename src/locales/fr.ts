@@ -58,6 +58,7 @@ export const fr: Record<string, string> = {
   '关注 {author}': 'Suivre {author}',
   '+ 关注': '+ Suivre',
   '订阅『{name}』解锁': 'Abonnez-vous à « {name} » pour débloquer',
+  '升级到『{name}』解锁': 'Passez à « {name} » pour débloquer',
   '查看打赏详情，已收到 {tipsReceived} PB': 'Voir les détails des pourboires, reçu {tipsReceived} PB',
   '已收到打赏 {tipsReceived} PB': 'Pourboire reçu de {tipsReceived} PB',
   '打赏此帖，当前 {tipsReceived}': 'Donner un pourboire, actuellement {tipsReceived}',

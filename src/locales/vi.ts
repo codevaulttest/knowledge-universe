@@ -58,6 +58,7 @@ export const vi: Record<string, string> = {
   '关注 {author}': 'Theo dõi {author}',
   '+ 关注': '+ Theo dõi',
   '订阅『{name}』解锁': 'Đăng ký "{name}" để mở khóa',
+  '升级到『{name}』解锁': 'Nâng cấp lên "{name}" để mở khóa',
   '查看打赏详情，已收到 {tipsReceived} PB': 'Xem chi tiết tip, đã nhận {tipsReceived} PB',
   '已收到打赏 {tipsReceived} PB': 'Đã nhận tip {tipsReceived} PB',
   '打赏此帖，当前 {tipsReceived}': 'Tip bài này, hiện tại {tipsReceived}',

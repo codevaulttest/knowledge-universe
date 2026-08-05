@@ -58,6 +58,7 @@ export const zhCN: Record<string, string> = {
   '关注 {author}': '关注 {author}',
   '+ 关注': '+ 关注',
   '订阅『{name}』解锁': '订阅『{name}』解锁',
+  '升级到『{name}』解锁': '升级到『{name}』解锁',
   '查看打赏详情，已收到 {tipsReceived} PB': '查看打赏详情，已收到 {tipsReceived} PB',
   '已收到打赏 {tipsReceived} PB': '已收到打赏 {tipsReceived} PB',
   '打赏此帖，当前 {tipsReceived}': '打赏此帖，当前 {tipsReceived}',

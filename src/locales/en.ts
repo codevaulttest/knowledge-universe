@@ -58,6 +58,7 @@ export const en: Record<string, string> = {
   '关注 {author}': 'Follow {author}',
   '+ 关注': '+ Follow',
   '订阅『{name}』解锁': 'Subscribe "{name}" to unlock',
+  '升级到『{name}』解锁': 'Upgrade to "{name}" to unlock',
   '查看打赏详情，已收到 {tipsReceived} PB': 'View tip details, received {tipsReceived} PB',
   '已收到打赏 {tipsReceived} PB': 'Received {tipsReceived} PB in tips',
   '打赏此帖，当前 {tipsReceived}': 'Tip this post, current count {tipsReceived}',

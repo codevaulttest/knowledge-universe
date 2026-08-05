@@ -58,6 +58,7 @@ export const ja: Record<string, string> = {
   '关注 {author}': '{author} をフォロー',
   '+ 关注': '+ フォロー',
   '订阅『{name}』解锁': '「{name}」に登録して解除',
+  '升级到『{name}』解锁': '「{name}」にアップグレードして解除',
   '查看打赏详情，已收到 {tipsReceived} PB': '投げ銭の詳細を見る、受取済み {tipsReceived} PB',
   '已收到打赏 {tipsReceived} PB': '{tipsReceived} PB の投げ銭を受け取りました',
   '打赏此帖，当前 {tipsReceived}': 'この投稿に投げ銭、現在 {tipsReceived}',

@@ -58,6 +58,7 @@ export const th: Record<string, string> = {
   '关注 {author}': 'ติดตาม {author}',
   '+ 关注': '+ ติดตาม',
   '订阅『{name}』解锁': 'สมัคร "{name}" เพื่อปลดล็อก',
+  '升级到『{name}』解锁': 'อัปเกรดเป็น "{name}" เพื่อปลดล็อก',
   '查看打赏详情，已收到 {tipsReceived} PB': 'ดูรายละเอียดทิป ได้รับ {tipsReceived} PB',
   '已收到打赏 {tipsReceived} PB': 'ได้รับทิป {tipsReceived} PB',
   '打赏此帖，当前 {tipsReceived}': 'ทิปโพสต์นี้ จำนวนปัจจุบัน {tipsReceived}',

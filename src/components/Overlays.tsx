@@ -1854,7 +1854,7 @@ const MAX_CHANNEL_TIERS = 3;
 const DEFAULT_CHANNEL_CATEGORY = 'AI / 大模型';
 const DEFAULT_TIER_PRICES = [100, 500, 2000] as const;
 // 档位名不可自定义，按档位顺序固定分配，不出现在此表里的位置（超出预设数量的历史档位）保持原名不动
-const DEFAULT_TIER_NAMES = ['金牌', '银牌', '铜牌'] as const;
+const DEFAULT_TIER_NAMES = ['铜牌', '银牌', '金牌'] as const;
 
 // 仅对预设范围内、未下架的档位重新赋名；超出预设或已下架的档位保留原名不动
 function normalizeTierNames(tiers: ChannelTier[]): ChannelTier[] {

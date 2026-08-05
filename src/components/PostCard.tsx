@@ -356,7 +356,7 @@ export function PostCard({
             collapseLines={4}
             alwaysExpand={isOwn}
             forceLocked={channelLocked}
-            lockLabel={channelLocked ? t('订阅『{name}』解锁', { name: requiredTier!.name }) : undefined}
+            lockLabel={channelLocked ? (mySubTierIdx != null ? t('升级到『{name}』解锁', { name: requiredTier!.name }) : t('订阅『{name}』解锁', { name: requiredTier!.name })) : undefined}
             onUnlockOverride={channelLocked ? openChannelGate : undefined}
           />
           <MediaPlaceholder

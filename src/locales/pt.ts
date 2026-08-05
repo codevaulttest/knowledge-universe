@@ -58,6 +58,7 @@ export const pt: Record<string, string> = {
   '关注 {author}': 'Seguir {author}',
   '+ 关注': '+ Seguir',
   '订阅『{name}』解锁': 'Assine «{name}» para desbloquear',
+  '升级到『{name}』解锁': 'Atualize para «{name}» para desbloquear',
   '查看打赏详情，已收到 {tipsReceived} PB': 'Ver detalhes de gorjetas, recebido {tipsReceived} PB',
   '已收到打赏 {tipsReceived} PB': 'Gorjeta recebida de {tipsReceived} PB',
   '打赏此帖，当前 {tipsReceived}': 'Dar gorjeta a esta publicação, atual {tipsReceived}',

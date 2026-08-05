@@ -58,6 +58,7 @@ export const ru: Record<string, string> = {
   '关注 {author}': 'Подписаться на {author}',
   '+ 关注': '+ Подписаться',
   '订阅『{name}』解锁': 'Оформите подписку «{name}», чтобы открыть',
+  '升级到『{name}』解锁': 'Перейдите на «{name}», чтобы открыть',
   '查看打赏详情，已收到 {tipsReceived} PB': 'Детали донатов, получено {tipsReceived} PB',
   '已收到打赏 {tipsReceived} PB': 'Получен донат {tipsReceived} PB',
   '打赏此帖，当前 {tipsReceived}': 'Задонатить за пост, сейчас {tipsReceived}',
