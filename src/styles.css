@@ -1161,13 +1161,38 @@ button {
 }
 
 /* ── 热力值 + 打赏入口（覆盖 GeminiNodeBadge 左侧内容，见 .gemini-left）──
-   知识宇宙徽章原本的蓝紫色壳是给节点信息用的冷色调；这里装的是热力值/打赏，外壳改中性色，避免冷暖打架 */
+   知识宇宙徽章原本的蓝紫色壳是给节点信息用的冷色调；这里装的是热力值/打赏，外壳改中性色，避免冷暖打架。
+   默认宽度贴内容、靠左；参与知识宇宙时拆成两个独立胶囊左右分列 */
 .gemini-badge--heat {
+  width: fit-content;
+  max-width: 100%;
+  justify-content: flex-start;
+  gap: 8px;
   border-color: var(--ku-color-border-card);
   background: var(--ku-color-bg-page);
 }
 .gemini-badge--heat:not([role="button"]) {
   cursor: default;
+}
+/* Feed：热力值胶囊 + 知识宇宙胶囊，同一行左右分列 */
+.post-heat-gemini-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  margin: 12px 0 0;
+}
+.post-heat-gemini-row > .gemini-badge {
+  margin: 0;
+}
+.gemini-badge--node {
+  width: fit-content;
+  max-width: 100%;
+  flex-shrink: 1;
+  gap: 8px;
+  border-color: var(--ku-color-border-card);
+  background: var(--ku-color-bg-page);
 }
 .post-heat {
   display: inline-flex;
@@ -1185,10 +1210,10 @@ button {
   margin-left: 6px;
   height: 26px;
   padding: 0 12px;
-  border: 1.5px solid var(--ku-color-genesis-gold);
+  border: none;
   border-radius: var(--ku-radius-card);
-  background: transparent;
-  color: var(--ku-color-genesis-gold);
+  background: var(--ku-color-genesis-gold);
+  color: #fff;
   font: var(--ku-text-action-cta);
 }
 /* 已收到打赏（自己主页帖子）：仅展示态，不用实心 CTA 样式，也不加边框 */

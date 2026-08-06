@@ -570,6 +570,7 @@ export function PostContent({
 // ── GeminiNodeBadge ────────────────────────────────────────────
 // leftContent：用其它内容（如 feed 卡片的热力值/打赏）覆盖默认的「知识宇宙·星级·节点ID」左侧内容；
 // 此时整条外层点击行为改由 onLeftClick 控制（未传则该区域不可点击），与 onGoToPlanet/链接跳转逻辑互斥。
+// 有 leftContent 且 showChain 时拆成两个容器：左侧热力值/打赏；右侧星球+「知识宇宙」+星级+节点编号+链接。
 export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPlanet, leftContent, onLeftClick, leftAriaLabel }: {
   post: Post; showChain?: boolean; onViewLinks?: () => void; onGoToPlanet?: () => void;
   leftContent?: React.ReactNode; onLeftClick?: () => void; leftAriaLabel?: string;
@@ -580,6 +581,75 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
   const handleLink = () => (onViewLinks ? onViewLinks() : openLink(post.id));
   const handleBadgeClick = leftContent ? onLeftClick : (onGoToPlanet ? onGoToPlanet : handleLink);
   const clickable = leftContent ? !!onLeftClick : true;
+  const splitHeatNode = !!leftContent && showChain;
+
+  const chainEl = showChain ? (
+    isLinked ? (
+      <div className="gemini-chain gemini-chain--linked" aria-label={t('已链接，共 {links} 人', { links: post.links })}>
+        <CircleCheck size={14} strokeWidth={2.5} />
+        <span>{t('已链接')}</span>
+        <span className="gemini-chain-count">{post.links}</span>
+      </div>
+    ) : (
+      <button type="button" className="gemini-chain"
+        onClick={(e) => { e.stopPropagation(); handleLink(); }}
+        aria-label={onViewLinks
+          ? t('查看 {links} 人链接了此节点', { links: post.links })
+          : t('链接此节点，当前 {links} 人已链接', { links: post.links })}>
+        <Link size={14} strokeWidth={2.5} />{post.links}
+        <ChevronRight size={12} strokeWidth={2.5} />
+      </button>
+    )
+  ) : null;
+
+  const nodeMetaEl = (
+    <>
+      <KnowledgePlanetIcon className="gemini-icon" />
+      <span className="gemini-label">{t('知识宇宙')}</span>
+      <Rating value={post.rating} size={22} />
+      <span className="gemini-id">{post.nodeId}</span>
+    </>
+  );
+
+  // Feed：热力值/打赏 与 知识宇宙节点 拆成两个独立胶囊，左右分列
+  if (splitHeatNode) {
+    return (
+      <div className="post-heat-gemini-row" data-layer="gemini-node-badge">
+        <div
+          className="gemini-badge gemini-badge--heat"
+          role={clickable ? 'button' : undefined}
+          tabIndex={clickable ? 0 : undefined}
+          onClick={clickable ? handleBadgeClick : undefined}
+          onKeyDown={clickable ? (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleBadgeClick!();
+            }
+          } : undefined}
+          aria-label={leftAriaLabel}
+        >
+          <div className="gemini-left">{leftContent}</div>
+        </div>
+        <div
+          className="gemini-badge gemini-badge--node"
+          role={onGoToPlanet ? 'button' : undefined}
+          tabIndex={onGoToPlanet ? 0 : undefined}
+          onClick={onGoToPlanet ? (e) => { e.stopPropagation(); onGoToPlanet(); } : undefined}
+          onKeyDown={onGoToPlanet ? (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onGoToPlanet();
+            }
+          } : undefined}
+          aria-label={t('查看知识宇宙节点 {nodeId}，{rating} 星', { nodeId: post.nodeId ?? '', rating: post.rating, unit: post.rating === 1 ? 'star' : 'stars' })}
+        >
+          <div className="gemini-left">{nodeMetaEl}</div>
+          {chainEl}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`gemini-badge${leftContent ? ' gemini-badge--heat' : ''}`}
@@ -621,24 +691,7 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
           </>
         )}
       </div>
-      {showChain && (
-        isLinked ? (
-          <div className="gemini-chain gemini-chain--linked" aria-label={t('已链接，共 {links} 人', { links: post.links })}>
-            <CircleCheck size={14} strokeWidth={2.5} />
-            <span>{t('已链接')}</span>
-            <span className="gemini-chain-count">{post.links}</span>
-          </div>
-        ) : (
-          <button type="button" className="gemini-chain"
-            onClick={(e) => { e.stopPropagation(); handleLink(); }}
-            aria-label={onViewLinks
-              ? t('查看 {links} 人链接了此节点', { links: post.links })
-              : t('链接此节点，当前 {links} 人已链接', { links: post.links })}>
-            <Link size={14} strokeWidth={2.5} />{post.links}
-            <ChevronRight size={12} strokeWidth={2.5} />
-          </button>
-        )
-      )}
+      {chainEl}
     </div>
   );
 }

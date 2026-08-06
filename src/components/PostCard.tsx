@@ -392,6 +392,9 @@ export function PostCard({
           post={post}
           showChain={post.isNode}
           onViewLinks={isOwn ? () => setActorsTab('link') : undefined}
+          onGoToPlanet={post.isNode
+            ? () => navigate({ page: 'P_PLANET', searchNodeCode: post.nodeId })
+            : undefined}
           leftContent={(
             <>
               <span className="post-heat">
