@@ -570,10 +570,12 @@ export function PostContent({
 // ── GeminiNodeBadge ────────────────────────────────────────────
 // leftContent：用其它内容（如 feed 卡片的热力值/打赏）覆盖默认的「知识宇宙·星级·节点ID」左侧内容；
 // 此时整条外层点击行为改由 onLeftClick 控制（未传则该区域不可点击），与 onGoToPlanet/链接跳转逻辑互斥。
-// 有 leftContent 且 showChain 时拆成两块：左侧热力值/打赏胶囊；右侧仅链接按钮。
-export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPlanet, leftContent, onLeftClick, leftAriaLabel }: {
+// 有 leftContent 且 showChain 时拆成两块：左侧热力值/打赏胶囊；右侧原链接按钮靠右。
+export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPlanet, leftContent, onLeftClick, leftAriaLabel, chainOutline = false }: {
   post: Post; showChain?: boolean; onViewLinks?: () => void; onGoToPlanet?: () => void;
   leftContent?: React.ReactNode; onLeftClick?: () => void; leftAriaLabel?: string;
+  /** 仅「我的主页」等场景：链接按钮改空心并去掉右箭头，其它页面保持实心 CTA */
+  chainOutline?: boolean;
 }) {
   const { openLink, linkedPostIds, t } = useApp();
   const isLinked = linkedPostIds.has(post.id);
@@ -591,18 +593,18 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
         <span className="gemini-chain-count">{post.links}</span>
       </div>
     ) : (
-      <button type="button" className="gemini-chain"
+      <button type="button" className={`gemini-chain${chainOutline ? ' gemini-chain--outline' : ''}`}
         onClick={(e) => { e.stopPropagation(); handleLink(); }}
         aria-label={onViewLinks
           ? t('查看 {links} 人链接了此节点', { links: post.links })
           : t('链接此节点，当前 {links} 人已链接', { links: post.links })}>
         <Link size={14} strokeWidth={2.5} />{post.links}
-        <ChevronRight size={12} strokeWidth={2.5} />
+        {!chainOutline && <ChevronRight size={12} strokeWidth={2.5} />}
       </button>
     )
   ) : null;
 
-  // Feed：热力值/打赏胶囊 + 链接按钮
+  // Feed：热力值/打赏胶囊靠左 + 链接按钮靠右
   if (splitHeatNode) {
     return (
       <div className="post-heat-gemini-row" data-layer="gemini-node-badge">

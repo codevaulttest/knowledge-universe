@@ -212,12 +212,15 @@ export function PostCard({
   hideFollow,
   onOpen,
   repostedBy,
+  chainOutline,
 }: {
   post: Post;
   index: number;
   hideFollow?: boolean;
   onOpen?: (post: Post) => void;
   repostedBy?: RepostedBy;
+  /** 透传给 GeminiNodeBadge：仅「我的主页」用空心链接按钮 */
+  chainOutline?: boolean;
 }) {
   const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, openChannelSubscribe, requireWallet } = useApp();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -391,6 +394,7 @@ export function PostCard({
         <GeminiNodeBadge
           post={post}
           showChain={post.isNode}
+          chainOutline={chainOutline}
           onViewLinks={isOwn ? () => setActorsTab('link') : undefined}
           onGoToPlanet={post.isNode
             ? () => navigate({ page: 'P_PLANET', searchNodeCode: post.nodeId })

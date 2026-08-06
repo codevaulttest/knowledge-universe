@@ -1126,7 +1126,7 @@ button {
   opacity: 0.7;
 }
 .gemini-id-goto:active { opacity: 1; }
-/* 链接 CTA */
+/* 链接 CTA：实心主色，与打赏按钮同权重 */
 .gemini-chain {
   display: flex;
   align-items: center;
@@ -1145,6 +1145,13 @@ button {
 .gemini-chain svg { color: var(--ku-color-on-primary); }
 .gemini-chain:hover  { opacity: 0.88; }
 .gemini-chain:active { opacity: 0.72; }
+/* 「我的主页」：空心描边、无右箭头，弱化视觉权重，其它页面仍用上方实心 CTA */
+.gemini-chain--outline {
+  border: 1.5px solid var(--ku-color-primary);
+  background: transparent;
+  color: var(--ku-color-primary);
+}
+.gemini-chain--outline svg { color: var(--ku-color-primary); }
 /* 已链接态 */
 .gemini-chain--linked {
   background: rgba(16, 185, 129, 0.12);
@@ -1174,7 +1181,7 @@ button {
 .gemini-badge--heat:not([role="button"]) {
   cursor: default;
 }
-/* Feed：热力值胶囊 + 知识宇宙胶囊，同一行左右分列 */
+/* Feed：热力值胶囊靠左 + 链接按钮靠右 */
 .post-heat-gemini-row {
   display: flex;
   align-items: center;
@@ -2295,25 +2302,33 @@ button {
 .lang-option-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  padding: 0 0 calc(8px + env(safe-area-inset-bottom, 0px));
 }
 .lang-sheet .sheet-header {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 .lang-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   width: 100%;
-  padding: 12px;
-  border: 1px solid var(--ku-color-border-card);
-  border-radius: var(--ku-radius-card);
-  background: var(--ku-color-bg-phone);
+  padding: 15px 2px;
+  border: none;
+  border-bottom: 1px solid var(--ku-color-border-card);
+  border-radius: 0;
+  background: none;
   text-align: left;
-  transition: border-color 0.12s, background 0.12s;
+  cursor: pointer;
+}
+.lang-option:last-child {
+  border-bottom: none;
+}
+.lang-option:active {
+  background: var(--ku-color-border-cell);
 }
 .lang-option__label {
-  font: 600 14px/1 var(--ku-font-family);
+  font: 600 14px/1.3 var(--ku-font-family);
   color: var(--ku-color-text-primary);
 }
 .lang-option__check {
@@ -4248,6 +4263,7 @@ button {
 .channel-picker-list {
   display: flex;
   flex-direction: column;
+  gap: 8px;
   overflow-y: auto;
   padding: 14px 0 calc(14px + env(safe-area-inset-bottom, 0px));
 }
@@ -4257,25 +4273,32 @@ button {
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  padding: 15px 2px;
-  border: none;
-  background: none;
-  border-bottom: 1px solid var(--ku-color-border-card);
+  padding: 12px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
   text-align: left;
   cursor: pointer;
-}
-.channel-picker-item:last-of-type {
-  border-bottom: none;
+  transition: border-color 0.12s, background 0.12s;
 }
 .channel-picker-item:active {
   background: var(--ku-color-border-cell);
 }
 .channel-picker-item--active {
+  border-color: var(--ku-color-primary);
+  background: var(--ku-color-primary-alpha-06);
   color: var(--ku-color-primary-dark);
 }
 .channel-picker-item--active svg {
   color: var(--ku-color-primary-dark);
   flex-shrink: 0;
+}
+.channel-picker-item-radio {
+  flex-shrink: 0;
+  color: var(--ku-color-text-meta);
+}
+.channel-picker-item--active .channel-picker-item-radio {
+  color: var(--ku-color-primary-dark);
 }
 .channel-picker-item-info {
   display: flex;

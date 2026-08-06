@@ -787,9 +787,12 @@ export function ComposePage({
                     setChannelPickerOpen(false);
                   }}
                 >
+                  <Radio size={16} strokeWidth={2.2} className="channel-picker-item-radio" aria-hidden />
                   <span className="channel-picker-item-info">
                     <span className="channel-picker-item-name">{c.name}</span>
-                    <span className="channel-picker-item-desc">{c.description}</span>
+                    <span className="channel-picker-item-desc">
+                      {t('{subscriberCount} 人已订阅', { subscriberCount: c.subscriberCount })}
+                    </span>
                   </span>
                   {selectedChannelId === c.id && <Check size={16} strokeWidth={2.5} aria-hidden />}
                 </button>

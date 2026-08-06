@@ -240,7 +240,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
             >
               <Bell size={22} strokeWidth={2} />
               {unreadActivityCount > 0 && (
-                <span className="feed-bell-dot">{unreadActivityCount > 9 ? '9+' : unreadActivityCount}</span>
+                <span className="feed-bell-dot">{unreadActivityCount > 99 ? '99+' : unreadActivityCount}</span>
               )}
             </button>
           )}

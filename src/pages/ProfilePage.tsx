@@ -164,7 +164,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               >
                 <Bell size={20} strokeWidth={1.8} />
                 {unreadActivityCount > 0 && (
-                  <span className="feed-bell-dot">{unreadActivityCount > 9 ? '9+' : unreadActivityCount}</span>
+                  <span className="feed-bell-dot">{unreadActivityCount > 99 ? '99+' : unreadActivityCount}</span>
                 )}
               </button>
               <button
@@ -390,6 +390,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 index={i % 3}
                 hideFollow={!isOwn}
                 repostedBy={entry.repostedBy}
+                chainOutline={isOwn}
               />
             ))}
             {displayedPosts.length === 0 && (
