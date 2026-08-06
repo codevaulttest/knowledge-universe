@@ -4194,11 +4194,15 @@ button {
   flex-direction: column;
   gap: 8px;
 }
+/* 频道目录比关注/粉丝列表更长，单独加高，避免列表被截得太狠 */
+.channel-directory-modal {
+  max-height: min(720px, 85vh);
+}
 /* 频道目录弹层内的列表：套用 .follow-list-content 的 10px 0 纵向内边距时，
    补回左右 20px，避免卡片贴到弹层两侧（组合选择器提升优先级，防止被 .follow-list-content 的
    padding 简写覆盖掉） */
 .follow-list-content.channel-directory-list {
-  padding: 10px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 20px;
 }
 .channel-directory-empty {
   padding: 20px 0;
@@ -4219,9 +4223,12 @@ button {
 .channel-directory-more-btn:active {
   opacity: 0.7;
 }
-/* 频道目录弹层内的「创建频道」入口：父容器（.channel-directory-list）已经
-   提供左右 20px 内边距，这里不再叠加 .channel-create-entry 自带的 margin/width
-   计算（否则会比上面的频道卡片窄一圈）；改用反色 filled 设计，作为列表末尾的主操作 */
+/* 频道目录弹层底部固定「创建频道」：列表滚动时按钮始终贴底 */
+.channel-directory-footer {
+  flex-shrink: 0;
+  padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--ku-color-bg-phone);
+}
 .channel-directory-create-btn {
   display: flex;
   align-items: center;

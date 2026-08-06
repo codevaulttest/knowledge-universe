@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
@@ -131,6 +131,15 @@ export default function App() {
   };
 
   const [channels, setChannels] = useState<Channel[]>(ALL_CHANNELS);
+  // 开发工具：模拟「当前用户尚未创建任何频道」；默认关闭（原型自带 5 个自有频道）
+  const [demoHideOwnChannels, setDemoHideOwnChannels] = useState(false);
+  const visibleChannels = useMemo(
+    () => (demoHideOwnChannels ? channels.filter(c => c.ownerName !== CURRENT_USER) : channels),
+    [channels, demoHideOwnChannels],
+  );
+  const toggleDemoHideOwnChannels = useCallback(() => {
+    setDemoHideOwnChannels(prev => !prev);
+  }, []);
   const [subscribedChannelTiers, setSubscribedChannelTiers] = useState<Record<string, number>>({});
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
   const [manageChannelId, setManageChannelId] = useState<string | null>(null);
@@ -433,6 +442,8 @@ export default function App() {
 
   // 开通频道是一步流程：CreateChannelModal 自己跑完支付动画（1000 PB + 100 PB + 0.1 SUP）后直接调用此函数建号
   const createChannel = (data: NewChannelData) => {
+    // 演示「未创建」态时若真的去开通，退出该演示态，否则新建频道会被继续隐藏
+    if (demoHideOwnChannels) setDemoHideOwnChannels(false);
     const channelId = `channel-${Date.now()}`;
     const newChannel: Channel = {
       id: channelId,
@@ -649,11 +660,12 @@ export default function App() {
     recentSearches, saveRecentSearch, removeRecentSearch, clearRecentSearches,
     drafts, saveDraft, updateDraft, deleteDraft,
     userProfile, updateUserProfile,
-    channels, subscribedChannelTiers,
+    channels: visibleChannels, subscribedChannelTiers,
     openChannelSubscribe, subscribeToChannelTier, unsubscribeFromChannel,
     createChannel, updateChannel, resetChannelTierCooldown,
     openCreateChannel, createChannelOpen, closeCreateChannel,
     openManageChannel, closeManageChannel,
+    demoHideOwnChannels, toggleDemoHideOwnChannels,
     supBalance, supHistory, deductSup,
     walletConnected, connectWallet, requireWallet,
     walletAddress, walletConnecting, disconnectWallet,

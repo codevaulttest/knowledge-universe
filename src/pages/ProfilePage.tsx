@@ -5,6 +5,7 @@ import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
 import type { Channel, ChannelSubscriber, Draft, Language, OutgoingTip, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
+import { DevPanel } from '../components/DevPanel';
 import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelCard, ChannelMemberBadge, GenesisBadge, PageHeader } from '../components/shared';
 import { useChannelListSearch } from '../components/channelSearch';
@@ -472,6 +473,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         />
       )}
 
+      {isOwn && <DevPanel />}
+
     </div>
   );
 }
@@ -645,7 +648,7 @@ function ChannelDirectoryModal({
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="follow-list-modal" onClick={e => e.stopPropagation()}>
+      <div className="follow-list-modal channel-directory-modal" onClick={e => e.stopPropagation()}>
         <div className="follow-list-header">
           <span className="follow-list-title">
             {isOwn
@@ -687,13 +690,15 @@ function ChannelDirectoryModal({
               {t('加载更多（剩余 {length}）', { length: channelListState.filteredCount - channelListState.visible.length })}
             </button>
           )}
-          {isOwn && (
+        </div>
+        {isOwn && (
+          <div className="channel-directory-footer">
             <button type="button" className="channel-directory-create-btn" onClick={openCreateChannel}>
               <Radio size={14} strokeWidth={2.2} />
               {t('开通频道 · 发布专属内容')}
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

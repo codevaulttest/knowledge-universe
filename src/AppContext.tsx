@@ -75,6 +75,9 @@ export type AppContextValue = {
   closeCreateChannel: () => void;
   openManageChannel: (channelId: string) => void;
   closeManageChannel: () => void;
+  // 开发工具：模拟当前用户「未创建频道」空态（默认关闭，原型自带 5 个自有频道）
+  demoHideOwnChannels: boolean;
+  toggleDemoHideOwnChannels: () => void;
   // SUP（SUP 链原生代币）：用户中心可充值站内 SUP 资产，产生节点时与 PB 同步扣除
   supBalance: number;
   supHistory: SupTransaction[];

@@ -10,7 +10,7 @@ type DevPanelProps = {
 export function DevPanel({ children }: DevPanelProps) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(true);
-  const { walletConnected, connectWallet, disconnectWallet, t } = useApp();
+  const { walletConnected, connectWallet, disconnectWallet, demoHideOwnChannels, toggleDemoHideOwnChannels, t } = useApp();
 
   if (!visible) return null;
 
@@ -48,6 +48,18 @@ export function DevPanel({ children }: DevPanelProps) {
             <span>{t('游客模式')}</span>
             <span className={`planet-dev-menu-toggle${!walletConnected ? ' planet-dev-menu-toggle--on' : ''}`}>
               {!walletConnected ? t('开') : t('关')}
+            </span>
+          </button>
+          <button
+            type="button"
+            className="planet-dev-menu-item"
+            role="menuitemcheckbox"
+            aria-checked={demoHideOwnChannels}
+            onClick={toggleDemoHideOwnChannels}
+          >
+            <span>{t('未创建频道')}</span>
+            <span className={`planet-dev-menu-toggle${demoHideOwnChannels ? ' planet-dev-menu-toggle--on' : ''}`}>
+              {demoHideOwnChannels ? t('开') : t('关')}
             </span>
           </button>
           {children}
