@@ -3944,7 +3944,7 @@ button {
 }
 /* ── 频道信息条 ── */
 .channel-info-bar {
-  margin: 0 var(--ku-feed-padding-x) 14px;
+  margin: 12px var(--ku-feed-padding-x) 14px;
   padding: 12px 14px;
   border-radius: var(--ku-radius-card);
   background: var(--ku-color-badge-bg);
@@ -4079,6 +4079,9 @@ button {
   white-space: nowrap;
 }
 .channel-page-hero-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   align-self: flex-start;
   border: none;
   background: none;
@@ -4086,6 +4089,10 @@ button {
   font: var(--ku-text-caption);
   color: var(--ku-color-text-secondary);
   cursor: pointer;
+}
+.channel-page-hero-owner svg {
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 .channel-page-hero-owner:active {
   opacity: 0.7;

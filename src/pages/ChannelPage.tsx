@@ -51,6 +51,7 @@ export function ChannelPage({ channelId }: { channelId: string }) {
               onClick={() => navigate({ page: 'P6', authorName: channel.ownerName })}
             >
               {t('由 {ownerName} 运营', { ownerName: channel.ownerName })}
+              <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
             </button>
           </div>
         </div>
