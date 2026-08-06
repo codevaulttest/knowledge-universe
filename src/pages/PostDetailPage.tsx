@@ -1,13 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
-import { Ellipsis, HandCoins, Heart, Trash2, User } from 'lucide-react';
+import { Ellipsis, Eye, Flame, HandCoins, Heart, Trash2, User } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { CURRENT_USER, getGenesisTier, POST_REPLIES, replyLikesStore, likedReplyIdsStore } from '../mockData';
+import { CURRENT_USER, getGenesisTier, POST_ACTORS, POST_REPLIES, replyLikesStore, likedReplyIdsStore } from '../mockData';
 import type { Reply } from '../types';
 import { Actions, ActorsSheet } from '../components/PostCard';
 import { TipModal } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, GeminiNodeBadge, MediaPlaceholder, PageHeader, PostContent } from '../components/shared';
 import { postHasStake } from '../stakeConfig';
 import { localizeTime } from '../i18n';
+import { formatCount } from '../formatCount';
+
+/** 与 PostCard 一致：未显式设置 heat/views 时按 id 派生稳定演示数值 */
+function derivedStat(id: string, salt: number, min: number, span: number): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i) + salt) >>> 0;
+  return min + (h % span);
+}
 
 function parseTimeToMinutes(time: string): number {
   if (time === '刚刚' || time === 'Just now') return 0;
@@ -41,7 +49,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const [repostOpen, setRepostOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [showTip, setShowTip] = useState(false);
-  const [actorsTab, setActorsTab] = useState<'link' | null>(null);
+  const [actorsTab, setActorsTab] = useState<'link' | 'tip' | null>(null);
   // 快照排序：进入页面时按持久化的赞数排一次，会话内点赞不触发重排
   const [snapshotReplies] = useState<Reply[]>(() => sortReplies(POST_REPLIES[postId] ?? [], replyLikesStore));
   const [newReplies, setNewReplies] = useState<Reply[]>([]);
@@ -61,6 +69,9 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const displayName = isOwn ? userProfile.nickname : post.author;
   const isLinked = linkedPostIds.has(post.id);
   const unlocked = isOwn || isLinked || post.visiblePercent === 100;
+  const hasActors = isOwn && !!POST_ACTORS[post.id];
+  const heat = post.heat ?? derivedStat(post.id, 1, 300, 260000);
+  const views = post.views ?? derivedStat(post.id, 2, 80, 4200);
 
   const handleDelete = () => {
     setMoreOpen(false);
@@ -166,32 +177,58 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
             } : undefined}
           />
 
-          {/* 知识宇宙节点标识 → 点击打开链接弹窗（onClick 由 GeminiNodeBadge 自身处理）*/}
-          {post.isNode && (
-            <GeminiNodeBadge
-              post={post}
-              showChain
-              onViewLinks={isOwn ? () => setActorsTab('link') : undefined}
-              onGoToPlanet={isOwn ? () => requireWallet(() => navigate({ page: 'P_PLANET', searchNodeCode: post.nodeId })) : undefined}
-            />
-          )}
+          {/* 热力值/打赏（+知识宇宙节点）：与首页 Feed 同步 */}
+          <GeminiNodeBadge
+            post={post}
+            showChain={post.isNode}
+            onViewLinks={isOwn ? () => setActorsTab('link') : undefined}
+            onGoToPlanet={post.isNode
+              ? () => navigate({ page: 'P_PLANET', searchNodeCode: post.nodeId })
+              : undefined}
+            leftContent={(
+              <>
+                <span className="post-heat">
+                  <Flame size={16} strokeWidth={2.25} />
+                  {formatCount(heat, language)}
+                </span>
+                {isOwn ? (
+                  (post.tipsReceived ?? 0) > 0 && (
+                    <span className="post-heat-tip-btn post-heat-tip-btn--received">
+                      <HandCoins size={13} strokeWidth={2.25} />
+                      {t('已收到 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
+                    </span>
+                  )
+                ) : (
+                  <span className="post-heat-tip-btn">
+                    <HandCoins size={13} strokeWidth={2.25} />
+                    {t('打赏')}
+                  </span>
+                )}
+              </>
+            )}
+            onLeftClick={isOwn
+              ? (hasActors ? () => setActorsTab('tip') : undefined)
+              : () => requireWallet(() => setShowTip(true))}
+            leftAriaLabel={isOwn
+              ? t('查看打赏详情，已收到 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })
+              : t('打赏此帖，当前热力值 {heat}', { heat })}
+          />
         </div>
 
-        {/* 操作行（复用 feed 样式）*/}
+        {/* 操作行（复用 feed 样式；原打赏位改为浏览量）*/}
         <div className="detail-body-actions">
           <Actions
             post={post}
             onComment={() => repliesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-            extra={!isOwn ? (
-              <button
-                type="button"
-                className="detail-tip-btn"
-                onClick={() => requireWallet(() => setShowTip(true))}
-                aria-label={t('打赏此帖')}
+            extra={(
+              <span
+                className="post-views"
+                aria-label={t('浏览量 {views}', { views })}
               >
-                <HandCoins size={15} strokeWidth={2} />
-              </button>
-            ) : undefined}
+                <Eye size={18} strokeWidth={2.25} />
+                {formatCount(views, language)}
+              </span>
+            )}
           />
         </div>
 

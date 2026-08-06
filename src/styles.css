@@ -1186,13 +1186,8 @@ button {
 .post-heat-gemini-row > .gemini-badge {
   margin: 0;
 }
-.gemini-badge--node {
-  width: fit-content;
-  max-width: 100%;
-  flex-shrink: 1;
-  gap: 8px;
-  border-color: var(--ku-color-border-card);
-  background: var(--ku-color-bg-page);
+.post-heat-gemini-row > .gemini-chain {
+  margin-left: auto;
 }
 .post-heat {
   display: inline-flex;
@@ -4136,12 +4131,21 @@ button {
 
 /* ── 频道目录（频道目录弹层 / 频道选择器共用的搜索 + 分页列表）── */
 .channel-directory-search-wrap {
+  position: relative;
   display: flex;
+  align-items: center;
   padding: 14px 20px 0;
+}
+.channel-directory-search-icon {
+  position: absolute;
+  left: 32px;
+  color: var(--ku-color-text-meta);
+  pointer-events: none;
+  flex-shrink: 0;
 }
 .channel-directory-search-input {
   width: 100%;
-  padding: 9px 12px;
+  padding: 9px 12px 9px 36px;
   border: 1px solid var(--ku-color-border-control);
   border-radius: var(--ku-radius-card);
   background: var(--ku-color-bg-page);
@@ -4212,10 +4216,11 @@ button {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  margin-top: 12px;
   padding: 10px 12px;
-  border: 1px solid var(--ku-color-border-control);
+  border: 1px solid var(--ku-color-border-card);
   border-radius: var(--ku-radius-card);
-  background: var(--ku-color-bg-page);
+  background: var(--ku-color-bg-phone);
   color: var(--ku-color-text-primary);
   font: var(--ku-text-body-sm);
   cursor: pointer;
@@ -4235,21 +4240,24 @@ button {
   max-height: 70vh;
 }
 .channel-picker-search-wrap {
-  padding: 10px 16px 0;
+  padding: 2px 0 0;
+}
+.channel-picker-search-wrap .channel-directory-search-icon {
+  left: 12px;
 }
 .channel-picker-list {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  padding: 6px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  padding: 14px 0 calc(14px + env(safe-area-inset-bottom, 0px));
 }
 .channel-picker-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  padding: 10px 0;
+  padding: 15px 2px;
   border: none;
   background: none;
   border-bottom: 1px solid var(--ku-color-border-card);
@@ -4272,7 +4280,7 @@ button {
 .channel-picker-item-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
   flex: 1;
 }

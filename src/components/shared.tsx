@@ -570,7 +570,7 @@ export function PostContent({
 // ── GeminiNodeBadge ────────────────────────────────────────────
 // leftContent：用其它内容（如 feed 卡片的热力值/打赏）覆盖默认的「知识宇宙·星级·节点ID」左侧内容；
 // 此时整条外层点击行为改由 onLeftClick 控制（未传则该区域不可点击），与 onGoToPlanet/链接跳转逻辑互斥。
-// 有 leftContent 且 showChain 时拆成两个容器：左侧热力值/打赏；右侧星球+「知识宇宙」+星级+节点编号+链接。
+// 有 leftContent 且 showChain 时拆成两块：左侧热力值/打赏胶囊；右侧仅链接按钮。
 export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPlanet, leftContent, onLeftClick, leftAriaLabel }: {
   post: Post; showChain?: boolean; onViewLinks?: () => void; onGoToPlanet?: () => void;
   leftContent?: React.ReactNode; onLeftClick?: () => void; leftAriaLabel?: string;
@@ -602,16 +602,7 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
     )
   ) : null;
 
-  const nodeMetaEl = (
-    <>
-      <KnowledgePlanetIcon className="gemini-icon" />
-      <span className="gemini-label">{t('知识宇宙')}</span>
-      <Rating value={post.rating} size={22} />
-      <span className="gemini-id">{post.nodeId}</span>
-    </>
-  );
-
-  // Feed：热力值/打赏 与 知识宇宙节点 拆成两个独立胶囊，左右分列
+  // Feed：热力值/打赏胶囊 + 链接按钮
   if (splitHeatNode) {
     return (
       <div className="post-heat-gemini-row" data-layer="gemini-node-badge">
@@ -630,22 +621,7 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
         >
           <div className="gemini-left">{leftContent}</div>
         </div>
-        <div
-          className="gemini-badge gemini-badge--node"
-          role={onGoToPlanet ? 'button' : undefined}
-          tabIndex={onGoToPlanet ? 0 : undefined}
-          onClick={onGoToPlanet ? (e) => { e.stopPropagation(); onGoToPlanet(); } : undefined}
-          onKeyDown={onGoToPlanet ? (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onGoToPlanet();
-            }
-          } : undefined}
-          aria-label={t('查看知识宇宙节点 {nodeId}，{rating} 星', { nodeId: post.nodeId ?? '', rating: post.rating, unit: post.rating === 1 ? 'star' : 'stars' })}
-        >
-          <div className="gemini-left">{nodeMetaEl}</div>
-          {chainEl}
-        </div>
+        {chainEl}
       </div>
     );
   }

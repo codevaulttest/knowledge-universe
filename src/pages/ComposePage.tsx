@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react';
-import { Camera, Check, ChevronRight, Eye, FileText, Image, Plus, Radio, Save, Send, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
+import { Camera, Check, ChevronRight, Eye, FileText, Image, Plus, Radio, Save, Search, Send, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { useChannelListSearch } from '../components/channelSearch';
@@ -752,6 +752,7 @@ export function ComposePage({
             </div>
             {myChannels.length > 1 && (
               <div className="channel-directory-search-wrap channel-picker-search-wrap">
+                <Search size={15} strokeWidth={2} className="channel-directory-search-icon" aria-hidden />
                 <input
                   className="channel-directory-search-input"
                   type="text"
