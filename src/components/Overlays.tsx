@@ -1916,8 +1916,17 @@ function channelTierPriceError(
 }
 
 export function CreateChannelModal({ existingChannel, onClose }: { existingChannel?: Channel; onClose: () => void }) {
-  const { t, createChannel, updateChannel, userProfile, deductSup, showToast } = useApp();
-  const defaultChannelName = t('{nickname}的频道', { nickname: userProfile.nickname });
+  const { t, createChannel, updateChannel, userProfile, deductSup, showToast, channels } = useApp();
+  // 一个人可以开多个频道，默认名称如果都叫「{nickname}的频道」会难以区分——
+  // 撞名时依次追加编号（2/3/4…），直到不与本人现有频道重名
+  const baseChannelName = t('{nickname}的频道', { nickname: userProfile.nickname });
+  const defaultChannelName = (() => {
+    const myChannelNames = new Set(channels.filter(c => c.ownerName === CURRENT_USER).map(c => c.name));
+    if (!myChannelNames.has(baseChannelName)) return baseChannelName;
+    let suffix = 2;
+    while (myChannelNames.has(`${baseChannelName} ${suffix}`)) suffix++;
+    return `${baseChannelName} ${suffix}`;
+  })();
   const [paying, setPaying] = useState<'idle' | 'loading' | 'failed'>('idle');
   const [failReason, setFailReason] = useState('');
   const channelSupCost = SUP_COST_BY_TIER[1000];

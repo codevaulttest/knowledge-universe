@@ -596,4 +596,12 @@ export const zhTW: Record<string, string> = {
   '频道不存在': '頻道不存在',
   '该频道可能已被下架': '該頻道可能已被下架',
   '该频道还没有发布任何内容': '該頻道還沒有發佈任何內容',
+  '{ownerName} 的 {count} 个频道': '{ownerName} 的 {count} 個頻道',
+  '共 {total} 人已订阅 · {preview}': '共 {total} 人已訂閱 · {preview}',
+  '{names} 等': '{names} 等',
+  '我的频道': '我的頻道',
+  '{ownerName} 的频道': '{ownerName} 的頻道',
+  '我的频道 · {count}': '我的頻道 · {count}',
+  '{ownerName} 的频道 · {count}': '{ownerName} 的頻道 · {count}',
+  '{count} 个频道 · 共 {total} 人已订阅': '{count} 個頻道 · 共 {total} 人已訂閱',
 };

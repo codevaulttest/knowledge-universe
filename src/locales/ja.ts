@@ -596,4 +596,12 @@ export const ja: Record<string, string> = {
   '频道不存在': 'チャンネルが存在しません',
   '该频道可能已被下架': 'このチャンネルは削除された可能性があります',
   '该频道还没有发布任何内容': 'このチャンネルにはまだ投稿がありません',
+  '{ownerName} 的 {count} 个频道': '{ownerName} の {count} 件のチャンネル',
+  '共 {total} 人已订阅 · {preview}': '合計 {total} 人が購読中 · {preview}',
+  '{names} 等': '{names} など',
+  '我的频道': 'マイチャンネル',
+  '{ownerName} 的频道': '{ownerName} のチャンネル',
+  '我的频道 · {count}': 'マイチャンネル · {count}',
+  '{ownerName} 的频道 · {count}': '{ownerName} のチャンネル · {count}',
+  '{count} 个频道 · 共 {total} 人已订阅': '{count} 件のチャンネル · 合計 {total} 人が購読中',
 };

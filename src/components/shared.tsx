@@ -99,17 +99,22 @@ export function ChannelCard({
   index,
   onClick,
   onManage,
+  showAvatar = true,
 }: {
   channel: Channel;
   index: number;
   onClick: () => void;
   /** 传入后在卡片右侧展示「管理」快捷入口（仅频道主视角） */
   onManage?: () => void;
+  /** 同一用户名下的多个频道目前共用同一个头像种子（都取自本人头像），并排展示时
+   * 头像完全相同、无法区分，反而占地方——同一用户的频道列表场景可以传 false 隐藏；
+   * 跨用户的频道发现场景（不同频道主头像各不相同）应保留 true（默认） */
+  showAvatar?: boolean;
 }) {
   const { t } = useApp();
   return (
     <button type="button" className="channel-discover-card" onClick={onClick}>
-      <Avatar index={index} seed={channel.avatarSeed} />
+      {showAvatar && <Avatar index={index} seed={channel.avatarSeed} />}
       <div className="channel-discover-info">
         <span className="channel-discover-name">
           <Radio size={13} strokeWidth={2.2} />
@@ -570,7 +575,7 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
   const clickable = leftContent ? !!onLeftClick : true;
   return (
     <div
-      className="gemini-badge"
+      className={`gemini-badge${leftContent ? ' gemini-badge--heat' : ''}`}
       data-layer="gemini-node-badge"
       role={clickable ? 'button' : undefined}
       tabIndex={clickable ? 0 : undefined}

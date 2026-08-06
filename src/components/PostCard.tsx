@@ -390,7 +390,7 @@ export function PostCard({
       <div onClick={e => e.stopPropagation()}>
         <GeminiNodeBadge
           post={post}
-          showChain
+          showChain={post.isNode}
           onViewLinks={isOwn ? () => setActorsTab('link') : undefined}
           leftContent={(
             <>
@@ -400,7 +400,7 @@ export function PostCard({
               </span>
               {isOwn ? (
                 (post.tipsReceived ?? 0) > 0 && (
-                  <span className="post-heat-tip-btn">
+                  <span className="post-heat-tip-btn post-heat-tip-btn--received">
                     <HandCoins size={13} strokeWidth={2.25} />
                     {t('已收到 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
                   </span>

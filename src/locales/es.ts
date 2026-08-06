@@ -596,4 +596,12 @@ export const es: Record<string, string> = {
   '频道不存在': 'El canal no existe',
   '该频道可能已被下架': 'Este canal podría haber sido dado de baja',
   '该频道还没有发布任何内容': 'Este canal aún no tiene publicaciones',
+  '{ownerName} 的 {count} 个频道': '{count} canales de {ownerName}',
+  '共 {total} 人已订阅 · {preview}': '{total} suscriptores en total · {preview}',
+  '{names} 等': '{names} y más',
+  '我的频道': 'Mis canales',
+  '{ownerName} 的频道': 'Canales de {ownerName}',
+  '我的频道 · {count}': 'Mis canales · {count}',
+  '{ownerName} 的频道 · {count}': 'Canales de {ownerName} · {count}',
+  '{count} 个频道 · 共 {total} 人已订阅': '{count} canales · {total} suscriptores',
 };

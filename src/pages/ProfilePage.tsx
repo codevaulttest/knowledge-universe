@@ -80,13 +80,26 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
   // 频道目录：他人主页展示在身份区下方；自己主页降级为次优先级，排在核心社交数据之后。
   // 主页上只放一个固定高度的摘要入口，完整的搜索 + 分页目录收进弹层——否则频道一多
-  // （几十上千个），主页会被频道列表占满，「帖子/草稿/转发」等 tab 永远刷不到
+  // （几十上千个），主页会被频道列表占满，「帖子/草稿/转发」等 tab 永远刷不到。
+  // 摘要行本身补上频道主、总订阅数、前 1-2 个频道名预览，尽量在不占用额外高度的前提下提升信息密度
   const [channelDirectoryOpen, setChannelDirectoryOpen] = useState(false);
+  const channelTotalSubscribers = ownerChannels.reduce((sum, c) => sum + c.subscriberCount, 0);
+  const channelNamePreview = (() => {
+    const names = ownerChannels.slice(0, 2).map(c => c.name).join('、');
+    return ownerChannels.length > 2 ? t('{names} 等', { names }) : names;
+  })();
   const channelSection = ownerChannels.length > 0 ? (
     <button type="button" className="channel-summary-entry" onClick={() => setChannelDirectoryOpen(true)}>
-      <Radio size={14} strokeWidth={2.2} />
-      <span className="channel-summary-entry-label">{t('{count} 个频道', { count: ownerChannels.length })}</span>
-      <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" />
+      <Radio size={14} strokeWidth={2.2} className="channel-summary-entry-icon" />
+      <span className="channel-summary-entry-text">
+        <span className="channel-summary-entry-label">
+          {t('{count} 个频道 · 共 {total} 人已订阅', { count: ownerChannels.length, total: channelTotalSubscribers })}
+        </span>
+        <span className="channel-summary-entry-sub">
+          {channelNamePreview}
+        </span>
+      </span>
+      <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
     </button>
   ) : isOwn ? (
     <button type="button" className="channel-create-entry channel-create-entry--subtle" onClick={openCreateChannel}>
@@ -627,13 +640,16 @@ function ChannelDirectoryModal({
 }) {
   const { t, navigate, openManageChannel, openCreateChannel } = useApp();
   const channelListState = useChannelListSearch(channels);
+  const ownerName = channels[0]?.ownerName ?? '';
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="follow-list-modal" onClick={e => e.stopPropagation()}>
         <div className="follow-list-header">
           <span className="follow-list-title">
-            {t('{count} 个频道', { count: channels.length })}
+            {isOwn
+              ? t('我的频道 · {count}', { count: channels.length })
+              : t('{ownerName} 的频道 · {count}', { ownerName, count: channels.length })}
           </span>
           <button type="button" className="follow-list-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
@@ -661,6 +677,7 @@ function ChannelDirectoryModal({
               index={i % 3}
               onClick={() => { navigate({ page: 'P_CHANNEL', channelId: c.id }); onClose(); }}
               onManage={isOwn ? () => openManageChannel(c.id) : undefined}
+              showAvatar={false}
             />
           ))}
           {channelListState.hasMore && (
@@ -669,7 +686,7 @@ function ChannelDirectoryModal({
             </button>
           )}
           {isOwn && (
-            <button type="button" className="channel-create-entry channel-create-entry--subtle" onClick={openCreateChannel}>
+            <button type="button" className="channel-directory-create-btn" onClick={openCreateChannel}>
               <Radio size={14} strokeWidth={2.2} />
               {t('开通频道 · 发布专属内容')}
             </button>

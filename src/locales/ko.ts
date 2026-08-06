@@ -594,4 +594,12 @@ export const ko: Record<string, string> = {
   '频道不存在': '채널이 존재하지 않습니다',
   '该频道可能已被下架': '이 채널은 삭제되었을 수 있습니다',
   '该频道还没有发布任何内容': '이 채널에는 아직 게시물이 없습니다',
+  '{ownerName} 的 {count} 个频道': '{ownerName}님의 채널 {count}개',
+  '共 {total} 人已订阅 · {preview}': '총 {total}명 구독 중 · {preview}',
+  '{names} 等': '{names} 외',
+  '我的频道': '내 채널',
+  '{ownerName} 的频道': '{ownerName}님의 채널',
+  '我的频道 · {count}': '내 채널 · {count}',
+  '{ownerName} 的频道 · {count}': '{ownerName}님의 채널 · {count}',
+  '{count} 个频道 · 共 {total} 人已订阅': '채널 {count}개 · 총 {total}명 구독',
 };

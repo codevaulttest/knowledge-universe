@@ -596,4 +596,12 @@ export const vi: Record<string, string> = {
   '频道不存在': 'Kênh không tồn tại',
   '该频道可能已被下架': 'Kênh này có thể đã bị gỡ bỏ',
   '该频道还没有发布任何内容': 'Kênh này chưa có bài đăng nào',
+  '{ownerName} 的 {count} 个频道': '{count} kênh của {ownerName}',
+  '共 {total} 人已订阅 · {preview}': 'Tổng {total} người đăng ký · {preview}',
+  '{names} 等': '{names} và nhiều hơn',
+  '我的频道': 'Kênh của tôi',
+  '{ownerName} 的频道': 'Kênh của {ownerName}',
+  '我的频道 · {count}': 'Kênh của tôi · {count}',
+  '{ownerName} 的频道 · {count}': 'Kênh của {ownerName} · {count}',
+  '{count} 个频道 · 共 {total} 人已订阅': '{count} kênh · {total} người đăng ký',
 };

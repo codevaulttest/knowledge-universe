@@ -596,4 +596,12 @@ export const ru: Record<string, string> = {
   '频道不存在': 'Канал не найден',
   '该频道可能已被下架': 'Этот канал мог быть удалён',
   '该频道还没有发布任何内容': 'В этом канале пока нет публикаций',
+  '{ownerName} 的 {count} 个频道': 'Каналы {ownerName} ({count})',
+  '共 {total} 人已订阅 · {preview}': 'Всего подписчиков: {total} · {preview}',
+  '{names} 等': '{names} и др.',
+  '我的频道': 'Мои каналы',
+  '{ownerName} 的频道': 'Каналы {ownerName}',
+  '我的频道 · {count}': 'Мои каналы · {count}',
+  '{ownerName} 的频道 · {count}': 'Каналы {ownerName} · {count}',
+  '{count} 个频道 · 共 {total} 人已订阅': 'Каналов: {count} · подписчиков: {total}',
 };

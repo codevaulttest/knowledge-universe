@@ -596,4 +596,12 @@ export const fr: Record<string, string> = {
   '频道不存在': 'Chaîne introuvable',
   '该频道可能已被下架': 'Cette chaîne a peut-être été retirée',
   '该频道还没有发布任何内容': 'Cette chaîne n\'a encore aucune publication',
+  '{ownerName} 的 {count} 个频道': '{count} chaînes de {ownerName}',
+  '共 {total} 人已订阅 · {preview}': '{total} abonnés au total · {preview}',
+  '{names} 等': '{names} et plus',
+  '我的频道': 'Mes chaînes',
+  '{ownerName} 的频道': 'Chaînes de {ownerName}',
+  '我的频道 · {count}': 'Mes chaînes · {count}',
+  '{ownerName} 的频道 · {count}': 'Chaînes de {ownerName} · {count}',
+  '{count} 个频道 · 共 {total} 人已订阅': '{count} chaînes · {total} abonnés',
 };
