@@ -1184,11 +1184,11 @@ button {
   flex-shrink: 0;
   margin-left: 6px;
   height: 26px;
-  padding: 0 13px;
-  border: none;
+  padding: 0 12px;
+  border: 1.5px solid var(--ku-color-genesis-gold);
   border-radius: var(--ku-radius-card);
-  background: var(--ku-color-genesis-gold);
-  color: #fff;
+  background: transparent;
+  color: var(--ku-color-genesis-gold);
   font: var(--ku-text-action-cta);
 }
 /* 已收到打赏（自己主页帖子）：仅展示态，不用实心 CTA 样式，也不加边框 */
@@ -4122,6 +4122,10 @@ button {
   background: var(--ku-color-bg-page);
   color: var(--ku-color-text-primary);
   font: var(--ku-text-body-sm);
+  outline: none;
+}
+.channel-directory-search-input:focus {
+  border-color: var(--ku-color-primary);
 }
 .channel-directory-search-input::placeholder {
   color: var(--ku-color-text-meta);
@@ -4165,7 +4169,7 @@ button {
   justify-content: center;
   gap: 6px;
   width: 100%;
-  padding: 10px 14px;
+  padding: 14px;
   border: none;
   border-radius: var(--ku-radius-card);
   background: var(--ku-color-primary);

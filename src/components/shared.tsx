@@ -112,8 +112,17 @@ export function ChannelCard({
   showAvatar?: boolean;
 }) {
   const { t } = useApp();
+  // 注：外层不能用 <button> 包 <button>（管理按钮）——嵌套交互元素是无效 HTML，
+  // 部分浏览器（尤其 WebKit）会导致内层点击拿不到事件。改用 div+role="button" 承载整卡点击，
+  // 管理按钮保留原生 <button>，两者是兄弟节点而非嵌套。
   return (
-    <button type="button" className="channel-discover-card" onClick={onClick}>
+    <div
+      className="channel-discover-card"
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
+    >
       {showAvatar && <Avatar index={index} seed={channel.avatarSeed} />}
       <div className="channel-discover-info">
         <span className="channel-discover-name">
@@ -126,18 +135,16 @@ export function ChannelCard({
         </div>
       </div>
       {onManage && (
-        <span
+        <button
+          type="button"
           className="channel-manage-btn channel-discover-manage-btn"
-          role="button"
-          tabIndex={0}
           onClick={e => { e.stopPropagation(); onManage(); }}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); onManage(); } }}
         >
           <Settings size={13} strokeWidth={2.2} />
           {t('管理频道2')}
-        </span>
+        </button>
       )}
-    </button>
+    </div>
   );
 }
 
