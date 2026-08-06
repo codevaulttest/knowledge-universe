@@ -317,7 +317,7 @@ export function PullToRefresh({
 }
 
 // ── PageHeader ─────────────────────────────────────────────────
-export function PageHeader({ title, onBack, action, className }: { title?: string; onBack?: () => void; action?: React.ReactNode; className?: string }) {
+export function PageHeader({ title, onBack, action, className }: { title?: React.ReactNode; onBack?: () => void; action?: React.ReactNode; className?: string }) {
   const { t } = useApp();
   return (
     <div className={`page-header${className ? ` ${className}` : ''}`} data-layer="page-header">
@@ -326,7 +326,7 @@ export function PageHeader({ title, onBack, action, className }: { title?: strin
           <ArrowLeft size={22} strokeWidth={2} />
         </button>
       )}
-      {title && <span className="page-title">{title}</span>}
+      {title != null && title !== '' && <span className="page-title">{title}</span>}
       {action && <div className="page-header-action">{action}</div>}
     </div>
   );

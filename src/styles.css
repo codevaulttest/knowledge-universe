@@ -1479,9 +1479,17 @@ button {
 .back-btn:hover { background: var(--ku-color-primary-alpha-06); }
 .page-title {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
   font: var(--ku-text-tab);
   color: var(--ku-color-text-primary);
   text-align: center;
+}
+.page-title > svg {
+  flex-shrink: 0;
 }
 
 /* 他人主页：返回栏浮在头部背景插画之上，与"我的"页面共用同一套沉浸式顶部样式 */

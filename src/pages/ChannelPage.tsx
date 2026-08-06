@@ -35,14 +35,28 @@ export function ChannelPage({ channelId }: { channelId: string }) {
   const mySubscribedTierIndex = subscribedChannelTiers[channel.id];
   const channelPosts = posts.filter(p => p.channelId === channel.id && !p.deleted);
   const isExclusive = (p: (typeof channelPosts)[number]) => p.minTierIndex != null;
-  const displayedPosts = contentFilter === 'sub' ? channelPosts.filter(isExclusive) : channelPosts;
+  const displayedPosts = contentFilter === 'sub'
+    ? channelPosts.filter(isExclusive)
+    : channelPosts.filter(p => !isExclusive(p));
 
   return (
     <div className="page">
-      <PageHeader title={channel.name} onBack={canGoBack ? goBack : undefined} />
+      <PageHeader
+        title={(
+          <>
+            <Radio size={16} strokeWidth={2.2} aria-hidden="true" />
+            {channel.name}
+          </>
+        )}
+        onBack={canGoBack ? goBack : undefined}
+      />
       <div className="scroll-area">
         <div className="channel-page-hero">
-          <Avatar index={0} seed={channel.avatarSeed} />
+          <Avatar
+            index={0}
+            seed={channel.avatarSeed}
+            onClick={() => navigate({ page: 'P6', authorName: channel.ownerName })}
+          />
           <div className="channel-page-hero-info">
             <span className="channel-page-hero-name">{channel.name}</span>
             <button
@@ -116,7 +130,7 @@ export function ChannelPage({ channelId }: { channelId: string }) {
                 onClick={() => setContentFilter(f)}
               >
                 {f === 'sub' && <Gem size={14} strokeWidth={2} />}
-                {f === 'all' ? t('全部') : t('会员')}
+                {f === 'all' ? t('免费') : t('会员')}
               </button>
             ))}
           </nav>

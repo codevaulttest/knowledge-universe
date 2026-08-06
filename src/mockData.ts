@@ -229,6 +229,57 @@ export const MOCK_PLANET_ANNOUNCEMENT: PlanetAnnouncement = {
 };
 
 // ── 频道 ───────────────────────────────────────────────────────
+/** 原型默认：当前用户已开通 5 个频道（DevPanel 可切到「未创建频道」） */
+export const MY_DEMO_CHANNELS: Channel[] = [
+  {
+    id: 'channel-me-1', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道`,
+    description: '分享产品思考与日常灵感，不定期更新。',
+    avatarSeed: CURRENT_USER, category: '综合',
+    tiers: [],
+    subscriberCount: 12, createdAt: '2026-02-18',
+  },
+  {
+    id: 'channel-me-2', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 2`,
+    description: '会员专属短讯与幕后笔记。',
+    avatarSeed: CURRENT_USER, category: '综合',
+    tiers: [
+      { id: 'me2-1', name: '铜牌会员', price: 50 },
+    ],
+    subscriberCount: 38, createdAt: '2026-03-02',
+  },
+  {
+    id: 'channel-me-3', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 3`,
+    description: '深度长文与专题合集。',
+    avatarSeed: CURRENT_USER, category: '创作',
+    tiers: [
+      { id: 'me3-1', name: '铜牌会员', price: 30 },
+      { id: 'me3-2', name: '银牌', price: 120 },
+    ],
+    subscriberCount: 64, createdAt: '2026-03-28',
+  },
+  {
+    id: 'channel-me-4', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 4`,
+    description: '工具测评、工作流模板与实操演示。',
+    avatarSeed: CURRENT_USER, category: '效率',
+    tiers: [
+      { id: 'me4-1', name: '铜牌会员', price: 20 },
+      { id: 'me4-2', name: '银牌', price: 80 },
+      { id: 'me4-3', name: '金牌', price: 200 },
+    ],
+    subscriberCount: 91, createdAt: '2026-04-15',
+  },
+  {
+    id: 'channel-me-5', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 5`,
+    description: '问答、连载与社群活动预告。',
+    avatarSeed: CURRENT_USER, category: '社群',
+    tiers: [
+      { id: 'me5-1', name: '铜牌会员', price: 100 },
+      { id: 'me5-2', name: '银牌', price: 300 },
+    ],
+    subscriberCount: 27, createdAt: '2026-05-08',
+  },
+];
+
 export const ALL_CHANNELS: Channel[] = [
   {
     id: 'channel-amay', ownerName: '阿May的研究笔记', name: '阿May的AI研究站',
@@ -275,6 +326,7 @@ export const ALL_CHANNELS: Channel[] = [
     ],
     subscriberCount: 124, createdAt: '2026-03-15',
   },
+  ...MY_DEMO_CHANNELS,
 ];
 
 /** 频道订阅者名单（频道主从个人页「X 人已订阅」进入查看；UI demo 用局部名单，数量可不等于 subscriberCount） */
@@ -495,6 +547,49 @@ export const ALL_POSTS: Post[] = [
     title: '2025 年个人阅读 Top 5 书单\n每一本都值得反复读，附精读笔记链接。',
     kind: 'image', imageCount: 3, visiblePercent: 50, isNode: true, stakeTier: 100, nodeId: 'Jn9pQ2',
     rating: 1, replies: 12, links: 7, shares: 9, saves: 41, likes: 103, tipsReceived: 120,
+  },
+  // ── 本人演示频道 mock 帖（频道详情页「免费 / 会员」筛选有内容可看）──
+  {
+    id: 'me1-free-1', author: CURRENT_USER, time: '40 分钟前',
+    title: '本周灵感碎片：把「做完」定义得更小一点\n连续三天卡住同一个方案，后来发现是目标太大，拆成 25 分钟就能推进。',
+    kind: 'text', visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 6, links: 0, shares: 4, saves: 18, likes: 52, tipsReceived: 10,
+    channelId: 'channel-me-1',
+  },
+  {
+    id: 'me1-free-2', author: CURRENT_USER, time: '昨天',
+    title: '频道开张第一帖：我会在这里更新什么？\n产品思考、阅读摘录、偶尔的工具测评——先从公开免费内容开始。',
+    kind: 'image', imageCount: 2, visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 9, links: 0, shares: 7, saves: 26, likes: 74,
+    channelId: 'channel-me-1',
+  },
+  {
+    id: 'me1-free-3', author: CURRENT_USER, time: '3 天前',
+    title: '一张图说清我最近的信息流结构\nInbox → 暂存 → 主题库，尽量少让未处理的东西过夜。',
+    kind: 'image', imageCount: 1, visiblePercent: 100, isNode: true, stakeTier: 10, nodeId: 'Me1aK2',
+    rating: 1, replies: 11, links: 4, shares: 8, saves: 33, likes: 91, tipsReceived: 20,
+    channelId: 'channel-me-1',
+  },
+  {
+    id: 'me2-free-1', author: CURRENT_USER, time: '5 小时前',
+    title: '会员频道也会发公开预告：下周专题预告\n主题是「如何写一份别人愿意读完的周报」，会员档会放完整模板。',
+    kind: 'text', visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 5, links: 0, shares: 3, saves: 14, likes: 41,
+    channelId: 'channel-me-2',
+  },
+  {
+    id: 'me2-sub-1', author: CURRENT_USER, time: '昨天',
+    title: '【会员专属】周报模板完整版 + 填写示例\n含可复制大纲、常见踩坑，以及我自己用过的两份真实样例。',
+    kind: 'image', imageCount: 3, visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 14, links: 0, shares: 6, saves: 48, likes: 126,
+    channelId: 'channel-me-2', minTierIndex: 0,
+  },
+  {
+    id: 'me2-sub-2', author: CURRENT_USER, time: '4 天前',
+    title: '【会员专属】幕后笔记：这条选题是怎么筛出来的\n从 12 个备选缩到 1 个的判断标准，公开帖不会写这么细。',
+    kind: 'text', visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 8, links: 0, shares: 2, saves: 29, likes: 67,
+    channelId: 'channel-me-2', minTierIndex: 0,
   },
 ];
 
