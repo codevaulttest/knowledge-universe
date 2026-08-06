@@ -22,6 +22,8 @@ export type Post = {
   dislikes?: number;
   videoUrl?: string;
   tipsReceived?: number; // 该帖累计收到的打赏（PB）
+  heat?: number; // 热力值（综合热度，用于打赏入口的引导展示）；未设置=按 id 派生一个稳定的演示值
+  views?: number; // 浏览量；未设置=按 id 派生一个稳定的演示值
   channelId?: string; // 归属频道；未设置=不属于任何频道
   // 该频道下需订阅达到 channel.tiers[minTierIndex] 及以上档位才可见；未设置=频道内全员免费公开
   // "会员专属再付费"场景：已满足 minTierIndex 后，仍复用现有 stakeTier/visiblePercent 付费解锁机制，无需额外字段

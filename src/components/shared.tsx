@@ -556,45 +556,57 @@ export function PostContent({
 }
 
 // ── GeminiNodeBadge ────────────────────────────────────────────
-export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPlanet }: { post: Post; showChain?: boolean; onViewLinks?: () => void; onGoToPlanet?: () => void }) {
+// leftContent：用其它内容（如 feed 卡片的热力值/打赏）覆盖默认的「知识宇宙·星级·节点ID」左侧内容；
+// 此时整条外层点击行为改由 onLeftClick 控制（未传则该区域不可点击），与 onGoToPlanet/链接跳转逻辑互斥。
+export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPlanet, leftContent, onLeftClick, leftAriaLabel }: {
+  post: Post; showChain?: boolean; onViewLinks?: () => void; onGoToPlanet?: () => void;
+  leftContent?: React.ReactNode; onLeftClick?: () => void; leftAriaLabel?: string;
+}) {
   const { openLink, linkedPostIds, t } = useApp();
   const isLinked = linkedPostIds.has(post.id);
 
   const handleLink = () => (onViewLinks ? onViewLinks() : openLink(post.id));
-  const handleBadgeClick = () => (onGoToPlanet ? onGoToPlanet() : handleLink());
+  const handleBadgeClick = leftContent ? onLeftClick : (onGoToPlanet ? onGoToPlanet : handleLink);
+  const clickable = leftContent ? !!onLeftClick : true;
   return (
     <div
       className="gemini-badge"
       data-layer="gemini-node-badge"
-      role="button"
-      tabIndex={0}
-      onClick={handleBadgeClick}
-      onKeyDown={(e) => {
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? handleBadgeClick : undefined}
+      onKeyDown={clickable ? (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          handleBadgeClick();
+          handleBadgeClick!();
         }
-      }}
-      aria-label={onGoToPlanet
-        ? t('查看知识宇宙节点 {nodeId}，{rating} 星', { nodeId: post.nodeId ?? '', rating: post.rating, unit: post.rating === 1 ? 'star' : 'stars' })
-        : t('链接节点 {nodeId}，{rating} 星', { nodeId: post.nodeId ?? '', rating: post.rating, unit: post.rating === 1 ? 'star' : 'stars' })}
+      } : undefined}
+      aria-label={leftContent
+        ? leftAriaLabel
+        : (onGoToPlanet
+          ? t('查看知识宇宙节点 {nodeId}，{rating} 星', { nodeId: post.nodeId ?? '', rating: post.rating, unit: post.rating === 1 ? 'star' : 'stars' })
+          : t('链接节点 {nodeId}，{rating} 星', { nodeId: post.nodeId ?? '', rating: post.rating, unit: post.rating === 1 ? 'star' : 'stars' }))}
     >
       <div className="gemini-left">
-        <KnowledgePlanetIcon className="gemini-icon" />
-        <span className="gemini-label">{t('知识宇宙')}</span>
-        <span className="gemini-sep">·</span>
-        <Rating value={post.rating} />
-        <span className="gemini-sep">·</span>
-        <span className="gemini-id">{post.nodeId}</span>
-        {onGoToPlanet && (
-          <button
-            type="button"
-            className="gemini-id-goto"
-            onClick={(e) => { e.stopPropagation(); onGoToPlanet(); }}
-            aria-label={t('在知识宇宙中查看节点 {nodeId}', { nodeId: post.nodeId ?? '' })}
-          >
-            <ChevronRight size={14} strokeWidth={2.5} />
-          </button>
+        {leftContent ?? (
+          <>
+            <KnowledgePlanetIcon className="gemini-icon" />
+            <span className="gemini-label">{t('知识宇宙')}</span>
+            <span className="gemini-sep">·</span>
+            <Rating value={post.rating} />
+            <span className="gemini-sep">·</span>
+            <span className="gemini-id">{post.nodeId}</span>
+            {onGoToPlanet && (
+              <button
+                type="button"
+                className="gemini-id-goto"
+                onClick={(e) => { e.stopPropagation(); onGoToPlanet(); }}
+                aria-label={t('在知识宇宙中查看节点 {nodeId}', { nodeId: post.nodeId ?? '' })}
+              >
+                <ChevronRight size={14} strokeWidth={2.5} />
+              </button>
+            )}
+          </>
         )}
       </div>
       {showChain && (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bookmark, Check, Ellipsis, Gem, HandCoins, MessageCircle, Pencil, Radio, Repeat2, ThumbsDown, ThumbsUp, Trash2, Users } from 'lucide-react';
+import { Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, Pencil, Radio, Repeat2, ThumbsDown, ThumbsUp, Trash2, Users } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
@@ -7,6 +7,13 @@ import { ArticleFeedCard, AuthorName, Avatar, GenesisBadge, GeminiNodeBadge, Med
 import { TipModal, Ios26Alert } from './Overlays';
 import { isChinese, localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
+
+/** 未在 mock 数据里显式设置 heat/views 时，按 id 派生一个稳定的演示数值（同一帖子每次渲染保持一致）。*/
+function derivedStat(id: string, salt: number, min: number, span: number): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i) + salt) >>> 0;
+  return min + (h % span);
+}
 
 // ── ActorsSheet（帖子互动名单浮层）────────────────────────────
 export function ActorsSheet({ postId, initialTab, onClose }: {
@@ -220,6 +227,8 @@ export function PostCard({
   const displayName = isOwn ? userProfile.nickname : post.author;
   const avatarSeed = isOwn ? userProfile.avatarSeed : post.author;
   const hasActors = isOwn && !!POST_ACTORS[post.id];
+  const heat = post.heat ?? derivedStat(post.id, 1, 300, 260000);
+  const views = post.views ?? derivedStat(post.id, 2, 80, 4200);
   const isFollowing = followedAuthors.has(post.author);
   const totalImgs = post.imageCount ?? 3;
   const genesisTier = getGenesisTier(post.author);
@@ -378,46 +387,54 @@ export function PostCard({
           />
         </>
       )}
-      {post.isNode && (
-        <div onClick={e => e.stopPropagation()}>
-          <GeminiNodeBadge
-            post={post}
-            showChain
-            onViewLinks={isOwn ? () => setActorsTab('link') : undefined}
-            onGoToPlanet={isOwn ? () => requireWallet(() => navigate({ page: 'P_PLANET', searchNodeCode: post.nodeId })) : undefined}
-          />
-        </div>
-      )}
+      <div onClick={e => e.stopPropagation()}>
+        <GeminiNodeBadge
+          post={post}
+          showChain
+          onViewLinks={isOwn ? () => setActorsTab('link') : undefined}
+          leftContent={(
+            <>
+              <span className="post-heat">
+                <Flame size={16} strokeWidth={2.25} />
+                {formatCount(heat, language)}
+              </span>
+              {isOwn ? (
+                (post.tipsReceived ?? 0) > 0 && (
+                  <span className="post-heat-tip-btn">
+                    <HandCoins size={13} strokeWidth={2.25} />
+                    {t('已收到 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
+                  </span>
+                )
+              ) : (
+                <span className="post-heat-tip-btn">
+                  <HandCoins size={13} strokeWidth={2.25} />
+                  {t('打赏')}
+                </span>
+              )}
+            </>
+          )}
+          onLeftClick={isOwn
+            ? (hasActors ? () => setActorsTab('tip') : undefined)
+            : () => requireWallet(() => setShowTip(true))}
+          leftAriaLabel={isOwn
+            ? t('查看打赏详情，已收到 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })
+            : t('打赏此帖，当前热力值 {heat}', { heat })}
+        />
+      </div>
       <Actions
         post={post}
         onComment={(e) => {
           e.stopPropagation();
           navigate({ page: 'P2', postId: post.id, scrollToComments: true });
         }}
-        extra={isOwn ? (
+        extra={(
           <span
-            className="post-tip-received"
-            role={hasActors ? 'button' : undefined}
-            tabIndex={hasActors ? 0 : undefined}
-            onClick={hasActors ? (e) => { e.stopPropagation(); setActorsTab('tip'); } : undefined}
-            onKeyDown={hasActors ? (e) => { if (e.key === 'Enter' || e.key === ' ') setActorsTab('tip'); } : undefined}
-            aria-label={hasActors
-              ? t('查看打赏详情，已收到 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })
-              : t('已收到打赏 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
+            className="post-views"
+            aria-label={t('浏览量 {views}', { views })}
           >
-            <HandCoins size={18} strokeWidth={2.25} />
-            {post.tipsReceived ?? 0} PB
+            <Eye size={18} strokeWidth={2.25} />
+            {formatCount(views, language)}
           </span>
-        ) : (
-          <button
-            type="button"
-            className="detail-tip-btn"
-            onClick={(e) => { e.stopPropagation(); requireWallet(() => setShowTip(true)); }}
-            aria-label={t('打赏此帖，当前 {tipsReceived}', { tipsReceived: post.tipsReceived ?? 0 })}
-          >
-            <HandCoins size={18} strokeWidth={2.25} />
-            {formatCount(post.tipsReceived ?? 0, language)}
-          </button>
         )}
       />
       </>

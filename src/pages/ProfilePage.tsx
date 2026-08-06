@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Check, Edit3, FileText, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, Plus, Radio, Repeat2, ThumbsUp, Trash2, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Check, ChevronRight, Edit3, FileText, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, Plus, Radio, Repeat2, ThumbsUp, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -12,7 +12,7 @@ import { useChannelListSearch } from '../components/channelSearch';
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, openManageChannel, requireWallet } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
@@ -79,56 +79,20 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const displayedPosts = displayedEntries.map(e => e.post);
 
   // 频道目录：他人主页展示在身份区下方；自己主页降级为次优先级，排在核心社交数据之后。
-  // 每个人可拥有任意数量频道，用搜索 + 每页 50 条「加载更多」承载千级规模
-  const channelListState = useChannelListSearch(ownerChannels);
-  const channelSection = (ownerChannels.length > 0 || isOwn) ? (
-    <div className="channel-directory">
-      {ownerChannels.length > 0 && (
-        <>
-          <div className="channel-directory-head">
-            <span className="channel-directory-count">
-              {t('{count} 个频道', { count: ownerChannels.length })}
-            </span>
-          </div>
-          {ownerChannels.length > 1 && (
-            <div className="channel-directory-search-wrap">
-              <input
-                className="channel-directory-search-input"
-                type="text"
-                value={channelListState.search}
-                onChange={e => channelListState.setSearch(e.target.value)}
-                placeholder={t('搜索频道名称或简介')}
-                aria-label={t('搜索频道名称或简介')}
-              />
-            </div>
-          )}
-          <div className="channel-directory-list">
-            {channelListState.visible.length === 0 ? (
-              <div className="channel-directory-empty">{t('没有找到匹配的频道')}</div>
-            ) : channelListState.visible.map((c, i) => (
-              <ChannelCard
-                key={c.id}
-                channel={c}
-                index={i % 3}
-                onClick={() => navigate({ page: 'P_CHANNEL', channelId: c.id })}
-                onManage={isOwn ? () => openManageChannel(c.id) : undefined}
-              />
-            ))}
-            {channelListState.hasMore && (
-              <button type="button" className="channel-directory-more-btn" onClick={channelListState.loadMore}>
-                {t('加载更多（剩余 {length}）', { length: channelListState.filteredCount - channelListState.visible.length })}
-              </button>
-            )}
-          </div>
-        </>
-      )}
-      {isOwn && (
-        <button type="button" className="channel-create-entry channel-create-entry--subtle" onClick={openCreateChannel}>
-          <Radio size={14} strokeWidth={2.2} />
-          {t('开通频道 · 发布专属内容')}
-        </button>
-      )}
-    </div>
+  // 主页上只放一个固定高度的摘要入口，完整的搜索 + 分页目录收进弹层——否则频道一多
+  // （几十上千个），主页会被频道列表占满，「帖子/草稿/转发」等 tab 永远刷不到
+  const [channelDirectoryOpen, setChannelDirectoryOpen] = useState(false);
+  const channelSection = ownerChannels.length > 0 ? (
+    <button type="button" className="channel-summary-entry" onClick={() => setChannelDirectoryOpen(true)}>
+      <Radio size={14} strokeWidth={2.2} />
+      <span className="channel-summary-entry-label">{t('{count} 个频道', { count: ownerChannels.length })}</span>
+      <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" />
+    </button>
+  ) : isOwn ? (
+    <button type="button" className="channel-create-entry channel-create-entry--subtle" onClick={openCreateChannel}>
+      <Radio size={14} strokeWidth={2.2} />
+      {t('开通频道 · 发布专属内容')}
+    </button>
   ) : null;
 
   return (
@@ -464,6 +428,14 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         />
       )}
 
+      {channelDirectoryOpen && (
+        <ChannelDirectoryModal
+          channels={ownerChannels}
+          isOwn={isOwn}
+          onClose={() => setChannelDirectoryOpen(false)}
+        />
+      )}
+
       {tipTarget && (
         <TipModal
           recipientName={authorName}
@@ -633,6 +605,75 @@ function LanguageSheet({ onClose }: { onClose: () => void }) {
               )}
             </button>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Channel Directory Modal（频道目录：搜索 + 每页 50 条「加载更多」，
+// 承载千级频道规模，主页只留一个固定高度的摘要入口打开它）
+// ═══════════════════════════════════════════════════════════════
+
+function ChannelDirectoryModal({
+  channels,
+  isOwn,
+  onClose,
+}: {
+  channels: Channel[];
+  isOwn: boolean;
+  onClose: () => void;
+}) {
+  const { t, navigate, openManageChannel, openCreateChannel } = useApp();
+  const channelListState = useChannelListSearch(channels);
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="follow-list-modal" onClick={e => e.stopPropagation()}>
+        <div className="follow-list-header">
+          <span className="follow-list-title">
+            {t('{count} 个频道', { count: channels.length })}
+          </span>
+          <button type="button" className="follow-list-close" onClick={onClose} aria-label={t('关闭')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+        {channels.length > 1 && (
+          <div className="channel-directory-search-wrap">
+            <input
+              className="channel-directory-search-input"
+              type="text"
+              value={channelListState.search}
+              onChange={e => channelListState.setSearch(e.target.value)}
+              placeholder={t('搜索频道名称或简介')}
+              aria-label={t('搜索频道名称或简介')}
+            />
+          </div>
+        )}
+        <div className="follow-list-content channel-directory-list">
+          {channelListState.visible.length === 0 ? (
+            <div className="channel-directory-empty">{t('没有找到匹配的频道')}</div>
+          ) : channelListState.visible.map((c, i) => (
+            <ChannelCard
+              key={c.id}
+              channel={c}
+              index={i % 3}
+              onClick={() => { navigate({ page: 'P_CHANNEL', channelId: c.id }); onClose(); }}
+              onManage={isOwn ? () => openManageChannel(c.id) : undefined}
+            />
+          ))}
+          {channelListState.hasMore && (
+            <button type="button" className="channel-directory-more-btn" onClick={channelListState.loadMore}>
+              {t('加载更多（剩余 {length}）', { length: channelListState.filteredCount - channelListState.visible.length })}
+            </button>
+          )}
+          {isOwn && (
+            <button type="button" className="channel-create-entry channel-create-entry--subtle" onClick={openCreateChannel}>
+              <Radio size={14} strokeWidth={2.2} />
+              {t('开通频道 · 发布专属内容')}
+            </button>
+          )}
         </div>
       </div>
     </div>
