@@ -694,8 +694,8 @@ function ChannelDirectoryModal({
         {isOwn && (
           <div className="channel-directory-footer">
             <button type="button" className="channel-directory-create-btn" onClick={openCreateChannel}>
-              <Radio size={14} strokeWidth={2.2} />
-              {t('开通频道 · 发布专属内容')}
+              <Plus size={16} strokeWidth={2.4} />
+              {t('创建新频道')}
             </button>
           </div>
         )}

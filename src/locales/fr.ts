@@ -281,6 +281,7 @@ export const fr: Record<string, string> = {
   '管理频道2': 'Gérer la chaîne',
   '已订阅 · {name}': 'Abonné · {name}',
   '订阅': 'S\'abonner',
+  '创建新频道': 'Créer une nouvelle chaîne',
   '开通频道 · 发布专属内容': 'Créer une chaîne · publier du contenu exclusif',
   '编辑资料': 'Modifier le profil',
   '互动通知': 'Notifications d\'activité',

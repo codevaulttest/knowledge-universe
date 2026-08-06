@@ -281,6 +281,7 @@ export const vi: Record<string, string> = {
   '管理频道2': 'Quản lý',
   '已订阅 · {name}': 'Đã đăng ký · {name}',
   '订阅': 'Đăng ký',
+  '创建新频道': 'Tạo kênh mới',
   '开通频道 · 发布专属内容': 'Tạo kênh · Chia sẻ nội dung độc quyền',
   '编辑资料': 'Chỉnh sửa hồ sơ',
   '互动通知': 'Hoạt động',
