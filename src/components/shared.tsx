@@ -100,6 +100,7 @@ export function ChannelCard({
   onClick,
   onManage,
   showAvatar = true,
+  showSubscribe = false,
 }: {
   channel: Channel;
   index: number;
@@ -110,11 +111,16 @@ export function ChannelCard({
    * 头像完全相同、无法区分，反而占地方——同一用户的频道列表场景可以传 false 隐藏；
    * 跨用户的频道发现场景（不同频道主头像各不相同）应保留 true（默认） */
   showAvatar?: boolean;
+  /** 访客视角：在卡片右侧展示「订阅 / 已订阅」快捷入口 */
+  showSubscribe?: boolean;
 }) {
-  const { t } = useApp();
-  // 注：外层不能用 <button> 包 <button>（管理按钮）——嵌套交互元素是无效 HTML，
+  const { t, subscribedChannelTiers, openChannelSubscribe } = useApp();
+  const subscribedTierIndex = subscribedChannelTiers[channel.id];
+  const isSubscribed = subscribedTierIndex != null;
+  const canSubscribe = isSubscribed || channel.tiers.some(tr => !tr.archived);
+  // 注：外层不能用 <button> 包 <button>（管理/订阅按钮）——嵌套交互元素是无效 HTML，
   // 部分浏览器（尤其 WebKit）会导致内层点击拿不到事件。改用 div+role="button" 承载整卡点击，
-  // 管理按钮保留原生 <button>，两者是兄弟节点而非嵌套。
+  // 右侧操作保留原生 <button>，两者是兄弟节点而非嵌套。
   return (
     <div
       className="channel-discover-card"
@@ -142,6 +148,25 @@ export function ChannelCard({
         >
           <Settings size={13} strokeWidth={2.2} />
           {t('管理频道2')}
+        </button>
+      )}
+      {showSubscribe && !onManage && canSubscribe && (
+        <button
+          type="button"
+          className={`channel-manage-btn channel-discover-subscribe-btn${isSubscribed ? ' channel-manage-btn--subscribed' : ''}`}
+          onClick={e => { e.stopPropagation(); openChannelSubscribe(channel.id); }}
+        >
+          {isSubscribed ? (
+            <>
+              <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
+              {t('已订阅')}
+            </>
+          ) : (
+            <>
+              <Gem size={13} strokeWidth={2.2} aria-hidden="true" />
+              {t('订阅')}
+            </>
+          )}
         </button>
       )}
     </div>

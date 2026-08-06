@@ -682,6 +682,7 @@ function ChannelDirectoryModal({
               index={i % 3}
               onClick={() => { navigate({ page: 'P_CHANNEL', channelId: c.id }); onClose(); }}
               onManage={isOwn ? () => openManageChannel(c.id) : undefined}
+              showSubscribe={!isOwn}
               showAvatar={false}
             />
           ))}

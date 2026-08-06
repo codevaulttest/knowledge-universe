@@ -63,7 +63,7 @@ export type Route =
 // ── 频道 / 会员档位 ──────────────────────────────────────────────
 export type ChannelTier = {
   id: string;
-  name: string; // 固定编号"金牌/银牌/铜牌"（按档位顺序自动生成，不可自定义；对外展示可带「会员」后缀）
+  name: string; // 固定编号「铜牌会员 / 银牌会员 / 金牌会员」（按档位顺序自动生成，不可自定义）
   price: number; // PB/月，须 > 0，且高于上一档
   // 已下架：不再接受新订阅、不出现在发帖门槛/新用户订阅选择器里；但已订阅用户保留原价与权限，
   // 且该档位不能真删除（避免 minTierIndex / 订阅记录的数组下标错位），只能下架
@@ -77,7 +77,7 @@ export type Channel = {
   description: string;
   avatarSeed: string;
   category: string;
-  tiers: ChannelTier[]; // 最多 5 档；空数组=不开启订阅（纯免费频道）
+  tiers: ChannelTier[]; // 最多 3 档；空数组=不开启订阅（纯免费频道）
   subscriberCount: number;
   createdAt: string;
   // 会员档位设置（涨价/降价/新增/下架档位）30 天内只能改一次；记录上次改动时间（ms 时间戳）

@@ -4065,6 +4065,11 @@ button {
   color: var(--ku-color-primary-dark);
   border: 1px solid var(--ku-color-border-control);
 }
+/* 访客目录卡片「订阅」：贴右；未订阅保持实心主 CTA，已订阅走 --subscribed 描边态 */
+.channel-discover-subscribe-btn {
+  align-self: center;
+  margin-left: auto;
+}
 
 /* ── 频道详情页（按 channelId 独立访问）── */
 .channel-page-hero {

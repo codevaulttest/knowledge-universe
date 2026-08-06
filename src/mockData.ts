@@ -253,7 +253,7 @@ export const MY_DEMO_CHANNELS: Channel[] = [
     avatarSeed: CURRENT_USER, category: '创作',
     tiers: [
       { id: 'me3-1', name: '铜牌会员', price: 30 },
-      { id: 'me3-2', name: '银牌', price: 120 },
+      { id: 'me3-2', name: '银牌会员', price: 120 },
     ],
     subscriberCount: 64, createdAt: '2026-03-28',
   },
@@ -263,8 +263,8 @@ export const MY_DEMO_CHANNELS: Channel[] = [
     avatarSeed: CURRENT_USER, category: '效率',
     tiers: [
       { id: 'me4-1', name: '铜牌会员', price: 20 },
-      { id: 'me4-2', name: '银牌', price: 80 },
-      { id: 'me4-3', name: '金牌', price: 200 },
+      { id: 'me4-2', name: '银牌会员', price: 80 },
+      { id: 'me4-3', name: '金牌会员', price: 200 },
     ],
     subscriberCount: 91, createdAt: '2026-04-15',
   },
@@ -274,7 +274,7 @@ export const MY_DEMO_CHANNELS: Channel[] = [
     avatarSeed: CURRENT_USER, category: '社群',
     tiers: [
       { id: 'me5-1', name: '铜牌会员', price: 100 },
-      { id: 'me5-2', name: '银牌', price: 300 },
+      { id: 'me5-2', name: '银牌会员', price: 300 },
     ],
     subscriberCount: 27, createdAt: '2026-05-08',
   },
@@ -287,7 +287,7 @@ export const ALL_CHANNELS: Channel[] = [
     avatarSeed: '阿May的研究笔记', category: 'AI / 大模型',
     tiers: [
       { id: 'amay-1', name: '铜牌会员', price: 100 },
-      { id: 'amay-2', name: '银牌', price: 500 },
+      { id: 'amay-2', name: '银牌会员', price: 500 },
     ],
     subscriberCount: 86, createdAt: '2026-05-10',
   },
@@ -306,23 +306,19 @@ export const ALL_CHANNELS: Channel[] = [
     avatarSeed: '极客前沿', category: '科技资讯',
     tiers: [
       { id: 'jike-1', name: '铜牌会员', price: 30 },
-      { id: 'jike-2', name: '银牌', price: 150 },
-      { id: 'jike-3', name: '金牌', price: 400 },
+      { id: 'jike-2', name: '银牌会员', price: 150 },
+      { id: 'jike-3', name: '金牌会员', price: 400 },
     ],
     subscriberCount: 215, createdAt: '2026-04-22',
   },
   {
-    // 该频道档位数早于「最多 3 档」的规则上线，保留 5 档作为老频道被延续保护（grandfathered）的示例：
-    // 新频道最多只能设 3 档，但已有的超额档位不会被强制收缩
     id: 'channel-aieff', ownerName: 'AI 效率研究所', name: 'AI 效率研究所·工具箱',
-    description: 'AI 工具评测、提示词模板与效率工作流，五档订阅覆盖轻度到深度用户。',
+    description: 'AI 工具评测、提示词模板与效率工作流，三档订阅覆盖轻度到深度用户。',
     avatarSeed: 'AI 效率研究所', category: 'AI / 大模型',
     tiers: [
       { id: 'aieff-1', name: '铜牌会员', price: 20 },
-      { id: 'aieff-2', name: '银牌', price: 60 },
-      { id: 'aieff-3', name: '金牌', price: 150 },
-      { id: 'aieff-4', name: '钻石', price: 350 },
-      { id: 'aieff-5', name: '至尊', price: 800 },
+      { id: 'aieff-2', name: '银牌会员', price: 60 },
+      { id: 'aieff-3', name: '金牌会员', price: 150 },
     ],
     subscriberCount: 124, createdAt: '2026-03-15',
   },
@@ -332,10 +328,10 @@ export const ALL_CHANNELS: Channel[] = [
 /** 频道订阅者名单（频道主从个人页「X 人已订阅」进入查看；UI demo 用局部名单，数量可不等于 subscriberCount） */
 export const CHANNEL_SUBSCRIBERS: Record<string, ChannelSubscriber[]> = {
   'channel-amay': [
-    { name: '游牧开发者', avatarIdx: 2, tierName: '银牌', subscribedAt: '2 天前' },
+    { name: '游牧开发者', avatarIdx: 2, tierName: '银牌会员', subscribedAt: '2 天前' },
     { name: '设计师刘然', avatarIdx: 0, tierName: '铜牌会员', subscribedAt: '5 天前' },
     { name: '深海鱼炸弹', avatarIdx: 0, tierName: '铜牌会员', subscribedAt: '1 周前' },
-    { name: '极客前沿', avatarIdx: 1, tierName: '银牌', subscribedAt: '2 周前' },
+    { name: '极客前沿', avatarIdx: 1, tierName: '银牌会员', subscribedAt: '2 周前' },
     { name: '产品大叔严磊', avatarIdx: 2, tierName: '铜牌会员', subscribedAt: '3 周前' },
   ],
   'channel-yanlei': [
@@ -344,28 +340,28 @@ export const CHANNEL_SUBSCRIBERS: Record<string, ChannelSubscriber[]> = {
     { name: '设计师刘然', avatarIdx: 0, tierName: '铜牌会员', subscribedAt: '1 周前' },
   ],
   'channel-jike': [
-    { name: 'AI 效率研究所', avatarIdx: 0, tierName: '金牌', subscribedAt: '3 小时前' },
-    { name: '阿May的研究笔记', avatarIdx: 1, tierName: '银牌', subscribedAt: '昨天' },
+    { name: 'AI 效率研究所', avatarIdx: 0, tierName: '金牌会员', subscribedAt: '3 小时前' },
+    { name: '阿May的研究笔记', avatarIdx: 1, tierName: '银牌会员', subscribedAt: '昨天' },
     { name: '游牧开发者', avatarIdx: 2, tierName: '铜牌会员', subscribedAt: '3 天前' },
-    { name: '深海鱼炸弹', avatarIdx: 0, tierName: '银牌', subscribedAt: '1 周前' },
+    { name: '深海鱼炸弹', avatarIdx: 0, tierName: '银牌会员', subscribedAt: '1 周前' },
     { name: '设计师刘然', avatarIdx: 0, tierName: '铜牌会员', subscribedAt: '2 周前' },
-    { name: '产品大叔严磊', avatarIdx: 2, tierName: '金牌', subscribedAt: '1 个月前' },
+    { name: '产品大叔严磊', avatarIdx: 2, tierName: '金牌会员', subscribedAt: '1 个月前' },
   ],
   'channel-aieff': [
-    { name: '阿May的研究笔记', avatarIdx: 1, tierName: '至尊', subscribedAt: '1 小时前' },
-    { name: '游牧开发者', avatarIdx: 2, tierName: '银牌', subscribedAt: '昨天' },
+    { name: '阿May的研究笔记', avatarIdx: 1, tierName: '金牌会员', subscribedAt: '1 小时前' },
+    { name: '游牧开发者', avatarIdx: 2, tierName: '银牌会员', subscribedAt: '昨天' },
     { name: '设计师刘然', avatarIdx: 0, tierName: '铜牌会员', subscribedAt: '2 天前' },
-    { name: '极客前沿', avatarIdx: 1, tierName: '钻石', subscribedAt: '5 天前' },
-    { name: '深海鱼炸弹', avatarIdx: 0, tierName: '金牌', subscribedAt: '1 周前' },
+    { name: '极客前沿', avatarIdx: 1, tierName: '金牌会员', subscribedAt: '5 天前' },
+    { name: '深海鱼炸弹', avatarIdx: 0, tierName: '金牌会员', subscribedAt: '1 周前' },
     { name: '产品大叔严磊', avatarIdx: 2, tierName: '铜牌会员', subscribedAt: '2 周前' },
   ],
   // 分组展示用：同档位按订阅时间从新到旧排列
   'channel-lin': [
-    { name: '阿May的研究笔记', avatarIdx: 1, tierName: '钻石', subscribedAt: '2 小时前' },
-    { name: 'AI 效率研究所', avatarIdx: 0, tierName: '金牌', subscribedAt: '昨天' },
-    { name: '极客前沿', avatarIdx: 1, tierName: '金牌', subscribedAt: '5 天前' },
-    { name: '游牧开发者', avatarIdx: 2, tierName: '银牌', subscribedAt: '2 天前' },
-    { name: '深海鱼炸弹', avatarIdx: 0, tierName: '银牌', subscribedAt: '1 周前' },
+    { name: '阿May的研究笔记', avatarIdx: 1, tierName: '金牌会员', subscribedAt: '2 小时前' },
+    { name: 'AI 效率研究所', avatarIdx: 0, tierName: '金牌会员', subscribedAt: '昨天' },
+    { name: '极客前沿', avatarIdx: 1, tierName: '金牌会员', subscribedAt: '5 天前' },
+    { name: '游牧开发者', avatarIdx: 2, tierName: '银牌会员', subscribedAt: '2 天前' },
+    { name: '深海鱼炸弹', avatarIdx: 0, tierName: '银牌会员', subscribedAt: '1 周前' },
     { name: '设计师刘然', avatarIdx: 0, tierName: '铜牌会员', subscribedAt: '4 天前' },
     { name: '产品大叔严磊', avatarIdx: 2, tierName: '铜牌会员', subscribedAt: '2 周前' },
   ],
@@ -597,8 +593,8 @@ export const ALL_POSTS: Post[] = [
 export const POST_REPLIES: Record<string, Reply[]> = {
   p1: [
     { id: 'r1a', author: '游牧开发者', time: '1 小时前', text: '这个模板真的太有用了，拿来即用！', avatarIdx: 1, likes: 12 },
-    { id: 'r1b', author: '深海鱼炸弹', time: '2 小时前', text: '哪个工具最好用？最近在对比 Claude 和 GPT-4o。', avatarIdx: 2, likes: 8, channelTierName: '金牌' },
-    { id: 'r1c', author: '极客前沿', time: '2 小时前', text: '提示词模板那部分很有价值，已收藏。', avatarIdx: 0, likes: 15, channelTierName: '至尊' },
+    { id: 'r1b', author: '深海鱼炸弹', time: '2 小时前', text: '哪个工具最好用？最近在对比 Claude 和 GPT-4o。', avatarIdx: 2, likes: 8, channelTierName: '金牌会员' },
+    { id: 'r1c', author: '极客前沿', time: '2 小时前', text: '提示词模板那部分很有价值，已收藏。', avatarIdx: 0, likes: 15, channelTierName: '金牌会员' },
     { id: 'r1d', author: '设计师刘然', time: '2 小时前', text: '我也整理过类似的合集，感觉你总结的更系统一些。', avatarIdx: 0, likes: 6 },
     { id: 'r1e', author: '产品大叔严磊', time: '3 小时前', text: '对 B 端产品设计有很好的借鉴作用，马住！', avatarIdx: 1, likes: 3, channelTierName: '铜牌会员' },
     { id: 'r1f', author: '阿May的研究笔记', time: '3 小时前', text: '实测了几个模板，效果确实比自己瞎写的要好。', avatarIdx: 1, likes: 7 },
@@ -627,7 +623,7 @@ export const POST_REPLIES: Record<string, Reply[]> = {
   p5: [{ id: 'r5a', author: '游牧开发者', time: '1 天前', text: '设计 token 系统这套工作流学到了，下个项目试试。', avatarIdx: 1, likes: 4 }],
   p6: [
     { id: 'r6a', author: CURRENT_USER, time: '2 天前', text: 'tool-use 那段讲得非常清楚，有没有开源版本？', avatarIdx: 0, likes: 22 },
-    { id: 'r6b', author: '深海鱼炸弹', time: '2 天前', text: 'Demo 链接能分享出来吗？', avatarIdx: 2, likes: 6, channelTierName: '银牌' },
+    { id: 'r6b', author: '深海鱼炸弹', time: '2 天前', text: 'Demo 链接能分享出来吗？', avatarIdx: 2, likes: 6, channelTierName: '银牌会员' },
   ],
   p7: [
     { id: 'r7a', author: CURRENT_USER, time: '2 天前', text: '12% 到 67%，这个增幅太惊人了，方法论帖子什么时候出？', avatarIdx: 0, likes: 31 },
@@ -699,7 +695,7 @@ export const ACTIVITY_GROUPS: ActivityGroup[] = [
     id: 'ags1', type: 'subscribe', time: '30 分钟前', isRead: false,
     actors: [{ user: '游牧开发者', avatarIdx: 2 }],
     channelName: `${DEFAULT_WALLET_DISPLAY}的频道`,
-    tierName: '银牌',
+    tierName: '银牌会员',
   },
   {
     id: 'ags2', type: 'subscribe', time: '5 小时前', isRead: false,
