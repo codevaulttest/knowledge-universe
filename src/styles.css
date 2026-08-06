@@ -4200,15 +4200,17 @@ button {
   gap: 8px;
 }
 /* 频道目录比关注/粉丝列表更长；提高选择器优先级，避免被后面的
-   .follow-list-modal { max-height: 480px } 盖掉 */
+   .follow-list-modal { max-height: 480px } 盖掉。
+   不设固定 height，频道少时随内容收缩；频道多时在 max-height 内由列表滚动。 */
 .follow-list-modal.channel-directory-modal {
   max-height: min(860px, 92vh);
-  height: min(860px, 92vh);
 }
 /* 频道目录弹层内的列表：套用 .follow-list-content 的 10px 0 纵向内边距时，
    补回左右 20px，避免卡片贴到弹层两侧（组合选择器提升优先级，防止被 .follow-list-content 的
    padding 简写覆盖掉） */
 .follow-list-content.channel-directory-list {
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 10px 20px;
 }
 .channel-directory-empty {
