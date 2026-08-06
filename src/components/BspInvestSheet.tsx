@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Info, Loader2, Minus, Plus, ShieldCheck, ShieldX, X } from 'lucide-react';
+import { ChevronRight, Info, Loader2, Minus, Plus, ShieldCheck, ShieldX, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import {
   BSP_QTY_MAX,
@@ -10,6 +10,7 @@ import {
   bspSupCost,
   type BspInvestment,
 } from '../bspConfig';
+import { shortenAddress } from '../formatAddress';
 import { REGISTERED_TRANSFER_ADDRESSES } from '../pages/KnowledgePlanetPage';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
 
@@ -122,9 +123,20 @@ export function BspInvestSheet({
         status: 'paid',
       };
       onConfirmed(record);
-      showToast(
-        t('投流成功，已投放 {pbCost} PB，明日 00:00 起为你保底每日 {dailyGuarantee} PB', { pbCost: formatTokenAmount(pbCost), dailyGuarantee: formatTokenAmount(dailyGuarantee) })
-      );
+      const toastParams = {
+        pbCost: formatTokenAmount(pbCost),
+        dailyGuarantee: formatTokenAmount(dailyGuarantee),
+      };
+      if (record.beneficiaryKind === 'self') {
+        showToast(t('投流成功，已投放 {pbCost} PB，明日 00:00 起为你保底每日 {dailyGuarantee} PB', toastParams));
+      } else {
+        showToast(
+          t('投流成功，已投放 {pbCost} PB 给 {beneficiary}，明日 00:00 起为该用户保底每日 {dailyGuarantee} PB', {
+            ...toastParams,
+            beneficiary: shortenAddress(beneficiaryAddress),
+          }),
+        );
+      }
       setPaying(false);
       onClose();
     }, 1400);
@@ -135,22 +147,22 @@ export function BspInvestSheet({
       <div className="payment-sheet bsp-invest-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">{t('BSP 巨星投流')}</span>
-          <span
-            role="button"
-            tabIndex={0}
-            className="asset-overview-info-btn"
-            onClick={onOpenRules}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onOpenRules(); }}
-            aria-label={t('查看保底规则')}
-            style={{ marginLeft: 8 }}
-          >
-            <Info size={13} strokeWidth={2} />
-          </span>
           <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')} disabled={paying}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
 
+        <button
+          type="button"
+          className="bsp-rules-entry"
+          onClick={onOpenRules}
+          disabled={paying}
+          aria-label={t('了解 BSP 巨星投流规则')}
+        >
+          <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
+          <span className="bsp-rules-entry-text">{t('了解 BSP 巨星投流规则')}</span>
+          <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
+        </button>
 
         <div className="stake-code-block">
           <div className="stake-code-label-row">

@@ -9814,6 +9814,44 @@ button {
 .bsp-invest-sheet {
 }
 
+.bsp-rules-entry {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 0 0 var(--ku-planet2-space-md);
+  padding: 10px 12px;
+  gap: 8px;
+  border: none;
+  border-radius: var(--ku-radius-card);
+  background: color-mix(in srgb, var(--ku-color-primary) 8%, var(--ku-color-bg-phone));
+  color: var(--ku-color-primary);
+  font: var(--ku-text-body-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.bsp-rules-entry:active:not(:disabled) {
+  background: color-mix(in srgb, var(--ku-color-primary) 12%, var(--ku-color-bg-phone));
+}
+
+.bsp-rules-entry:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.bsp-rules-entry-icon {
+  flex-shrink: 0;
+}
+
+.bsp-rules-entry-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.bsp-rules-entry-chevron {
+  flex-shrink: 0;
+}
+
 .bsp-record-summary {
   width: 100%;
   min-width: 0;
