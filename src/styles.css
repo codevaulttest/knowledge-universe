@@ -10414,15 +10414,14 @@ html[lang="zh-TW"] .planet-hero-title {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-  padding: 5px 8px 5px 10px;
+  gap: var(--ku-planet2-space-xxs);
+  margin-top: var(--ku-planet2-space-xxs);
+  padding: var(--ku-planet2-space-xxs) var(--ku-planet2-space-xs) var(--ku-planet2-space-xxs) var(--ku-planet2-space-sm);
   border: 1px solid var(--ku-color-border-control);
-  border-radius: var(--ku-planet2-radius-pill);
+  border-radius: var(--ku-planet2-radius-lg);
   background: var(--ku-color-bg-phone);
   color: var(--ku-color-primary);
   cursor: pointer;
-  white-space: nowrap;
   max-width: 46%;
 }
 
@@ -10431,9 +10430,12 @@ html[lang="zh-TW"] .planet-hero-title {
   color: var(--ku-color-primary-dark);
 }
 
-.planet-hero-balances-wallet {
-  flex-shrink: 0;
-  color: var(--ku-color-text-meta);
+.planet-hero-balances-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  min-width: 0;
 }
 
 .planet-hero-balances-item {
@@ -10441,6 +10443,7 @@ html[lang="zh-TW"] .planet-hero-title {
   align-items: baseline;
   gap: var(--ku-planet2-space-xxs);
   min-width: 0;
+  max-width: 100%;
 }
 
 .planet-hero-balances-value {
@@ -10450,18 +10453,13 @@ html[lang="zh-TW"] .planet-hero-title {
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .planet-hero-balances-unit {
   font-family: var(--ku-font-family);
   font-size: 12px;
   font-weight: 500;
-  color: var(--ku-color-text-meta);
-}
-
-.planet-hero-balances-sep {
-  font-size: 12px;
-  line-height: 1.2;
   color: var(--ku-color-text-meta);
 }
 

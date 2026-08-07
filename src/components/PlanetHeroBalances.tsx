@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, ChevronRight, Wallet, X } from 'lucide-react';
+import { AlertTriangle, ChevronRight, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { formatCompactBalance } from '../formatCount';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
@@ -18,18 +18,18 @@ export function PlanetHeroBalances() {
         type="button"
         className="planet-hero-balances"
         onClick={() => setPbInfoOpen(true)}
-        aria-label={`${formatCompactBalance(pbBalance, language)} PB · ${formatCompactBalance(supBalance, language)} SUP，${t('查看资产说明')}`}
+        aria-label={`${formatCompactBalance(pbBalance, language)} PB，${formatCompactBalance(supBalance, language)} SUP，${t('查看资产说明')}`}
         title={`${formatTokenAmount(pbBalance)} PB · ${formatSupAmount(supBalance)} SUP`}
       >
-        <Wallet size={14} strokeWidth={2} className="planet-hero-balances-wallet" aria-hidden="true" />
-        <span className="planet-hero-balances-item">
-          <span className="planet-hero-balances-value">{formatCompactBalance(pbBalance, language)}</span>
-          <span className="planet-hero-balances-unit">PB</span>
-        </span>
-        <span className="planet-hero-balances-sep" aria-hidden="true">·</span>
-        <span className="planet-hero-balances-item">
-          <span className="planet-hero-balances-value">{formatCompactBalance(supBalance, language)}</span>
-          <span className="planet-hero-balances-unit">SUP</span>
+        <span className="planet-hero-balances-stack">
+          <span className="planet-hero-balances-item">
+            <span className="planet-hero-balances-value">{formatCompactBalance(pbBalance, language)}</span>
+            <span className="planet-hero-balances-unit">PB</span>
+          </span>
+          <span className="planet-hero-balances-item">
+            <span className="planet-hero-balances-value">{formatCompactBalance(supBalance, language)}</span>
+            <span className="planet-hero-balances-unit">SUP</span>
+          </span>
         </span>
         <ChevronRight size={14} strokeWidth={2} className="planet-hero-balances-chevron" aria-hidden="true" />
       </button>
