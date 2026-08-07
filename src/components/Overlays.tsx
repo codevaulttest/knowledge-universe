@@ -3,6 +3,7 @@ import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volu
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
+import { ChannelTierName } from './ChannelTierMedal';
 import { Avatar, AuthorName, Rating, GeminiNodeBadge } from './shared';
 import { Actions } from './PostCard';
 import { isChinese, localizeTime } from '../i18n';
@@ -125,11 +126,11 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
                   aria-label={IMG_LABELS[i]}
                 />
                 {slideLocked && (
-                  <div className="lightbox-lock-overlay">
-                    <Lock className="lightbox-lock-icon" strokeWidth={1.8} />
-                    <p className="lightbox-lock-hint">此图片尚未解锁</p>
-                    <button type="button" className="lightbox-unlock-btn" onClick={handleUnlock}>
-                      解锁
+                  <div className="img-lock-overlay lightbox-lock-overlay">
+                    <KnowledgePlanetIcon className="img-lock-pattern" />
+                    <button type="button" className="img-lock-badge" onClick={handleUnlock}>
+                      <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
+                      <span>{t('解锁')}</span>
                     </button>
                   </div>
                 )}
@@ -1806,7 +1807,10 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
                 className={`stake-tier-option${selected === idx ? ' stake-tier-option--active' : ''}`}
                 onClick={() => setSelected(idx)}
               >
-                <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月')}</span>
+                <span className="stake-tier-option__amount">
+                  <ChannelTierName name={tier.name} tierIndex={idx} />
+                  {' · '}{tier.price} PB/{t('月')}
+                </span>
                 <span className="stake-tier-option__desc">
                   {isCurrent
                     ? (tier.archived ? t('当前档位（已下架，不影响你的权限）') : t('当前档位'))
@@ -1862,8 +1866,8 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
 const MAX_CHANNEL_TIERS = 3;
 const DEFAULT_CHANNEL_CATEGORY = 'AI / 大模型';
 const DEFAULT_TIER_PRICES = [100, 500, 2000] as const;
-// 档位名不可自定义，按档位顺序固定分配（均带「会员」后缀）
-const DEFAULT_TIER_NAMES = ['铜牌会员', '银牌会员', '金牌会员'] as const;
+// 档位名不可自定义，按档位顺序固定分配
+const DEFAULT_TIER_NAMES = ['铜牌', '银牌', '金牌'] as const;
 
 // 仅对预设范围内、未下架的档位重新赋名；已下架档位保留原名不动
 function normalizeTierNames(tiers: ChannelTier[]): ChannelTier[] {
@@ -2086,7 +2090,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                 return (
                   <div key={tier.id} className="channel-tier-block channel-tier-block--archived">
                     <div className="channel-tier-row">
-                      <span className="channel-tier-name-label">{tier.name}</span>
+                      <ChannelTierName name={tier.name} tierIndex={idx} className="channel-tier-name-label" />
                       <span className="channel-tier-archived-price">{tier.price} PB/{t('月')}</span>
                       <span className="channel-tier-archived-badge">{t('已下架')}</span>
                     </div>
@@ -2100,7 +2104,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               return (
                 <div key={tier.id} className="channel-tier-block">
                   <div className="channel-tier-row">
-                    <span className="channel-tier-name-label">{tier.name}</span>
+                    <ChannelTierName name={tier.name} tierIndex={idx} className="channel-tier-name-label" />
                     <div className="channel-tier-price-wrap">
                       <input
                         className={`edit-profile-input channel-tier-price-input${priceError ? ' edit-profile-input--error' : ''}${!canEditTierSettings ? ' channel-tier-price-input--locked' : ''}`}

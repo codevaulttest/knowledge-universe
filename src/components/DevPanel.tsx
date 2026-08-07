@@ -10,7 +10,10 @@ type DevPanelProps = {
 export function DevPanel({ children }: DevPanelProps) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(true);
-  const { walletConnected, connectWallet, disconnectWallet, demoHideOwnChannels, toggleDemoHideOwnChannels, t } = useApp();
+  const {
+    walletConnected, connectWallet, disconnectWallet, demoHideOwnChannels, toggleDemoHideOwnChannels, t,
+    taskSnapshotToday, resetDemoTasks, simulateDemoTaskInteractions,
+  } = useApp();
 
   if (!visible) return null;
 
@@ -61,6 +64,20 @@ export function DevPanel({ children }: DevPanelProps) {
             <span className={`planet-dev-menu-toggle${demoHideOwnChannels ? ' planet-dev-menu-toggle--on' : ''}`}>
               {demoHideOwnChannels ? t('开') : t('关')}
             </span>
+          </button>
+          <button
+            type="button"
+            className="planet-dev-menu-item"
+            onClick={() => simulateDemoTaskInteractions(Math.min(35, taskSnapshotToday.interactedCount + 5))}
+          >
+            <span>{t('模拟互动 +5 篇（今日任务）')}</span>
+          </button>
+          <button
+            type="button"
+            className="planet-dev-menu-item"
+            onClick={resetDemoTasks}
+          >
+            <span>{t('重置今日任务')}</span>
           </button>
           {children}
         </div>

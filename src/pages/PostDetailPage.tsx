@@ -195,7 +195,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
                   (post.tipsReceived ?? 0) > 0 && (
                     <span className="post-heat-tip-btn post-heat-tip-btn--received">
                       <HandCoins size={13} strokeWidth={2.25} />
-                      {t('已收到 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
+                      {t('{tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
                     </span>
                   )
                 ) : (

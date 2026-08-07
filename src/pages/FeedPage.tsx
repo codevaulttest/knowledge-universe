@@ -173,6 +173,7 @@ function ChannelDiscoverFeed() {
           channel={channel}
           index={i % 3}
           onClick={() => navigate({ page: 'P_CHANNEL', channelId: channel.id })}
+          showSubscribe
         />
       ))}
     </section>

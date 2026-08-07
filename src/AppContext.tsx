@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import type { TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
   navigate: (route: Route) => void;
@@ -78,7 +79,7 @@ export type AppContextValue = {
   // 开发工具：模拟当前用户「未创建频道」空态（默认关闭，原型自带 5 个自有频道）
   demoHideOwnChannels: boolean;
   toggleDemoHideOwnChannels: () => void;
-  // SUP（SUP 链原生代币）：用户中心可充值站内 SUP 资产，产生节点时与 PB 同步扣除
+  // SUP（SUP 链原生代币）：站内余额，产生节点时与 PB 同步扣除
   supBalance: number;
   supHistory: SupTransaction[];
   deductSup: (amount: number, reason: SupTransactionReason) => void;
@@ -103,6 +104,14 @@ export type AppContextValue = {
   // 知识宇宙页：周期性 PB 空投
   airdropClaimed: boolean;
   claimAirdrop: () => void;
+  // 每日任务（发帖任务 + 互动帖任务）：今天的完成度决定明天可领取空投收益的比例
+  taskSnapshotToday: TaskDaySnapshot;
+  taskSnapshotYesterday: TaskDaySnapshot;
+  /** 每完成 5 篇互动帖 +1，供任务面板监听触发一次性庆祝动效 */
+  taskCelebrateSignal: number;
+  // 开发工具：重置/模拟今日任务，便于演示
+  resetDemoTasks: () => void;
+  simulateDemoTaskInteractions: (count: number) => void;
 };
 
 

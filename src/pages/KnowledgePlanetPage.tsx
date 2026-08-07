@@ -659,7 +659,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
             <PlanetAnnouncementBanner />
           </div>
 
-          {/* ── 资产概览：PB 余额 + 领取空投 / SUP 余额 + 充值（右上角为邀请入口） ── */}
+          {/* ── 资产概览：空投主区 + 任务 + PB/SUP 资产条 ── */}
           <AssetOverviewCard />
 
           {/* ── Quick Actions: BSP 巨星投流 / 创建频道 ── */}

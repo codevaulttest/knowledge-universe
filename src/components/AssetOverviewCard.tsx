@@ -1,24 +1,11 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, ArrowDown, ArrowUp, Check, ChevronRight, Copy, Gift, Info, QrCode, Wallet, Wallet2, X } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Gift, Info, ListChecks, X } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT, MOCK_SUP_DEPOSIT_ADDRESS } from '../mockData';
+import { formatCompactBalance } from '../formatCount';
+import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT } from '../mockData';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
-import type { SupTransactionReason } from '../types';
-
-const SUP_REASON_LABELS: Record<SupTransactionReason, string> = {
-  recharge: '充值',
-  channel_open: '开通频道',
-  post: '发布知识宇宙节点',
-  chain_unlock: '解锁全文',
-  repost: '转发并创建子节点',
-  comment: '评论并创建子节点',
-  share: '转发并创建子节点',
-  like: '点赞并创建子节点',
-  dislike: '踩并创建子节点',
-  save: '收藏并创建子节点',
-  unlock: '解锁并创建子节点',
-  bsp_invest: 'BSP 巨星投流',
-};
+import { TaskPanelSheet } from './TaskPanelSheet';
+import { TASK_INTERACTION_POOL_SIZE } from '../taskConfig';
 
 function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000));
@@ -44,12 +31,10 @@ function getAirdropCountdownTone(remainingMs: number, claimable: boolean): Airdr
 }
 
 export function AssetOverviewCard() {
-  const { t, walletConnected, pbBalance, supBalance, supHistory, airdropClaimed, claimAirdrop } = useApp();
-  const [depositOpen, setDepositOpen] = useState(false);
-  const [addressCopied, setAddressCopied] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
+  const { t, language, walletConnected, pbBalance, supBalance, airdropClaimed, claimAirdrop, taskSnapshotToday, taskSnapshotYesterday } = useApp();
   const [pbInfoOpen, setPbInfoOpen] = useState(false);
   const [airdropRuleOpen, setAirdropRuleOpen] = useState(false);
+  const [taskPanelOpen, setTaskPanelOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -63,13 +48,6 @@ export function AssetOverviewCard() {
   const countdownTone = getAirdropCountdownTone(remainingMs, airdropClaimable);
 
   if (!walletConnected) return null;
-
-  const copyDepositAddress = () => {
-    navigator.clipboard.writeText(MOCK_SUP_DEPOSIT_ADDRESS).then(() => {
-      setAddressCopied(true);
-      setTimeout(() => setAddressCopied(false), 1800);
-    });
-  };
 
   return (
     <>
@@ -86,22 +64,6 @@ export function AssetOverviewCard() {
                 <span className="asset-overview-airdrop-label">
                   {t('待领取空投')}
                 </span>
-                {airdropClaimable && (
-                  <span
-                    className={`asset-overview-airdrop-deadline${countdownTone === 'warning' ? ' asset-overview-airdrop-deadline--warning' : ''}${countdownTone === 'urgent' ? ' asset-overview-airdrop-deadline--urgent' : ''}`}
-                  >
-                    {t('剩 ')}
-                    <span className={`asset-overview-action-countdown-time${countdownTone === 'warning' ? ' asset-overview-action-countdown-time--warning' : ''}${countdownTone === 'urgent' ? ' asset-overview-action-countdown-time--urgent' : ''}`}>{formatCountdown(remainingMs)}</span>
-                    <button
-                      type="button"
-                      className="asset-overview-info-btn"
-                      onClick={() => setAirdropRuleOpen(true)}
-                      aria-label={t('查看空投规则')}
-                    >
-                      <Info size={13} strokeWidth={2} />
-                    </button>
-                  </span>
-                )}
               </div>
               {airdropClaimed ? (
                 <span className="asset-overview-airdrop-badge">{t('今日已领取')}</span>
@@ -118,184 +80,109 @@ export function AssetOverviewCard() {
                   </button>
                 </span>
               ) : (
-                <div className="asset-overview-airdrop-amount">
-                  {formatTokenAmount(MOCK_PB_AIRDROP_AMOUNT)}
-                  <span className="asset-overview-airdrop-unit"> PB</span>
-                </div>
+                <>
+                  <div className="asset-overview-airdrop-amount">
+                    {formatTokenAmount(Math.round(MOCK_PB_AIRDROP_AMOUNT * taskSnapshotYesterday.claimRatio / 100))}
+                    <span className="asset-overview-airdrop-unit"> PB</span>
+                  </div>
+                  <span className="asset-overview-airdrop-ratio-hint">
+                    {t('昨日任务完成 {ratio}%，可领取 {ratio}% 空投', { ratio: taskSnapshotYesterday.claimRatio })}
+                  </span>
+                </>
               )}
             </div>
           </div>
-          <button
-            type="button"
-            className={`asset-overview-claim-btn${airdropClaimed || airdropMissed ? ' asset-overview-claim-btn--done' : ''}`}
-            onClick={claimAirdrop}
-            disabled={airdropClaimed || airdropMissed}
-          >
-            {airdropClaimed ? t('已领取') : airdropMissed ? t('已错过') : t('领取空投')}
-          </button>
+          <div className="asset-overview-airdrop-claim-col">
+            {airdropClaimable && (
+              <span
+                className={`asset-overview-airdrop-deadline${countdownTone === 'warning' ? ' asset-overview-airdrop-deadline--warning' : ''}${countdownTone === 'urgent' ? ' asset-overview-airdrop-deadline--urgent' : ''}`}
+              >
+                {t('剩 ')}
+                <span className={`asset-overview-action-countdown-time${countdownTone === 'warning' ? ' asset-overview-action-countdown-time--warning' : ''}${countdownTone === 'urgent' ? ' asset-overview-action-countdown-time--urgent' : ''}`}>{formatCountdown(remainingMs)}</span>
+                <button
+                  type="button"
+                  className="asset-overview-info-btn"
+                  onClick={() => setAirdropRuleOpen(true)}
+                  aria-label={t('查看空投规则')}
+                >
+                  <Info size={13} strokeWidth={2} />
+                </button>
+              </span>
+            )}
+            <button
+              type="button"
+              className={`asset-overview-claim-btn${airdropClaimed || airdropMissed ? ' asset-overview-claim-btn--done' : ''}`}
+              onClick={claimAirdrop}
+              disabled={airdropClaimed || airdropMissed}
+            >
+              {airdropClaimed ? t('已领取') : airdropMissed ? t('已错过') : t('领取空投')}
+            </button>
+          </div>
         </div>
 
         <button
           type="button"
-          className="asset-overview-toggle-row"
-          onClick={() => setPbInfoOpen(true)}
-          aria-label={t('查看 PB 说明')}
+          className="asset-overview-toggle-row asset-overview-task-row"
+          onClick={() => setTaskPanelOpen(true)}
+          aria-label={t('查看任务')}
         >
           <span className="asset-overview-toggle-left">
             <span className="asset-overview-icon-col">
               <span className="asset-overview-toggle-icon">
-                <Wallet size={14} strokeWidth={2} />
+                <ListChecks size={14} strokeWidth={2} />
               </span>
             </span>
-            <span>{t('PB 余额')}</span>
-            <Info size={13} strokeWidth={2} className="asset-overview-toggle-chevron" />
+            <span className="asset-overview-task-row-text">
+              <span>{t('今日任务')}</span>
+              <span className="asset-overview-task-row-detail">
+                {taskSnapshotToday.posted ? (
+                  <Check size={11} strokeWidth={2.6} className="asset-overview-task-row-check" />
+                ) : null}
+                {t('发帖')}
+                <span className="asset-overview-task-row-dot" aria-hidden="true">·</span>
+                {t('互动 {count}/{total}', { count: taskSnapshotToday.interactedCount, total: TASK_INTERACTION_POOL_SIZE })}
+              </span>
+            </span>
           </span>
           <span className="asset-overview-toggle-right">
-            <span className="asset-overview-toggle-balance">{formatTokenAmount(pbBalance)} PB</span>
+            <span className="asset-overview-task-row-ratio">
+              {t('明日可领 {ratio}%', { ratio: taskSnapshotToday.claimRatio })}
+            </span>
+            <ChevronRight size={13} strokeWidth={2} className="asset-overview-toggle-chevron" />
           </span>
         </button>
 
-        <div className="asset-overview-toggle-row asset-overview-toggle-row--split">
+        <div className="asset-overview-balances">
           <button
             type="button"
-            className="asset-overview-toggle-row-inner"
-            onClick={() => setHistoryOpen(true)}
-            aria-label={t('查看 SUP 流水')}
+            className="asset-overview-balance-cell"
+            onClick={() => setPbInfoOpen(true)}
+            aria-label={t('查看 PB 说明')}
+            title={`${formatTokenAmount(pbBalance)} PB`}
           >
-            <span className="asset-overview-icon-col">
-              <span className="asset-overview-toggle-icon">
-                <Wallet size={14} strokeWidth={2} />
-              </span>
+            <span className="asset-overview-balance-cell-label">
+              {t('PB 余额')}
+              <Info size={12} strokeWidth={2} className="asset-overview-balance-cell-info" />
             </span>
-            <span className="asset-overview-toggle-content">
-              <span className="asset-overview-toggle-label-row">
-                <span className="asset-overview-toggle-label">{t('SUP 余额')}</span>
-                <span className="asset-overview-toggle-right asset-overview-toggle-right--stackable">
-                  <span className="asset-overview-toggle-balance">{formatSupAmount(supBalance)} SUP</span>
-                  <ChevronRight size={13} strokeWidth={2} className="asset-overview-toggle-chevron" />
-                </span>
-              </span>
+            <span className="asset-overview-balance-cell-value">
+              {formatCompactBalance(pbBalance, language)}
+              <span className="asset-overview-balance-cell-unit"> PB</span>
             </span>
           </button>
-          <button
-            type="button"
-            className="asset-overview-recharge-btn"
-            onClick={() => setDepositOpen(true)}
+          <span className="asset-overview-balance-divider" aria-hidden="true" />
+          <div
+            className="asset-overview-balance-cell asset-overview-balance-cell--static"
+            title={`${formatSupAmount(supBalance)} SUP`}
+            aria-label={`${t('SUP 余额')} ${formatSupAmount(supBalance)} SUP`}
           >
-            <Wallet2 size={12} strokeWidth={2.2} />
-            {t('充值')}
-          </button>
+            <span className="asset-overview-balance-cell-label">{t('SUP 余额')}</span>
+            <span className="asset-overview-balance-cell-value">
+              {formatCompactBalance(supBalance, language)}
+              <span className="asset-overview-balance-cell-unit"> SUP</span>
+            </span>
+          </div>
         </div>
       </div>
-
-      {depositOpen && (
-        <div className="sheet-backdrop" onClick={() => setDepositOpen(false)}>
-          <div
-            className="payment-sheet sup-deposit-sheet"
-            role="dialog"
-            aria-modal="true"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="sheet-header">
-              <span className="sheet-title">{t('充值 SUP')}</span>
-              <button
-                className="back-btn"
-                style={{ marginLeft: 'auto' }}
-                onClick={() => setDepositOpen(false)}
-                aria-label={t('关闭')}
-              >
-                <X size={18} strokeWidth={2} />
-              </button>
-            </div>
-
-            <div className="sup-deposit-body">
-              <div className="sup-deposit-warning">
-                <AlertTriangle size={16} strokeWidth={2} aria-hidden="true" />
-                <span>
-                  {t('请确认转账网络为 Super AI Chain，充错网络资产将无法找回')}
-                </span>
-              </div>
-
-              <p className="sup-deposit-hint">
-                {t('使用任意钱包向以下地址转入 SUP，链上到账后自动计入站内余额')}
-              </p>
-
-              <div className="sup-deposit-qr" aria-hidden="true">
-                <QrCode size={96} strokeWidth={1.2} />
-              </div>
-
-              <div className="sup-deposit-row">
-                <span className="sup-deposit-label">{t('网络')}</span>
-                <span className="sup-deposit-value">Super AI Chain</span>
-              </div>
-              <div className="sup-deposit-row sup-deposit-row--address">
-                <span className="sup-deposit-label">{t('充值地址')}</span>
-                <span className="sup-deposit-value sup-deposit-address">
-                  {MOCK_SUP_DEPOSIT_ADDRESS}
-                  <button
-                    type="button"
-                    className={`planet-node-copy-btn${addressCopied ? ' planet-node-copy-btn--done' : ''}`}
-                    onClick={copyDepositAddress}
-                    aria-label={t('复制地址')}
-                  >
-                    {addressCopied ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} strokeWidth={2} />}
-                  </button>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {historyOpen && (
-        <div className="sheet-backdrop" onClick={() => setHistoryOpen(false)}>
-          <div
-            className="payment-sheet sup-history-sheet"
-            role="dialog"
-            aria-modal="true"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="sheet-header">
-              <span className="sheet-title">{t('SUP 明细')}</span>
-              <button
-                className="back-btn"
-                style={{ marginLeft: 'auto' }}
-                onClick={() => setHistoryOpen(false)}
-                aria-label={t('关闭')}
-              >
-                <X size={18} strokeWidth={2} />
-              </button>
-            </div>
-
-            <div className="sup-history-list">
-              {supHistory.length === 0 ? (
-                <div className="planet-history-empty">{t('暂无 SUP 流水')}</div>
-              ) : supHistory.map(tx => {
-                const isIn = tx.direction === 'in';
-                const label = t(SUP_REASON_LABELS[tx.reason]);
-                return (
-                  <div className="sup-history-row" key={tx.id}>
-                    <span className={`sup-history-icon${isIn ? ' sup-history-icon--deposit' : ''}`}>
-                      {isIn ? (
-                        <ArrowDown size={14} strokeWidth={2} />
-                      ) : (
-                        <ArrowUp size={14} strokeWidth={2} />
-                      )}
-                    </span>
-                    <span className="sup-history-desc">
-                      {tx.time} · {label}
-                    </span>
-                    <span className={`sup-history-amount${isIn ? ' sup-history-amount--positive' : ''}`}>
-                      {isIn ? '+' : '-'}
-                      {formatSupAmount(tx.amount)} SUP
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
 
       {pbInfoOpen && (
         <div className="sheet-backdrop" onClick={() => setPbInfoOpen(false)}>
@@ -318,6 +205,10 @@ export function AssetOverviewCard() {
             </div>
 
             <div className="pb-info-sheet-body">
+              <div className="pb-info-balance-row">
+                <span className="pb-info-balance-label">{t('当前余额')}</span>
+                <span className="pb-info-balance-value">{formatTokenAmount(pbBalance)} PB</span>
+              </div>
               <p className="pb-info-sheet-para pb-info-sheet-heading">
                 {t('关于知识宇宙"PB"的定义与核心机制说明')}
               </p>
@@ -380,10 +271,24 @@ export function AssetOverviewCard() {
               <p className="pb-info-sheet-para">
                 {t('需在北京时间当天 22:00 前点击"领取空投"，逾期未领取则本轮空投作废。')}
               </p>
+              <p className="pb-info-sheet-para">
+                {t('可领取比例取决于昨日任务（发帖任务 + 互动帖任务）完成度，完成度越高可领取比例越高。')}
+              </p>
+              <button
+                type="button"
+                className="bsp-rules-entry"
+                onClick={() => { setAirdropRuleOpen(false); setTaskPanelOpen(true); }}
+              >
+                <ListChecks size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
+                <span className="bsp-rules-entry-text">{t('查看任务')}</span>
+                <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {taskPanelOpen && <TaskPanelSheet onClose={() => setTaskPanelOpen(false)} />}
     </>
   );
 }

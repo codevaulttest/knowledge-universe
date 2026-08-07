@@ -9,6 +9,7 @@ import { isChinese } from './i18n';
 import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, CheckInModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { commitClaim, getClaimPreview, CHECK_IN_REWARD, type ClaimPreview } from './checkInConfig';
+import { getTaskSnapshot, getYesterdaySnapshot, markInteracted, markPosted, resetTasks, simulateInteractedCount, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
 import { Toast } from './components/shared';
 import { ComposePage } from './pages/ComposePage';
 import { FeedPage } from './pages/FeedPage';
@@ -92,6 +93,38 @@ export default function App() {
   const [inviterAddress, setInviterAddress] = useState<string | null>(null);
   const [airdropClaimed, setAirdropClaimed] = useState(false);
 
+  // 每日任务（发帖任务 + 互动帖任务）：今天的完成度决定明天可领取空投收益的比例
+  const [taskSnapshotToday, setTaskSnapshotToday] = useState<TaskDaySnapshot>(() => getTaskSnapshot());
+  const [taskSnapshotYesterday] = useState<TaskDaySnapshot>(() => getYesterdaySnapshot());
+  // 每完成 N 篇互动帖 +1，供任务面板监听触发一次性庆祝动效
+  const [taskCelebrateSignal, setTaskCelebrateSignal] = useState(0);
+
+  const recordTaskInteraction = (postId: string) => {
+    const { state, added } = markInteracted(postId);
+    setTaskSnapshotToday(getTaskSnapshot());
+    if (added && state.interactedPostIds.length > 0 && state.interactedPostIds.length % TASK_CELEBRATE_EVERY === 0) {
+      setTaskCelebrateSignal(s => s + 1);
+    }
+  };
+
+  const recordTaskPosted = () => {
+    markPosted();
+    setTaskSnapshotToday(getTaskSnapshot());
+  };
+
+  // 开发工具：重置今日任务记录，便于重新体验任务面板
+  const resetDemoTasks = () => {
+    resetTasks();
+    setTaskSnapshotToday(getTaskSnapshot());
+  };
+
+  // 开发工具：直接模拟今日互动帖完成数（无需真的操作 35 篇帖子即可预览阶梯比例与庆祝动效）
+  const simulateDemoTaskInteractions = (count: number) => {
+    simulateInteractedCount(count);
+    setTaskSnapshotToday(getTaskSnapshot());
+    if (count > 0 && count % TASK_CELEBRATE_EVERY === 0) setTaskCelebrateSignal(s => s + 1);
+  };
+
   const bindInviter = (code: string) => {
     if (inviterAddress) return { ok: false, message: t('已绑定邀请人，无法更换') };
     if (!/^\d{6}$/.test(code)) return { ok: false, message: t('请输入 6 位数字邀请码') };
@@ -103,9 +136,11 @@ export default function App() {
 
   const claimAirdrop = () => {
     if (airdropClaimed || Date.now() > getAirdropDeadline()) return;
-    setPbBalance(prev => prev + MOCK_PB_AIRDROP_AMOUNT);
+    // 可领取金额取决于昨日任务（发帖任务 + 互动帖任务）完成度对应的比例
+    const claimedAmount = Math.round(MOCK_PB_AIRDROP_AMOUNT * taskSnapshotYesterday.claimRatio / 100);
+    setPbBalance(prev => prev + claimedAmount);
     setAirdropClaimed(true);
-    showToast(t('领取成功，+{MOCK_PB_AIRDROP_AMOUNT} PB', { MOCK_PB_AIRDROP_AMOUNT }));
+    showToast(t('领取成功，+{MOCK_PB_AIRDROP_AMOUNT} PB', { MOCK_PB_AIRDROP_AMOUNT: claimedAmount }));
   };
 
   const deductPb = (amount: number, _reason: PbTransactionReason) => {
@@ -388,6 +423,8 @@ export default function App() {
           }
         : post));
       if (action !== 'like' && action !== 'dislike') showToast(active ? labels[0] : labels[1]);
+      // 新增互动（非取消）时，计入今日互动帖任务进度
+      if (!active) recordTaskInteraction(postId);
     });
   };
 
@@ -422,6 +459,8 @@ export default function App() {
 
   const incrementReplies = useCallback((postId: string) => {
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, replies: p.replies + 1 } : p));
+    // 评论同样计入今日互动帖任务进度
+    recordTaskInteraction(postId);
   }, []);
 
   const handleConfirmDelete = () => {
@@ -638,6 +677,7 @@ export default function App() {
     setPosts(prev => [newPost, ...prev]);
     setComposeOpen(false);
     setComposeDraftId(null);
+    recordTaskPosted();
     showToast(data.isNode
       ? t('发布成功！知识宇宙节点已生成')
       : t('发布成功！帖子已公开')
@@ -671,6 +711,8 @@ export default function App() {
     walletAddress, walletConnecting, disconnectWallet,
     pbBalance, deductPb, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
     airdropClaimed, claimAirdrop,
+    taskSnapshotToday, taskSnapshotYesterday, taskCelebrateSignal,
+    resetDemoTasks, simulateDemoTaskInteractions,
   };
 
 

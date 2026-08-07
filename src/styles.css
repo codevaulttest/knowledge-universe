@@ -295,12 +295,33 @@ button {
 .channel-discover-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 0 6px;
   margin-top: 2px;
 }
 .channel-discover-subs {
   font: var(--ku-text-caption);
   color: var(--ku-color-text-secondary);
+}
+.channel-discover-meta-dot {
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-secondary);
+  opacity: 0.55;
+  line-height: 1;
+}
+.channel-discover-access {
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.channel-discover-access--free {
+  padding: 1px 6px;
+  border-radius: var(--ku-radius-badge);
+  background: var(--ku-color-bg-page);
+}
+.channel-discover-access--subscribed {
+  color: var(--ku-color-primary-dark);
+  font-weight: 600;
 }
 
 /* ── Feed Loading ── */
@@ -974,36 +995,28 @@ button {
   border-radius: 0;
 }
 .lightbox-img--locked {
-  filter: var(--ku-lightbox-locked-filter);
+  filter: var(--ku-locked-media-filter);
 }
-.lightbox-lock-overlay {
+/* 锁定态与首页 img-grid-cell--locked 一致：中性实色遮罩 + 星球图案 */
+.lightbox-media:has(.lightbox-lock-overlay)::before {
+  content: '';
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--ku-lightbox-lock-gap);
-  color: var(--ku-color-on-primary);
-  background: var(--ku-lightbox-lock-overlay);
+  background: var(--ku-locked-media-scrim);
+  transition: background var(--ku-motion-fast);
+  z-index: 1;
 }
-.lightbox-lock-icon {
-  width: var(--ku-lightbox-lock-icon-size);
-  height: var(--ku-lightbox-lock-icon-size);
+.lightbox-media:has(.lightbox-lock-overlay):hover::before {
+  background: var(--ku-locked-media-scrim-hover);
 }
-.lightbox-lock-hint {
-  margin: 0;
-  font: var(--ku-text-meta);
+.lightbox-lock-overlay {
+  pointer-events: auto;
+  z-index: 2;
 }
-.lightbox-unlock-btn {
-  padding: var(--ku-lightbox-unlock-padding-y) var(--ku-lightbox-unlock-padding-x);
-  border-radius: var(--ku-radius-card);
-  color: var(--ku-color-on-primary);
-  background: var(--ku-color-primary);
-  font: var(--ku-text-action-cta);
-}
-.lightbox-unlock-btn:hover {
-  background: var(--ku-color-primary-dark);
+.lightbox-lock-overlay .img-lock-badge {
+  pointer-events: auto;
+  cursor: pointer;
+  font: inherit;
 }
 .lightbox-nav {
   position: absolute;
@@ -1169,26 +1182,28 @@ button {
 
 /* ── 热力值 + 打赏入口（覆盖 GeminiNodeBadge 左侧内容，见 .gemini-left）──
    知识宇宙徽章原本的蓝紫色壳是给节点信息用的冷色调；这里装的是热力值/打赏，外壳改中性色，避免冷暖打架。
-   默认宽度贴内容、靠左；参与知识宇宙时拆成两个独立胶囊左右分列 */
+   默认宽度贴内容、靠左；参与知识宇宙时左侧同壳，链接按钮靠右 */
 .gemini-badge--heat {
   width: fit-content;
   max-width: 100%;
   justify-content: flex-start;
   gap: 8px;
+  margin: 16px 0 0;
+  padding: 9px 10px;
   border-color: var(--ku-color-border-card);
   background: var(--ku-color-bg-page);
 }
 .gemini-badge--heat:not([role="button"]) {
   cursor: default;
 }
-/* Feed：热力值胶囊靠左 + 链接按钮靠右 */
+/* Feed：热力值/打赏同壳靠左 + 链接按钮靠右 */
 .post-heat-gemini-row {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
   width: 100%;
-  margin: 12px 0 0;
+  margin: 16px 0 0;
 }
 .post-heat-gemini-row > .gemini-badge {
   margin: 0;
@@ -1218,10 +1233,10 @@ button {
   color: #fff;
   font: var(--ku-text-action-cta);
 }
-/* 已收到打赏（自己主页帖子）：仅展示态，不用实心 CTA 样式，也不加边框 */
+/* 已收到打赏（自己主页帖子）：描边展示态，不用实心 CTA */
 .post-heat-tip-btn--received {
-  padding: 0 4px;
-  border: none;
+  padding: 0 10px;
+  border: 1.5px solid var(--ku-color-genesis-gold);
   background: transparent;
   color: var(--ku-color-genesis-gold);
 }
@@ -4055,12 +4070,13 @@ button {
   margin: 12px var(--ku-feed-padding-x) 14px;
 }
 
-/* 频道卡片内嵌「管理」入口：贴右对齐、垂直居中于卡片 */
+/* 频道卡片内嵌「管理」入口：贴右对齐、垂直居中；仅齿轮图标，避免抢主次 */
 .channel-discover-manage-btn {
   align-self: center;
   margin-left: auto;
-  /* 频道卡片本身已经是可点击的主操作（整卡点击进详情页），管理入口只是次要快捷方式，
-     复用「已订阅」态那套描边样式的思路，改用主色描边而非实心，避免跟卡片本身抢主次 */
+  width: 36px;
+  height: 36px;
+  padding: 0;
   background: transparent;
   color: var(--ku-color-primary-dark);
   border: 1px solid var(--ku-color-border-control);
@@ -6858,9 +6874,12 @@ button {
   color: var(--ku-color-text-meta);
 }
 .channel-tier-row {
+  --channel-tier-name-col: 60px;
+  --channel-tier-col-gap: 12px;
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) 32px;
-  gap: 10px 12px;
+  /* 各行独立 grid，第一列用固定宽保证表头「月订阅费」与输入框左缘对齐 */
+  grid-template-columns: var(--channel-tier-name-col) minmax(0, 1fr) 32px;
+  gap: 12px var(--channel-tier-col-gap);
   align-items: center;
   width: 100%;
   margin-bottom: 0;
@@ -6870,6 +6889,7 @@ button {
 }
 .channel-tier-col-label--price {
   text-align: left;
+  justify-self: start;
 }
 .channel-tier-col-label {
   font: var(--ku-text-meta);
@@ -6878,14 +6898,56 @@ button {
 .channel-tier-col-label--action {
   width: 32px;
 }
+.channel-tier-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.channel-tier-name-text {
+  min-width: 0;
+}
+.channel-tier-medal {
+  flex-shrink: 0;
+}
+.channel-tier-medal--bronze {
+  color: #a85f28;
+  fill: #e39a5c;
+  filter: drop-shadow(0 1px 1px rgba(168, 95, 40, 0.28));
+}
+.channel-tier-medal--silver {
+  color: #6f7d92;
+  fill: #d8dee8;
+  filter: drop-shadow(0 1px 1px rgba(111, 125, 146, 0.22));
+}
+.channel-tier-medal--gold {
+  color: #b8860b;
+  fill: #f5d04d;
+  filter: drop-shadow(0 1px 1px rgba(184, 134, 11, 0.32));
+}
 .channel-tier-name-label {
   display: flex;
   align-items: center;
+  justify-self: start;
+  width: auto;
   min-height: 43px;
   padding: 0;
   font: 600 15px/1.3 var(--ku-font-family);
-  color: var(--ku-color-text-primary);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.channel-tier-name--bronze .channel-tier-name-text {
+  color: #a85f28;
+}
+.channel-tier-name--silver .channel-tier-name-text {
+  color: #5f6d82;
+}
+.channel-tier-name--gold .channel-tier-name-text {
+  color: #b8860b;
+}
+.stake-tier-option__amount .channel-tier-name {
+  display: inline-flex;
+  vertical-align: middle;
 }
 .channel-tier-price-wrap {
   display: flex;
@@ -6909,7 +6971,7 @@ button {
   flex-shrink: 0;
 }
 .channel-tier-error {
-  margin: 4px 0 0 52px;
+  margin: 4px 0 0 72px; /* 对齐价格列：name-col 60 + gap 12 */
   font: var(--ku-text-meta);
   color: var(--ku-color-text-danger);
 }
@@ -7532,7 +7594,7 @@ button {
 
 /* ── Quick Actions: 钻石节点 / 创建频道 ── */
 
-/* ── Asset Overview: PB 余额 + 领取空投 / SUP 余额 + 充值 ── */
+/* ── Asset Overview: 空投主区 + 任务 + 资产条 ── */
 
 .asset-overview-card {
   position: relative;
@@ -7620,6 +7682,31 @@ button {
   flex-direction: column;
   gap: var(--ku-planet2-space-sm);
   padding: var(--ku-planet2-space-base);
+}
+
+.pb-info-balance-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ku-planet2-space-sm);
+  padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: var(--ku-color-border-cell);
+}
+
+.pb-info-balance-label {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--ku-color-text-meta);
+}
+
+.pb-info-balance-value {
+  font-family: var(--ku-font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ku-color-text-primary);
+  word-break: break-all;
+  text-align: right;
 }
 
 .pb-info-sheet-para {
@@ -7781,6 +7868,21 @@ button {
   color: var(--ku-color-text-meta);
 }
 
+.asset-overview-airdrop-ratio-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--ku-color-text-meta);
+}
+
+.asset-overview-airdrop-claim-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .asset-overview-claim-btn {
   flex-shrink: 0;
   padding: 10px 18px;
@@ -7838,45 +7940,6 @@ button {
   cursor: pointer;
 }
 
-.asset-overview-toggle-row--split {
-  padding: 0;
-  border-top: 1px solid var(--ku-color-border-card);
-}
-
-.asset-overview-toggle-row-inner {
-  container-type: inline-size;
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--ku-planet2-space-sm);
-  padding: var(--ku-planet2-space-xs) 0 2px;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-}
-
-.asset-overview-toggle-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.asset-overview-toggle-label-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ku-planet2-space-xs);
-  width: 100%;
-}
-
-.asset-overview-toggle-label {
-  flex-shrink: 0;
-  white-space: nowrap;
-  font-size: 14px;
-  color: var(--ku-color-text-secondary);
-}
-
 .asset-overview-toggle-left {
   display: flex;
   align-items: center;
@@ -7911,44 +7974,122 @@ button {
   margin-left: auto;
 }
 
-/* 充值按钮占据较多宽度时，让 SUP 数量独占下一行并从左侧开始，避免右对齐造成阅读跳跃。 */
-@container (max-width: 170px) {
-  .asset-overview-toggle-right--stackable {
-    flex-basis: 100%;
-    margin-left: 0;
-  }
-}
-
-.asset-overview-toggle-balance {
-  font-family: var(--ku-font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--ku-color-text-primary);
-  white-space: nowrap;
-}
-
 .asset-overview-toggle-chevron {
   color: var(--ku-color-text-meta);
 }
 
-.asset-overview-recharge-btn {
+/* ── 资产条：PB / SUP 并排 ── */
+
+.asset-overview-balances {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border-top: 1px solid var(--ku-color-border-card);
+  padding-top: var(--ku-planet2-space-xs);
+}
+
+.asset-overview-balance-cell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 2px var(--ku-planet2-space-xs);
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.asset-overview-balance-cell--static {
+  cursor: default;
+}
+
+.asset-overview-balance-cell:first-child {
+  padding-left: 0;
+}
+
+.asset-overview-balance-cell:last-child {
+  padding-right: 0;
+}
+
+.asset-overview-balance-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 0;
+  background: var(--ku-color-border-card);
   flex-shrink: 0;
+}
+
+.asset-overview-balance-cell-label {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  margin: var(--ku-planet2-space-xs) 0 2px;
-  border-radius: var(--ku-planet2-radius-pill);
-  border: 1.5px solid var(--ku-color-primary);
-  background: transparent;
-  color: var(--ku-color-primary);
-  font-size: 14px;
-  font-weight: 600;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--ku-color-text-meta);
   white-space: nowrap;
 }
 
-.asset-overview-recharge-btn:active {
-  background: var(--ku-color-border-cell);
+.asset-overview-balance-cell-info {
+  color: var(--ku-color-text-meta);
+}
+
+.asset-overview-balance-cell-value {
+  font-family: var(--ku-font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ku-color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.asset-overview-balance-cell-unit {
+  font-family: var(--ku-font-family);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ku-color-text-meta);
+}
+
+/* ── 今日任务行（发帖任务 + 互动帖任务，影响明日空投领取比例） ── */
+
+.asset-overview-task-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+  white-space: normal;
+}
+
+.asset-overview-task-row-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--ku-color-text-meta);
+}
+
+.asset-overview-task-row-check {
+  color: var(--ku-color-success-text);
+}
+
+.asset-overview-task-row-dot {
+  color: var(--ku-color-text-meta);
+}
+
+.asset-overview-task-row-ratio {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-primary-alpha-06);
+  color: var(--ku-color-primary-dark);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .planet-origin-summary {
@@ -10072,4 +10213,138 @@ html[lang="zh-TW"] .planet-hero-title {
   position: relative;
   z-index: 1;
   margin-top: calc(-1 * (var(--ku-planet2-space-lg) + 28px));
+}
+
+/* ═══════════════════════════════════════════════════
+   任务面板 (TaskPanelSheet) —— 发帖任务 + 互动帖任务
+   ═══════════════════════════════════════════════════ */
+.task-panel-sheet {
+}
+
+.task-panel-toggle {
+  margin-bottom: var(--ku-planet2-space-md);
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+}
+
+.task-card--done {
+  border-color: var(--ku-color-primary-alpha-14);
+  background: var(--ku-color-primary-alpha-04);
+}
+
+.task-card--interaction {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.task-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ku-radius-circle);
+  background: var(--ku-color-primary-alpha-06);
+  color: var(--ku-color-primary);
+}
+
+.task-card--done .task-card-icon {
+  background: var(--ku-color-primary);
+  color: var(--ku-color-on-primary);
+}
+
+.task-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.task-card-title {
+  font: 600 13px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
+
+.task-card-desc {
+  font: 400 12px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-meta);
+}
+
+.task-card-ratio {
+  flex-shrink: 0;
+  font: 700 15px/1 var(--ku-font-mono);
+  color: var(--ku-color-primary);
+}
+
+.task-progress-track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-primary-alpha-06);
+  overflow: visible;
+}
+
+.task-progress-fill {
+  height: 100%;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-gradient-primary);
+  transition: width var(--ku-motion-fast);
+}
+
+.task-progress-marker {
+  position: absolute;
+  top: -2px;
+  width: 2px;
+  height: 12px;
+  background: var(--ku-color-bg-phone);
+  border-left: 1px dashed var(--ku-color-border-card);
+}
+
+@keyframes ku-task-celebrate-pop {
+  0%   { opacity: 0; transform: translateY(4px) scale(0.94); }
+  15%  { opacity: 1; transform: translateY(0) scale(1); }
+  85%  { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+
+.task-celebrate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-success-bg);
+  color: var(--ku-color-success-text);
+  font: 600 12px/1.4 var(--ku-font-family);
+  animation: ku-task-celebrate-pop 1.2s ease forwards;
+}
+
+.task-panel-note {
+  margin: 0 0 10px;
+  font: 400 11px/1.6 var(--ku-font-family);
+  color: var(--ku-color-text-meta);
+  text-align: left;
+}
+
+.task-panel-rules-entry {
+  margin-bottom: var(--ku-planet2-space-md);
 }

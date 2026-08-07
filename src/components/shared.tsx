@@ -118,6 +118,19 @@ export function ChannelCard({
   const subscribedTierIndex = subscribedChannelTiers[channel.id];
   const isSubscribed = subscribedTierIndex != null;
   const canSubscribe = isSubscribed || channel.tiers.some(tr => !tr.archived);
+  const activeTiers = channel.tiers.filter(tr => !tr.archived);
+  const subscribedTier = isSubscribed ? channel.tiers[subscribedTierIndex] : undefined;
+  const accessLabel = (() => {
+    if (subscribedTier) {
+      return t('已订阅 · {name}', { name: subscribedTier.name });
+    }
+    if (activeTiers.length === 0) return t('免费');
+    if (activeTiers.length === 1) {
+      return t('{price} PB/月', { price: activeTiers[0].price });
+    }
+    const fromPrice = Math.min(...activeTiers.map(tr => tr.price));
+    return t('{price} PB/月起', { price: fromPrice });
+  })();
   // 注：外层不能用 <button> 包 <button>（管理/订阅按钮）——嵌套交互元素是无效 HTML，
   // 部分浏览器（尤其 WebKit）会导致内层点击拿不到事件。改用 div+role="button" 承载整卡点击，
   // 右侧操作保留原生 <button>，两者是兄弟节点而非嵌套。
@@ -138,6 +151,10 @@ export function ChannelCard({
         <span className="channel-discover-desc">{channel.description}</span>
         <div className="channel-discover-meta">
           <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
+          <span className="channel-discover-meta-dot" aria-hidden="true">·</span>
+          <span className={`channel-discover-access${activeTiers.length === 0 && !subscribedTier ? ' channel-discover-access--free' : ''}${subscribedTier ? ' channel-discover-access--subscribed' : ''}`}>
+            {accessLabel}
+          </span>
         </div>
       </div>
       {onManage && (
@@ -145,9 +162,10 @@ export function ChannelCard({
           type="button"
           className="channel-manage-btn channel-discover-manage-btn"
           onClick={e => { e.stopPropagation(); onManage(); }}
+          aria-label={t('管理频道2')}
+          title={t('管理频道2')}
         >
-          <Settings size={13} strokeWidth={2.2} />
-          {t('管理频道2')}
+          <Settings size={16} strokeWidth={2.2} />
         </button>
       )}
       {showSubscribe && !onManage && canSubscribe && (
@@ -595,7 +613,7 @@ export function PostContent({
 // ── GeminiNodeBadge ────────────────────────────────────────────
 // leftContent：用其它内容（如 feed 卡片的热力值/打赏）覆盖默认的「知识宇宙·星级·节点ID」左侧内容；
 // 此时整条外层点击行为改由 onLeftClick 控制（未传则该区域不可点击），与 onGoToPlanet/链接跳转逻辑互斥。
-// 有 leftContent 且 showChain 时拆成两块：左侧热力值/打赏胶囊；右侧原链接按钮靠右。
+// 有 leftContent 且 showChain 时：左侧热力值+打赏同壳胶囊，右侧链接按钮靠右。
 export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPlanet, leftContent, onLeftClick, leftAriaLabel, chainOutline = false }: {
   post: Post; showChain?: boolean; onViewLinks?: () => void; onGoToPlanet?: () => void;
   leftContent?: React.ReactNode; onLeftClick?: () => void; leftAriaLabel?: string;
@@ -629,7 +647,7 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
     )
   ) : null;
 
-  // Feed：热力值/打赏胶囊靠左 + 链接按钮靠右
+  // Feed：热力值/打赏同壳靠左 + 链接按钮靠右
   if (splitHeatNode) {
     return (
       <div className="post-heat-gemini-row" data-layer="gemini-node-badge">
