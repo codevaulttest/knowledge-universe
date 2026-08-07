@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react';
-import { CalendarClock, Check, ChevronRight, Circle, Crown, Gift, Info, X } from 'lucide-react';
+import { CalendarClock, ChevronRight, Gift, Info, X } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { BSP_GUARANTEE_MIN_INTERACTIONS } from '../bspConfig';
 import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT } from '../mockData';
 import { formatTokenAmount } from '../stakeConfig';
-import { InteractionTaskSheet, BspTaskSheet } from './TaskPanelSheet';
+import { InteractionTaskSheet } from './TaskPanelSheet';
 import { TASK_INTERACTION_POOL_SIZE } from '../taskConfig';
 
 export function AssetOverviewCard() {
   const { t, navigateRoot, walletConnected, airdropClaimed, claimAirdrop, taskSnapshotToday, taskSnapshotYesterday } = useApp();
   const [airdropRuleOpen, setAirdropRuleOpen] = useState(false);
   const [interactionTaskOpen, setInteractionTaskOpen] = useState(false);
-  const [bspTaskOpen, setBspTaskOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -28,10 +26,6 @@ export function AssetOverviewCard() {
   const remaining = Math.max(0, TASK_INTERACTION_POOL_SIZE - interacted);
   const isFull = remaining === 0;
   const progressPct = Math.min(100, (interacted / TASK_INTERACTION_POOL_SIZE) * 100);
-  const posted = taskSnapshotToday.posted;
-  const guaranteeCount = Math.min(interacted, BSP_GUARANTEE_MIN_INTERACTIONS);
-  const guaranteePct = (guaranteeCount / BSP_GUARANTEE_MIN_INTERACTIONS) * 100;
-  const bspReady = posted && guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS;
 
   if (!walletConnected) return null;
 
@@ -60,38 +54,38 @@ export function AssetOverviewCard() {
                   <Info size={13} strokeWidth={2} />
                 </button>
               </div>
-              {airdropClaimed ? (
-                <span className="asset-overview-airdrop-badge">{t('今日已领取')}</span>
-              ) : airdropMissed ? (
-                <span className="asset-overview-airdrop-badge asset-overview-airdrop-badge--missed">
-                  {t('今日已错过')}
-                </span>
-              ) : (
-                <>
+              <div className="asset-overview-airdrop-amount-row">
+                {airdropClaimed ? (
+                  <span className="asset-overview-airdrop-badge">{t('今日已领取')}</span>
+                ) : airdropMissed ? (
+                  <span className="asset-overview-airdrop-badge asset-overview-airdrop-badge--missed">
+                    {t('今日已错过')}
+                  </span>
+                ) : (
                   <div className="asset-overview-airdrop-amount">
                     {formatTokenAmount(todayPb)}
                     <span className="asset-overview-airdrop-unit"> PB</span>
                   </div>
-                  <span className="asset-overview-airdrop-deadline">
-                    {t('请在今晚 10 点前领取')}
-                  </span>
-                </>
+                )}
+                <button
+                  type="button"
+                  className={`asset-overview-claim-btn${airdropClaimed || airdropMissed ? ' asset-overview-claim-btn--done' : ''}`}
+                  onClick={claimAirdrop}
+                  disabled={airdropClaimed || airdropMissed}
+                >
+                  {airdropClaimed ? t('已领取') : airdropMissed ? t('已错过') : t('领取空投')}
+                </button>
+              </div>
+              {!airdropClaimed && !airdropMissed && (
+                <span className="asset-overview-airdrop-deadline">
+                  {t('请在今晚 10 点前领取')}
+                </span>
               )}
             </div>
           </div>
-          <div className="asset-overview-airdrop-claim-col">
-            <button
-              type="button"
-              className={`asset-overview-claim-btn${airdropClaimed || airdropMissed ? ' asset-overview-claim-btn--done' : ''}`}
-              onClick={claimAirdrop}
-              disabled={airdropClaimed || airdropMissed}
-            >
-              {airdropClaimed ? t('已领取') : airdropMissed ? t('已错过') : t('领取空投')}
-            </button>
-          </div>
         </div>
 
-        {/* 今日互动任务 · 决定明天领取比例 */}
+        {/* 每日互动任务 */}
         <div className="asset-overview-tomorrow">
           <button
             type="button"
@@ -104,26 +98,28 @@ export function AssetOverviewCard() {
                 <CalendarClock size={20} strokeWidth={1.8} />
               </span>
             </span>
-            <span className="asset-overview-tomorrow-title">{t('今日互动任务 · 决定明天领取比例')}</span>
+            <span className="asset-overview-tomorrow-title">{t('今日互动任务')}</span>
             <ChevronRight size={15} strokeWidth={2} className="asset-overview-toggle-chevron" />
           </button>
 
           <div className="asset-overview-tomorrow-body">
-            <div className="asset-overview-tomorrow-amount">
-              <span className="asset-overview-tomorrow-amount-value">
-                {tomorrowRatio}
-                <span className="asset-overview-airdrop-unit">%</span>
-              </span>
-              <span className="asset-overview-tomorrow-max">{t('额度')}</span>
-            </div>
+            <div className="asset-overview-tomorrow-stats">
+              <div className="asset-overview-tomorrow-amount">
+                <span className="asset-overview-tomorrow-amount-value">
+                  {tomorrowRatio}
+                  <span className="asset-overview-airdrop-unit">%</span>
+                </span>
+                <span className="asset-overview-tomorrow-max">{t('额度')}</span>
+              </div>
 
-            <div className="asset-overview-tomorrow-progress">
-              <span className="asset-overview-tomorrow-track">
-                <span className="asset-overview-tomorrow-fill" style={{ width: `${progressPct}%` }} />
-              </span>
-              <span className="asset-overview-tomorrow-caption">
-                {t('今天已互动 {count} / {total} 次', { count: interacted, total: TASK_INTERACTION_POOL_SIZE })}
-              </span>
+              <div className="asset-overview-tomorrow-progress">
+                <span className="asset-overview-tomorrow-track">
+                  <span className="asset-overview-tomorrow-fill" style={{ width: `${progressPct}%` }} />
+                </span>
+                <span className="asset-overview-tomorrow-caption">
+                  {t('今天已互动 {count} / {total} 次', { count: interacted, total: TASK_INTERACTION_POOL_SIZE })}
+                </span>
+              </div>
             </div>
 
             <div className="asset-overview-tomorrow-action">
@@ -142,63 +138,6 @@ export function AssetOverviewCard() {
                 </button>
               )}
             </div>
-          </div>
-        </div>
-
-        {/* BSP 巨星投流任务：发帖 + 保底互动门槛摘要 */}
-        <div className="asset-overview-bsp">
-          <button
-            type="button"
-            className="asset-overview-tomorrow-head"
-            onClick={() => setBspTaskOpen(true)}
-            aria-label={t('查看 BSP 巨星投流任务')}
-          >
-            <span className="asset-overview-icon-col">
-              <span className="asset-overview-bsp-icon">
-                <Crown size={20} strokeWidth={1.8} />
-              </span>
-            </span>
-            <span className="asset-overview-tomorrow-title">{t('BSP 巨星投流任务')}</span>
-            <ChevronRight size={15} strokeWidth={2} className="asset-overview-toggle-chevron" />
-          </button>
-
-          <div className="asset-overview-tomorrow-body">
-            <div className="asset-overview-bsp-rows">
-              <div className="asset-overview-bsp-row">
-                <span className={`asset-overview-bsp-row-label${posted ? ' asset-overview-bsp-row-label--done' : ''}`}>
-                  {posted
-                    ? <Check size={12} strokeWidth={2.6} className="asset-overview-bsp-row-check" aria-hidden="true" />
-                    : <Circle size={12} strokeWidth={2} className="asset-overview-bsp-row-check" aria-hidden="true" />}
-                  {t('发帖任务')}
-                </span>
-                <span className={`asset-overview-bsp-row-value${posted ? ' asset-overview-bsp-row-value--done' : ''}`}>
-                  {posted ? t('已发布内容') : t('还没有发布内容')}
-                </span>
-              </div>
-              <div className="asset-overview-bsp-row">
-                <span className={`asset-overview-bsp-row-label${guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS ? ' asset-overview-bsp-row-label--done' : ''}`}>
-                  {guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS
-                    ? <Check size={12} strokeWidth={2.6} className="asset-overview-bsp-row-check" aria-hidden="true" />
-                    : <Circle size={12} strokeWidth={2} className="asset-overview-bsp-row-check" aria-hidden="true" />}
-                  {t('保底互动门槛')}
-                </span>
-                <span className={`asset-overview-bsp-row-value${guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS ? ' asset-overview-bsp-row-value--done' : ''}`}>
-                  {t('已互动 {count} / {total} 次', { count: guaranteeCount, total: BSP_GUARANTEE_MIN_INTERACTIONS })}
-                </span>
-              </div>
-            </div>
-
-            <div className="asset-overview-tomorrow-progress">
-              <span className="asset-overview-tomorrow-track">
-                <span className="asset-overview-tomorrow-fill" style={{ width: `${guaranteePct}%` }} />
-              </span>
-            </div>
-
-            <p className="asset-overview-bsp-hint">
-              {bspReady
-                ? t('明日可享 BSP 打赏保底')
-                : t('当天发帖且互动满 {min} 次，次日享有打赏保底', { min: BSP_GUARANTEE_MIN_INTERACTIONS })}
-            </p>
           </div>
         </div>
       </div>
@@ -245,7 +184,6 @@ export function AssetOverviewCard() {
       )}
 
       {interactionTaskOpen && <InteractionTaskSheet onClose={() => setInteractionTaskOpen(false)} />}
-      {bspTaskOpen && <BspTaskSheet onClose={() => setBspTaskOpen(false)} />}
     </>
   );
 }
