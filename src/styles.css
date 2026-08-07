@@ -1790,14 +1790,19 @@ button {
 /* Compose full-page */
 .sheet-backdrop:has(.compose-modal) {
   padding: 0;
+  /* 与 phone-shell / pay-page-wrap 同宽：全屏遮罩下把发帖页限在布局最大宽度内居中 */
+  align-items: stretch;
+  justify-content: center;
 }
 .compose-modal {
   width: 100%;
+  max-width: var(--ku-layout-max-width);
   height: 100vh;
   height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--ku-color-bg-phone);
+  box-shadow: var(--ku-shadow-phone);
 }
 .compose-modal-header {
   display: grid;
