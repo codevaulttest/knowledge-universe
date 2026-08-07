@@ -3,6 +3,7 @@ import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronRight
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { AssetOverviewCard } from '../components/AssetOverviewCard';
+import { PlanetHeroBalances } from '../components/PlanetHeroBalances';
 import { PlanetAnnouncementBanner } from '../components/PlanetAnnouncementBanner';
 import { BspInvestSheet } from '../components/BspInvestSheet';
 import { BspRecordList, BspRecordSummary } from '../components/BspRecordList';
@@ -632,7 +633,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
   };
 
   // 下拉刷新：demo 环境无真实后端，用短暂延迟模拟重新拉取余额 / 空投 / 节点数据，
-  // 并按最新 channels 状态重新推导节点列表（AssetOverviewCard 的余额与空投倒计时自身已是响应式，会随之一起呈现最新值）
+  // 并按最新 channels 状态重新推导节点列表（顶栏余额与空投倒计时自身已是响应式，会随之一起呈现最新值）
   const handleRefresh = async () => {
     await new Promise(resolve => setTimeout(resolve, 900));
     setNodes(seedNodesWithChannel(channels));
@@ -651,7 +652,10 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
               把 hero 提到 .page 外层再用负 margin 顶起整页的写法，避免破坏本 app 固定视口 + 内部滚动的壳体结构） ── */}
           <div className="planet-hero">
             <img className="planet-hero-bg" src="/img/genesis-bigbang.webp" alt="" aria-hidden="true" />
-            <h1 className="planet-hero-title">{t('知识宇宙')}</h1>
+            <div className="planet-hero-row">
+              <h1 className="planet-hero-title">{t('知识宇宙')}</h1>
+              <PlanetHeroBalances />
+            </div>
           </div>
 
           {/* ── 页顶公告：单条可关闭横幅，点开看全文；负 margin 叠压在 hero 底边上 ── */}
@@ -659,7 +663,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
             <PlanetAnnouncementBanner />
           </div>
 
-          {/* ── 资产概览：空投主区 + 任务 + PB/SUP 资产条 ── */}
+          {/* ── 资产概览：空投主区 + 今日互动任务 ── */}
           <AssetOverviewCard />
 
           {/* ── Quick Actions: BSP 巨星投流 / 创建频道 ── */}

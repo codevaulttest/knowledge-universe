@@ -7683,19 +7683,30 @@ button {
   padding: var(--ku-planet2-space-base);
 }
 
-.pb-info-balance-row {
+.pb-info-balances {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  flex-direction: column;
   gap: var(--ku-planet2-space-sm);
   padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base);
   border-radius: var(--ku-planet2-radius-lg);
   background: var(--ku-color-border-cell);
 }
 
+.pb-info-balance-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ku-planet2-space-xxs);
+  min-width: 0;
+}
+
+.pb-info-balance-row + .pb-info-balance-row {
+  padding-top: var(--ku-planet2-space-sm);
+  border-top: 1px solid var(--ku-color-border-card);
+}
+
 .pb-info-balance-label {
-  flex-shrink: 0;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--ku-color-text-meta);
 }
 
@@ -7703,9 +7714,11 @@ button {
   font-family: var(--ku-font-mono);
   font-size: 15px;
   font-weight: 700;
+  line-height: 1.35;
   color: var(--ku-color-text-primary);
   word-break: break-all;
-  text-align: right;
+  overflow-wrap: anywhere;
+  text-align: left;
 }
 
 .pb-info-sheet-para {
@@ -7973,7 +7986,7 @@ button {
 
 /* ── 资产条：PB / SUP 并排 ── */
 
-/* ── 明天可以领（次日空投预告 + 互动进度 + 去互动 CTA） ── */
+/* ── 今日互动任务（次日空投预告 + 互动进度 + 去互动 CTA） ── */
 .asset-overview-tomorrow {
   margin-top: var(--ku-planet2-space-xs);
   padding-top: var(--ku-planet2-space-sm);
@@ -7982,7 +7995,7 @@ button {
 
 .asset-overview-tomorrow-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--ku-planet2-space-sm);
   width: 100%;
   padding: 0;
@@ -8008,7 +8021,16 @@ button {
   flex: 1;
   min-width: 0;
   font-size: 14px;
+  line-height: 1.35;
   color: var(--ku-color-text-secondary);
+  /* 与 40px 图标垂直居中：单行时贴近图标中线，换行时顶对齐自然 */
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.asset-overview-tomorrow-head .asset-overview-toggle-chevron {
+  flex-shrink: 0;
+  margin-top: 12px;
 }
 
 .asset-overview-tomorrow-body {
@@ -8019,7 +8041,7 @@ button {
 .asset-overview-tomorrow-amount {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px;
   margin-top: 4px;
 }
 
@@ -8031,14 +8053,10 @@ button {
   color: var(--ku-color-primary);
 }
 
-.asset-overview-tomorrow-arrow {
-  align-self: center;
-  color: var(--ku-color-text-meta);
-}
-
 .asset-overview-tomorrow-max {
-  font-size: 13px;
-  color: var(--ku-color-text-meta);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ku-color-text-secondary);
 }
 
 .asset-overview-tomorrow-progress {
@@ -8103,84 +8121,65 @@ button {
   background: var(--ku-color-primary-dark);
 }
 
-.asset-overview-balances {
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  margin-top: var(--ku-planet2-space-sm);
+/* ── BSP 巨星投流任务摘要（发帖 + 保底互动门槛） ── */
+.asset-overview-bsp {
+  margin-top: var(--ku-planet2-space-xs);
+  padding-top: var(--ku-planet2-space-sm);
   border-top: 1px solid var(--ku-color-border-card);
-  padding-top: var(--ku-planet2-space-xs);
 }
 
-.asset-overview-balance-cell {
-  flex: 1;
-  min-width: 0;
+.asset-overview-bsp-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ku-planet2-radius-full);
+  background: var(--ku-color-genesis-gold-bg);
+  color: var(--ku-color-genesis-gold);
+}
+
+.asset-overview-bsp-rows {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 2px var(--ku-planet2-space-xs);
-  border: none;
-  background: none;
-  text-align: left;
-  cursor: pointer;
+  gap: var(--ku-planet2-space-xxs);
+  margin-top: 4px;
 }
 
-.asset-overview-balance-cell--static {
-  cursor: default;
+.asset-overview-bsp-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ku-planet2-space-sm);
+  min-width: 0;
 }
 
-.asset-overview-balance-cell:first-child {
-  padding-left: 0;
-}
-
-.asset-overview-balance-cell:last-child {
-  padding-right: 0;
-}
-
-.asset-overview-balance-divider {
-  width: 1px;
-  align-self: stretch;
-  margin: 2px 0;
-  background: var(--ku-color-border-card);
+.asset-overview-bsp-row-label {
   flex-shrink: 0;
-}
-
-.asset-overview-balance-cell-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
   font-size: 12px;
   color: var(--ku-color-text-meta);
-  white-space: nowrap;
 }
 
-.asset-overview-balance-cell-wallet {
-  flex-shrink: 0;
-  color: var(--ku-color-text-meta);
-}
-
-.asset-overview-balance-cell-info {
-  color: var(--ku-color-text-meta);
-}
-
-.asset-overview-balance-cell-value {
-  font-family: var(--ku-font-mono);
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--ku-color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.asset-overview-balance-cell-unit {
-  font-family: var(--ku-font-family);
+.asset-overview-bsp-row-value {
+  min-width: 0;
   font-size: 12px;
   font-weight: 500;
-  color: var(--ku-color-text-meta);
+  color: var(--ku-color-text-secondary);
+  text-align: right;
+}
+
+.asset-overview-bsp-row-value--done {
+  color: var(--ku-color-primary);
+  font-weight: 600;
+}
+
+.asset-overview-bsp-hint {
+  margin: var(--ku-planet2-space-xs) 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ku-color-text-primary);
 }
 
 .planet-origin-summary {
@@ -10282,10 +10281,19 @@ button {
   z-index: 0;
 }
 
-.planet-hero-title {
+.planet-hero-row {
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ku-planet2-space-sm);
+}
+
+.planet-hero-title {
   margin: 0;
+  flex: 1;
+  min-width: 0;
   /* 默认无衬线：英文等拉丁文案（Wisverse）不走品牌隶书 */
   font: 700 32px/1.2 var(--ku-font-family);
   letter-spacing: 0.02em;
@@ -10296,6 +10304,67 @@ html[lang="zh-CN"] .planet-hero-title,
 html[lang="zh-TW"] .planet-hero-title {
   font-family: var(--ku-font-brand);
   letter-spacing: 0.08em;
+}
+
+/* 顶栏极简余额：白底 + 品牌色文字，不透明边框保证边界 */
+.planet-hero-balances {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 5px 8px 5px 10px;
+  border: 1px solid var(--ku-color-border-control);
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 46%;
+}
+
+.planet-hero-balances:active {
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-primary-dark);
+}
+
+.planet-hero-balances-wallet {
+  flex-shrink: 0;
+  color: var(--ku-color-text-meta);
+}
+
+.planet-hero-balances-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--ku-planet2-space-xxs);
+  min-width: 0;
+}
+
+.planet-hero-balances-value {
+  font-family: var(--ku-font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planet-hero-balances-unit {
+  font-family: var(--ku-font-family);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ku-color-text-meta);
+}
+
+.planet-hero-balances-sep {
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--ku-color-text-meta);
+}
+
+.planet-hero-balances-chevron {
+  flex-shrink: 0;
+  color: var(--ku-color-text-meta);
 }
 
 /* 公告横幅叠压在 hero 底边（负 margin 需盖过 .planet-content 的 flex gap 才能真正压上插画）；
@@ -10486,7 +10555,7 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 
 .task-group-note {
-  margin: 8px 0 0;
+  margin: 0;
   font: 400 12px/1.6 var(--ku-font-family);
   color: var(--ku-color-text-meta);
   text-align: left;

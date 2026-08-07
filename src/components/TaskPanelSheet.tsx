@@ -13,13 +13,46 @@ import {
 
 type TaskTab = 'today' | 'yesterday';
 
-/** 任务面板：展示「今天/昨天」发帖任务与互动帖任务的完成情况与对应领取比例 */
-export function TaskPanelSheet({ onClose }: { onClose: () => void }) {
-  const { t, taskSnapshotToday, taskSnapshotYesterday } = useApp();
+function useTaskDaySnapshot() {
+  const { taskSnapshotToday, taskSnapshotYesterday } = useApp();
   const [tab, setTab] = useState<TaskTab>('today');
-  const [rulesOpen, setRulesOpen] = useState(false);
-
   const snapshot = tab === 'today' ? taskSnapshotToday : taskSnapshotYesterday;
+  return { tab, setTab, snapshot };
+}
+
+function TaskDayToggle({
+  tab,
+  onChange,
+}: {
+  tab: TaskTab;
+  onChange: (tab: TaskTab) => void;
+}) {
+  const { t } = useApp();
+  return (
+    <div className="create-scale-toggle task-panel-toggle">
+      <button
+        type="button"
+        className={`create-scale-tab${tab === 'today' ? ' create-scale-tab--active' : ''}`}
+        onClick={() => onChange('today')}
+      >
+        {t('今天')}
+      </button>
+      <button
+        type="button"
+        className={`create-scale-tab${tab === 'yesterday' ? ' create-scale-tab--active' : ''}`}
+        onClick={() => onChange('yesterday')}
+      >
+        {t('昨天')}
+      </button>
+    </div>
+  );
+}
+
+/** 互动帖任务弹窗：决定次日空投领取比例 */
+export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
+  const { t } = useApp();
+  const { tab, setTab, snapshot } = useTaskDaySnapshot();
+  const [rulesOpen, setRulesOpen] = useState(false);
   const tier1Percent = (TASK_INTERACTION_TIER1_COUNT / TASK_INTERACTION_POOL_SIZE) * 100;
   const progressPercent = (snapshot.interactedCount / TASK_INTERACTION_POOL_SIZE) * 100;
 
@@ -28,7 +61,7 @@ export function TaskPanelSheet({ onClose }: { onClose: () => void }) {
       <div className="sheet-backdrop" onClick={onClose}>
         <div className="payment-sheet task-panel-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
           <div className="sheet-header">
-            <span className="sheet-title">{t('任务')}</span>
+            <span className="sheet-title">{t('互动帖任务')}</span>
             <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')}>
               <X size={18} strokeWidth={2} />
             </button>
@@ -44,34 +77,21 @@ export function TaskPanelSheet({ onClose }: { onClose: () => void }) {
             <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
           </button>
 
-          <div className="create-scale-toggle task-panel-toggle">
-            <button
-              type="button"
-              className={`create-scale-tab${tab === 'today' ? ' create-scale-tab--active' : ''}`}
-              onClick={() => setTab('today')}
-            >
-              {t('今天')}
-            </button>
-            <button
-              type="button"
-              className={`create-scale-tab${tab === 'yesterday' ? ' create-scale-tab--active' : ''}`}
-              onClick={() => setTab('yesterday')}
-            >
-              {t('昨天')}
-            </button>
-          </div>
-
-          <p className="task-group-label">{t('影响空投领取比例')}</p>
+          <TaskDayToggle tab={tab} onChange={setTab} />
 
           <div className="task-card task-card--interaction">
             <div className="task-card-head">
               <span className="task-card-icon" aria-hidden="true">
-                {snapshot.interactedCount >= TASK_INTERACTION_POOL_SIZE ? <Check size={16} strokeWidth={2.6} /> : <Sparkles size={16} strokeWidth={1.9} />}
+                {snapshot.interactedCount >= TASK_INTERACTION_POOL_SIZE
+                  ? <Check size={16} strokeWidth={2.6} />
+                  : <Sparkles size={16} strokeWidth={1.9} />}
               </span>
               <span className="task-card-body">
                 <span className="task-card-title">{t('互动帖任务')}</span>
                 <span className="task-card-desc">
-                  {t('已完成 {count} / {total} 篇', { count: snapshot.interactedCount, total: TASK_INTERACTION_POOL_SIZE })}
+                  {tab === 'today'
+                    ? t('今天已互动 {count} / {total} 次', { count: snapshot.interactedCount, total: TASK_INTERACTION_POOL_SIZE })
+                    : t('昨天已互动 {count} / {total} 次', { count: snapshot.interactedCount, total: TASK_INTERACTION_POOL_SIZE })}
                 </span>
               </span>
               <span className="task-card-ratio">{snapshot.claimRatio}%</span>
@@ -82,8 +102,44 @@ export function TaskPanelSheet({ onClose }: { onClose: () => void }) {
               <span className="task-progress-marker" style={{ left: `${tier1Percent}%` }} aria-hidden="true" />
             </div>
           </div>
+        </div>
+      </div>
 
-          <p className="task-group-label">{t('影响 BSP 巨星投流保底')}</p>
+      {rulesOpen && <InteractionTaskRulesSheet onClose={() => setRulesOpen(false)} />}
+    </>
+  );
+}
+
+/** BSP 巨星投流任务弹窗：发帖 + 保底互动门槛 */
+export function BspTaskSheet({ onClose }: { onClose: () => void }) {
+  const { t } = useApp();
+  const { tab, setTab, snapshot } = useTaskDaySnapshot();
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const guaranteeCount = Math.min(snapshot.interactedCount, BSP_GUARANTEE_MIN_INTERACTIONS);
+  const guaranteePercent = (guaranteeCount / BSP_GUARANTEE_MIN_INTERACTIONS) * 100;
+
+  return (
+    <>
+      <div className="sheet-backdrop" onClick={onClose}>
+        <div className="payment-sheet task-panel-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+          <div className="sheet-header">
+            <span className="sheet-title">{t('BSP 巨星投流任务')}</span>
+            <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')}>
+              <X size={18} strokeWidth={2} />
+            </button>
+          </div>
+
+          <p className="task-panel-note">
+            {t('需当天发帖，且互动帖任务完成 {min} 次以上，次日才享有 BSP 打赏保底。', { min: BSP_GUARANTEE_MIN_INTERACTIONS })}
+          </p>
+
+          <button type="button" className="bsp-rules-entry task-panel-rules-entry" onClick={() => setRulesOpen(true)}>
+            <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
+            <span className="bsp-rules-entry-text">{t('查看 BSP 保底规则')}</span>
+            <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
+          </button>
+
+          <TaskDayToggle tab={tab} onChange={setTab} />
 
           <div className={`task-card${snapshot.posted ? ' task-card--done' : ''}`}>
             <span className="task-card-icon" aria-hidden="true">
@@ -97,19 +153,37 @@ export function TaskPanelSheet({ onClose }: { onClose: () => void }) {
             </span>
           </div>
 
-          <p className="task-group-note">
-            {t('需当天发帖，且互动帖任务完成 {min} 篇以上，次日才享有 BSP 打赏保底。', { min: BSP_GUARANTEE_MIN_INTERACTIONS })}
-          </p>
+          <div className={`task-card task-card--interaction${guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS ? ' task-card--done' : ''}`}>
+            <div className="task-card-head">
+              <span className="task-card-icon" aria-hidden="true">
+                {guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS
+                  ? <Check size={16} strokeWidth={2.6} />
+                  : <Sparkles size={16} strokeWidth={1.9} />}
+              </span>
+              <span className="task-card-body">
+                <span className="task-card-title">{t('保底互动门槛')}</span>
+                <span className="task-card-desc">
+                  {t('已互动 {count} / {total} 次', { count: guaranteeCount, total: BSP_GUARANTEE_MIN_INTERACTIONS })}
+                </span>
+              </span>
+            </div>
+
+            <div className="task-progress-track" aria-hidden="true">
+              <div className="task-progress-fill" style={{ width: `${guaranteePercent}%` }} />
+            </div>
+          </div>
         </div>
       </div>
 
-      {rulesOpen && <TaskRulesSheet onClose={() => setRulesOpen(false)} />}
+      {rulesOpen && <BspTaskRulesSheet onClose={() => setRulesOpen(false)} />}
     </>
   );
 }
 
-/** 任务规则说明 —— 阶梯比例表与生效时间说明 */
-function TaskRulesSheet({ onClose }: { onClose: () => void }) {
+/** @deprecated 使用 InteractionTaskSheet / BspTaskSheet；保留别名避免旧引用断裂 */
+export const TaskPanelSheet = InteractionTaskSheet;
+
+function InteractionTaskRulesSheet({ onClose }: { onClose: () => void }) {
   const { t } = useApp();
 
   return (
@@ -142,16 +216,47 @@ function TaskRulesSheet({ onClose }: { onClose: () => void }) {
             })}
           </p>
           <p className="pb-info-sheet-para">
-            <strong className="pb-info-sheet-label">{t('发帖任务：')}</strong>
-            {t('当天至少发布 1 篇内容即视为完成。它是 BSP 巨星投流每日打赏保底的门槛：当天发帖、且互动帖任务完成 {min} 篇以上，次日才享有打赏保底。', { min: BSP_GUARANTEE_MIN_INTERACTIONS })}
-          </p>
-          <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('生效时间：')}</strong>
             {t('今天的任务完成情况，决定明天可领取空投收益的比例。')}
           </p>
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('里程碑提示：')}</strong>
-            {t('互动帖任务每完成 {every} 篇会有一次特效提示，帮助你直观了解当前累计比例。', { every: TASK_CELEBRATE_EVERY })}
+            {t('互动帖任务每完成 {every} 次会有一次特效提示，帮助你直观了解当前累计比例。', { every: TASK_CELEBRATE_EVERY })}
+          </p>
+          <div className="sup-deposit-warning">
+            <AlertTriangle size={16} strokeWidth={2} aria-hidden="true" />
+            <span>{t('具体保底比例与阶梯步长可能随运营策略调整，请以任务面板内实际展示为准。')}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BspTaskRulesSheet({ onClose }: { onClose: () => void }) {
+  const { t } = useApp();
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div className="sheet-header">
+          <span className="sheet-title">{t('BSP 保底规则')}</span>
+          <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+
+        <div className="pb-info-sheet-body">
+          <p className="pb-info-sheet-para pb-info-sheet-heading">
+            {t('BSP 巨星投流任务')}
+          </p>
+          <p className="pb-info-sheet-para">
+            <strong className="pb-info-sheet-label">{t('发帖任务：')}</strong>
+            {t('当天至少发布 1 篇内容即视为完成。它是 BSP 巨星投流每日打赏保底的门槛：当天发帖、且互动帖任务完成 {min} 次以上，次日才享有打赏保底。', { min: BSP_GUARANTEE_MIN_INTERACTIONS })}
+          </p>
+          <p className="pb-info-sheet-para">
+            <strong className="pb-info-sheet-label">{t('保底互动门槛：')}</strong>
+            {t('需当天发帖，且互动帖任务完成 {min} 次以上，次日才享有 BSP 打赏保底。', { min: BSP_GUARANTEE_MIN_INTERACTIONS })}
           </p>
           <div className="sup-deposit-warning">
             <AlertTriangle size={16} strokeWidth={2} aria-hidden="true" />

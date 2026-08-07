@@ -313,7 +313,7 @@ export function BspInvestSheet({
         <div className="create-delay-note">
           <Info size={14} strokeWidth={2} aria-hidden />
           <span>
-            {t('受益人当天需至少发布 1 篇内容，且当天互动帖任务完成数需达到 {min} 篇，才触发次日保底。', { min: BSP_GUARANTEE_MIN_INTERACTIONS })}
+            {t('受益人当天需至少发布 1 篇内容，且当天互动帖任务完成数需达到 {min} 次，才触发次日保底。', { min: BSP_GUARANTEE_MIN_INTERACTIONS })}
           </span>
         </div>
 
