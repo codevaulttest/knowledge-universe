@@ -1,13 +1,15 @@
 // ════════════════════════════════════════════════════════════════
 // 每日任务（发帖任务 + 互动帖任务）— 配置与结算逻辑（纯前端 Mock，无后端）
 // ----------------------------------------------------------------
-// 今天的任务完成度决定「明天」可领取空投收益的比例：
-// - 发帖任务：当天是否至少发布过一篇帖子。
+// 「空投领取比例」只由互动帖任务决定，与发帖任务无关：
 // - 互动帖任务：系统每天推荐固定数量的「互动帖」，对任意一篇做一次互动
 //   （点赞/评论/收藏/踩，任选其一，同一帖子多次操作只算一次）即完成 1 篇，
-//   按阶梯换算成领取比例，全部完成对应 100%。
-// 具体保底比例 / 阶梯步长为录音整理推断值，非产品最终定案数值，
-// 已做成下方可调常量，接入真实需求时按产品口径调整即可。
+//   按阶梯换算成次日领取比例，全部完成对应 100%。
+// - 发帖任务：当天是否至少发布过一篇帖子。不影响空投领取比例，
+//   而是 BSP 巨星投流每日打赏保底的门槛之一（另一门槛见 bspConfig.ts 的
+//   BSP_GUARANTEE_MIN_INTERACTIONS：昨日发帖 且 昨日互动帖 ≥ 该数量，
+//   今日才有保底）。
+// 具体保底比例 / 阶梯步长为产品口径确认值，已做成下方可调常量。
 // ════════════════════════════════════════════════════════════════
 import { dayKey } from './checkInConfig';
 
@@ -46,7 +48,7 @@ function emptyState(date: string): DailyTaskState {
   return { date, posted: false, interactedPostIds: [] };
 }
 
-/** 按阶梯规则将互动帖完成数换算为领取比例（%），封顶 100。 */
+/** 按阶梯规则将互动帖完成数换算为空投领取比例（%），封顶 100；与是否发帖无关。 */
 export function interactionRatio(count: number): number {
   const n = Math.max(0, Math.min(TASK_INTERACTION_POOL_SIZE, count));
   if (n <= 0) return TASK_INTERACTION_BASE_RATIO;
@@ -118,7 +120,7 @@ export function getYesterdaySnapshot(now: Date = new Date()): TaskDaySnapshot {
   if (state.posted || state.interactedPostIds.length > 0) {
     return getTaskSnapshot(yesterday);
   }
-  // seed：demo 首次打开时展示一份「昨天完成了大半」的示例快照，而非全零
+  // seed：demo 首次打开时展示一份「昨天已发帖 + 完成了大半互动帖」的示例快照，而非全零
   const seedCount = 20;
   return {
     date: yesterday,

@@ -22,6 +22,8 @@ export const BSP_QTY_MAX_DIGITS = 5;
 export const BSP_TIP_YIELD_RATE = 0.8;
 /** 签到获得的前 N PB 打赏到账为 0。 */
 export const BSP_CHECKIN_ZERO_YIELD_PB = 1000;
+/** 每日打赏保底门槛：昨日需发帖，且昨日互动帖任务完成数需达到此值，今日才有保底。 */
+export const BSP_GUARANTEE_MIN_INTERACTIONS = 10;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -30,13 +32,15 @@ export type BspBeneficiaryKind = 'self' | 'address';
 /** 昨日结算快照（demo：由 seed 数据给定，不做真实时间推演）。 */
 export type BspSettlement = {
   date: string;
-  /** 当日是否至少发布 1 篇内容——未发帖当日无保底。 */
+  /** 当日是否至少发布 1 篇内容——发帖是保底门槛之一，另一门槛见 interactedCount。 */
   posted: boolean;
+  /** 当日互动帖任务完成数——需达到 BSP_GUARANTEE_MIN_INTERACTIONS 才满足保底门槛。 */
+  interactedCount: number;
   /** 打赏方实际支付总额。 */
   tipsGross: number;
   /** 按来源规则折算后受益人实得。 */
   tipsNet: number;
-  /** 系统补足差额；未发帖或已达保底为 0。 */
+  /** 系统补足差额；未达保底门槛或实得已达保底为 0。 */
   topUp: number;
 };
 
@@ -89,9 +93,11 @@ export function bspTipNet(checkInFirst1000: number, otherSources: number): numbe
   return otherSources * BSP_TIP_YIELD_RATE;
 }
 
-/** 核心结算规则：未发帖无保底；实得不足保底则补足差额；超过保底不补贴。 */
-export function bspSettle(units: number, s: { posted: boolean; tipsNet: number }): { guarantee: number; topUp: number; total: number } {
-  const guarantee = s.posted ? bspDailyGuarantee(units) : 0;
+/** 核心结算规则：昨日需同时满足「发帖」与「互动帖任务完成数 ≥ BSP_GUARANTEE_MIN_INTERACTIONS」才有保底；
+ * 实得不足保底则补足差额；超过保底不补贴。 */
+export function bspSettle(units: number, s: { posted: boolean; interactedCount: number; tipsNet: number }): { guarantee: number; topUp: number; total: number } {
+  const qualifies = s.posted && s.interactedCount >= BSP_GUARANTEE_MIN_INTERACTIONS;
+  const guarantee = qualifies ? bspDailyGuarantee(units) : 0;
   const topUp = Math.max(0, guarantee - s.tipsNet);
   const total = s.tipsNet + topUp;
   return { guarantee, topUp, total };

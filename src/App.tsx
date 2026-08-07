@@ -11,6 +11,7 @@ import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, Check
 import { commitClaim, getClaimPreview, CHECK_IN_REWARD, type ClaimPreview } from './checkInConfig';
 import { getTaskSnapshot, getYesterdaySnapshot, markInteracted, markPosted, resetTasks, simulateInteractedCount, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
 import { Toast } from './components/shared';
+import { TaskCelebrationOverlay } from './components/TaskCelebrationOverlay';
 import { ComposePage } from './pages/ComposePage';
 import { FeedPage } from './pages/FeedPage';
 import { KnowledgePlanetPage } from './pages/KnowledgePlanetPage';
@@ -904,6 +905,9 @@ export default function App() {
         )}
 
         {toastMsg && <Toast msg={toastMsg.msg} type={toastMsg.type} />}
+
+        {/* 任务里程碑庆祝：每完成 5 篇互动帖就地放烟花（在信息流动作现场触发） */}
+        <TaskCelebrationOverlay />
 
       </div>
     </AppProvider>

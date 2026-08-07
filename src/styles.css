@@ -658,7 +658,7 @@ button {
   border-radius: var(--ku-radius-badge);
   background: var(--ku-color-primary-alpha-06);
   color: var(--ku-color-primary);
-  font: 600 11px/1.2 var(--ku-font-family);
+  font: var(--ku-text-badge);
 }
 
 .post-channel-badge {
@@ -670,7 +670,7 @@ button {
   border-radius: var(--ku-radius-badge);
   background: var(--ku-color-badge-bg);
   color: var(--ku-color-text-secondary);
-  font: 600 11px/1.2 var(--ku-font-family);
+  font: var(--ku-text-badge);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -688,7 +688,7 @@ button {
   border-radius: var(--ku-radius-badge);
   background: var(--ku-color-member-badge-bg);
   color: var(--ku-color-member-badge);
-  font: 600 11px/1.2 var(--ku-font-family);
+  font: var(--ku-text-badge);
   white-space: nowrap;
 }
 
@@ -1176,7 +1176,7 @@ button {
 .gemini-chain--linked svg { color: #059669; }
 .gemini-chain-count {
   opacity: 0.65;
-  font-size: 11px;
+  font-size: 12px;
   margin-left: 1px;
 }
 
@@ -1607,7 +1607,6 @@ button {
 }
 .nav-label {
   font: var(--ku-text-caption);
-  font-size: 10px;
   letter-spacing: -0.2px;
   color: inherit;
   white-space: nowrap;
@@ -2916,7 +2915,7 @@ button {
   margin-left: auto;
   flex-shrink: 0;
   color: var(--ku-color-text-meta);
-  font: 500 11px/1 var(--ku-font-family);
+  font: 500 12px/1 var(--ku-font-family);
   padding: 2px 4px;
   border-radius: var(--ku-radius-sm);
   transition: color 0.15s, transform 0.1s;
@@ -3400,7 +3399,7 @@ button {
   color: #fff;
 }
 .video-player-author-meta span {
-  font: 400 11px/1 var(--ku-font-family);
+  font: 400 12px/1 var(--ku-font-family);
   color: rgba(255,255,255,0.6);
 }
 .video-player-post-title {
@@ -4660,7 +4659,7 @@ button {
   border-radius: 999px;
   background: var(--ku-color-primary);
   color: #fff;
-  font: 700 10px/1 var(--ku-font-family);
+  font: 700 12px/1 var(--ku-font-family);
 }
 
 /* ─── 收藏 / 帖子空态 ─── */
@@ -4783,7 +4782,7 @@ button {
 }
 
 .subscriber-tier-group-meta {
-  font: 400 11px/1.3 var(--ku-font-family);
+  font: 400 12px/1.3 var(--ku-font-family);
   color: var(--ku-color-text-secondary);
   font-weight: 400;
 }
@@ -4895,7 +4894,7 @@ button {
 
 .settings-section-label {
   padding: 10px 14px 6px;
-  font: 600 11px/1 var(--ku-font-family);
+  font: 600 12px/1 var(--ku-font-family);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ku-color-text-secondary);
@@ -5060,7 +5059,7 @@ button {
   border-radius: 8px;
   background: #ef4444;
   color: #fff;
-  font: 700 10px/16px var(--ku-font-family);
+  font: 700 12px/16px var(--ku-font-family);
   text-align: center;
   pointer-events: none;
 }
@@ -5077,7 +5076,7 @@ button {
   border-radius: 8px;
   background: #ef4444;
   color: #fff;
-  font: 700 10px/16px var(--ku-font-family);
+  font: 700 12px/16px var(--ku-font-family);
   text-align: center;
   pointer-events: none;
 }
@@ -5092,7 +5091,7 @@ button {
   border-radius: 8px;
   background: #ef4444;
   color: #fff;
-  font: 700 10px/16px var(--ku-font-family);
+  font: 700 12px/16px var(--ku-font-family);
   text-align: center;
   pointer-events: none;
 }
@@ -5475,7 +5474,7 @@ button {
   border-radius: var(--ku-radius-badge);
   background: var(--ku-color-primary-alpha-06);
   color: var(--ku-color-primary);
-  font: 600 11px/1.2 var(--ku-font-family);
+  font: var(--ku-text-badge);
 }
 .draft-item-delete {
   display: flex;
@@ -5947,7 +5946,7 @@ button {
   border-radius: 9px;
   background: var(--ku-color-primary);
   color: #fff;
-  font: 700 11px/18px var(--ku-font-family);
+  font: 700 12px/18px var(--ku-font-family);
   text-align: center;
 }
 
@@ -6058,7 +6057,7 @@ button {
   border-radius: 999px;
   background: var(--ku-color-primary);
   color: #fff;
-  font: 700 10px/16px var(--ku-font-family);
+  font: 700 12px/16px var(--ku-font-family);
   text-align: center;
 }
 
@@ -6154,7 +6153,7 @@ button {
 
 .dm-time-divider {
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ku-color-text-secondary);
   margin: 12px 0 10px;
 }
@@ -6325,7 +6324,7 @@ button {
 }
 
 .tip-split-pct {
-  font-size: 11px;
+  font-size: 12px;
   opacity: 0.7;
   margin-left: 3px;
 }
@@ -6539,7 +6538,7 @@ button {
   background: var(--ku-color-bg-phone);
 }
 .checkin-day-label {
-  font: 400 10px/1 var(--ku-font-family);
+  font: 400 12px/1 var(--ku-font-family);
   color: var(--ku-color-text-meta);
   white-space: nowrap;
 }
@@ -6562,7 +6561,7 @@ button {
   color: var(--ku-color-text-primary);
 }
 .checkin-day-symbol {
-  font: 400 9px/1 var(--ku-font-family);
+  font: 400 12px/1 var(--ku-font-family);
   color: var(--ku-color-text-meta);
   max-width: 100%;
   overflow: hidden;
@@ -6600,7 +6599,7 @@ button {
 
 .checkin-rule {
   margin: 0 0 16px;
-  font: 400 11px/1.6 var(--ku-font-family);
+  font: 400 12px/1.6 var(--ku-font-family);
   color: var(--ku-color-text-meta);
   text-align: left;
 }
@@ -7054,7 +7053,7 @@ button {
 }
 .edit-profile-charcount {
   align-self: flex-end;
-  font: 400 11px/1 var(--ku-font-family);
+  font: 400 12px/1 var(--ku-font-family);
   color: var(--ku-color-text-meta);
 }
 /* ── Edit Profile Avatar Upload ── */
@@ -7868,12 +7867,6 @@ button {
   color: var(--ku-color-text-meta);
 }
 
-.asset-overview-airdrop-ratio-hint {
-  display: block;
-  margin-top: 2px;
-  font-size: 11px;
-  color: var(--ku-color-text-meta);
-}
 
 .asset-overview-airdrop-claim-col {
   display: flex;
@@ -7980,10 +7973,141 @@ button {
 
 /* ── 资产条：PB / SUP 并排 ── */
 
+/* ── 明天可以领（次日空投预告 + 互动进度 + 去互动 CTA） ── */
+.asset-overview-tomorrow {
+  margin-top: var(--ku-planet2-space-xs);
+  padding-top: var(--ku-planet2-space-sm);
+  border-top: 1px solid var(--ku-color-border-card);
+}
+
+.asset-overview-tomorrow-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-planet2-space-sm);
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.asset-overview-tomorrow-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ku-planet2-radius-full);
+  background: var(--ku-color-primary-alpha-14);
+  color: var(--ku-color-primary-dark);
+}
+
+.asset-overview-tomorrow-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--ku-color-text-secondary);
+}
+
+.asset-overview-tomorrow-body {
+  /* 与上方图标列对齐：40px 图标列 + 8px gap */
+  padding-left: calc(40px + var(--ku-planet2-space-sm));
+}
+
+.asset-overview-tomorrow-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.asset-overview-tomorrow-amount-value {
+  font-family: var(--ku-font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ku-color-primary);
+}
+
+.asset-overview-tomorrow-arrow {
+  align-self: center;
+  color: var(--ku-color-text-meta);
+}
+
+.asset-overview-tomorrow-max {
+  font-size: 13px;
+  color: var(--ku-color-text-meta);
+}
+
+.asset-overview-tomorrow-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.asset-overview-tomorrow-track {
+  flex: 1;
+  height: 8px;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-primary-alpha-06);
+  overflow: hidden;
+}
+
+.asset-overview-tomorrow-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-gradient-primary);
+  transition: width var(--ku-motion-fast);
+}
+
+.asset-overview-tomorrow-caption {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--ku-color-text-meta);
+  white-space: nowrap;
+}
+
+.asset-overview-tomorrow-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.asset-overview-tomorrow-hint {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ku-color-text-primary);
+}
+
+.asset-overview-go-btn {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-primary);
+  color: var(--ku-color-on-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--ku-planet2-shadow-card);
+}
+
+.asset-overview-go-btn:active {
+  background: var(--ku-color-primary-dark);
+}
+
 .asset-overview-balances {
   display: flex;
   align-items: stretch;
   gap: 0;
+  margin-top: var(--ku-planet2-space-sm);
   border-top: 1px solid var(--ku-color-border-card);
   padding-top: var(--ku-planet2-space-xs);
 }
@@ -8031,6 +8155,11 @@ button {
   white-space: nowrap;
 }
 
+.asset-overview-balance-cell-wallet {
+  flex-shrink: 0;
+  color: var(--ku-color-text-meta);
+}
+
 .asset-overview-balance-cell-info {
   color: var(--ku-color-text-meta);
 }
@@ -8052,44 +8181,6 @@ button {
   font-size: 12px;
   font-weight: 500;
   color: var(--ku-color-text-meta);
-}
-
-/* ── 今日任务行（发帖任务 + 互动帖任务，影响明日空投领取比例） ── */
-
-.asset-overview-task-row-text {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-  flex: 1;
-  white-space: normal;
-}
-
-.asset-overview-task-row-detail {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 12px;
-  color: var(--ku-color-text-meta);
-}
-
-.asset-overview-task-row-check {
-  color: var(--ku-color-success-text);
-}
-
-.asset-overview-task-row-dot {
-  color: var(--ku-color-text-meta);
-}
-
-.asset-overview-task-row-ratio {
-  flex-shrink: 0;
-  padding: 3px 8px;
-  border-radius: var(--ku-planet2-radius-pill);
-  background: var(--ku-color-primary-alpha-06);
-  color: var(--ku-color-primary-dark);
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
 }
 
 .planet-origin-summary {
@@ -8165,7 +8256,7 @@ button {
 .planet-origin-summary-serials-row .planet-origin-summary-serial {
   flex-shrink: 0;
   padding: 1px 6px;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .planet-origin-summary-serials-chevron {
@@ -10319,32 +10410,84 @@ html[lang="zh-TW"] .planet-hero-title {
   border-left: 1px dashed var(--ku-color-border-card);
 }
 
-@keyframes ku-task-celebrate-pop {
-  0%   { opacity: 0; transform: translateY(4px) scale(0.94); }
-  15%  { opacity: 1; transform: translateY(0) scale(1); }
-  85%  { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-4px) scale(0.98); }
-}
-
-.task-celebrate {
+/* 信息流里的任务里程碑庆祝层（每 5 篇互动帖就地放烟花） */
+.task-celebrate-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 300;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: var(--ku-radius-card);
-  background: var(--ku-color-success-bg);
-  color: var(--ku-color-success-text);
-  font: 600 12px/1.4 var(--ku-font-family);
-  animation: ku-task-celebrate-pop 1.2s ease forwards;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.task-celebrate-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+
+.task-celebrate-particle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: ku-task-confetti 1.35s ease-out forwards;
+}
+
+@keyframes ku-task-confetti {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.4) rotate(0deg); }
+  12%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 72px)) scale(1.1) rotate(300deg); }
+}
+
+.task-celebrate-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-primary-dark);
+  font: 700 16px/1.25 var(--ku-font-family);
+  box-shadow: var(--ku-shadow-modal), 0 0 0 6px var(--ku-color-primary-alpha-06);
+  animation: ku-task-celebrate-pop-lg 1.7s ease forwards;
+}
+
+@keyframes ku-task-celebrate-pop-lg {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.8); }
+  14%  { opacity: 1; transform: translateY(0) scale(1.06); }
+  24%  { transform: translateY(0) scale(1); }
+  84%  { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-6px) scale(0.98); }
 }
 
 .task-panel-note {
   margin: 0 0 10px;
-  font: 400 11px/1.6 var(--ku-font-family);
+  font: 400 12px/1.6 var(--ku-font-family);
   color: var(--ku-color-text-meta);
   text-align: left;
 }
 
 .task-panel-rules-entry {
   margin-bottom: var(--ku-planet2-space-md);
+}
+
+.task-group-label {
+  margin: 6px 0 8px;
+  font: 600 12px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+}
+
+.task-group-note {
+  margin: 8px 0 0;
+  font: 400 12px/1.6 var(--ku-font-family);
+  color: var(--ku-color-text-meta);
+  text-align: left;
 }

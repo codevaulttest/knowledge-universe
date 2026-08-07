@@ -137,7 +137,7 @@
   --ku-text-reward-chip:       400 12px/1 var(--ku-font-family);     /* 收益芯片 */
   --ku-text-caption:           400 12px/1 var(--ku-font-family);     /* 最小辅助文字 */
   --ku-text-caption-strong:    700 12px/1.4 var(--ku-font-family);   /* 强调辅助文字 */
-  --ku-text-locked-media:      600 11px/1 var(--ku-font-family);     /* 锁定图片提示 */
+  --ku-text-locked-media:      600 12px/1 var(--ku-font-family);     /* 锁定图片提示 */
 
   /* ═══════════════════════════════════════════════════
      圆角 (Border Radius)

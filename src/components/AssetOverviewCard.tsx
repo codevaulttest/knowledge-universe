@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, Check, ChevronRight, Gift, Info, ListChecks, X } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CalendarClock, ChevronRight, Gift, Info, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { formatCompactBalance } from '../formatCount';
 import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT } from '../mockData';
@@ -7,31 +7,8 @@ import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import { TaskPanelSheet } from './TaskPanelSheet';
 import { TASK_INTERACTION_POOL_SIZE } from '../taskConfig';
 
-function formatCountdown(ms: number): string {
-  const total = Math.max(0, Math.ceil(ms / 1000));
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(h)}:${pad(m)}:${pad(s)}`;
-}
-
-/** 剩余时间低于此阈值时切换为警告样式 */
-const AIRDROP_WARNING_MS = 60 * 60 * 1000;
-/** 剩余时间低于此阈值时切换为紧迫样式 */
-const AIRDROP_URGENT_MS = 60 * 1000;
-
-type AirdropCountdownTone = 'normal' | 'warning' | 'urgent';
-
-function getAirdropCountdownTone(remainingMs: number, claimable: boolean): AirdropCountdownTone {
-  if (!claimable) return 'normal';
-  if (remainingMs <= AIRDROP_URGENT_MS) return 'urgent';
-  if (remainingMs <= AIRDROP_WARNING_MS) return 'warning';
-  return 'normal';
-}
-
 export function AssetOverviewCard() {
-  const { t, language, walletConnected, pbBalance, supBalance, airdropClaimed, claimAirdrop, taskSnapshotToday, taskSnapshotYesterday } = useApp();
+  const { t, language, navigateRoot, walletConnected, pbBalance, supBalance, airdropClaimed, claimAirdrop, taskSnapshotToday, taskSnapshotYesterday } = useApp();
   const [pbInfoOpen, setPbInfoOpen] = useState(false);
   const [airdropRuleOpen, setAirdropRuleOpen] = useState(false);
   const [taskPanelOpen, setTaskPanelOpen] = useState(false);
@@ -42,16 +19,24 @@ export function AssetOverviewCard() {
     return () => clearInterval(id);
   }, []);
 
-  const remainingMs = getAirdropDeadline(now) - now;
-  const airdropMissed = !airdropClaimed && remainingMs <= 0;
+  const airdropMissed = !airdropClaimed && getAirdropDeadline(now) - now <= 0;
   const airdropClaimable = !airdropClaimed && !airdropMissed;
-  const countdownTone = getAirdropCountdownTone(remainingMs, airdropClaimable);
+
+  // 全部换算成 PB（和上方金额同单位），页面不出现百分比，方便直接比大小
+  const fullPb = MOCK_PB_AIRDROP_AMOUNT;
+  const todayPb = Math.round(fullPb * taskSnapshotYesterday.claimRatio / 100);
+  const tomorrowPb = Math.round(fullPb * taskSnapshotToday.claimRatio / 100);
+  const interacted = taskSnapshotToday.interactedCount;
+  const remaining = Math.max(0, TASK_INTERACTION_POOL_SIZE - interacted);
+  const isFull = remaining === 0;
+  const progressPct = Math.min(100, (interacted / TASK_INTERACTION_POOL_SIZE) * 100);
 
   if (!walletConnected) return null;
 
   return (
     <>
       <div className="asset-overview-card">
+        {/* 今天可以领 */}
         <div className="asset-overview-airdrop-top">
           <div className="asset-overview-airdrop-left">
             <span className="asset-overview-icon-col">
@@ -62,7 +47,7 @@ export function AssetOverviewCard() {
             <div className="asset-overview-airdrop-info">
               <div className="asset-overview-airdrop-label-row">
                 <span className="asset-overview-airdrop-label">
-                  {t('待领取空投')}
+                  {t('今天可以领')}
                 </span>
               </div>
               {airdropClaimed ? (
@@ -82,33 +67,25 @@ export function AssetOverviewCard() {
               ) : (
                 <>
                   <div className="asset-overview-airdrop-amount">
-                    {formatTokenAmount(Math.round(MOCK_PB_AIRDROP_AMOUNT * taskSnapshotYesterday.claimRatio / 100))}
+                    {formatTokenAmount(todayPb)}
                     <span className="asset-overview-airdrop-unit"> PB</span>
                   </div>
-                  <span className="asset-overview-airdrop-ratio-hint">
-                    {t('昨日任务完成 {ratio}%，可领取 {ratio}% 空投', { ratio: taskSnapshotYesterday.claimRatio })}
+                  <span className="asset-overview-airdrop-deadline">
+                    {t('今晚 10 点后过期作废')}
+                    <button
+                      type="button"
+                      className="asset-overview-info-btn"
+                      onClick={() => setAirdropRuleOpen(true)}
+                      aria-label={t('查看空投规则')}
+                    >
+                      <Info size={13} strokeWidth={2} />
+                    </button>
                   </span>
                 </>
               )}
             </div>
           </div>
           <div className="asset-overview-airdrop-claim-col">
-            {airdropClaimable && (
-              <span
-                className={`asset-overview-airdrop-deadline${countdownTone === 'warning' ? ' asset-overview-airdrop-deadline--warning' : ''}${countdownTone === 'urgent' ? ' asset-overview-airdrop-deadline--urgent' : ''}`}
-              >
-                {t('剩 ')}
-                <span className={`asset-overview-action-countdown-time${countdownTone === 'warning' ? ' asset-overview-action-countdown-time--warning' : ''}${countdownTone === 'urgent' ? ' asset-overview-action-countdown-time--urgent' : ''}`}>{formatCountdown(remainingMs)}</span>
-                <button
-                  type="button"
-                  className="asset-overview-info-btn"
-                  onClick={() => setAirdropRuleOpen(true)}
-                  aria-label={t('查看空投规则')}
-                >
-                  <Info size={13} strokeWidth={2} />
-                </button>
-              </span>
-            )}
             <button
               type="button"
               className={`asset-overview-claim-btn${airdropClaimed || airdropMissed ? ' asset-overview-claim-btn--done' : ''}`}
@@ -120,37 +97,60 @@ export function AssetOverviewCard() {
           </div>
         </div>
 
-        <button
-          type="button"
-          className="asset-overview-toggle-row asset-overview-task-row"
-          onClick={() => setTaskPanelOpen(true)}
-          aria-label={t('查看任务')}
-        >
-          <span className="asset-overview-toggle-left">
+        {/* 明天可以领 */}
+        <div className="asset-overview-tomorrow">
+          <button
+            type="button"
+            className="asset-overview-tomorrow-head"
+            onClick={() => setTaskPanelOpen(true)}
+            aria-label={t('查看任务')}
+          >
             <span className="asset-overview-icon-col">
-              <span className="asset-overview-toggle-icon">
-                <ListChecks size={14} strokeWidth={2} />
+              <span className="asset-overview-tomorrow-icon">
+                <CalendarClock size={20} strokeWidth={1.8} />
               </span>
             </span>
-            <span className="asset-overview-task-row-text">
-              <span>{t('今日任务')}</span>
-              <span className="asset-overview-task-row-detail">
-                {taskSnapshotToday.posted ? (
-                  <Check size={11} strokeWidth={2.6} className="asset-overview-task-row-check" />
-                ) : null}
-                {t('发帖')}
-                <span className="asset-overview-task-row-dot" aria-hidden="true">·</span>
-                {t('互动 {count}/{total}', { count: taskSnapshotToday.interactedCount, total: TASK_INTERACTION_POOL_SIZE })}
+            <span className="asset-overview-tomorrow-title">{t('明天可以领')}</span>
+            <ChevronRight size={15} strokeWidth={2} className="asset-overview-toggle-chevron" />
+          </button>
+
+          <div className="asset-overview-tomorrow-body">
+            <div className="asset-overview-tomorrow-amount">
+              <span className="asset-overview-tomorrow-amount-value">
+                {formatTokenAmount(tomorrowPb)}
+                <span className="asset-overview-airdrop-unit"> PB</span>
               </span>
-            </span>
-          </span>
-          <span className="asset-overview-toggle-right">
-            <span className="asset-overview-task-row-ratio">
-              {t('明日可领 {ratio}%', { ratio: taskSnapshotToday.claimRatio })}
-            </span>
-            <ChevronRight size={13} strokeWidth={2} className="asset-overview-toggle-chevron" />
-          </span>
-        </button>
+              <ArrowRight size={15} strokeWidth={2.4} className="asset-overview-tomorrow-arrow" aria-hidden="true" />
+              <span className="asset-overview-tomorrow-max">{t('最多 {max} PB', { max: formatTokenAmount(fullPb) })}</span>
+            </div>
+
+            <div className="asset-overview-tomorrow-progress">
+              <span className="asset-overview-tomorrow-track">
+                <span className="asset-overview-tomorrow-fill" style={{ width: `${progressPct}%` }} />
+              </span>
+              <span className="asset-overview-tomorrow-caption">
+                {t('今天已互动 {count} 次', { count: interacted })}
+              </span>
+            </div>
+
+            <div className="asset-overview-tomorrow-action">
+              <span className="asset-overview-tomorrow-hint">
+                {isFull
+                  ? t('明天可领满 {max} PB', { max: formatTokenAmount(fullPb) })
+                  : t('再互动 {remaining} 次，明天就能领满', { remaining })}
+              </span>
+              {!isFull && (
+                <button
+                  type="button"
+                  className="asset-overview-go-btn"
+                  onClick={() => navigateRoot({ page: 'P0', tab: 0 })}
+                >
+                  {t('去互动')}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="asset-overview-balances">
           <button
@@ -161,6 +161,7 @@ export function AssetOverviewCard() {
             title={`${formatTokenAmount(pbBalance)} PB`}
           >
             <span className="asset-overview-balance-cell-label">
+              <Wallet size={13} strokeWidth={2} className="asset-overview-balance-cell-wallet" aria-hidden="true" />
               {t('PB 余额')}
               <Info size={12} strokeWidth={2} className="asset-overview-balance-cell-info" />
             </span>
@@ -175,7 +176,10 @@ export function AssetOverviewCard() {
             title={`${formatSupAmount(supBalance)} SUP`}
             aria-label={`${t('SUP 余额')} ${formatSupAmount(supBalance)} SUP`}
           >
-            <span className="asset-overview-balance-cell-label">{t('SUP 余额')}</span>
+            <span className="asset-overview-balance-cell-label">
+              <Wallet size={13} strokeWidth={2} className="asset-overview-balance-cell-wallet" aria-hidden="true" />
+              {t('SUP 余额')}
+            </span>
             <span className="asset-overview-balance-cell-value">
               {formatCompactBalance(supBalance, language)}
               <span className="asset-overview-balance-cell-unit"> SUP</span>
@@ -272,14 +276,14 @@ export function AssetOverviewCard() {
                 {t('需在北京时间当天 22:00 前点击"领取空投"，逾期未领取则本轮空投作废。')}
               </p>
               <p className="pb-info-sheet-para">
-                {t('可领取比例取决于昨日任务（发帖任务 + 互动帖任务）完成度，完成度越高可领取比例越高。')}
+                {t('可领取比例取决于昨日互动帖任务完成度，完成度越高可领取比例越高。')}
               </p>
               <button
                 type="button"
                 className="bsp-rules-entry"
                 onClick={() => { setAirdropRuleOpen(false); setTaskPanelOpen(true); }}
               >
-                <ListChecks size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
+                <CalendarClock size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
                 <span className="bsp-rules-entry-text">{t('查看任务')}</span>
                 <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
               </button>
