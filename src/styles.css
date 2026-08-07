@@ -8149,16 +8149,32 @@ button {
 
 .asset-overview-bsp-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--ku-planet2-space-sm);
   min-width: 0;
 }
 
 .asset-overview-bsp-row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ku-planet2-space-xxs);
   flex-shrink: 0;
   font-size: 12px;
   color: var(--ku-color-text-meta);
+}
+
+.asset-overview-bsp-row-check {
+  flex-shrink: 0;
+  color: var(--ku-color-text-meta);
+}
+
+.asset-overview-bsp-row-label--done {
+  color: var(--ku-color-primary);
+}
+
+.asset-overview-bsp-row-label--done .asset-overview-bsp-row-check {
+  color: var(--ku-color-primary);
 }
 
 .asset-overview-bsp-row-value {

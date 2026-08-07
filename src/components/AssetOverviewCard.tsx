@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CalendarClock, ChevronRight, Crown, Gift, Info, X } from 'lucide-react';
+import { CalendarClock, Check, ChevronRight, Circle, Crown, Gift, Info, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { BSP_GUARANTEE_MIN_INTERACTIONS } from '../bspConfig';
 import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT } from '../mockData';
@@ -165,13 +165,23 @@ export function AssetOverviewCard() {
           <div className="asset-overview-tomorrow-body">
             <div className="asset-overview-bsp-rows">
               <div className="asset-overview-bsp-row">
-                <span className="asset-overview-bsp-row-label">{t('发帖任务')}</span>
+                <span className={`asset-overview-bsp-row-label${posted ? ' asset-overview-bsp-row-label--done' : ''}`}>
+                  {posted
+                    ? <Check size={12} strokeWidth={2.6} className="asset-overview-bsp-row-check" aria-hidden="true" />
+                    : <Circle size={12} strokeWidth={2} className="asset-overview-bsp-row-check" aria-hidden="true" />}
+                  {t('发帖任务')}
+                </span>
                 <span className={`asset-overview-bsp-row-value${posted ? ' asset-overview-bsp-row-value--done' : ''}`}>
                   {posted ? t('已发布内容') : t('还没有发布内容')}
                 </span>
               </div>
               <div className="asset-overview-bsp-row">
-                <span className="asset-overview-bsp-row-label">{t('保底互动门槛')}</span>
+                <span className={`asset-overview-bsp-row-label${guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS ? ' asset-overview-bsp-row-label--done' : ''}`}>
+                  {guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS
+                    ? <Check size={12} strokeWidth={2.6} className="asset-overview-bsp-row-check" aria-hidden="true" />
+                    : <Circle size={12} strokeWidth={2} className="asset-overview-bsp-row-check" aria-hidden="true" />}
+                  {t('保底互动门槛')}
+                </span>
                 <span className={`asset-overview-bsp-row-value${guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS ? ' asset-overview-bsp-row-value--done' : ''}`}>
                   {t('已互动 {count} / {total} 次', { count: guaranteeCount, total: BSP_GUARANTEE_MIN_INTERACTIONS })}
                 </span>
