@@ -1832,8 +1832,8 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
         >
           {selected !== null
             ? (currentTierIndex != null && selected > currentTierIndex
-              ? t('升级订阅 · {price} PB/月', { price: channel.tiers[selected].price })
-              : t('订阅 · {price} PB/月', { price: channel.tiers[selected].price }))
+              ? t('升级订阅')
+              : t('订阅'))
             : t('请选择档位')}
         </button>
 
