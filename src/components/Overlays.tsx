@@ -1775,7 +1775,7 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
         remark={t('订阅《{name}》· {name2}', { name: channel.name, name2: selectedTier.name })}
         amountText={`${selectedTier.price} PB`}
         networkFee="1 PB"
-        tokenFee={`${selectedTier.price} PB`}
+        tokenFee={`${formatSupAmount(selectedTier.price / 10000)} SUP/${t('月')}`}
         onConfirm={handlePay}
         onRetry={() => setStep('confirm')}
         onBack={() => setStep('select')}
@@ -1810,6 +1810,9 @@ export function ChannelSubscribeModal({ channelId, onClose }: { channelId: strin
                 <span className="stake-tier-option__amount">
                   <ChannelTierName name={tier.name} tierIndex={idx} />
                   {' · '}{tier.price} PB/{t('月')}
+                  <span className="stake-tier-option__fee">
+                    {t('+ {fee} SUP/月', { fee: formatSupAmount(tier.price / 10000) })}
+                  </span>
                 </span>
                 <span className="stake-tier-option__desc">
                   {isCurrent

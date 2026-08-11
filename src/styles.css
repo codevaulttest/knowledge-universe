@@ -2326,6 +2326,11 @@ button {
   color: var(--ku-color-text-meta);
   line-height: 1.45;
 }
+.stake-tier-option__fee {
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-meta);
+  margin-left: var(--ku-planet2-space-xs);
+}
 .lang-option-list {
   display: flex;
   flex-direction: column;
@@ -10446,6 +10451,10 @@ html[lang="zh-TW"] .planet-hero-title {
   max-width: 100%;
 }
 
+.planet-hero-balances-item--pb {
+  align-items: center;
+}
+
 .planet-hero-balances-value {
   font-family: var(--ku-font-mono);
   font-size: 13px;
@@ -10465,6 +10474,7 @@ html[lang="zh-TW"] .planet-hero-title {
 
 .planet-hero-balances-chevron {
   flex-shrink: 0;
+  margin-left: var(--ku-planet2-space-xxs);
   color: var(--ku-color-text-meta);
 }
 

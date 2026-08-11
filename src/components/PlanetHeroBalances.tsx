@@ -22,16 +22,16 @@ export function PlanetHeroBalances() {
         title={`${formatTokenAmount(pbBalance)} PB · ${formatSupAmount(supBalance)} SUP`}
       >
         <span className="planet-hero-balances-stack">
-          <span className="planet-hero-balances-item">
+          <span className="planet-hero-balances-item planet-hero-balances-item--pb">
             <span className="planet-hero-balances-value">{formatCompactBalance(pbBalance, language)}</span>
             <span className="planet-hero-balances-unit">PB</span>
+            <ChevronRight size={14} strokeWidth={2} className="planet-hero-balances-chevron" aria-hidden="true" />
           </span>
           <span className="planet-hero-balances-item">
             <span className="planet-hero-balances-value">{formatCompactBalance(supBalance, language)}</span>
             <span className="planet-hero-balances-unit">SUP</span>
           </span>
         </span>
-        <ChevronRight size={14} strokeWidth={2} className="planet-hero-balances-chevron" aria-hidden="true" />
       </button>
 
       {pbInfoOpen && createPortal(

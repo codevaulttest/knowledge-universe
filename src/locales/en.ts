@@ -168,6 +168,7 @@ export const en: Record<string, string> = {
   '当前档位（已下架，不影响你的权限）': 'Current tier (discontinued — your access is unaffected)',
   '当前档位': 'Current tier',
   '可看全部 {name} 及以下档位专属内容': 'Access all content for {name} and below',
+  '+ {fee} SUP/月': '+{fee} SUP/mo',
   '升级订阅 · {price} PB/月': 'Upgrade · {price} PB/mo',
   '订阅 · {price} PB/月': 'Subscribe · {price} PB/mo',
   '请选择档位': 'Select a tier',
