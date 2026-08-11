@@ -105,7 +105,7 @@ function pickDiscoverBatch(pool: Channel[], batchIndex: number): Channel[] {
 
 function ChannelDiscoverFeed() {
   const { channels, subscribedChannelTiers, navigate, t } = useApp();
-  const [scope, setScope] = useState<'all' | 'subscribed'>('all');
+  const [scope, setScope] = useState<'all' | 'subscribed'>('subscribed');
   const [batchIndex, setBatchIndex] = useState(0);
   const subscribedChannels = useMemo(
     () => channels.filter(c => subscribedChannelTiers[c.id] != null),
@@ -128,19 +128,19 @@ function ChannelDiscoverFeed() {
       <nav className="channel-scope-nav" aria-label={t('频道范围')}>
         <button
           type="button"
-          className={`channel-scope-tab${scope === 'all' ? ' channel-scope-tab--active' : ''}`}
-          onClick={() => setScope('all')}
-          aria-selected={scope === 'all'}
-        >
-          {t('发现')}
-        </button>
-        <button
-          type="button"
           className={`channel-scope-tab${scope === 'subscribed' ? ' channel-scope-tab--active' : ''}`}
           onClick={() => setScope('subscribed')}
           aria-selected={scope === 'subscribed'}
         >
           {t('已订阅')}
+        </button>
+        <button
+          type="button"
+          className={`channel-scope-tab${scope === 'all' ? ' channel-scope-tab--active' : ''}`}
+          onClick={() => setScope('all')}
+          aria-selected={scope === 'all'}
+        >
+          {t('发现')}
         </button>
       </nav>
 
