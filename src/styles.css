@@ -11288,6 +11288,10 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 .orders-role-tab {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 8px;
   border: 1px solid var(--ku-color-border-control);
   border-radius: var(--ku-radius-pill);
@@ -11295,6 +11299,16 @@ html[lang="zh-TW"] .planet-hero-title {
   color: var(--ku-color-text-secondary);
   font: var(--ku-text-body-sm);
   cursor: pointer;
+}
+.orders-role-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--ku-color-notification-badge);
+  color: #fff;
+  font: 700 12px/18px var(--ku-font-family);
+  text-align: center;
 }
 .orders-role-tab--active {
   border-color: var(--ku-color-shop-btn);
@@ -11336,7 +11350,7 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 .order-status {
   flex-shrink: 0;
-  padding: 2px 8px;
+  padding: 5px 10px;
   border-radius: var(--ku-radius-badge);
   font: var(--ku-text-badge);
 }

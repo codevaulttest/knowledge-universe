@@ -53,6 +53,7 @@
   --ku-color-warning-text:     #92600a;
   --ku-color-warning-icon:     #985d00;
   --ku-color-heat:             #ff4824;  /* 热度火焰图标 */
+  --ku-color-notification-badge: #ef4444;  /* 待处理/未读红色数字角标 */
   --ku-color-text-danger:      #c62828;  /* 危险操作文字（删除等） */
   --ku-color-verified:         #1B6BFF;  /* 用户蓝 V 认证标识 */
   --ku-color-verified-check:   #ffffff;  /* 蓝 V 内勾色 */

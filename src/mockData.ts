@@ -947,8 +947,8 @@ export const DM_CONVERSATIONS: DmConversation[] = [
 
 // ── 小黄车：收货地址 + 订单种子数据 ──────────────────────────────
 export const MOCK_SHIPPING_ADDRESSES: ShippingAddress[] = [
-  { id: 'addr1', name: '张玉慧', phone: '138****6621', detail: '上海市浦东新区世纪大道 100 号 环球金融中心 32F', isDefault: true },
-  { id: 'addr2', name: '张玉慧（公司）', phone: '139****0075', detail: '深圳市南山区科技园 T3 栋 1801' },
+  { id: 'addr1', name: '苏晓', phone: '138****6621', detail: '上海市浦东新区世纪大道 100 号 环球金融中心 32F', isDefault: true },
+  { id: 'addr2', name: '苏晓（公司）', phone: '139****0075', detail: '深圳市南山区科技园 T3 栋 1801' },
 ];
 
 /** 演示订单：既有当前用户「我买的」，也有「我卖的」，覆盖各状态 */

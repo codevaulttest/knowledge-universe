@@ -20,6 +20,10 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
     role === 'buyer' ? o.buyerName === CURRENT_USER : o.sellerName === CURRENT_USER
   );
 
+  // 待处理数：买家侧=已发货待确认收货；卖家侧=待发货
+  const buyerPending = shopOrders.filter(o => o.buyerName === CURRENT_USER && o.status === 'shipped').length;
+  const sellerPending = shopOrders.filter(o => o.sellerName === CURRENT_USER && o.status === 'to_ship').length;
+
   const submitShip = () => {
     if (!shipping || !carrier.trim() || !trackingNo.trim()) return;
     shipShopOrder(shipping.id, carrier.trim(), trackingNo.trim());
@@ -32,9 +36,11 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
       <div className="orders-role-tabs" role="tablist">
         <button type="button" role="tab" aria-selected={role === 'buyer'} className={`orders-role-tab${role === 'buyer' ? ' orders-role-tab--active' : ''}`} onClick={() => setRole('buyer')}>
           {t('我买的')}
+          {buyerPending > 0 && <span className="orders-role-badge" aria-label={t('{count} 笔待处理', { count: buyerPending })}>{buyerPending}</span>}
         </button>
         <button type="button" role="tab" aria-selected={role === 'seller'} className={`orders-role-tab${role === 'seller' ? ' orders-role-tab--active' : ''}`} onClick={() => setRole('seller')}>
           {t('我卖的')}
+          {sellerPending > 0 && <span className="orders-role-badge" aria-label={t('{count} 笔待处理', { count: sellerPending })}>{sellerPending}</span>}
         </button>
       </div>
       <div className="scroll-area">
