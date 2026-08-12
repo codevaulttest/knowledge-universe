@@ -289,7 +289,9 @@ export default function App() {
 
 
   const route = stack[stack.length - 1];
-  const tab = route.page === 'P0' ? route.tab : 0;
+  const shopItemOpen = route.page === 'P_SHOP_ITEM';
+  const pageRoute = shopItemOpen && stack.length > 1 ? stack[stack.length - 2]! : route;
+  const tab = pageRoute.page === 'P0' ? pageRoute.tab : 0;
   const navigate = (r: Route) => setStack(s => [...s, r]);
   const navigateRoot = (r: Route) => setStack([r]);
   const goBack = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
@@ -695,8 +697,8 @@ export default function App() {
   };
   const clearRecentSearches = () => setRecentSearches([]);
 
-  const isOwnProfile = route.page === 'P6' && route.authorName === CURRENT_USER;
-  const showBottomNav = route.page === 'P0' || route.page === 'P_PLANET' || route.page === 'P_SEARCH' || route.page === 'P7' || route.page === 'P_DM' || route.page === 'P_SHOP' || isOwnProfile;
+  const isOwnProfile = pageRoute.page === 'P6' && pageRoute.authorName === CURRENT_USER;
+  const showBottomNav = pageRoute.page === 'P0' || pageRoute.page === 'P_PLANET' || pageRoute.page === 'P_SEARCH' || pageRoute.page === 'P7' || pageRoute.page === 'P_DM' || pageRoute.page === 'P_SHOP' || isOwnProfile;
 
   const [composeDraftId, setComposeDraftId] = useState<string | null>(null);
   const [pendingNewPost, setPendingNewPost] = useState<NewPostData | null>(null);
@@ -808,21 +810,25 @@ export default function App() {
     <AppProvider value={ctx}>
       <div className="phone-shell" data-layer="knowledge-feed-page">
         {/* 页面主体 */}
-        {route.page === 'P0' && <FeedPage tab={tab} setTab={setTab} />}
-        {route.page === 'P2' && <PostDetailPage postId={route.postId} scrollToComments={route.scrollToComments} />}
-        {route.page === 'P6' && <ProfilePage authorName={route.authorName} />}
-        {route.page === 'P_CHANNEL' && <ChannelPage channelId={route.channelId} />}
-        {route.page === 'P7' && <ActivityPage />}
-        {route.page === 'P_SEARCH' && <SearchPage />}
-        {route.page === 'P_PLANET' && <KnowledgePlanetPage initialSearch={route.searchNodeCode} openBsp={route.openBsp} />}
-        {route.page === 'P_DM' && <DmListPage />}
-        {route.page === 'P_DM_CHAT' && <DmChatPage peerId={route.peerId} />}
-        {route.page === 'P_SHOP' && <ShopPage />}
-        {route.page === 'P_SHOP_ITEM' && <ShopItemPage postId={route.postId} />}
-        {route.page === 'P_ORDERS' && <OrdersPage initialRole={route.role} />}
+        {pageRoute.page === 'P0' && <FeedPage tab={tab} setTab={setTab} />}
+        {pageRoute.page === 'P2' && <PostDetailPage postId={pageRoute.postId} scrollToComments={pageRoute.scrollToComments} />}
+        {pageRoute.page === 'P6' && <ProfilePage authorName={pageRoute.authorName} />}
+        {pageRoute.page === 'P_CHANNEL' && <ChannelPage channelId={pageRoute.channelId} />}
+        {pageRoute.page === 'P7' && <ActivityPage />}
+        {pageRoute.page === 'P_SEARCH' && <SearchPage />}
+        {pageRoute.page === 'P_PLANET' && <KnowledgePlanetPage initialSearch={pageRoute.searchNodeCode} openBsp={pageRoute.openBsp} />}
+        {pageRoute.page === 'P_DM' && <DmListPage />}
+        {pageRoute.page === 'P_DM_CHAT' && <DmChatPage peerId={pageRoute.peerId} />}
+        {pageRoute.page === 'P_SHOP' && <ShopPage />}
+        {pageRoute.page === 'P_ORDERS' && <OrdersPage initialRole={pageRoute.role} />}
 
         {/* 码库全局底部导航（知识宇宙内始终保持同一套宿主导航）*/}
-        {showBottomNav && <BottomNav route={route} setTab={setTab} />}
+        {showBottomNav && <BottomNav route={pageRoute} setTab={setTab} />}
+
+        {/* 覆盖层：商品详情弹窗 */}
+        {shopItemOpen && (
+          <ShopItemPage postId={route.postId} onClose={goBack} />
+        )}
 
         {/* 覆盖层：发帖居中弹窗 */}
         {composeOpen && (

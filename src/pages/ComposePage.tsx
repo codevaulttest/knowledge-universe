@@ -5,7 +5,7 @@ import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { useChannelListSearch } from '../components/channelSearch';
 import { CURRENT_USER } from '../mockData';
 import type { Draft, Post, ShopInfo, StakeTier } from '../types';
-import { STAKE_TIERS, stakeTierDescription, stakeTierLabel } from '../stakeConfig';
+import { STAKE_TIERS, stakeTierDescription, stakeTierLabel, SUP_COST_BY_TIER } from '../stakeConfig';
 import { SHOP_MAX_REBATE_PERCENT, computeShopFee } from '../shopConfig';
 import { isChinese } from '../i18n';
 
@@ -720,13 +720,26 @@ export function ComposePage({
                     <span className="stake-tier-option__amount">
                       {stakeTierLabel(tier, zh)}
                     </span>
-                    <span className="stake-tier-option__desc">
-                      {stakeTierDescription(tier, zh)}
-                    </span>
+                    {tier === 0 && (
+                      <span className="stake-tier-option__desc">
+                        {stakeTierDescription(tier, zh)}
+                      </span>
+                    )}
+                    {tier === 1000 && (
+                      <span className="stake-tier-option__desc">
+                        {t('可参与小黄车')}
+                      </span>
+                    )}
                   </button>
                 );
               })}
             </div>
+            {stakeTier > 0 && (
+              <div className="compose-stake-gas">
+                <span className="compose-stake-gas-label">{t('Gas 费')}</span>
+                <span className="compose-stake-gas-value">{SUP_COST_BY_TIER[stakeTier as Exclude<typeof stakeTier, 0>]} SUP</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -784,7 +797,7 @@ export function ComposePage({
               </span>
             </button>
             <p className="compose-stake-hint">
-              {t('开启后帖子作为商品进入商城，买家可下单；货款于买家收货后次月 15 日结算，卖家实收 90%')}
+              {t('开启后帖子作为商品进入商城，买家可下单')}
             </p>
 
             {shopEnabled && (

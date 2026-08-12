@@ -1,7 +1,26 @@
-import { ClipboardList, ShoppingCart } from 'lucide-react';
+import { ClipboardList, Package } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { MediaPlaceholder, PageHeader } from '../components/shared';
 import { formatTokenAmount } from '../stakeConfig';
+import type { Post } from '../types';
+
+/** 商城封面：无图或图片全部锁定时显示默认占位 */
+function shopCoverUsesPlaceholder(post: Post): boolean {
+  if (post.kind === 'text') return true;
+  if (post.kind === 'article' && post.articleHasCover === false) return true;
+  if (post.kind === 'image') {
+    const total = post.imageCount ?? 1;
+    return Math.floor(post.visiblePercent / 100 * total) <= 0;
+  }
+  if (post.kind === 'video' && post.visiblePercent === 0) return true;
+  return false;
+}
+
+function shopCoverVisibleImgCount(post: Post): number {
+  if (post.kind !== 'image') return 1;
+  const total = post.imageCount ?? 1;
+  return Math.max(1, Math.floor(post.visiblePercent / 100 * total));
+}
 
 /** 商城内容（商品网格 + 我的订单入口）——供「商城」tab 与独立商城页复用 */
 export function ShopFeed() {
@@ -35,15 +54,15 @@ export function ShopFeed() {
               onClick={() => navigate({ page: 'P_SHOP_ITEM', postId: p.id })}
             >
               <div className="shop-card-cover" aria-hidden="true">
-                {p.kind === 'text' ? (
-                  <ShoppingCart size={30} strokeWidth={1.5} />
+                {shopCoverUsesPlaceholder(p) ? (
+                  <Package size={30} strokeWidth={1.5} />
                 ) : (
                   <MediaPlaceholder
                     kind={p.kind}
                     articleHasCover={p.articleHasCover}
                     imageCount={p.kind === 'image' ? 1 : p.imageCount}
                     imageAspect={p.imageAspect}
-                    visibleImgCount={1}
+                    visibleImgCount={shopCoverVisibleImgCount(p)}
                   />
                 )}
               </div>

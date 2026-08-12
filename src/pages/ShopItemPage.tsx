@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Check, ChevronRight, MapPin, Minus, Plus, ShoppingCart, Sparkles } from 'lucide-react';
+import { Check, ChevronRight, MapPin, Minus, Plus, ShoppingCart, Sparkles, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import type { ShippingAddress, ShopOrder } from '../types';
-import { MediaPlaceholder, PageHeader } from '../components/shared';
+import { PageHeader } from '../components/shared';
 import { formatTokenAmount } from '../stakeConfig';
 import { computeShopFee, computeUnitMerit, formatShopFee, MERIT_PER_ADN } from '../shopConfig';
 
-export function ShopItemPage({ postId }: { postId: string }) {
+export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () => void }) {
   const {
-    posts, goBack, canGoBack, navigate, t, requireWallet,
+    posts, navigate, t, requireWallet,
     shippingAddresses, defaultAddress, addShippingAddress,
     placeShopOrder, showToast, openImageLightbox,
   } = useApp();
@@ -27,10 +27,13 @@ export function ShopItemPage({ postId }: { postId: string }) {
 
   if (!post || !post.shop) {
     return (
-      <div className="page">
-        <PageHeader title={t('商品')} onBack={canGoBack ? goBack : undefined} />
-        <div className="empty-state" style={{ paddingTop: 60 }}>
-          <p>{t('该商品已下架')}</p>
+      <div className="sheet-backdrop" onClick={onClose}>
+        <div className="payment-sheet shop-item-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+          <div className="sheet-header">
+            <span className="sheet-title">{t('商品详情')}</span>
+            <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
+          </div>
+          <p style={{ color: 'var(--ku-color-text-meta)', textAlign: 'center', padding: '32px 0' }}>{t('该商品已下架')}</p>
         </div>
       </div>
     );
@@ -74,33 +77,17 @@ export function ShopItemPage({ postId }: { postId: string }) {
   };
 
   return (
-    <div className="page">
-      <PageHeader title={t('商品详情')} onBack={canGoBack ? goBack : undefined} />
-      <div className="scroll-area shop-item-scroll">
-        {/* 商品封面：复用帖子首图 / 视频封面 / 文章封面 */}
-        <div className="shop-item-cover">
-          {post.kind === 'text' ? (
-            <ShoppingCart size={54} strokeWidth={1.5} aria-hidden="true" />
-          ) : (
-            <MediaPlaceholder
-              kind={post.kind}
-              articleHasCover={post.articleHasCover}
-              imageCount={post.kind === 'image' ? 1 : post.imageCount}
-              imageAspect={post.imageAspect}
-              visibleImgCount={1}
-              onImageClick={post.kind === 'image' ? () => {
-                const total = post.imageCount ?? 1;
-                const vCount = Math.floor(post.visiblePercent / 100 * total);
-                openImageLightbox(post, 0, vCount);
-              } : undefined}
-            />
-          )}
+    <>
+      <div className="sheet-backdrop" onClick={onClose}>
+      <div className="payment-sheet shop-item-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        {/* 弹窗头：标题 + 关闭 */}
+        <div className="sheet-header">
+          <span className="sheet-title">{t('商品详情')}</span>
+          <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
         </div>
 
+        {/* 正文 */}
         <div className="shop-item-body">
-          <div className="shop-item-pricebar">
-            <span className="shop-item-price">{formatTokenAmount(price)} <span className="shop-item-price-unit">PB</span></span>
-          </div>
           <h2 className="shop-item-title">{post.title}</h2>
           <button
             type="button"
@@ -110,6 +97,9 @@ export function ShopItemPage({ postId }: { postId: string }) {
             {t('卖家')}：{post.author}
             <ChevronRight size={15} strokeWidth={2} />
           </button>
+          <div className="shop-item-pricebar">
+            <span className="shop-item-price">{formatTokenAmount(price)} <span className="shop-item-price-unit">PB</span></span>
+          </div>
 
           {/* 数量 */}
           <div className="shop-item-row">
@@ -140,7 +130,7 @@ export function ShopItemPage({ postId }: { postId: string }) {
               </button>
             </div>
           </div>
-          <p className="shop-item-stock">{t('可订购 {stock} 件', { stock })}</p>
+          <p className="shop-item-stock">{t('库存：{stock} 件', { stock })}</p>
 
           {/* 收货地址 */}
           <button type="button" className="shop-item-addr" onClick={() => setPickerOpen(true)}>
@@ -156,30 +146,31 @@ export function ShopItemPage({ postId }: { postId: string }) {
             <ChevronRight size={16} strokeWidth={2} />
           </button>
 
-          {/* 优点返还占位 */}
+          {/* 优点返还 */}
           <div className="shop-item-merit">
             <Sparkles size={15} strokeWidth={2} />
             {t('本单预计返 {merit} 优点（满 {per} 优点兑 1 张 ADN 抽奖券）', { merit: estMerit, per: MERIT_PER_ADN })}
           </div>
         </div>
-      </div>
 
-      {/* 底部下单栏 */}
-      <div className="shop-item-buybar">
-        <div className="shop-item-total">
-          <span className="shop-item-total-label">{t('合计')}</span>
-          <span className="shop-item-total-value">{formatTokenAmount(totalPb)} PB</span>
-          <span className="shop-item-total-gas">{t('Gas 费')} {formatShopFee(totalSup)} SUP</span>
+        {/* 合计 + 下单按钮 */}
+        <div className="shop-item-buybar shop-item-buybar--sheet">
+          <div className="shop-item-total">
+            <span className="shop-item-total-label">{t('合计')}</span>
+            <span className="shop-item-total-value">{formatTokenAmount(totalPb)} PB</span>
+            <span className="shop-item-total-gas">{t('Gas 费')} {formatShopFee(totalSup)} SUP</span>
+          </div>
+          <button
+            type="button"
+            className="shop-buy-btn"
+            onClick={buy}
+            disabled={soldOut || isOwn}
+          >
+            {isOwn ? t('这是你的商品') : soldOut ? t('已售罄') : t('立即购买')}
+          </button>
         </div>
-        <button
-          type="button"
-          className="shop-buy-btn"
-          onClick={buy}
-          disabled={soldOut || isOwn}
-        >
-          {isOwn ? t('这是你的商品') : soldOut ? t('已售罄') : t('立即购买')}
-        </button>
       </div>
+    </div>
 
       {/* 地址选择 / 新增 */}
       {pickerOpen && (
@@ -244,7 +235,7 @@ export function ShopItemPage({ postId }: { postId: string }) {
               {t('预计返 {merit} 优点', { merit: placed.estMerit })}
             </div>
             <div className="shop-success-actions">
-              <button type="button" className="shop-success-btn shop-success-btn--ghost" onClick={() => { setPlaced(null); goBack(); }}>
+              <button type="button" className="shop-success-btn shop-success-btn--ghost" onClick={() => { setPlaced(null); onClose(); }}>
                 {t('继续逛')}
               </button>
               <button type="button" className="shop-success-btn" onClick={() => { setPlaced(null); navigate({ page: 'P_ORDERS', role: 'buyer' }); }}>
@@ -254,6 +245,6 @@ export function ShopItemPage({ postId }: { postId: string }) {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

@@ -382,6 +382,37 @@ export const ALL_POSTS: Post[] = [
     channelId: 'channel-aieff',
     shop: { price: 2000, rebatePercent: 40, stock: 50 },
   },
+  // ── 商城封面占位样式演示（首屏可见）──
+  {
+    id: 'shop-ph-text', author: '游牧开发者', time: '9 天前',
+    title: '《独立开发者的 100 条心法》电子版。纯文字交付，无配图；下单后私信发送 PDF 与 Notion 模板链接。',
+    kind: 'text', visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Ph1tX9',
+    rating: 4, replies: 12, links: 3, shares: 8, saves: 45, likes: 128,
+    shop: { price: 88, rebatePercent: 45, stock: 999 },
+  },
+  {
+    id: 'shop-ph-article', author: '阿May的研究笔记', time: '10 天前',
+    title: 'RAG 落地检查清单 · 可打印版。长文无封面，附 32 项自检表与踩坑对照；适合团队 onboarding 用。',
+    articlePreview: '从数据清洗、切片策略、检索召回、重排到评测闭环，这份清单把 RAG 上线前必须拍板的项逐条列清。',
+    kind: 'article', articleHasCover: false, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Ph2aR4',
+    rating: 5, replies: 19, links: 6, shares: 11, saves: 62, likes: 201,
+    shop: { price: 120, rebatePercent: 40, stock: 300 },
+  },
+  {
+    id: 'shop-ph-locked', author: '极客前沿', time: '11 天前',
+    title: '2025 技术书单完整版（含封面图）。帖子配图全部付费可见，商城列表展示默认小黄车占位封面。',
+    kind: 'image', imageCount: 4, visiblePercent: 0, isNode: true, stakeTier: 1000, nodeId: 'Ph3lK7',
+    rating: 3, replies: 27, links: 14, shares: 9, saves: 71, likes: 189,
+    shop: { price: 560, rebatePercent: 30, stock: 80 },
+  },
+  {
+    id: 'shop-ph-video', author: '产品大叔严磊', time: '12 天前',
+    title: 'B 端留存复盘 · 内部录屏课（无预览帧）。视频封面在付费前不可见，商城卡片走占位图样式。',
+    kind: 'video', visiblePercent: 0, isNode: true, stakeTier: 1000, nodeId: 'Ph4vD2',
+    rating: 4, replies: 33, links: 8, shares: 15, saves: 95, likes: 256,
+    videoUrl: '/mock-video-2.mp4',
+    shop: { price: 1500, rebatePercent: 25, stock: 30 },
+  },
   {
     id: 'shop-mug', author: '拾光杂货铺', time: '4 小时前',
     title: '「知识星探」联名马克杯 · 陶瓷 400ml。附赠贴纸一套，晒单返优点。图为实拍，颜色以实物为准。',

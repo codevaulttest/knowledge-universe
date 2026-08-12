@@ -38,18 +38,12 @@ export function stakeTierDescription(tier: StakeTier, zh: boolean): string {
     return zh ? '不创建知识宇宙节点，内容全公开' : 'No node; content fully public';
   }
   if (tier === 10) {
-    return zh
-      ? '空投上限 10 PB'
-      : 'Airdrop cap 10 PB';
+    return zh ? '空投上限 10 PB' : 'Airdrop cap 10 PB';
   }
   if (tier === 100) {
-    return zh
-      ? '空投上限 500 PB'
-      : 'Airdrop cap 500 PB';
+    return zh ? '空投上限 500 PB' : 'Airdrop cap 500 PB';
   }
-  return zh
-    ? '空投无上限 · 支持升至 5 星'
-    : 'Unlimited airdrop · Upgradable to 5 stars';
+  return zh ? '空投无上限 · 支持升至 5 星' : 'Unlimited airdrop · Upgradable to 5 stars';
 }
 
 export function stakeTierLabel(tier: StakeTier, zh: boolean): string {

@@ -690,7 +690,8 @@ export const en: Record<string, string> = {
   '请在今晚 10 点前领取': 'Please claim before 10 PM tonight',
   // ── Shop (小黄车) ──
   '参与小黄车': 'Enable Shop',
-  '开启后帖子作为商品进入商城，买家可下单；货款于买家收货后次月 15 日结算，卖家实收 90%': 'Once on, this post becomes a product in the mall. Payment settles to you on the 15th of next month after the buyer confirms receipt; you net 90%.',
+  '可参与小黄车': 'Shop-eligible',
+  '开启后帖子作为商品进入商城，买家可下单': 'Once on, this post becomes a product in the mall for buyers to order.',
   '商品价格（PB）': 'Price (PB)',
   '如 2000': 'e.g. 2000',
   '下单另收 {fee} SUP/件手续费': '{fee} SUP/item fee at checkout',
@@ -714,7 +715,7 @@ export const en: Record<string, string> = {
   '件': 'item',
   '卖家': 'Seller',
   '购买数量': 'Quantity',
-  '可订购 {stock} 件': '{stock} in stock',
+  '库存：{stock} 件': 'Stock: {stock}',
   '请选择收货地址': 'Choose a shipping address',
   '本单预计返 {merit} 优点（满 {per} 优点兑 1 张 ADN 抽奖券）': 'Est. {merit} merit back ({per} merit = 1 ADN raffle ticket)',
   '合计': 'Total',

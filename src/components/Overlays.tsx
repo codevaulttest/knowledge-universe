@@ -322,7 +322,7 @@ export function GeminiStakeModal({
           {t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点')}
         </p>
 
-        <div className="stake-tier-list stake-tier-list--row" style={{ marginBottom: 16 }}>
+        <div className="stake-tier-list stake-tier-list--row" style={{ marginBottom: 8 }}>
           {tiers.map(tier => (
             <button
               key={tier}
@@ -330,10 +330,16 @@ export function GeminiStakeModal({
               className={`stake-tier-option${selected === tier ? ' stake-tier-option--active' : ''}`}
               onClick={() => setSelected(tier)}
             >
-              <span className="stake-tier-option__amount">{tier} PB</span>
-              <span className="stake-tier-option__desc">{stakeTierDescription(tier, zh)}</span>
+              <span className="stake-tier-option__amount">
+                <span className="stake-tier-option__value">{tier}</span>
+                <span className="stake-tier-option__unit">PB</span>
+              </span>
             </button>
           ))}
+        </div>
+        <div className="compose-stake-gas" style={{ marginBottom: 16 }}>
+          <span className="compose-stake-gas-label">{t('Gas 费')}</span>
+          <span className="compose-stake-gas-value">{SUP_COST_BY_TIER[selected]} SUP</span>
         </div>
 
         <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" onClick={() => onParticipate(selected)}>
@@ -613,7 +619,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
             {t('链接后同步解锁本帖全部内容')}
           </p>
         )}
-        <div className="stake-tier-list stake-tier-list--row" style={{ marginBottom: 16 }}>
+        <div className="stake-tier-list stake-tier-list--row" style={{ marginBottom: 8 }}>
           {tiers.map(tier => (
             <button
               key={tier}
@@ -621,10 +627,16 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
               className={`stake-tier-option${selected === tier ? ' stake-tier-option--active' : ''}`}
               onClick={() => setSelected(tier)}
             >
-              <span className="stake-tier-option__amount">{tier} PB</span>
-              <span className="stake-tier-option__desc">{stakeTierDescription(tier, zh)}</span>
+              <span className="stake-tier-option__amount">
+                <span className="stake-tier-option__value">{tier}</span>
+                <span className="stake-tier-option__unit">PB</span>
+              </span>
             </button>
           ))}
+        </div>
+        <div className="compose-stake-gas" style={{ marginBottom: 16 }}>
+          <span className="compose-stake-gas-label">{t('Gas 费')}</span>
+          <span className="compose-stake-gas-value">{SUP_COST_BY_TIER[selected]} SUP</span>
         </div>
         <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" onClick={() => setStep('confirm')}>
           {mode === 'unlock'
