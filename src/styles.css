@@ -1214,6 +1214,22 @@ button {
 .post-heat-gemini-row > .gemini-badge {
   margin: 0 0 0 auto;
 }
+/* 热度与赞助分离：去掉包裹二者的外层灰胶囊，让 🔥热度 与「赞助」成为两个独立元素 */
+.post-heat-gemini-row > .gemini-badge--heat {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+.post-heat-gemini-row > .gemini-badge--heat .gemini-left {
+  gap: 8px;
+}
+/* 🔥热度 单独保留中性色胶囊背景（高度与链接/购买/赞助胶囊对齐） */
+.post-heat-gemini-row .post-heat {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-page);
+}
 .post-heat {
   display: inline-flex;
   align-items: center;

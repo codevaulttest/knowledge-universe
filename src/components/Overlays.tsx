@@ -1569,7 +1569,7 @@ export function TipModal({
 
         <div className="tip-recipient">
           <span className="tip-recipient-avatar">
-            <Avatar seed={recipientName} />
+            <Avatar index={0} seed={recipientName} />
           </span>
           <div className="tip-recipient-info">
             <div className="tip-recipient-name">{t('打赏 {recipientName}', { recipientName })}</div>
@@ -1580,7 +1580,7 @@ export function TipModal({
         </div>
 
         <div className="tip-section-heading">
-          <Gift size={16} strokeWidth={2} className="tip-section-heading__icon" />
+          <HandCoins size={16} strokeWidth={2} className="tip-section-heading__icon" />
           {t('选择赞助金额')}
         </div>
 
