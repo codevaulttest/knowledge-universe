@@ -743,42 +743,8 @@ export function ComposePage({
           </div>
         )}
 
-        {/* 付费可见度设置 */}
-        {!isEditMode && stakeTier > 0 && (
-          <div className="compose-section">
-            <div className="visibility-row">
-              <span className="visibility-label">
-                <Eye size={16} strokeWidth={2} aria-hidden="true" />
-                {t('免费可见比例')}
-              </span>
-              <div className="visibility-opts">
-                {[
-                  { v: 0, label: t('完全隐藏') },
-                  { v: 10, label: '10%' as const },
-                  { v: 30, label: '30%' as const },
-                  { v: 50, label: '50%' as const },
-                  { v: 100, label: t('公开') },
-                ].map(({ v, label }) => (
-                  <button
-                    key={v}
-                    type="button"
-                    className={`vis-btn${visibility === v ? ' vis-btn--active' : ''}`}
-                    onClick={() => setVisibility(v)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {selectedChannel && stakeTier > 0 && (
-              <p className="compose-stake-hint">
-                {t('建议单条解锁价为该档月费的 2–10 倍')}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* 小黄车：仅 1000 PB 节点帖可挂载，把帖子变成可下单商品 */}
+        {/* 小黄车：仅 1000 PB 节点帖可挂载，把帖子变成可下单商品；
+            紧跟节点档位之后，避免选中 1000 PB 后模块被推到折叠线以下、用户看不到 */}
         {!isEditMode && shopEligible && (
           <div className="compose-section compose-shop-section">
             <button
@@ -819,7 +785,7 @@ export function ComposePage({
                 </label>
 
                 <label className="compose-shop-field">
-                  <span className="compose-shop-field__label">{t('可订购数量')}</span>
+                  <span className="compose-shop-field__label">{t('库存')}</span>
                   <input
                     type="number" inputMode="numeric" min={1} step={1}
                     className="compose-shop-input"
@@ -845,6 +811,41 @@ export function ComposePage({
                   </span>
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* 付费可见度设置 */}
+        {!isEditMode && stakeTier > 0 && (
+          <div className="compose-section compose-section--divider">
+            <div className="visibility-row">
+              <span className="visibility-label">
+                <Eye size={16} strokeWidth={2} aria-hidden="true" />
+                {t('免费可见比例')}
+              </span>
+              <div className="visibility-opts">
+                {[
+                  { v: 0, label: t('完全隐藏') },
+                  { v: 10, label: '10%' as const },
+                  { v: 30, label: '30%' as const },
+                  { v: 50, label: '50%' as const },
+                  { v: 100, label: t('公开') },
+                ].map(({ v, label }) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className={`vis-btn${visibility === v ? ' vis-btn--active' : ''}`}
+                    onClick={() => setVisibility(v)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {selectedChannel && stakeTier > 0 && (
+              <p className="compose-stake-hint">
+                {t('建议单条解锁价为该档月费的 2–10 倍')}
+              </p>
             )}
           </div>
         )}

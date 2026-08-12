@@ -5,7 +5,7 @@ export type StakeTier = 0 | 10 | 100 | 1000;
 export type ShopInfo = {
   price: number;         // 商品单价（PB），必须 > 0
   rebatePercent: number; // 优点返还比例，0–90（平台固定收 10% 损耗，故上限 90）
-  stock: number;         // 可订购数量
+  stock: number;         // 库存
 };
 
 /** 买家收货地址 */

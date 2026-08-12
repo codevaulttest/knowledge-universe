@@ -696,7 +696,7 @@ export const en: Record<string, string> = {
   '商品价格（PB）': 'Price (PB)',
   '如 2000': 'e.g. 2000',
   '下单另收 {fee} SUP/件手续费': '{fee} SUP/item fee at checkout',
-  '可订购数量': 'Stock',
+  '库存': 'Stock',
   '如 50': 'e.g. 50',
   '优点返还比例': 'Merit rebate',
   '买家按此比例获得优点返还': 'Buyers earn merit at this rate.',
