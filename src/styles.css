@@ -4189,7 +4189,8 @@ button {
   padding: 10px 14px;
   border: none;
   border-radius: var(--ku-radius-card);
-  background: var(--ku-color-badge-bg);
+  background: var(--ku-color-bg-phone);
+  box-shadow: var(--ku-shadow-card);
   color: var(--ku-color-text-primary);
   cursor: pointer;
 }
@@ -4203,6 +4204,17 @@ button {
   min-width: 0;
   flex: 1;
   text-align: left;
+}
+/* 订单入口：标题与「N 笔待处理」同一行 */
+.channel-summary-entry-text--inline {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+}
+/* 两个摘要行卡相邻时收紧间距：上卡 bottom(26) + 本卡 top(-12) 折叠为 14，
+   与末卡到下方 Tab 的 14px 一致，使订单卡上下间距对称 */
+.channel-summary-entry + .channel-summary-entry {
+  margin-top: -12px;
 }
 .channel-summary-entry-label {
   font: 700 13px/1.3 var(--ku-font-family);
@@ -6403,6 +6415,7 @@ button {
   color: var(--ku-color-text-primary);
 }
 
+
 .tip-split-info {
   margin: 0 var(--ku-modal-content-padding) 16px;
   border-radius: var(--ku-radius-card);
@@ -6437,8 +6450,8 @@ button {
 
 .tip-split-pct {
   font-size: 12px;
-  opacity: 0.7;
-  margin-left: 3px;
+  color: var(--ku-color-text-meta);
+  margin-left: 6px;
 }
 
 /* ─── 博主主页打赏 / 私信按钮 ─── */
@@ -10778,11 +10791,6 @@ html[lang="zh-TW"] .planet-hero-title {
    小黄车（帖子即商品）
    ═══════════════════════════════════════════════════════════════ */
 
-/* 顶栏商城入口：小黄车黄色，区别于中性的通知/签到图标 */
-.feed-shop-entry {
-  color: var(--ku-color-shop);
-}
-
 /* 帖子卡片上的「购买」入口（链接按钮旁） */
 .post-shop-btn {
   display: inline-flex;
@@ -10901,19 +10909,30 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 
 /* ── 商城列表 ── */
-.shop-orders-entry {
-  display: inline-flex;
+.shop-mall-bar {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  border: none;
-  background: none;
-  color: var(--ku-color-text-primary);
-  cursor: pointer;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px 4px;
 }
 .shop-mall-hint {
-  padding: 12px 16px 4px;
   color: var(--ku-color-text-meta);
   font: var(--ku-text-meta);
+}
+.shop-orders-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--ku-color-shop-border);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-shop-bg);
+  color: var(--ku-color-shop-strong);
+  font: var(--ku-text-action-cta);
+  cursor: pointer;
 }
 .shop-grid {
   display: grid;

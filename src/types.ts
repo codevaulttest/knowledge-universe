@@ -93,7 +93,7 @@ export type Reply = {
 };
 
 export type Route =
-  | { page: 'P0'; tab: 0 | 1 | 2 }
+  | { page: 'P0'; tab: 0 | 1 | 2 | 3 }
   | { page: 'P2'; postId: string; scrollToComments?: boolean }
   | { page: 'P6'; authorName: string }
   | { page: 'P_CHANNEL'; channelId: string }

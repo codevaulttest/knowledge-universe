@@ -1624,6 +1624,14 @@ export function TipModal({
           />
         </div>
 
+        <div className="planet-upgrade-row" style={{ padding: 0 }}>
+          <span className="planet-upgrade-row-label">{t('Gas 费')}</span>
+          <div className="planet-upgrade-cost">
+            <span className="planet-upgrade-cost-num">{formatSupAmount((amount ?? 0) / 10000)}</span>
+            <span className="planet-upgrade-cost-unit"> SUP</span>
+          </div>
+        </div>
+
         <button
           type="button"
           className="planet-confirm-btn"

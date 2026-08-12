@@ -293,7 +293,7 @@ export default function App() {
   const navigate = (r: Route) => setStack(s => [...s, r]);
   const navigateRoot = (r: Route) => setStack([r]);
   const goBack = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
-  const setTab = (t: 0 | 1 | 2) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
+  const setTab = (t: 0 | 1 | 2 | 3) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
 
   const [posts, setPosts] = useState<Post[]>(ALL_POSTS.filter(p => p.kind !== 'article'));
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, CalendarCheck, RefreshCw, ShoppingCart, Wallet } from 'lucide-react';
+import { Bell, CalendarCheck, RefreshCw, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
 import type { Channel, Post, RepostedBy } from '../types';
@@ -7,6 +7,7 @@ import { PostCard } from '../components/PostCard';
 import { GenesisBanner } from '../components/GenesisBanner';
 import { ChannelCard } from '../components/shared';
 import { DevPanel } from '../components/DevPanel';
+import { ShopFeed } from './ShopPage';
 
 type FeedEntry = { post: Post; repostedBy?: RepostedBy };
 
@@ -180,7 +181,7 @@ function ChannelDiscoverFeed() {
   );
 }
 
-export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 2) => void }) {
+export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 1 | 2 | 3) => void }) {
   const { followedAuthors, navigate, unreadActivityCount, openCheckIn, checkInClaimable, t, walletConnected, connectWallet, requireWallet } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevTabRef = useRef(tab);
@@ -195,9 +196,9 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
     return () => clearTimeout(t);
   }, [tab]);
 
-  // 关注 / 频道依赖身份数据，游客点击先引导连接钱包；连接成功后继续切到目标 tab
-  const goTab = (next: 0 | 1 | 2) => {
-    if (next === 0) { setTab(0); return; }
+  // 关注 / 频道依赖身份数据，游客点击先引导连接钱包；推荐、商城为公开浏览，无需连接
+  const goTab = (next: 0 | 1 | 2 | 3) => {
+    if (next === 0 || next === 3) { setTab(next); return; }
     requireWallet(() => setTab(next));
   };
 
@@ -220,16 +221,9 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
           <button className={tab === 0 ? 'active' : ''} type="button" onClick={() => goTab(0)}>{t('推荐')}</button>
           <button className={tab === 1 ? 'active' : ''} type="button" onClick={() => goTab(1)}>{t('关注2')}</button>
           <button className={tab === 2 ? 'active' : ''} type="button" onClick={() => goTab(2)}>{t('频道')}</button>
+          <button className={tab === 3 ? 'active' : ''} type="button" onClick={() => goTab(3)}>{t('商城')}</button>
         </nav>
         <div className="feed-header-right">
-          <button
-            type="button"
-            className="feed-bell-btn feed-shop-entry"
-            onClick={() => navigate({ page: 'P_SHOP' })}
-            aria-label={t('小黄车商城')}
-          >
-            <ShoppingCart size={22} strokeWidth={2} />
-          </button>
           {!walletConnected && (
             <button
               type="button"
@@ -259,6 +253,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
         {tab === 0 && <RecommendFeed scrollRef={scrollRef} />}
         {tab === 1 && <FollowFeed followedAuthors={followedAuthors} />}
         {tab === 2 && <ChannelDiscoverFeed />}
+        {tab === 3 && <ShopFeed />}
       </div>
       <DevPanel />
     </>

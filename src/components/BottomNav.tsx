@@ -6,7 +6,7 @@ import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 
 export function BottomNav({ route, setTab }: {
   route: Route;
-  setTab: (t: 0 | 1 | 2) => void;
+  setTab: (t: 0 | 1 | 2 | 3) => void;
 }) {
   const { navigate, navigateRoot, openCompose, requireWallet, t } = useApp();
   const unreadDmCount = DM_CONVERSATIONS.reduce((s, c) => s + c.unread, 0);
