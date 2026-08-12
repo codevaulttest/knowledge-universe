@@ -736,6 +736,7 @@ export const en: Record<string, string> = {
   '下单失败，请稍后重试': 'Order failed, please retry',
   '我买的': 'Bought',
   '我卖的': 'Sold',
+  '订单空态': 'Empty orders',
   '还没有买过东西': 'No purchases yet',
   '还没有卖出订单': 'No sales yet',
   '卖家：{name}': 'Seller: {name}',

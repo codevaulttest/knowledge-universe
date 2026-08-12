@@ -11300,6 +11300,11 @@ html[lang="zh-TW"] .planet-hero-title {
   font: var(--ku-text-body-sm);
   cursor: pointer;
 }
+.orders-empty-icon {
+  display: block;
+  margin: 0 auto 14px;
+  color: var(--ku-color-text-meta);
+}
 .orders-role-badge {
   min-width: 18px;
   height: 18px;

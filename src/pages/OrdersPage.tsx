@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { PackageCheck, Truck } from 'lucide-react';
+import { PackageCheck, PackageOpen, Truck } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import type { ShopOrder } from '../types';
 import { PageHeader } from '../components/shared';
+import { DevPanel } from '../components/DevPanel';
 import { isChinese } from '../i18n';
 import { formatTokenAmount } from '../stakeConfig';
 import { shopOrderStatusLabel, formatShopFee } from '../shopConfig';
@@ -14,15 +15,17 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
   const [shipping, setShipping] = useState<ShopOrder | null>(null);
   const [carrier, setCarrier] = useState('');
   const [trackingNo, setTrackingNo] = useState('');
+  // 开发工具：模拟订单空态（不改动种子数据）
+  const [demoEmpty, setDemoEmpty] = useState(false);
   const zh = isChinese(language);
 
-  const orders = shopOrders.filter(o =>
+  const orders = demoEmpty ? [] : shopOrders.filter(o =>
     role === 'buyer' ? o.buyerName === CURRENT_USER : o.sellerName === CURRENT_USER
   );
 
   // 待处理数：买家侧=已发货待确认收货；卖家侧=待发货
-  const buyerPending = shopOrders.filter(o => o.buyerName === CURRENT_USER && o.status === 'shipped').length;
-  const sellerPending = shopOrders.filter(o => o.sellerName === CURRENT_USER && o.status === 'to_ship').length;
+  const buyerPending = demoEmpty ? 0 : shopOrders.filter(o => o.buyerName === CURRENT_USER && o.status === 'shipped').length;
+  const sellerPending = demoEmpty ? 0 : shopOrders.filter(o => o.sellerName === CURRENT_USER && o.status === 'to_ship').length;
 
   const submitShip = () => {
     if (!shipping || !carrier.trim() || !trackingNo.trim()) return;
@@ -46,6 +49,7 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
       <div className="scroll-area">
         {orders.length === 0 ? (
           <div className="empty-state" style={{ paddingTop: 60 }}>
+            <PackageOpen size={44} strokeWidth={1.5} className="orders-empty-icon" aria-hidden="true" />
             <p>{role === 'buyer' ? t('还没有买过东西') : t('还没有卖出订单')}</p>
           </div>
         ) : (
@@ -132,6 +136,21 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
           </div>
         </div>
       )}
+
+      <DevPanel>
+        <button
+          type="button"
+          className="planet-dev-menu-item"
+          role="menuitemcheckbox"
+          aria-checked={demoEmpty}
+          onClick={() => setDemoEmpty(v => !v)}
+        >
+          <span>{t('订单空态')}</span>
+          <span className={`planet-dev-menu-toggle${demoEmpty ? ' planet-dev-menu-toggle--on' : ''}`}>
+            {demoEmpty ? t('开') : t('关')}
+          </span>
+        </button>
+      </DevPanel>
     </div>
   );
 }
