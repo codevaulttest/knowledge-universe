@@ -700,6 +700,8 @@ export const en: Record<string, string> = {
   '买家按此比例获得优点返还（平台收 10% 损耗，上限 90%）': 'Buyers earn merit at this rate (platform takes 10%, so max 90%).',
   '购买此商品，{price} PB': 'Buy this item, {price} PB',
   '购买': 'Buy',
+  '小黄车': 'On sale',
+  '本帖已参与小黄车，售价 {price} PB，点按预览商品页': 'This post is listed in Shop at {price} PB — tap to preview',
   '小黄车商城': 'Shop Mall',
   '我的订单': 'My Orders',
   '这里是全部上架商品，点商品即可下单购买': 'All listed products — tap one to order.',

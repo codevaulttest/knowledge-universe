@@ -425,15 +425,28 @@ export function PostCard({
             ? t('查看打赏详情，已收到 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })
             : t('打赏此帖，当前热力值 {heat}', { heat })}
           chainExtra={post.shop && (
-            <button
-              type="button"
-              className="post-shop-btn"
-              onClick={(e) => { e.stopPropagation(); navigate({ page: 'P_SHOP_ITEM', postId: post.id }); }}
-              aria-label={t('购买此商品，{price} PB', { price: post.shop.price })}
-            >
-              <ShoppingCart size={13} strokeWidth={2.25} />
-              {t('购买')}
-            </button>
+            isOwn ? (
+              // 自己的帖子不能买自己的；改为展示「小黄车」标识，让作者知道本帖已参与，点按可预览商品页
+              <button
+                type="button"
+                className="post-shop-tag"
+                onClick={(e) => { e.stopPropagation(); navigate({ page: 'P_SHOP_ITEM', postId: post.id }); }}
+                aria-label={t('本帖已参与小黄车，售价 {price} PB，点按预览商品页', { price: post.shop.price })}
+              >
+                <ShoppingCart size={13} strokeWidth={2.25} />
+                {t('小黄车')}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="post-shop-btn"
+                onClick={(e) => { e.stopPropagation(); navigate({ page: 'P_SHOP_ITEM', postId: post.id }); }}
+                aria-label={t('购买此商品，{price} PB', { price: post.shop.price })}
+              >
+                <ShoppingCart size={13} strokeWidth={2.25} />
+                {t('购买')}
+              </button>
+            )
           )}
         />
       </div>

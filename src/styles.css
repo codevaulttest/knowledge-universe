@@ -10783,7 +10783,7 @@ html[lang="zh-TW"] .planet-hero-title {
   color: var(--ku-color-shop);
 }
 
-/* 帖子卡片上的「购买」入口（打赏按钮旁） */
+/* 帖子卡片上的「购买」入口（链接按钮旁） */
 .post-shop-btn {
   display: inline-flex;
   align-items: center;
@@ -10795,6 +10795,21 @@ html[lang="zh-TW"] .planet-hero-title {
   border-radius: var(--ku-radius-card);
   background: var(--ku-color-shop-btn);
   color: var(--ku-color-shop-btn-text);
+  font: var(--ku-text-action-cta);
+  cursor: pointer;
+}
+/* 自己的帖子：小黄车参与标识（浅色描边 chip，区别于实心「购买」CTA）*/
+.post-shop-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--ku-color-shop-border);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-shop-bg);
+  color: var(--ku-color-shop-strong);
   font: var(--ku-text-action-cta);
   cursor: pointer;
 }
