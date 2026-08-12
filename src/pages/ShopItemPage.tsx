@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { Check, ChevronRight, MapPin, Minus, Plus, ShoppingCart, Sparkles, X } from 'lucide-react';
+import { Check, ChevronRight, MapPin, Minus, Plus, Sparkles, Trash2, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import type { ShippingAddress, ShopOrder } from '../types';
 import { PageHeader } from '../components/shared';
 import { formatTokenAmount } from '../stakeConfig';
 import { computeShopFee, computeUnitMerit, formatShopFee, MERIT_PER_ADN } from '../shopConfig';
+import { Ios26Alert } from '../components/Overlays';
 
 export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () => void }) {
   const {
     posts, navigate, t, requireWallet,
-    shippingAddresses, defaultAddress, addShippingAddress,
+    shippingAddresses, defaultAddress, addShippingAddress, removeShippingAddress,
     placeShopOrder, showToast, openImageLightbox,
   } = useApp();
 
@@ -24,6 +25,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formDetail, setFormDetail] = useState('');
+  const [pendingDeleteAddrId, setPendingDeleteAddrId] = useState<string | null>(null);
 
   if (!post || !post.shop) {
     return (
@@ -76,6 +78,15 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     });
   };
 
+  const deleteAddress = (addrId: string) => {
+    const remaining = shippingAddresses.filter(a => a.id !== addrId);
+    removeShippingAddress(addrId);
+    if (selectedAddressId === addrId) {
+      const fallback = remaining.find(a => a.isDefault) ?? remaining[0];
+      setSelectedAddressId(fallback?.id ?? null);
+    }
+  };
+
   return (
     <>
       <div className="sheet-backdrop" onClick={onClose}>
@@ -88,49 +99,53 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
 
         {/* 正文 */}
         <div className="shop-item-body">
-          <h2 className="shop-item-title">{post.title}</h2>
-          <button
-            type="button"
-            className="shop-item-seller"
-            onClick={() => navigate({ page: 'P6', authorName: post.author })}
-          >
-            {t('卖家')}：{post.author}
-            <ChevronRight size={15} strokeWidth={2} />
-          </button>
+          <div className="shop-item-intro">
+            <h2 className="shop-item-title">{post.title}</h2>
+            <button
+              type="button"
+              className="shop-item-seller"
+              onClick={() => navigate({ page: 'P6', authorName: post.author })}
+            >
+              {t('卖家')}：{post.author}
+              <ChevronRight size={15} strokeWidth={2} />
+            </button>
+          </div>
           <div className="shop-item-pricebar">
             <span className="shop-item-price">{formatTokenAmount(price)} <span className="shop-item-price-unit">PB</span></span>
           </div>
 
           {/* 数量 */}
-          <div className="shop-item-row">
-            <span className="shop-item-row-label">{t('购买数量')}</span>
-            <div className="shop-qty">
-              <button type="button" className="shop-qty-btn" onClick={() => changeQty(-1)} disabled={qty <= 1} aria-label={t('减少')}>
-                <Minus size={16} strokeWidth={2.4} />
-              </button>
-              <input
-                className="shop-qty-value"
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={stock}
-                value={qty}
-                onChange={e => {
-                  const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v)) setQty(Math.min(Math.max(1, v), Math.max(1, stock)));
-                }}
-                onBlur={e => {
-                  const v = parseInt(e.target.value, 10);
-                  setQty(isNaN(v) ? 1 : Math.min(Math.max(1, v), Math.max(1, stock)));
-                }}
-                aria-label={t('购买数量')}
-              />
-              <button type="button" className="shop-qty-btn" onClick={() => changeQty(1)} disabled={qty >= stock} aria-label={t('增加')}>
-                <Plus size={16} strokeWidth={2.4} />
-              </button>
+          <div className="shop-item-qty-group">
+            <div className="shop-item-row">
+              <span className="shop-item-row-label">{t('购买数量')}</span>
+              <div className="shop-qty">
+                <button type="button" className="shop-qty-btn" onClick={() => changeQty(-1)} disabled={qty <= 1} aria-label={t('减少')}>
+                  <Minus size={16} strokeWidth={2.4} />
+                </button>
+                <input
+                  className="shop-qty-value"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={stock}
+                  value={qty}
+                  onChange={e => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v)) setQty(Math.min(Math.max(1, v), Math.max(1, stock)));
+                  }}
+                  onBlur={e => {
+                    const v = parseInt(e.target.value, 10);
+                    setQty(isNaN(v) ? 1 : Math.min(Math.max(1, v), Math.max(1, stock)));
+                  }}
+                  aria-label={t('购买数量')}
+                />
+                <button type="button" className="shop-qty-btn" onClick={() => changeQty(1)} disabled={qty >= stock} aria-label={t('增加')}>
+                  <Plus size={16} strokeWidth={2.4} />
+                </button>
+              </div>
             </div>
+            <p className="shop-item-stock">{t('库存：{stock} 件', { stock })}</p>
           </div>
-          <p className="shop-item-stock">{t('库存：{stock} 件', { stock })}</p>
 
           {/* 收货地址 */}
           <button type="button" className="shop-item-addr" onClick={() => setPickerOpen(true)}>
@@ -184,7 +199,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                 <input className="compose-shop-input" placeholder={t('收货人姓名')} value={formName} onChange={e => setFormName(e.target.value)} />
                 <input className="compose-shop-input" placeholder={t('手机号')} value={formPhone} onChange={e => setFormPhone(e.target.value)} />
                 <textarea className="compose-shop-input shop-addr-detail" placeholder={t('详细地址')} value={formDetail} onChange={e => setFormDetail(e.target.value)} />
-                <button type="button" className="planet-confirm-btn" onClick={submitAddress} disabled={!formName.trim() || !formPhone.trim() || !formDetail.trim()}>
+                <button type="button" className="shop-addr-save-btn" onClick={submitAddress} disabled={!formName.trim() || !formPhone.trim() || !formDetail.trim()}>
                   {t('保存并使用')}
                 </button>
               </div>
@@ -192,21 +207,33 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
               <>
                 <div className="shop-addr-list">
                   {shippingAddresses.map(addr => (
-                    <button
+                    <div
                       key={addr.id}
-                      type="button"
                       className={`shop-addr-item${selectedAddressId === addr.id ? ' shop-addr-item--active' : ''}`}
-                      onClick={() => { setSelectedAddressId(addr.id); setPickerOpen(false); }}
                     >
-                      <span className="shop-item-addr-text">
-                        <span className="shop-item-addr-line1">
-                          {addr.name} · {addr.phone}
-                          {addr.isDefault && <span className="shop-addr-default-tag">{t('默认')}</span>}
+                      <button
+                        type="button"
+                        className="shop-addr-item-main"
+                        onClick={() => { setSelectedAddressId(addr.id); setPickerOpen(false); }}
+                      >
+                        <span className="shop-item-addr-text">
+                          <span className="shop-item-addr-line1">
+                            {addr.name} · {addr.phone}
+                            {addr.isDefault && <span className="shop-addr-default-tag">{t('默认')}</span>}
+                          </span>
+                          <span className="shop-item-addr-line2">{addr.detail}</span>
                         </span>
-                        <span className="shop-item-addr-line2">{addr.detail}</span>
-                      </span>
-                      {selectedAddressId === addr.id && <Check size={16} strokeWidth={2.4} className="shop-addr-check" />}
-                    </button>
+                        {selectedAddressId === addr.id && <Check size={16} strokeWidth={2.4} className="shop-addr-check" />}
+                      </button>
+                      <button
+                        type="button"
+                        className="shop-addr-delete"
+                        onClick={() => setPendingDeleteAddrId(addr.id)}
+                        aria-label={t('删除')}
+                      >
+                        <Trash2 size={16} strokeWidth={2} />
+                      </button>
+                    </div>
                   ))}
                 </div>
                 <button type="button" className="shop-addr-add-btn" onClick={() => setAddOpen(true)}>
@@ -216,6 +243,21 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             )}
           </div>
         </div>
+      )}
+
+      {/* 删除地址二次确认 */}
+      {pendingDeleteAddrId && (
+        <Ios26Alert
+          title={t('删除收货地址')}
+          message={t('确定要删除该收货地址吗？')}
+          cancelLabel={t('取消')}
+          confirmLabel={t('删除')}
+          onCancel={() => setPendingDeleteAddrId(null)}
+          onConfirm={() => {
+            deleteAddress(pendingDeleteAddrId);
+            setPendingDeleteAddrId(null);
+          }}
+        />
       )}
 
       {/* 下单成功 */}

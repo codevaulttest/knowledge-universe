@@ -119,6 +119,7 @@ export type AppContextValue = {
   defaultAddress: ShippingAddress | null;
   addShippingAddress: (data: Omit<ShippingAddress, 'id'>) => ShippingAddress;
   setDefaultAddress: (addressId: string) => void;
+  removeShippingAddress: (addressId: string) => void;
   /** 买家下单：扣 PB + SUP，生成订单，返回新订单 */
   placeShopOrder: (postId: string, quantity: number, address: ShippingAddress) => ShopOrder | undefined;
   /** 卖家发货：填物流公司 + 快递单号 */

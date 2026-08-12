@@ -579,6 +579,18 @@ export default function App() {
     setShippingAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addressId })));
   };
 
+  const removeShippingAddress = (addressId: string) => {
+    setShippingAddresses(prev => {
+      const filtered = prev.filter(a => a.id !== addressId);
+      if (filtered.length === 0) return [];
+      const deleted = prev.find(a => a.id === addressId);
+      if (deleted?.isDefault) {
+        return filtered.map((a, i) => ({ ...a, isDefault: i === 0 }));
+      }
+      return filtered;
+    });
+  };
+
   // 买家下单：扣 PB（单价×数量）+ SUP（手续费×数量），生成一条订单
   const placeShopOrder = (postId: string, quantity: number, address: ShippingAddress) => {
     const post = posts.find(p => p.id === postId);
@@ -801,7 +813,7 @@ export default function App() {
     taskSnapshotToday, taskSnapshotYesterday, taskCelebrateSignal,
     resetDemoTasks, simulateDemoTaskInteractions,
     shopOrders, shippingAddresses, defaultAddress,
-    addShippingAddress, setDefaultAddress,
+    addShippingAddress, setDefaultAddress, removeShippingAddress,
     placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle,
   };
 

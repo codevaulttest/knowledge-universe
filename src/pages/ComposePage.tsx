@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, type ChangeEvent, type CSSProperties } from 'react';
 import { Camera, Check, ChevronRight, Eye, FileText, Image, Plus, Radio, Save, Search, Send, ShoppingCart, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
@@ -837,10 +837,11 @@ export function ComposePage({
                     type="range" min={0} max={SHOP_MAX_REBATE_PERCENT} step={5}
                     className="compose-shop-range"
                     value={shopRebate}
+                    style={{ '--shop-range-pct': `${(shopRebate / SHOP_MAX_REBATE_PERCENT) * 100}%` } as CSSProperties}
                     onChange={e => setShopRebate(Number(e.target.value))}
                   />
                   <span className="compose-shop-field__hint">
-                    {t('买家按此比例获得优点返还（平台收 10% 损耗，上限 90%）')}
+                    {t('买家按此比例获得优点返还')}
                   </span>
                 </div>
               </div>
