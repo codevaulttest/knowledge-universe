@@ -614,11 +614,13 @@ export function PostContent({
 // leftContent：用其它内容（如 feed 卡片的热力值/打赏）覆盖默认的「知识宇宙·星级·节点ID」左侧内容；
 // 此时整条外层点击行为改由 onLeftClick 控制（未传则该区域不可点击），与 onGoToPlanet/链接跳转逻辑互斥。
 // 有 leftContent 且 showChain 时：左侧热力值+打赏同壳胶囊，右侧链接按钮靠右。
-export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPlanet, leftContent, onLeftClick, leftAriaLabel, chainOutline = false }: {
+export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPlanet, leftContent, onLeftClick, leftAriaLabel, chainOutline = false, chainExtra }: {
   post: Post; showChain?: boolean; onViewLinks?: () => void; onGoToPlanet?: () => void;
   leftContent?: React.ReactNode; onLeftClick?: () => void; leftAriaLabel?: string;
   /** 仅「我的主页」等场景：链接按钮改空心并去掉右箭头，其它页面保持实心 CTA */
   chainOutline?: boolean;
+  /** 紧贴「链接」按钮之后的附加内容（如小黄车「购买」入口）*/
+  chainExtra?: React.ReactNode;
 }) {
   const { openLink, linkedPostIds, t } = useApp();
   const isLinked = linkedPostIds.has(post.id);
@@ -647,10 +649,12 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
     )
   ) : null;
 
-  // Feed：热力值/打赏同壳靠左 + 链接按钮靠右
+  // Feed：链接（连接数量）+ 购买靠左 + 热力值/赞助同壳靠右
   if (splitHeatNode) {
     return (
       <div className="post-heat-gemini-row" data-layer="gemini-node-badge">
+        {chainEl}
+        {chainExtra}
         <div
           className="gemini-badge gemini-badge--heat"
           role={clickable ? 'button' : undefined}
@@ -666,7 +670,6 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
         >
           <div className="gemini-left">{leftContent}</div>
         </div>
-        {chainEl}
       </div>
     );
   }

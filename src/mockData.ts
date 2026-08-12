@@ -1,4 +1,4 @@
-import type { ActivityGroup, Channel, ChannelSubscriber, DmConversation, OutgoingTip, Post, PostActors, Reply } from './types';
+import type { ActivityGroup, Channel, ChannelSubscriber, DmConversation, OutgoingTip, Post, PostActors, Reply, ShippingAddress, ShopOrder } from './types';
 
 export type UserListItem = {
   name: string;
@@ -380,6 +380,21 @@ export const ALL_POSTS: Post[] = [
     kind: 'image', imageCount: 3, visiblePercent: 50, isNode: true, stakeTier: 1000, nodeId: 'Kx7mR2',
     rating: 4, replies: 18, links: 42, shares: 36, saves: 152, likes: 306, tipsReceived: 89,
     channelId: 'channel-aieff',
+    shop: { price: 2000, rebatePercent: 40, stock: 50 },
+  },
+  {
+    id: 'shop-mug', author: '拾光杂货铺', time: '4 小时前',
+    title: '「知识星探」联名马克杯 · 陶瓷 400ml。附赠贴纸一套，晒单返优点。图为实拍，颜色以实物为准。',
+    kind: 'image', imageCount: 3, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Sg9pL3',
+    rating: 5, replies: 24, links: 12, shares: 8, saves: 66, likes: 188, tipsReceived: 12,
+    shop: { price: 800, rebatePercent: 30, stock: 120 },
+  },
+  {
+    id: 'shop-mine', author: CURRENT_USER, time: '1 天前',
+    title: '我的手作机械键盘（客制化 · 静电容轴）。整套含卫星轴调教与消音棉，支持改键。下单请备注配列。',
+    kind: 'image', imageCount: 2, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Mk2wQ8',
+    rating: 5, replies: 9, links: 5, shares: 3, saves: 41, likes: 97,
+    shop: { price: 12000, rebatePercent: 20, stock: 5 },
   },
   {
     id: 'p7', author: '产品大叔严磊', time: '3 天前',
@@ -927,5 +942,53 @@ export const DM_CONVERSATIONS: DmConversation[] = [
       { id: 'm4', from: 'me', text: '是的，Qdrant 生产环境更稳，可以试试', time: '4 天前 10:22' },
       { id: 'm5', from: 'peer', text: '已收到，感谢！', time: '3 天前' },
     ],
+  },
+];
+
+// ── 小黄车：收货地址 + 订单种子数据 ──────────────────────────────
+export const MOCK_SHIPPING_ADDRESSES: ShippingAddress[] = [
+  { id: 'addr1', name: '张玉慧', phone: '138****6621', detail: '上海市浦东新区世纪大道 100 号 环球金融中心 32F', isDefault: true },
+  { id: 'addr2', name: '张玉慧（公司）', phone: '139****0075', detail: '深圳市南山区科技园 T3 栋 1801' },
+];
+
+/** 演示订单：既有当前用户「我买的」，也有「我卖的」，覆盖各状态 */
+export const MOCK_SHOP_ORDERS: ShopOrder[] = [
+  // 我买的
+  {
+    id: 'ord-1001', postId: 'shop-mug', productTitle: '「知识星探」联名马克杯 · 陶瓷 400ml', productKind: 'image',
+    sellerName: '拾光杂货铺', buyerName: CURRENT_USER,
+    unitPrice: 800, unitFee: 0.08, quantity: 2, rebatePercent: 30,
+    address: MOCK_SHIPPING_ADDRESSES[0], status: 'shipped', createdAt: Date.now() - 1000 * 60 * 60 * 26,
+    carrier: '顺丰速运', trackingNo: 'SF1398820156283', estMerit: 30,
+  },
+  {
+    id: 'ord-1002', postId: 'p1', productTitle: 'AI 产品截图 × 提示词模板合集', productKind: 'image',
+    sellerName: 'AI 效率研究所', buyerName: CURRENT_USER,
+    unitPrice: 2000, unitFee: 0.2, quantity: 1, rebatePercent: 40,
+    address: MOCK_SHIPPING_ADDRESSES[0], status: 'to_ship', createdAt: Date.now() - 1000 * 60 * 60 * 3,
+    estMerit: 50,
+  },
+  {
+    id: 'ord-1003', postId: 'shop-mug', productTitle: '「知识星探」联名马克杯 · 陶瓷 400ml', productKind: 'image',
+    sellerName: '拾光杂货铺', buyerName: CURRENT_USER,
+    unitPrice: 800, unitFee: 0.08, quantity: 1, rebatePercent: 30,
+    address: MOCK_SHIPPING_ADDRESSES[1], status: 'to_settle', createdAt: Date.now() - 1000 * 60 * 60 * 24 * 6,
+    carrier: '中通快递', trackingNo: 'ZT758210934471', estMerit: 15,
+  },
+  // 我卖的（商品 shop-mine 由当前用户发布）
+  {
+    id: 'ord-2001', postId: 'shop-mine', productTitle: '我的手作机械键盘（客制化 · 静电容轴）', productKind: 'image',
+    sellerName: CURRENT_USER, buyerName: '深海鱼炸弹',
+    unitPrice: 12000, unitFee: 1.2, quantity: 1, rebatePercent: 20,
+    address: { id: 'addr-b1', name: '陈先生', phone: '137****4408', detail: '杭州市西湖区文三路 478 号 华星时代广场 A 座 15F' },
+    status: 'to_ship', createdAt: Date.now() - 1000 * 60 * 60 * 5, estMerit: 150,
+  },
+  {
+    id: 'ord-2002', postId: 'shop-mine', productTitle: '我的手作机械键盘（客制化 · 静电容轴）', productKind: 'image',
+    sellerName: CURRENT_USER, buyerName: '游牧开发者',
+    unitPrice: 12000, unitFee: 1.2, quantity: 1, rebatePercent: 20,
+    address: { id: 'addr-b2', name: '刘女士', phone: '135****9902', detail: '成都市高新区天府三街 199 号 太平洋保险大厦 20F' },
+    status: 'completed', createdAt: Date.now() - 1000 * 60 * 60 * 24 * 2,
+    carrier: '京东物流', trackingNo: 'JD0055217788013', estMerit: 150,
   },
 ];

@@ -957,6 +957,7 @@ function OutgoingTipItem({ tip, onOpen }: { tip: OutgoingTip; onOpen: () => void
       </div>
       <div className="tip-history-item-body">
         <div className="tip-history-item-title">{title}</div>
+        {tip.message && <div className="tip-history-item-message">{tip.message}</div>}
         <div className="tip-history-item-meta">
           <span>{tip.recipientName}</span>
           <span>{formatTime(tip.createdAt)}</span>

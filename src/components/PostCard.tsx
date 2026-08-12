@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, Pencil, Radio, Repeat2, ThumbsDown, ThumbsUp, Trash2, Users } from 'lucide-react';
+import { Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, Pencil, Radio, Repeat2, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, Users } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
@@ -34,7 +34,7 @@ export function ActorsSheet({ postId, initialTab, onClose }: {
     { key: 'like',    zh: '点赞', en: 'Likes' },
     { key: 'share',   zh: '转发', en: 'Reposts' },
     { key: 'save',    zh: '收藏', en: 'Saves' },
-    { key: 'tip',     zh: '打赏', en: 'Tips' },
+    { key: 'tip',     zh: '赞助', en: 'Sponsorships' },
   ];
 
   return (
@@ -406,12 +406,10 @@ export function PostCard({
                 {formatCount(heat, language)}
               </span>
               {isOwn ? (
-                (post.tipsReceived ?? 0) > 0 && (
-                  <span className="post-heat-tip-btn post-heat-tip-btn--received">
-                    <HandCoins size={13} strokeWidth={2.25} />
-                    {t('{tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
-                  </span>
-                )
+                <span className="post-heat-tip-btn post-heat-tip-btn--received">
+                  <HandCoins size={13} strokeWidth={2.25} />
+                  {t('{tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
+                </span>
               ) : (
                 <span className="post-heat-tip-btn">
                   <HandCoins size={13} strokeWidth={2.25} />
@@ -426,6 +424,17 @@ export function PostCard({
           leftAriaLabel={isOwn
             ? t('查看打赏详情，已收到 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })
             : t('打赏此帖，当前热力值 {heat}', { heat })}
+          chainExtra={post.shop && (
+            <button
+              type="button"
+              className="post-shop-btn"
+              onClick={(e) => { e.stopPropagation(); navigate({ page: 'P_SHOP_ITEM', postId: post.id }); }}
+              aria-label={t('购买此商品，{price} PB', { price: post.shop.price })}
+            >
+              <ShoppingCart size={13} strokeWidth={2.25} />
+              {t('购买')}
+            </button>
+          )}
         />
       </div>
       <Actions

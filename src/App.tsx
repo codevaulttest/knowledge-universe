@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
-import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import { computeUnitMerit } from './shopConfig';
 import { postHasStake } from './stakeConfig';
 import { translate } from './locales';
 import { isChinese } from './i18n';
@@ -21,6 +22,9 @@ import { ChannelPage } from './pages/ChannelPage';
 import { ActivityPage } from './pages/ActivityPage';
 import { DmListPage, DmChatPage } from './pages/DmPage';
 import { SearchPage } from './pages/SearchPage';
+import { ShopPage } from './pages/ShopPage';
+import { ShopItemPage } from './pages/ShopItemPage';
+import { OrdersPage } from './pages/OrdersPage';
 
 
 export default function App() {
@@ -553,6 +557,84 @@ export default function App() {
     showToast(t('已取消订阅'));
   };
 
+  // ── 小黄车：收货地址 + 订单 ──────────────────────────────────────
+  const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>(MOCK_SHIPPING_ADDRESSES);
+  const [shopOrders, setShopOrders] = useState<ShopOrder[]>(MOCK_SHOP_ORDERS);
+
+  const defaultAddress = shippingAddresses.find(a => a.isDefault) ?? shippingAddresses[0] ?? null;
+
+  const addShippingAddress = (data: Omit<ShippingAddress, 'id'>): ShippingAddress => {
+    const addr: ShippingAddress = { ...data, id: `addr-${Date.now()}` };
+    setShippingAddresses(prev => {
+      // 若新地址设为默认，其余取消默认
+      const next = addr.isDefault ? prev.map(a => ({ ...a, isDefault: false })) : [...prev];
+      return [...next, addr];
+    });
+    return addr;
+  };
+
+  const setDefaultAddress = (addressId: string) => {
+    setShippingAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addressId })));
+  };
+
+  // 买家下单：扣 PB（单价×数量）+ SUP（手续费×数量），生成一条订单
+  const placeShopOrder = (postId: string, quantity: number, address: ShippingAddress) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post?.shop) return;
+    const { price, rebatePercent } = post.shop;
+    const unitFee = Math.round(price * 0.0001 * 10000) / 10000;
+    const totalPb = price * quantity;
+    const totalSup = unitFee * quantity;
+    deductPb(totalPb, 'purchase');
+    if (totalSup > 0) deductSup(totalSup, 'purchase');
+    const order: ShopOrder = {
+      id: `ord-${Date.now()}`,
+      postId,
+      productTitle: post.title.split('\n')[0].slice(0, 40),
+      productKind: post.kind,
+      sellerName: post.author,
+      buyerName: CURRENT_USER,
+      unitPrice: price,
+      unitFee,
+      quantity,
+      rebatePercent,
+      address,
+      status: 'to_ship',
+      createdAt: Date.now(),
+      estMerit: computeUnitMerit(price, rebatePercent) * quantity,
+    };
+    setShopOrders(prev => [order, ...prev]);
+    // 扣减库存
+    setPosts(prev => prev.map(p => p.id === postId && p.shop
+      ? { ...p, shop: { ...p.shop, stock: Math.max(0, p.shop.stock - quantity) } }
+      : p));
+    return order;
+  };
+
+  // 卖家发货：填物流公司 + 快递单号
+  const shipShopOrder = (orderId: string, carrier: string, trackingNo: string) => {
+    setShopOrders(prev => prev.map(o => o.id === orderId
+      ? { ...o, status: 'shipped', carrier, trackingNo }
+      : o));
+    showToast(t('已发货'));
+  };
+
+  // 买家确认收货 → 已完成，标注次月 15 日结算
+  const confirmShopReceipt = (orderId: string) => {
+    setShopOrders(prev => prev.map(o => o.id === orderId
+      ? { ...o, status: 'to_settle' }
+      : o));
+    showToast(t('已确认收货，货款将于次月 15 日结算给卖家'));
+  };
+
+  // 开发工具：把待结算订单推进到已结算（演示 T+15 月结到账）
+  const simulateShopSettle = (orderId: string) => {
+    setShopOrders(prev => prev.map(o => o.id === orderId
+      ? { ...o, status: 'settled' }
+      : o));
+    showToast(t('已结算'));
+  };
+
   const handlePaySuccess = () => {
     if (!paySheet) return;
     const { ctx, postId } = paySheet;
@@ -575,6 +657,7 @@ export default function App() {
           nodeId: Math.random().toString(36).slice(2, 8).toUpperCase(),
           channelId: pendingNewPost.channelId,
           minTierIndex: pendingNewPost.minTierIndex,
+          shop: pendingNewPost.shop,
           rating: 0,
           replies: 0,
           links: 0,
@@ -613,7 +696,7 @@ export default function App() {
   const clearRecentSearches = () => setRecentSearches([]);
 
   const isOwnProfile = route.page === 'P6' && route.authorName === CURRENT_USER;
-  const showBottomNav = route.page === 'P0' || route.page === 'P_PLANET' || route.page === 'P_SEARCH' || route.page === 'P7' || route.page === 'P_DM' || isOwnProfile;
+  const showBottomNav = route.page === 'P0' || route.page === 'P_PLANET' || route.page === 'P_SEARCH' || route.page === 'P7' || route.page === 'P_DM' || route.page === 'P_SHOP' || isOwnProfile;
 
   const [composeDraftId, setComposeDraftId] = useState<string | null>(null);
   const [pendingNewPost, setPendingNewPost] = useState<NewPostData | null>(null);
@@ -668,6 +751,7 @@ export default function App() {
       nodeId: data.isNode ? Math.random().toString(36).slice(2, 8).toUpperCase() : undefined,
       channelId: data.channelId,
       minTierIndex: data.minTierIndex,
+      shop: data.shop,
       rating: 0,
       replies: 0,
       links: 0,
@@ -714,6 +798,9 @@ export default function App() {
     airdropClaimed, claimAirdrop,
     taskSnapshotToday, taskSnapshotYesterday, taskCelebrateSignal,
     resetDemoTasks, simulateDemoTaskInteractions,
+    shopOrders, shippingAddresses, defaultAddress,
+    addShippingAddress, setDefaultAddress,
+    placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle,
   };
 
 
@@ -730,6 +817,9 @@ export default function App() {
         {route.page === 'P_PLANET' && <KnowledgePlanetPage initialSearch={route.searchNodeCode} openBsp={route.openBsp} />}
         {route.page === 'P_DM' && <DmListPage />}
         {route.page === 'P_DM_CHAT' && <DmChatPage peerId={route.peerId} />}
+        {route.page === 'P_SHOP' && <ShopPage />}
+        {route.page === 'P_SHOP_ITEM' && <ShopItemPage postId={route.postId} />}
+        {route.page === 'P_ORDERS' && <OrdersPage initialRole={route.role} />}
 
         {/* 码库全局底部导航（知识宇宙内始终保持同一套宿主导航）*/}
         {showBottomNav && <BottomNav route={route} setTab={setTab} />}

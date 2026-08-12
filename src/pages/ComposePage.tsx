@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react';
-import { Camera, Check, ChevronRight, Eye, FileText, Image, Plus, Radio, Save, Search, Send, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
+import { Camera, Check, ChevronRight, Eye, FileText, Image, Plus, Radio, Save, Search, Send, ShoppingCart, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { useChannelListSearch } from '../components/channelSearch';
 import { CURRENT_USER } from '../mockData';
-import type { Draft, Post, StakeTier } from '../types';
+import type { Draft, Post, ShopInfo, StakeTier } from '../types';
 import { STAKE_TIERS, stakeTierDescription, stakeTierLabel } from '../stakeConfig';
+import { SHOP_MAX_REBATE_PERCENT, computeShopFee } from '../shopConfig';
 import { isChinese } from '../i18n';
 
 const MAX_POST_CHARS = 500;
@@ -50,6 +51,11 @@ export function ComposePage({
   const channelPicker = useChannelListSearch(myChannels);
   const selectedChannel = myChannels.find(c => c.id === selectedChannelId);
   const [minTierIndex, setMinTierIndex] = useState<number | undefined>(undefined);
+  // 小黄车（仅 1000 PB 节点帖可挂载）
+  const [shopEnabled, setShopEnabled] = useState(false);
+  const [shopPrice, setShopPrice] = useState('');
+  const [shopRebate, setShopRebate] = useState(40);
+  const [shopStock, setShopStock] = useState('');
   const [imgCount, setImgCount] = useState(draft?.imgCount ?? 0);
   // 用户通过系统相册/拍照选中的图片，生成本地预览用的 object URL（草稿里已有的旧图没有真实文件，仅按数量占位展示）
   const [imgUrls, setImgUrls] = useState<string[]>([]);
@@ -72,9 +78,25 @@ export function ComposePage({
 
   const isOverLimit = !articleMode && text.length > MAX_POST_CHARS;
 
-  const canPublish = articleMode
+  // 小黄车仅在 1000 PB 节点档位可用；档位变化后自动收起，避免带着无效配置提交
+  const shopEligible = stakeTier === 1000;
+  useEffect(() => {
+    if (!shopEligible && shopEnabled) setShopEnabled(false);
+  }, [shopEligible, shopEnabled]);
+  const shopPriceNum = Number(shopPrice);
+  const shopStockNum = Number(shopStock);
+  const shopValid = !shopEnabled || (
+    shopPriceNum > 0
+    && Number.isFinite(shopPriceNum)
+    && shopStockNum >= 1
+    && Number.isInteger(shopStockNum)
+    && shopRebate >= 0
+    && shopRebate <= SHOP_MAX_REBATE_PERCENT
+  );
+
+  const canPublish = (articleMode
     ? articleTitle.trim().length > 0 && articleBodyHasContent
-    : text.trim().length > 0 && !isOverLimit;
+    : text.trim().length > 0 && !isOverLimit) && shopValid;
 
   const canSaveDraft = !isEditMode && (
     articleMode
@@ -157,6 +179,9 @@ export function ComposePage({
       return;
     }
     const joinNode = stakeTier > 0;
+    const shop: ShopInfo | undefined = shopEligible && shopEnabled
+      ? { price: shopPriceNum, rebatePercent: shopRebate, stock: shopStockNum }
+      : undefined;
     const postData = {
       title: (articleMode ? articleTitle : text).trim(),
       kind,
@@ -167,6 +192,7 @@ export function ComposePage({
       imageCount: imgCount > 0 ? imgCount : undefined,
       channelId: selectedChannel ? selectedChannel.id : undefined,
       minTierIndex: selectedChannel ? minTierIndex : undefined,
+      shop,
     };
     if (joinNode) {
       stagePendingPost(postData);
@@ -735,6 +761,76 @@ export function ComposePage({
               <p className="compose-stake-hint">
                 {t('建议单条解锁价为该档月费的 2–10 倍')}
               </p>
+            )}
+          </div>
+        )}
+
+        {/* 小黄车：仅 1000 PB 节点帖可挂载，把帖子变成可下单商品 */}
+        {!isEditMode && shopEligible && (
+          <div className="compose-section compose-shop-section">
+            <button
+              type="button"
+              className="compose-shop-toggle"
+              role="switch"
+              aria-checked={shopEnabled}
+              onClick={() => setShopEnabled(v => !v)}
+            >
+              <span className="compose-shop-toggle__label">
+                <ShoppingCart size={16} strokeWidth={2} />
+                {t('参与小黄车')}
+              </span>
+              <span className={`compose-shop-switch${shopEnabled ? ' compose-shop-switch--on' : ''}`} aria-hidden="true">
+                <span className="compose-shop-switch__dot" />
+              </span>
+            </button>
+            <p className="compose-stake-hint">
+              {t('开启后帖子作为商品进入商城，买家可下单；货款于买家收货后次月 15 日结算，卖家实收 90%')}
+            </p>
+
+            {shopEnabled && (
+              <div className="compose-shop-fields">
+                <label className="compose-shop-field">
+                  <span className="compose-shop-field__label">{t('商品价格（PB）')}</span>
+                  <input
+                    type="number" inputMode="numeric" min={1}
+                    className="compose-shop-input"
+                    placeholder={t('如 2000')}
+                    value={shopPrice}
+                    onChange={e => setShopPrice(e.target.value)}
+                  />
+                  {shopPriceNum > 0 && (
+                    <span className="compose-shop-field__hint">
+                      {t('下单另收 {fee} SUP/件手续费', { fee: computeShopFee(shopPriceNum) })}
+                    </span>
+                  )}
+                </label>
+
+                <label className="compose-shop-field">
+                  <span className="compose-shop-field__label">{t('可订购数量')}</span>
+                  <input
+                    type="number" inputMode="numeric" min={1} step={1}
+                    className="compose-shop-input"
+                    placeholder={t('如 50')}
+                    value={shopStock}
+                    onChange={e => setShopStock(e.target.value)}
+                  />
+                </label>
+
+                <div className="compose-shop-field">
+                  <span className="compose-shop-field__label">
+                    {t('优点返还比例')} · {shopRebate}%
+                  </span>
+                  <input
+                    type="range" min={0} max={SHOP_MAX_REBATE_PERCENT} step={5}
+                    className="compose-shop-range"
+                    value={shopRebate}
+                    onChange={e => setShopRebate(Number(e.target.value))}
+                  />
+                  <span className="compose-shop-field__hint">
+                    {t('买家按此比例获得优点返还（平台收 10% 损耗，上限 90%）')}
+                  </span>
+                </div>
+              </div>
             )}
           </div>
         )}

@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import type { TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
@@ -112,6 +112,21 @@ export type AppContextValue = {
   // 开发工具：重置/模拟今日任务，便于演示
   resetDemoTasks: () => void;
   simulateDemoTaskInteractions: (count: number) => void;
+  // ── 小黄车（帖子即商品）──────────────────────────────────────────
+  shopOrders: ShopOrder[];
+  shippingAddresses: ShippingAddress[];
+  /** 默认收货地址（下单时自动填充）；无地址为 null */
+  defaultAddress: ShippingAddress | null;
+  addShippingAddress: (data: Omit<ShippingAddress, 'id'>) => ShippingAddress;
+  setDefaultAddress: (addressId: string) => void;
+  /** 买家下单：扣 PB + SUP，生成订单，返回新订单 */
+  placeShopOrder: (postId: string, quantity: number, address: ShippingAddress) => ShopOrder | undefined;
+  /** 卖家发货：填物流公司 + 快递单号 */
+  shipShopOrder: (orderId: string, carrier: string, trackingNo: string) => void;
+  /** 买家确认收货 → 待结算（次月 15 日） */
+  confirmShopReceipt: (orderId: string) => void;
+  /** 开发工具：模拟 T+15 月结到账（待结算 → 已结算） */
+  simulateShopSettle: (orderId: string) => void;
 };
 
 

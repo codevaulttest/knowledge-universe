@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, CalendarCheck, RefreshCw, Wallet } from 'lucide-react';
+import { Bell, CalendarCheck, RefreshCw, ShoppingCart, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
 import type { Channel, Post, RepostedBy } from '../types';
@@ -222,6 +222,14 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
           <button className={tab === 2 ? 'active' : ''} type="button" onClick={() => goTab(2)}>{t('频道')}</button>
         </nav>
         <div className="feed-header-right">
+          <button
+            type="button"
+            className="feed-bell-btn feed-shop-entry"
+            onClick={() => navigate({ page: 'P_SHOP' })}
+            aria-label={t('小黄车商城')}
+          >
+            <ShoppingCart size={22} strokeWidth={2} />
+          </button>
           {!walletConnected && (
             <button
               type="button"

@@ -322,7 +322,7 @@ export function GeminiStakeModal({
           {t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点')}
         </p>
 
-        <div className="stake-tier-list" style={{ marginBottom: 16 }}>
+        <div className="stake-tier-list stake-tier-list--row" style={{ marginBottom: 16 }}>
           {tiers.map(tier => (
             <button
               key={tier}
@@ -605,7 +605,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
             {t('链接后同步解锁本帖全部内容')}
           </p>
         )}
-        <div className="stake-tier-list" style={{ marginBottom: 16 }}>
+        <div className="stake-tier-list stake-tier-list--row" style={{ marginBottom: 16 }}>
           {tiers.map(tier => (
             <button
               key={tier}
@@ -1474,7 +1474,9 @@ export function ChannelCreatedSuccessModal({ onSetTiers, onDismiss }: {
 // TipModal — 打赏弹窗（帖子 / 博主）
 // ═══════════════════════════════════════════════════════════════
 
-const TIP_AMOUNTS = [10, 50, 100, 500];
+const TIP_AMOUNTS = [66, 88, 666, 888];
+const TIP_MIN = 1;
+const TIP_MAX = 100000;
 
 export function TipModal({
   recipientName,
@@ -1491,19 +1493,36 @@ export function TipModal({
 }) {
   const { t, showToast, recordOutgoingTip } = useApp();
   const [selected, setSelected] = useState<number | null>(null);
+  const [custom, setCustom] = useState('');
+  const [message, setMessage] = useState('');
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done'>('select');
 
+  // 自定义金额优先：填了自定义就以自定义为准，否则取选中的档位
+  const customAmount = custom.trim() === '' ? null : Math.floor(Number(custom));
+  const amount = customAmount != null && customAmount > 0 ? customAmount : selected;
+  const amountValid = amount != null && amount >= TIP_MIN && amount <= TIP_MAX;
+
+  const pickChip = (value: number) => {
+    setSelected(value);
+    setCustom('');
+  };
+  const onCustomChange = (v: string) => {
+    setCustom(v.replace(/[^\d]/g, ''));
+    setSelected(null);
+  };
+
   const handlePay = () => {
-    if (!selected) return;
+    if (!amountValid || amount == null) return;
     setStep('paying');
     setTimeout(() => {
       setStep('done');
       recordOutgoingTip({
         recipientName,
-        amount: selected,
+        amount,
         context,
         postId: context === 'post' ? postId : undefined,
         postTitle: context === 'post' ? postTitle : undefined,
+        message: message.trim() || undefined,
       });
       setTimeout(() => {
         showToast(t('打赏成功！感谢你的支持'));
@@ -1528,9 +1547,9 @@ export function TipModal({
         icon={<div className="pay-page-brand-icon pay-page-brand-icon--tip"><HandCoins size={28} strokeWidth={2} /></div>}
         productName={t('知识宇宙')}
         remark={tipRemark}
-        amountText={`${selected} PB`}
+        amountText={`${amount} PB`}
         networkFee="1 PB"
-        tokenFee={`${selected} PB`}
+        tokenFee={`${amount} PB`}
         onConfirm={handlePay}
         onRetry={() => setStep('confirm')}
         onBack={() => setStep('select')}
@@ -1548,31 +1567,71 @@ export function TipModal({
           </button>
         </div>
 
-        {context === 'post' && postTitle && (
-          <p className="tip-post-title">{postTitle.split('\n')[0]}</p>
-        )}
+        <div className="tip-recipient">
+          <span className="tip-recipient-avatar">
+            <Avatar seed={recipientName} />
+          </span>
+          <div className="tip-recipient-info">
+            <div className="tip-recipient-name">{t('打赏 {recipientName}', { recipientName })}</div>
+            {postTitle && (
+              <p className="tip-recipient-sub">{postTitle.split('\n')[0]}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="tip-section-heading">
+          <Gift size={16} strokeWidth={2} className="tip-section-heading__icon" />
+          {t('选择赞助金额')}
+        </div>
 
         <div className="tip-amounts">
-          {TIP_AMOUNTS.map(amount => (
+          {TIP_AMOUNTS.map(value => (
             <button
-              key={amount}
+              key={value}
               type="button"
-              className={`tip-amount-chip${selected === amount ? ' tip-amount-chip--active' : ''}`}
-              onClick={() => setSelected(amount)}
+              className={`tip-amount-chip${selected === value ? ' tip-amount-chip--active' : ''}`}
+              onClick={() => pickChip(value)}
             >
-              {amount} PB
+              <span className="tip-amount-chip__num">{value}</span>
+              <span className="tip-amount-chip__unit">PB</span>
             </button>
           ))}
+        </div>
+
+        <div className="tip-field">
+          <label className="tip-field-label" htmlFor="tip-custom">{t('自定义金额')}</label>
+          <input
+            id="tip-custom"
+            className="edit-profile-input"
+            type="text"
+            inputMode="numeric"
+            value={custom}
+            placeholder={t('请输入赞助金额（{min}~{max} PB）', { min: TIP_MIN, max: TIP_MAX })}
+            onChange={e => onCustomChange(e.target.value)}
+          />
+        </div>
+
+        <div className="tip-field">
+          <label className="tip-field-label" htmlFor="tip-message">{t('留言')}</label>
+          <input
+            id="tip-message"
+            className="edit-profile-input"
+            type="text"
+            maxLength={60}
+            value={message}
+            placeholder={t('写点什么，对方可见')}
+            onChange={e => setMessage(e.target.value)}
+          />
         </div>
 
         <button
           type="button"
           className="planet-confirm-btn"
-          disabled={!selected}
-          onClick={() => selected && setStep('confirm')}
+          disabled={!amountValid}
+          onClick={() => amountValid && setStep('confirm')}
         >
-          {selected
-            ? t('确认打赏 {selected} PB', { selected })
+          {amountValid && amount != null
+            ? t('确认打赏 {selected} PB', { selected: amount })
             : t('请选择数额')}
         </button>
       </div>

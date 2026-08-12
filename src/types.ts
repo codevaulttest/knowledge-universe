@@ -1,5 +1,46 @@
 export type StakeTier = 0 | 10 | 100 | 1000;
 
+// ── 小黄车（帖子即商品）──────────────────────────────────────────
+/** 卖家在发帖时为帖子挂载的小黄车配置（仅 1000 PB 节点帖可挂载） */
+export type ShopInfo = {
+  price: number;         // 商品单价（PB），必须 > 0
+  rebatePercent: number; // 优点返还比例，0–90（平台固定收 10% 损耗，故上限 90）
+  stock: number;         // 可订购数量
+};
+
+/** 买家收货地址 */
+export type ShippingAddress = {
+  id: string;
+  name: string;
+  phone: string;
+  detail: string;
+  isDefault?: boolean;
+};
+
+/**
+ * 订单状态机：待发货 → 已发货 → 已完成（买家确认/7天自动）→ 待结算（次月15日）→ 已结算
+ */
+export type ShopOrderStatus = 'to_ship' | 'shipped' | 'completed' | 'to_settle' | 'settled';
+
+export type ShopOrder = {
+  id: string;
+  postId: string;
+  productTitle: string;
+  productKind: Post['kind'];
+  sellerName: string;
+  buyerName: string;
+  unitPrice: number;   // 下单时单价（PB）
+  unitFee: number;     // 下单时单件 SUP 手续费
+  quantity: number;
+  rebatePercent: number;
+  address: ShippingAddress;
+  status: ShopOrderStatus;
+  createdAt: number;
+  carrier?: string;    // 物流公司
+  trackingNo?: string; // 快递单号
+  estMerit: number;    // 本单预计返给买家的优点（占位）
+};
+
 export type Post = {
   id: string;
   author: string;
@@ -31,6 +72,8 @@ export type Post = {
   // 原帖已下架（作者删除/违规下架/账号注销等，UI 不区分具体原因）。
   // 下架后不出现在任何公开列表（feed / 他人主页转发列表），仅在转发者本人的「转发」列表里保留占位记录。
   deleted?: boolean;
+  // 小黄车配置；未设置=该帖未挂载小黄车（仅 1000 PB 节点帖可挂载）
+  shop?: ShopInfo;
 };
 
 
@@ -58,7 +101,10 @@ export type Route =
   | { page: 'P_SEARCH' }
   | { page: 'P_PLANET'; searchNodeCode?: string; openBsp?: boolean }
   | { page: 'P_DM' }
-  | { page: 'P_DM_CHAT'; peerId: string };
+  | { page: 'P_DM_CHAT'; peerId: string }
+  | { page: 'P_SHOP' }
+  | { page: 'P_SHOP_ITEM'; postId: string }
+  | { page: 'P_ORDERS'; role?: 'buyer' | 'seller' };
 
 // ── 频道 / 会员档位 ──────────────────────────────────────────────
 export type ChannelTier = {
@@ -189,10 +235,11 @@ export type SupTransactionReason =
   | 'dislike'
   | 'save'
   | 'unlock'
-  | 'bsp_invest';
+  | 'bsp_invest'
+  | 'purchase';
 
 /** PB 支出原因（与 SupTransactionReason 平行；PB 侧暂无流水视图，仅用于标注扣款来源）。 */
-export type PbTransactionReason = 'bsp_invest' | 'channel_open' | 'transfer';
+export type PbTransactionReason = 'bsp_invest' | 'channel_open' | 'transfer' | 'purchase';
 
 export type SupTransaction = {
   id: string;
@@ -211,6 +258,8 @@ export type OutgoingTip = {
   /** context === 'post' 时有值，用于回跳详情 */
   postId?: string;
   postTitle?: string;
+  /** 赞助时附带的私信（对方可见，并生成一条私信） */
+  message?: string;
   createdAt: number;
 };
 
@@ -226,6 +275,7 @@ export type NewPostData = {
   imageCount?: number;
   channelId?: string;
   minTierIndex?: number;
+  shop?: ShopInfo;
 };
 
 export type StakeModalRequest = {

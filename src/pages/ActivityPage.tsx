@@ -14,7 +14,7 @@ const ACTION_LABEL: Record<ActivityType, { zh: string; en: string }> = {
   save:    { zh: '收藏', en: 'bookmarked' },
   comment: { zh: '评论', en: 'commented on' },
   link:    { zh: '链接', en: 'linked' },
-  tip:     { zh: '打赏', en: 'tipped' },
+  tip:     { zh: '赞助', en: 'sponsored' },
   subscribe: { zh: '订阅', en: 'subscribed to' },
 };
 
@@ -55,16 +55,16 @@ function groupText(group: ActivityGroup, zh: boolean): string {
     const amount = group.tipAmount != null ? `（${group.tipAmount} PB）` : '';
     const amountEn = group.tipAmount != null ? ` (${group.tipAmount} PB)` : '';
     if (actors.length === 1) {
-      return zh ? `${actors[0].user} 打赏了你的帖子${amount}` : `${actors[0].user} tipped your post${amountEn}`;
+      return zh ? `${actors[0].user} 赞助了你的帖子${amount}` : `${actors[0].user} sponsored your post${amountEn}`;
     }
     if (actors.length === 2) {
       return zh
-        ? `${actors[0].user}、${actors[1].user} 打赏了你的帖子${amount}`
-        : `${actors[0].user} and ${actors[1].user} tipped your post${amountEn}`;
+        ? `${actors[0].user}、${actors[1].user} 赞助了你的帖子${amount}`
+        : `${actors[0].user} and ${actors[1].user} sponsored your post${amountEn}`;
     }
     return zh
-      ? `${actors[0].user}、${actors[1].user} 等 ${actors.length} 人打赏了你的帖子${amount}`
-      : `${actors[0].user}, ${actors[1].user} and ${actors.length - 2} others tipped your post${amountEn}`;
+      ? `${actors[0].user}、${actors[1].user} 等 ${actors.length} 人赞助了你的帖子${amount}`
+      : `${actors[0].user}, ${actors[1].user} and ${actors.length - 2} others sponsored your post${amountEn}`;
   }
   if (group.type === 'link') {
     if (actors.length === 1) return zh ? `${actors[0].user} 链接了你的节点` : `${actors[0].user} linked your node`;
@@ -170,7 +170,7 @@ export function ActivityPage() {
     { key: 'like',    zh: '点赞',   en: 'Likes' },
     { key: 'share',   zh: '转发',   en: 'Reposts' },
     { key: 'save',    zh: '收藏',   en: 'Saves' },
-    { key: 'tip',     zh: '打赏',   en: 'Tips' },
+    { key: 'tip',     zh: '赞助',   en: 'Sponsorships' },
     { key: 'subscribe', zh: '订阅', en: 'Subscriptions' },
   ];
 
