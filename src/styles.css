@@ -834,6 +834,16 @@ button {
   overflow: visible;
 }
 .img-grid--1 { aspect-ratio: var(--ku-media-image-ratio); }
+.img-grid--1.img-grid--tall {
+  --_tall-max-h: var(--ku-media-image-max-height-tall);
+  aspect-ratio: var(--ku-media-image-ratio-tall);
+  max-height: var(--_tall-max-h);
+  max-width: var(--ku-media-image-max-width-tall);
+  width: min(var(--ku-media-image-max-width-tall), calc(var(--_tall-max-h) * 9 / 16));
+}
+.detail-body .img-grid--1.img-grid--tall {
+  --_tall-max-h: var(--ku-media-image-max-height-tall-detail);
+}
 .img-grid--2 { grid-template-columns: repeat(3, 1fr); }
 .img-grid--3 { grid-template-columns: repeat(3, 1fr); }
 .img-grid--4 { grid-template-columns: repeat(3, 1fr); }
@@ -854,6 +864,7 @@ button {
 
 /* 各格图片（本地 SVG 插画资产）*/
 .img-grid-cell:nth-child(1) { background: #f4e4c4 url('/img/p1.svg') center/cover no-repeat; }
+.img-grid--tall .img-grid-cell:nth-child(1) { background: #f4e4c4 url('/img/p1-tall.svg') center/cover no-repeat; }
 .img-grid-cell:nth-child(2) { background: #1a1b2e url('/img/p2.svg') center/cover no-repeat; }
 .img-grid-cell:nth-child(3) { background: #e8eef4 url('/img/p3.svg') center/cover no-repeat; }
 .img-grid-cell:nth-child(4) { background: #f8faff url('/img/p4.svg') center/cover no-repeat; }
@@ -1180,23 +1191,36 @@ button {
   margin-left: 1px;
 }
 
-/* ── 热力值 + 打赏入口（覆盖 GeminiNodeBadge 左侧内容，见 .gemini-left）──
-   知识宇宙徽章原本的蓝紫色壳是给节点信息用的冷色调；这里装的是热力值/打赏，外壳改中性色，避免冷暖打架。
-   默认宽度贴内容、靠左；参与知识宇宙时左侧同壳，链接按钮靠右 */
+/* ── 热力值 + 赞助入口（覆盖 GeminiNodeBadge 左侧内容，见 .gemini-left）──
+   热度与赞助分离：无外层胶囊，🔥热度 与「赞助」为两个独立 pill；
+   在 .post-heat-gemini-row 内靠右；有链接/购买时它们靠左 */
 .gemini-badge--heat {
   width: fit-content;
   max-width: 100%;
   justify-content: flex-start;
   gap: 8px;
-  margin: 16px 0 0;
-  padding: 9px 10px;
-  border-color: var(--ku-color-border-card);
-  background: var(--ku-color-bg-page);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 .gemini-badge--heat:not([role="button"]) {
   cursor: default;
 }
-/* Feed：热力值/打赏同壳靠左 + 链接按钮靠右 */
+.gemini-badge--heat .gemini-left {
+  gap: 8px;
+}
+/* 🔥热度 单独保留中性色胶囊背景（高度与链接/购买/赞助胶囊对齐） */
+.gemini-badge--heat .post-heat {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-page);
+}
+.gemini-badge--heat .post-heat-tip-btn {
+  margin-left: 0;
+}
+/* Feed：热力值/赞助 + 链接按钮同行 */
 .post-heat-gemini-row {
   display: flex;
   align-items: center;
@@ -1213,22 +1237,6 @@ button {
    重置徽章自带的 margin-top，避免在本行内被下推、破坏垂直居中 */
 .post-heat-gemini-row > .gemini-badge {
   margin: 0 0 0 auto;
-}
-/* 热度与赞助分离：去掉包裹二者的外层灰胶囊，让 🔥热度 与「赞助」成为两个独立元素 */
-.post-heat-gemini-row > .gemini-badge--heat {
-  padding: 0;
-  border: none;
-  background: transparent;
-}
-.post-heat-gemini-row > .gemini-badge--heat .gemini-left {
-  gap: 8px;
-}
-/* 🔥热度 单独保留中性色胶囊背景（高度与链接/购买/赞助胶囊对齐） */
-.post-heat-gemini-row .post-heat {
-  height: 26px;
-  padding: 0 10px;
-  border-radius: var(--ku-radius-card);
-  background: var(--ku-color-bg-page);
 }
 .post-heat {
   display: inline-flex;
@@ -1491,6 +1499,7 @@ button {
   min-height: 0;
 }
 .page-header {
+  position: relative;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -1500,6 +1509,8 @@ button {
   background: var(--ku-color-bg-phone);
 }
 .back-btn {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1512,15 +1523,22 @@ button {
 }
 .back-btn:hover { background: var(--ku-color-primary-alpha-06); }
 .page-title {
-  flex: 1;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  max-width: calc(100% - 96px);
   min-width: 0;
   font: var(--ku-text-tab);
   color: var(--ku-color-text-primary);
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 .page-title > svg {
   flex-shrink: 0;
@@ -5574,6 +5592,8 @@ button {
 
 /* ── PageHeader action slot ── */
 .page-header-action {
+  position: relative;
+  z-index: 1;
   margin-left: auto;
   display: flex;
   align-items: center;
@@ -10956,8 +10976,19 @@ html[lang="zh-TW"] .planet-hero-title {
   align-items: center;
   justify-content: center;
   aspect-ratio: 1 / 1;
+  overflow: hidden;
   background: var(--ku-color-shop-bg);
   color: var(--ku-color-shop);
+}
+.shop-card-cover .img-grid,
+.shop-card-cover .media {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+.shop-card-cover .img-grid--1 {
+  aspect-ratio: unset;
+  height: 100%;
 }
 .shop-card-body {
   display: flex;
@@ -11003,8 +11034,19 @@ html[lang="zh-TW"] .planet-hero-title {
   align-items: center;
   justify-content: center;
   aspect-ratio: 16 / 10;
+  overflow: hidden;
   background: var(--ku-color-shop-bg);
   color: var(--ku-color-shop);
+}
+.shop-item-cover .img-grid,
+.shop-item-cover .media {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+.shop-item-cover .img-grid--1 {
+  aspect-ratio: unset;
+  height: 100%;
 }
 .shop-item-body {
   padding: 16px;
@@ -11022,17 +11064,6 @@ html[lang="zh-TW"] .planet-hero-title {
   font: 700 26px/1 var(--ku-font-family);
 }
 .shop-item-price-unit { font-size: 14px; font-weight: 600; }
-.shop-item-gas {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 4px;
-  padding: 3px 8px;
-  border-radius: var(--ku-radius-badge);
-  background: var(--ku-color-bg-page);
-  color: var(--ku-color-text-secondary);
-  font: var(--ku-text-meta);
-}
 .shop-item-title {
   color: var(--ku-color-text-primary);
   font: 600 16px/1.5 var(--ku-font-family);
@@ -11081,10 +11112,21 @@ html[lang="zh-TW"] .planet-hero-title {
 .shop-qty-btn:disabled { color: var(--ku-color-border-control); cursor: default; }
 .shop-qty-value {
   min-width: 40px;
+  width: 40px;
   text-align: center;
   color: var(--ku-color-text-primary);
   font: var(--ku-text-body-sm);
+  border: none;
+  border-left: 1px solid var(--ku-color-border-control);
+  border-right: 1px solid var(--ku-color-border-control);
+  background: var(--ku-color-bg-phone);
+  outline: none;
+  padding: 0;
+  height: 32px;
+  -moz-appearance: textfield;
 }
+.shop-qty-value::-webkit-inner-spin-button,
+.shop-qty-value::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .shop-item-stock {
   color: var(--ku-color-text-meta);
   font: var(--ku-text-meta);

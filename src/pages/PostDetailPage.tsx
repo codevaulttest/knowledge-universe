@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Ellipsis, Eye, Flame, HandCoins, Heart, Trash2, User } from 'lucide-react';
+import { Ellipsis, Eye, Flame, HandCoins, Heart, ShoppingCart, Trash2, User } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_ACTORS, POST_REPLIES, replyLikesStore, likedReplyIdsStore } from '../mockData';
 import type { Reply } from '../types';
@@ -163,6 +163,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
             kind={post.kind}
             articleHasCover={post.articleHasCover}
             imageCount={post.imageCount ?? 3}
+            imageAspect={post.imageAspect}
             visibleImgCount={post.kind === 'image'
               ? (unlocked ? (post.imageCount ?? 3) : Math.floor(post.visiblePercent / 100 * (post.imageCount ?? 3)))
               : (post.imageCount ?? 3)}
@@ -212,6 +213,29 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
             leftAriaLabel={isOwn
               ? t('查看打赏详情，已收到 {tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })
               : t('打赏此帖，当前热力值 {heat}', { heat })}
+            chainExtra={post.shop && (
+              isOwn ? (
+                <button
+                  type="button"
+                  className="post-shop-tag"
+                  onClick={(e) => { e.stopPropagation(); navigate({ page: 'P_SHOP_ITEM', postId: post.id }); }}
+                  aria-label={t('本帖已参与小黄车，售价 {price} PB，点按预览商品页', { price: post.shop.price })}
+                >
+                  <ShoppingCart size={13} strokeWidth={2.25} />
+                  {t('小黄车')}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="post-shop-btn"
+                  onClick={(e) => { e.stopPropagation(); navigate({ page: 'P_SHOP_ITEM', postId: post.id }); }}
+                  aria-label={t('购买此商品，{price} PB', { price: post.shop.price })}
+                >
+                  <ShoppingCart size={13} strokeWidth={2.25} />
+                  {t('购买')}
+                </button>
+              )
+            )}
           />
         </div>
 

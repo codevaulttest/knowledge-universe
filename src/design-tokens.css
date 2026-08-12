@@ -222,6 +222,10 @@
   --ku-search-chip-remove-size: 20px;
 
   --ku-media-image-ratio:      16 / 9;  /* 单图比例 */
+  --ku-media-image-ratio-tall: 9 / 16;  /* 竖构图单图比例（瘦长图，宽远小于高） */
+  --ku-media-image-max-width-tall: 62%;  /* 竖图最大宽度（相对卡片） */
+  --ku-media-image-max-height-tall: min(300px, 52vh); /* feed 竖图最大高度 */
+  --ku-media-image-max-height-tall-detail: min(480px, 65vh); /* 详情页竖图可略高 */
   --ku-media-article-ratio:    2.5 / 1; /* 文章 feed 封面比例 */
   --ku-media-video-ratio:      16 / 9;  /* 视频封面比例 */
   --ku-media-grid-gap:         3px;

@@ -50,6 +50,7 @@ export type Post = {
   kind: 'text' | 'article' | 'image' | 'video';
   articleHasCover?: boolean;
   imageCount?: number;
+  imageAspect?: 'landscape' | 'tall'; // 单图构图：默认横图，'tall' 为瘦长竖图
   visiblePercent: number;
   isNode: boolean;
   stakeTier: StakeTier;

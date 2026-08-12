@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Check, ChevronRight, MapPin, Minus, Plus, ShoppingCart, Sparkles, Zap } from 'lucide-react';
+import { Check, ChevronRight, MapPin, Minus, Plus, ShoppingCart, Sparkles } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import type { ShippingAddress, ShopOrder } from '../types';
-import { PageHeader } from '../components/shared';
+import { MediaPlaceholder, PageHeader } from '../components/shared';
 import { formatTokenAmount } from '../stakeConfig';
 import { computeShopFee, computeUnitMerit, formatShopFee, MERIT_PER_ADN } from '../shopConfig';
 
@@ -11,7 +11,7 @@ export function ShopItemPage({ postId }: { postId: string }) {
   const {
     posts, goBack, canGoBack, navigate, t, requireWallet,
     shippingAddresses, defaultAddress, addShippingAddress,
-    placeShopOrder, showToast,
+    placeShopOrder, showToast, openImageLightbox,
   } = useApp();
 
   const post = posts.find(p => p.id === postId);
@@ -77,18 +77,29 @@ export function ShopItemPage({ postId }: { postId: string }) {
     <div className="page">
       <PageHeader title={t('商品详情')} onBack={canGoBack ? goBack : undefined} />
       <div className="scroll-area shop-item-scroll">
-        {/* 商品封面（占位插画） */}
-        <div className="shop-item-cover" aria-hidden="true">
-          <ShoppingCart size={54} strokeWidth={1.5} />
+        {/* 商品封面：复用帖子首图 / 视频封面 / 文章封面 */}
+        <div className="shop-item-cover">
+          {post.kind === 'text' ? (
+            <ShoppingCart size={54} strokeWidth={1.5} aria-hidden="true" />
+          ) : (
+            <MediaPlaceholder
+              kind={post.kind}
+              articleHasCover={post.articleHasCover}
+              imageCount={post.kind === 'image' ? 1 : post.imageCount}
+              imageAspect={post.imageAspect}
+              visibleImgCount={1}
+              onImageClick={post.kind === 'image' ? () => {
+                const total = post.imageCount ?? 1;
+                const vCount = Math.floor(post.visiblePercent / 100 * total);
+                openImageLightbox(post, 0, vCount);
+              } : undefined}
+            />
+          )}
         </div>
 
         <div className="shop-item-body">
           <div className="shop-item-pricebar">
             <span className="shop-item-price">{formatTokenAmount(price)} <span className="shop-item-price-unit">PB</span></span>
-          </div>
-          <div className="shop-item-gas">
-            <Zap size={13} strokeWidth={2} aria-hidden="true" />
-            {t('Gas 费')} · {formatShopFee(unitFee)} SUP/{t('件')}
           </div>
           <h2 className="shop-item-title">{post.title}</h2>
           <button
@@ -107,7 +118,23 @@ export function ShopItemPage({ postId }: { postId: string }) {
               <button type="button" className="shop-qty-btn" onClick={() => changeQty(-1)} disabled={qty <= 1} aria-label={t('减少')}>
                 <Minus size={16} strokeWidth={2.4} />
               </button>
-              <span className="shop-qty-value">{qty}</span>
+              <input
+                className="shop-qty-value"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={stock}
+                value={qty}
+                onChange={e => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v)) setQty(Math.min(Math.max(1, v), Math.max(1, stock)));
+                }}
+                onBlur={e => {
+                  const v = parseInt(e.target.value, 10);
+                  setQty(isNaN(v) ? 1 : Math.min(Math.max(1, v), Math.max(1, stock)));
+                }}
+                aria-label={t('购买数量')}
+              />
               <button type="button" className="shop-qty-btn" onClick={() => changeQty(1)} disabled={qty >= stock} aria-label={t('增加')}>
                 <Plus size={16} strokeWidth={2.4} />
               </button>
@@ -132,7 +159,7 @@ export function ShopItemPage({ postId }: { postId: string }) {
           {/* 优点返还占位 */}
           <div className="shop-item-merit">
             <Sparkles size={15} strokeWidth={2} />
-            {t('本单预计返 {merit} 优点（满 {per} 优点兑 1 张 adn 抽奖券）', { merit: estMerit, per: MERIT_PER_ADN })}
+            {t('本单预计返 {merit} 优点（满 {per} 优点兑 1 张 ADN 抽奖券）', { merit: estMerit, per: MERIT_PER_ADN })}
           </div>
         </div>
       </div>

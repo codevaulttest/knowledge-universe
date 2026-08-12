@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 800">
+  <defs>
+    <linearGradient id="bgTall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fdf6e3"/>
+      <stop offset="100%" stop-color="#f0e0c0"/>
+    </linearGradient>
+  </defs>
+  <rect width="450" height="800" fill="url(#bgTall)"/>
+
+  <!-- shelf 1 -->
+  <rect x="40" y="130" width="30" height="90" fill="#e85555" rx="4"/>
+  <rect x="40" y="132" width="6" height="86" fill="#d04040" rx="2"/>
+  <rect x="74" y="150" width="26" height="70" fill="#5577e8" rx="4"/>
+  <rect x="74" y="152" width="5" height="66" fill="#3a5cd0" rx="2"/>
+  <rect x="104" y="120" width="34" height="100" fill="#45b87c" rx="4"/>
+  <rect x="104" y="122" width="6" height="96" fill="#309060" rx="2"/>
+  <rect x="142" y="140" width="28" height="80" fill="#f0a030" rx="4"/>
+  <rect x="142" y="142" width="5" height="76" fill="#d08010" rx="2"/>
+  <rect x="174" y="135" width="30" height="85" fill="#9b6be0" rx="4"/>
+  <rect x="174" y="137" width="5" height="81" fill="#7a50c0" rx="2"/>
+  <ellipse cx="380" cy="200" rx="26" ry="12" fill="#4aaa60"/>
+  <ellipse cx="368" cy="188" rx="16" ry="10" fill="#5abe72"/>
+  <ellipse cx="392" cy="190" rx="14" ry="9" fill="#3a9850"/>
+  <rect x="372" y="205" width="18" height="15" fill="#a07040" rx="3"/>
+  <rect x="30" y="220" width="390" height="14" fill="#c8a472" rx="2"/>
+  <rect x="30" y="234" width="390" height="6" fill="#a07848" rx="1"/>
+
+  <!-- shelf 2 -->
+  <rect x="48" y="300" width="32" height="80" fill="#e04f80" rx="4"/>
+  <rect x="48" y="302" width="6" height="76" fill="#c03060" rx="2"/>
+  <rect x="84" y="290" width="28" height="90" fill="#38b8c8" rx="4"/>
+  <rect x="84" y="292" width="5" height="86" fill="#2090a8" rx="2"/>
+  <rect x="116" y="310" width="34" height="70" fill="#d4623c" rx="4"/>
+  <rect x="116" y="312" width="6" height="66" fill="#b04020" rx="2"/>
+  <rect x="154" y="295" width="26" height="85" fill="#f0a030" rx="4"/>
+  <rect x="154" y="297" width="5" height="81" fill="#d08010" rx="2"/>
+  <rect x="184" y="305" width="30" height="75" fill="#5577e8" rx="4"/>
+  <rect x="184" y="307" width="5" height="71" fill="#3a5cd0" rx="2"/>
+  <rect x="30" y="380" width="390" height="14" fill="#c8a472" rx="2"/>
+  <rect x="30" y="394" width="390" height="6" fill="#a07848" rx="1"/>
+
+  <!-- shelf 3 -->
+  <rect x="44" y="460" width="30" height="80" fill="#45b87c" rx="4"/>
+  <rect x="44" y="462" width="5" height="76" fill="#309060" rx="2"/>
+  <rect x="78" y="450" width="34" height="90" fill="#9b6be0" rx="4"/>
+  <rect x="78" y="452" width="6" height="86" fill="#7a50c0" rx="2"/>
+  <rect x="116" y="470" width="28" height="70" fill="#e85555" rx="4"/>
+  <rect x="116" y="472" width="5" height="66" fill="#d04040" rx="2"/>
+  <rect x="148" y="455" width="30" height="85" fill="#38b8c8" rx="4"/>
+  <rect x="148" y="457" width="5" height="81" fill="#2090a8" rx="2"/>
+  <rect x="182" y="465" width="26" height="75" fill="#e04f80" rx="4"/>
+  <rect x="182" y="467" width="5" height="71" fill="#c03060" rx="2"/>
+  <ellipse cx="378" cy="520" rx="24" ry="11" fill="#4aaa60"/>
+  <ellipse cx="366" cy="509" rx="15" ry="9" fill="#5abe72"/>
+  <rect x="370" y="524" width="16" height="16" fill="#a07040" rx="3"/>
+  <rect x="30" y="540" width="390" height="14" fill="#c8a472" rx="2"/>
+  <rect x="30" y="554" width="390" height="6" fill="#a07848" rx="1"/>
+
+  <!-- shelf 4 -->
+  <rect x="52" y="620" width="30" height="80" fill="#f0a030" rx="4"/>
+  <rect x="52" y="622" width="5" height="76" fill="#d08010" rx="2"/>
+  <rect x="86" y="610" width="34" height="90" fill="#5577e8" rx="4"/>
+  <rect x="86" y="612" width="6" height="86" fill="#3a5cd0" rx="2"/>
+  <rect x="124" y="630" width="28" height="70" fill="#d4623c" rx="4"/>
+  <rect x="124" y="632" width="5" height="66" fill="#b04020" rx="2"/>
+  <rect x="156" y="615" width="30" height="85" fill="#45b87c" rx="4"/>
+  <rect x="156" y="617" width="5" height="81" fill="#309060" rx="2"/>
+  <rect x="190" y="625" width="26" height="75" fill="#9b6be0" rx="4"/>
+  <rect x="190" y="627" width="5" height="71" fill="#7a50c0" rx="2"/>
+  <rect x="30" y="700" width="390" height="14" fill="#c8a472" rx="2"/>
+  <rect x="30" y="714" width="390" height="6" fill="#a07848" rx="1"/>
+</svg>

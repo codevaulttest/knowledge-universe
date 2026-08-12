@@ -716,7 +716,7 @@ export const en: Record<string, string> = {
   '购买数量': 'Quantity',
   '可订购 {stock} 件': '{stock} in stock',
   '请选择收货地址': 'Choose a shipping address',
-  '本单预计返 {merit} 优点（满 {per} 优点兑 1 张 adn 抽奖券）': 'Est. {merit} merit back ({per} merit = 1 adn raffle ticket)',
+  '本单预计返 {merit} 优点（满 {per} 优点兑 1 张 ADN 抽奖券）': 'Est. {merit} merit back ({per} merit = 1 ADN raffle ticket)',
   '合计': 'Total',
   '这是你的商品': 'Your own product',
   '已售罄': 'Sold out',

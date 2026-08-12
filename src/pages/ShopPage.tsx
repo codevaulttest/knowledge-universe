@@ -1,6 +1,6 @@
 import { ClipboardList, ShoppingCart } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { PageHeader } from '../components/shared';
+import { MediaPlaceholder, PageHeader } from '../components/shared';
 import { formatTokenAmount } from '../stakeConfig';
 
 /** 商城内容（商品网格 + 我的订单入口）——供「商城」tab 与独立商城页复用 */
@@ -35,7 +35,17 @@ export function ShopFeed() {
               onClick={() => navigate({ page: 'P_SHOP_ITEM', postId: p.id })}
             >
               <div className="shop-card-cover" aria-hidden="true">
-                <ShoppingCart size={30} strokeWidth={1.5} />
+                {p.kind === 'text' ? (
+                  <ShoppingCart size={30} strokeWidth={1.5} />
+                ) : (
+                  <MediaPlaceholder
+                    kind={p.kind}
+                    articleHasCover={p.articleHasCover}
+                    imageCount={p.kind === 'image' ? 1 : p.imageCount}
+                    imageAspect={p.imageAspect}
+                    visibleImgCount={1}
+                  />
+                )}
               </div>
               <div className="shop-card-body">
                 <p className="shop-card-title">{p.title.split('\n')[0]}</p>

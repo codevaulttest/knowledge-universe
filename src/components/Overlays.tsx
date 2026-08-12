@@ -377,6 +377,7 @@ function PaymentConfirmPage({
   amountText,
   networkFee,
   tokenFee,
+  gasFee,
   failReason,
   onConfirm,
   onRetry,
@@ -389,6 +390,7 @@ function PaymentConfirmPage({
   amountText: string;
   networkFee: string;
   tokenFee: string;
+  gasFee?: string;
   failReason?: string;
   onConfirm: () => void;
   onRetry: () => void;
@@ -458,6 +460,12 @@ function PaymentConfirmPage({
                 />
                 <span className="pay-page-row-value">{tokenFee}</span>
               </div>
+              {gasFee != null && (
+                <div className="pay-page-row">
+                  <span className="pay-page-row-label">{t('Gas 费')}</span>
+                  <span className="pay-page-row-value">{gasFee}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1550,6 +1558,7 @@ export function TipModal({
         amountText={`${amount} PB`}
         networkFee="1 PB"
         tokenFee={`${amount} PB`}
+        gasFee={`${formatSupAmount((amount ?? 0) / 10000)} SUP`}
         onConfirm={handlePay}
         onRetry={() => setStep('confirm')}
         onBack={() => setStep('select')}

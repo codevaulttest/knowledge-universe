@@ -380,6 +380,7 @@ export function MediaPlaceholder({
   kind,
   articleHasCover = true,
   imageCount = 3,
+  imageAspect = 'landscape',
   visibleImgCount = 3,
   visiblePercent = 100,
   onImageClick,
@@ -389,6 +390,7 @@ export function MediaPlaceholder({
   kind: Post['kind'];
   articleHasCover?: boolean;
   imageCount?: number;
+  imageAspect?: 'landscape' | 'tall';
   visibleImgCount?: number;
   visiblePercent?: number;
   onImageClick?: (idx: number) => void;
@@ -465,8 +467,9 @@ export function MediaPlaceholder({
     : imageCount <= 6 ? 'img-grid--3'
     : 'img-grid--multi';
   const lockedCount = Math.max(0, imageCount - visibleImgCount);
+  const tall = imageCount === 1 && imageAspect === 'tall';
   return (
-    <div className={`img-grid ${colClass}${lockedCount > 0 ? ' img-grid--has-locked' : ''}`} data-layer="image-cover">
+    <div className={`img-grid ${colClass}${tall ? ' img-grid--tall' : ''}${lockedCount > 0 ? ' img-grid--has-locked' : ''}`} data-layer="image-cover">
       {Array.from({ length: imageCount }, (_, i) => {
         const locked = i >= visibleImgCount;
         return (
@@ -613,7 +616,7 @@ export function PostContent({
 // ── GeminiNodeBadge ────────────────────────────────────────────
 // leftContent：用其它内容（如 feed 卡片的热力值/打赏）覆盖默认的「知识宇宙·星级·节点ID」左侧内容；
 // 此时整条外层点击行为改由 onLeftClick 控制（未传则该区域不可点击），与 onGoToPlanet/链接跳转逻辑互斥。
-// 有 leftContent 且 showChain 时：左侧热力值+打赏同壳胶囊，右侧链接按钮靠右。
+// 有 leftContent 时：热力值+赞助独立 pill 靠右；showChain 时链接/购买靠左。
 export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPlanet, leftContent, onLeftClick, leftAriaLabel, chainOutline = false, chainExtra }: {
   post: Post; showChain?: boolean; onViewLinks?: () => void; onGoToPlanet?: () => void;
   leftContent?: React.ReactNode; onLeftClick?: () => void; leftAriaLabel?: string;
@@ -628,7 +631,7 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
   const handleLink = () => (onViewLinks ? onViewLinks() : openLink(post.id));
   const handleBadgeClick = leftContent ? onLeftClick : (onGoToPlanet ? onGoToPlanet : handleLink);
   const clickable = leftContent ? !!onLeftClick : true;
-  const splitHeatNode = !!leftContent && showChain;
+  const heatRowLayout = !!leftContent;
 
   const chainEl = showChain ? (
     isLinked ? (
@@ -649,8 +652,8 @@ export function GeminiNodeBadge({ post, showChain = true, onViewLinks, onGoToPla
     )
   ) : null;
 
-  // Feed：链接（连接数量）+ 购买靠左 + 热力值/赞助同壳靠右
-  if (splitHeatNode) {
+  // Feed：链接（连接数量）+ 购买靠左 + 热力值/赞助靠右
+  if (heatRowLayout) {
     return (
       <div className="post-heat-gemini-row" data-layer="gemini-node-badge">
         {chainEl}
