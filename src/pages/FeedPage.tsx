@@ -182,10 +182,26 @@ function ChannelDiscoverFeed() {
 }
 
 export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 1 | 2 | 3) => void }) {
-  const { followedAuthors, navigate, unreadActivityCount, openCheckIn, checkInClaimable, t, walletConnected, connectWallet, requireWallet } = useApp();
+  const { followedAuthors, navigate, unreadActivityCount, openCheckIn, checkInClaimable, t, walletConnected, connectWallet, requireWallet, homeFeedRefreshNonce, showToast } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevTabRef = useRef(tab);
+  const lastRefreshNonce = useRef(homeFeedRefreshNonce);
   const [slideClass, setSlideClass] = useState('');
+  const [feedKey, setFeedKey] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (homeFeedRefreshNonce === lastRefreshNonce.current) return;
+    lastRefreshNonce.current = homeFeedRefreshNonce;
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    setFeedKey(k => k + 1);
+    setRefreshing(true);
+    const timer = setTimeout(() => {
+      setRefreshing(false);
+      showToast(t('数据已刷新'));
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [homeFeedRefreshNonce, showToast, t]);
 
   useEffect(() => {
     if (prevTabRef.current === tab) return;
@@ -250,10 +266,16 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
         </div>
       </div>
       <div className={`scroll-area${slideClass ? ` ${slideClass}` : ''}`} ref={scrollRef}>
-        {tab === 0 && <RecommendFeed scrollRef={scrollRef} />}
-        {tab === 1 && <FollowFeed followedAuthors={followedAuthors} />}
-        {tab === 2 && <ChannelDiscoverFeed />}
-        {tab === 3 && <ShopFeed />}
+        {refreshing && (
+          <div className="feed-loading" aria-live="polite">
+            <span className="spinner" />
+            <span className="feed-loading-label">{t('加载中')}</span>
+          </div>
+        )}
+        {tab === 0 && <RecommendFeed key={feedKey} scrollRef={scrollRef} />}
+        {tab === 1 && <FollowFeed key={feedKey} followedAuthors={followedAuthors} />}
+        {tab === 2 && <ChannelDiscoverFeed key={feedKey} />}
+        {tab === 3 && <ShopFeed key={feedKey} />}
       </div>
       <DevPanel />
     </>

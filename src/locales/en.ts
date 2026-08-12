@@ -249,6 +249,7 @@ export const en: Record<string, string> = {
   '创世节点·银': 'Genesis Node · Silver',
   '频道会员 · {tierName}': 'Channel member · {tierName}',
   '刷新中…': 'Refreshing…',
+  '加载中': 'Loading',
   '松开刷新': 'Release to refresh',
   '下拉刷新': 'Pull to refresh',
   '阅读文章': 'Read article',

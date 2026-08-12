@@ -1,15 +1,19 @@
 import { Home, MessageCircle, Plus, User } from 'lucide-react';
+import { useRef } from 'react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, DM_CONVERSATIONS } from '../mockData';
 import type { Route } from '../types';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 
+const HOME_DOUBLE_TAP_MS = 400;
+
 export function BottomNav({ route, setTab }: {
   route: Route;
   setTab: (t: 0 | 1 | 2 | 3) => void;
 }) {
-  const { navigate, navigateRoot, openCompose, requireWallet, t } = useApp();
+  const { navigate, navigateRoot, openCompose, requireWallet, t, refreshHomeFeed } = useApp();
   const unreadDmCount = DM_CONVERSATIONS.reduce((s, c) => s + c.unread, 0);
+  const lastHomeTapAt = useRef(0);
 
   const isHome = route.page === 'P0';
   const isPlanet = route.page === 'P_PLANET';
@@ -17,6 +21,22 @@ export function BottomNav({ route, setTab }: {
   const isMine = route.page === 'P6' && route.authorName === CURRENT_USER;
 
   const activeCol = isHome ? 0 : isPlanet ? 1 : isDm ? 3 : isMine ? 4 : -1;
+
+  const onHomeClick = () => {
+    if (!isHome) {
+      lastHomeTapAt.current = 0;
+      navigate({ page: 'P0', tab: 0 });
+      return;
+    }
+    const now = Date.now();
+    if (now - lastHomeTapAt.current < HOME_DOUBLE_TAP_MS) {
+      lastHomeTapAt.current = 0;
+      refreshHomeFeed();
+      return;
+    }
+    lastHomeTapAt.current = now;
+    setTab(0);
+  };
 
   return (
     <nav
@@ -28,7 +48,7 @@ export function BottomNav({ route, setTab }: {
       <button
         type="button"
         className={`nav-item${isHome ? ' nav-item--active' : ''}`}
-        onClick={() => { if (!isHome) navigate({ page: 'P0', tab: 0 }); else setTab(0); }}
+        onClick={onHomeClick}
         aria-label={t('首页')}
       >
         <Home size={20} strokeWidth={2} />

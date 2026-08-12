@@ -20,6 +20,9 @@ export type AppContextValue = {
   setLanguage: Dispatch<SetStateAction<Language>>;
   t: (key: string, params?: Record<string, string | number>) => string;
   posts: Post[];
+  /** 递增以通知首页信息流回顶并重新加载帖子 */
+  homeFeedRefreshNonce: number;
+  refreshHomeFeed: () => void;
   repostedPostIds: Set<string>;
   likedPostIds: Set<string>;
   savedPostIds: Set<string>;

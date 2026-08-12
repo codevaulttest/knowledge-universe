@@ -243,6 +243,7 @@ export const fr: Record<string, string> = {
   '创世节点·银': 'Nœud Genèse · Argent',
   '频道会员 · {tierName}': 'Membre de la chaîne · {tierName}',
   '刷新中…': 'Actualisation…',
+  '加载中': 'Chargement',
   '松开刷新': 'Relâchez pour actualiser',
   '下拉刷新': 'Tirez pour actualiser',
   '阅读文章': 'Lire l\'article',

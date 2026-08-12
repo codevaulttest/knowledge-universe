@@ -243,6 +243,7 @@ export const es: Record<string, string> = {
   '创世节点·银': 'Nodo Génesis · Plata',
   '频道会员 · {tierName}': 'Miembro del canal · {tierName}',
   '刷新中…': 'Actualizando…',
+  '加载中': 'Cargando',
   '松开刷新': 'Suelta para actualizar',
   '下拉刷新': 'Desliza para actualizar',
   '阅读文章': 'Leer artículo',

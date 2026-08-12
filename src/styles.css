@@ -327,8 +327,14 @@ button {
 /* ── Feed Loading ── */
 .feed-loading {
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 20px 0 18px;
+}
+.feed-loading-label {
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-meta);
 }
 .spinner {
   display: block;

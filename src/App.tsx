@@ -298,6 +298,8 @@ export default function App() {
   const setTab = (t: 0 | 1 | 2 | 3) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
 
   const [posts, setPosts] = useState<Post[]>(ALL_POSTS.filter(p => p.kind !== 'article'));
+  const [homeFeedRefreshNonce, setHomeFeedRefreshNonce] = useState(0);
+  const refreshHomeFeed = useCallback(() => setHomeFeedRefreshNonce(n => n + 1), []);
 
   const showToast = (msg: string, type?: 'demo') => {
     setToastMsg({ msg, type });
@@ -787,7 +789,7 @@ export default function App() {
     navigate, navigateRoot, goBack, canGoBack: stack.length > 1, openCompose, openComposeWithDraft, showToast, openLink, openPay, openImageLightbox,
     linkedPostIds, followedAuthors, toggleFollow,
     language, setLanguage, t,
-    posts, repostedPostIds, likedPostIds, savedPostIds, dislikedPostIds, togglePostAction,
+    posts, homeFeedRefreshNonce, refreshHomeFeed, repostedPostIds, likedPostIds, savedPostIds, dislikedPostIds, togglePostAction,
     outgoingTips, recordOutgoingTip,
     requestPostInteraction, beginPaidInteraction,
     deletePost, requestDeletePost,

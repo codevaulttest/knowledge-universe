@@ -243,6 +243,7 @@ export const vi: Record<string, string> = {
   '创世节点·银': 'Nút Genesis · Bạc',
   '频道会员 · {tierName}': 'Thành viên kênh · {tierName}',
   '刷新中…': 'Đang làm mới…',
+  '加载中': 'Đang tải',
   '松开刷新': 'Thả để làm mới',
   '下拉刷新': 'Kéo để làm mới',
   '阅读文章': 'Đọc bài viết',
