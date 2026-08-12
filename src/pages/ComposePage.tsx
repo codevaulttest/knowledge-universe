@@ -763,7 +763,7 @@ export function ComposePage({
               </span>
             </button>
             <p className="compose-stake-hint">
-              {t('开启后帖子作为商品进入商城，买家可下单')}
+              {t('开启后，读者能直接下单买走你的商品')}
             </p>
 
             {shopEnabled && (

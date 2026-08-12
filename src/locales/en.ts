@@ -692,7 +692,7 @@ export const en: Record<string, string> = {
   // ── Shop (小黄车) ──
   '参与小黄车': 'Enable Shop',
   '可参与小黄车': 'Shop-eligible',
-  '开启后帖子作为商品进入商城，买家可下单': 'Once on, this post becomes a product in the mall for buyers to order.',
+  '开启后，读者能直接下单买走你的商品': 'Turn this on and readers can order your product right from the post.',
   '商品价格（PB）': 'Price (PB)',
   '如 2000': 'e.g. 2000',
   '下单另收 {fee} SUP/件手续费': '{fee} SUP/item fee at checkout',
