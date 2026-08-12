@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ChevronRight, MapPin, Minus, Plus, Sparkles, Trash2, X } from 'lucide-react';
+import { Check, ChevronRight, MapPin, Minus, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import type { ShippingAddress, ShopOrder } from '../types';
@@ -105,9 +105,11 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
               type="button"
               className="shop-item-seller"
               onClick={() => navigate({ page: 'P6', authorName: post.author })}
+              aria-label={t('卖家：{name}', { name: post.author })}
             >
-              {t('卖家')}：{post.author}
-              <ChevronRight size={15} strokeWidth={2} />
+              <Store size={14} strokeWidth={2} aria-hidden="true" />
+              {post.author}
+              <ChevronRight size={15} strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
           <div className="shop-item-pricebar">
