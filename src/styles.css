@@ -11022,8 +11022,15 @@ html[lang="zh-TW"] .planet-hero-title {
   font: 700 26px/1 var(--ku-font-family);
 }
 .shop-item-price-unit { font-size: 14px; font-weight: 600; }
-.shop-item-fee {
-  color: var(--ku-color-text-meta);
+.shop-item-gas {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: var(--ku-radius-badge);
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-secondary);
   font: var(--ku-text-meta);
 }
 .shop-item-title {
@@ -11154,7 +11161,8 @@ html[lang="zh-TW"] .planet-hero-title {
   color: var(--ku-color-shop-strong);
   font: 700 18px/1 var(--ku-font-family);
 }
-.shop-item-total-sup {
+.shop-item-total-gas {
+  display: block;
   color: var(--ku-color-text-secondary);
   font: var(--ku-text-meta);
 }

@@ -729,7 +729,7 @@ export const en: Record<string, string> = {
   '保存并使用': 'Save & use',
   '默认': 'Default',
   '下单成功': 'Order placed',
-  '已扣 {pb} PB + {sup} SUP，货款将于收货后次月 15 日结算给卖家': 'Charged {pb} PB + {sup} SUP. Payment settles to the seller on the 15th of next month after receipt.',
+  '已扣商品款 {pb} PB、Gas 费 {sup} SUP，货款将于收货后次月 15 日结算给卖家': 'Charged {pb} PB for the item plus {sup} SUP gas. Payment settles to the seller on the 15th of next month after receipt.',
   '预计返 {merit} 优点': 'Est. {merit} merit back',
   '继续逛': 'Keep browsing',
   '查看订单': 'View orders',

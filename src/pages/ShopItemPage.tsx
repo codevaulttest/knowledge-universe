@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ChevronRight, MapPin, Minus, Plus, ShoppingCart, Sparkles } from 'lucide-react';
+import { Check, ChevronRight, MapPin, Minus, Plus, ShoppingCart, Sparkles, Zap } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import type { ShippingAddress, ShopOrder } from '../types';
@@ -85,7 +85,10 @@ export function ShopItemPage({ postId }: { postId: string }) {
         <div className="shop-item-body">
           <div className="shop-item-pricebar">
             <span className="shop-item-price">{formatTokenAmount(price)} <span className="shop-item-price-unit">PB</span></span>
-            <span className="shop-item-fee">+ {formatShopFee(unitFee)} SUP/{t('件')}</span>
+          </div>
+          <div className="shop-item-gas">
+            <Zap size={13} strokeWidth={2} aria-hidden="true" />
+            {t('Gas 费')} · {formatShopFee(unitFee)} SUP/{t('件')}
           </div>
           <h2 className="shop-item-title">{post.title}</h2>
           <button
@@ -138,10 +141,8 @@ export function ShopItemPage({ postId }: { postId: string }) {
       <div className="shop-item-buybar">
         <div className="shop-item-total">
           <span className="shop-item-total-label">{t('合计')}</span>
-          <span className="shop-item-total-value">
-            {formatTokenAmount(totalPb)} PB
-            <span className="shop-item-total-sup"> + {formatShopFee(totalSup)} SUP</span>
-          </span>
+          <span className="shop-item-total-value">{formatTokenAmount(totalPb)} PB</span>
+          <span className="shop-item-total-gas">{t('Gas 费')} {formatShopFee(totalSup)} SUP</span>
         </div>
         <button
           type="button"
@@ -206,7 +207,7 @@ export function ShopItemPage({ postId }: { postId: string }) {
             <div className="shop-success-check"><Check size={30} strokeWidth={2.6} /></div>
             <p className="shop-success-title">{t('下单成功')}</p>
             <p className="shop-success-sub">
-              {t('已扣 {pb} PB + {sup} SUP，货款将于收货后次月 15 日结算给卖家', {
+              {t('已扣商品款 {pb} PB、Gas 费 {sup} SUP，货款将于收货后次月 15 日结算给卖家', {
                 pb: formatTokenAmount(placed.unitPrice * placed.quantity),
                 sup: formatShopFee(Math.round(placed.unitFee * placed.quantity * 10000) / 10000),
               })}
