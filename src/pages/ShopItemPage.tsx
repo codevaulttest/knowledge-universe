@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Check, ChevronRight, MapPin, Minus, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
+import { Check, ChevronRight, MapPin, Minus, Package, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import type { ShippingAddress, ShopOrder } from '../types';
-import { PageHeader } from '../components/shared';
+import { MediaPlaceholder, PageHeader } from '../components/shared';
+import { shopCoverUsesPlaceholder, shopCoverVisibleImgCount } from './ShopPage';
 import { formatTokenAmount } from '../stakeConfig';
 import { computeShopFee, computeUnitMerit, formatShopFee, MERIT_PER_ADN } from '../shopConfig';
 import { Ios26Alert } from '../components/Overlays';
@@ -95,6 +96,22 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
         <div className="sheet-header">
           <span className="sheet-title">{t('商品详情')}</span>
           <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
+        </div>
+
+        {/* 商品图片：只显示首图，无图 / 全锁时回退为占位图 */}
+        <div className="shop-item-cover" aria-hidden={shopCoverUsesPlaceholder(post) ? true : undefined}>
+          {shopCoverUsesPlaceholder(post) ? (
+            <Package size={54} strokeWidth={1.5} />
+          ) : (
+            <MediaPlaceholder
+              kind={post.kind}
+              articleHasCover={post.articleHasCover}
+              imageCount={post.kind === 'image' ? 1 : post.imageCount}
+              imageAspect={post.imageAspect}
+              visibleImgCount={shopCoverVisibleImgCount(post)}
+              onImageClick={post.kind === 'image' ? () => openImageLightbox(post, 0, shopCoverVisibleImgCount(post)) : undefined}
+            />
+          )}
         </div>
 
         {/* 正文 */}

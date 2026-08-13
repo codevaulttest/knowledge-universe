@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useCallback, type ChangeEvent, type CSSProperties } from 'react';
-import { Camera, Check, ChevronRight, Eye, FileText, Image, Plus, Radio, Save, Search, Send, ShoppingCart, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
+import { Camera, Check, ChevronRight, Eye, FileText, Image, Info, Plus, Radio, Save, Search, Send, ShoppingCart, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { useChannelListSearch } from '../components/channelSearch';
 import { CURRENT_USER } from '../mockData';
 import type { Draft, Post, ShopInfo, StakeTier } from '../types';
 import { STAKE_TIERS, stakeTierDescription, stakeTierLabel, SUP_COST_BY_TIER } from '../stakeConfig';
-import { SHOP_MAX_REBATE_PERCENT, computeShopFee } from '../shopConfig';
+import { SHOP_MAX_REBATE_PERCENT, MERIT_PB_PER_POINT, MERIT_PER_ADN, computeShopFee } from '../shopConfig';
 import { isChinese } from '../i18n';
 
 const MAX_POST_CHARS = 500;
@@ -56,6 +56,7 @@ export function ComposePage({
   const [shopPrice, setShopPrice] = useState('');
   const [shopRebate, setShopRebate] = useState(40);
   const [shopStock, setShopStock] = useState('');
+  const [rebateInfoOpen, setRebateInfoOpen] = useState(false);
   const [imgCount, setImgCount] = useState(draft?.imgCount ?? 0);
   // 用户通过系统相册/拍照选中的图片，生成本地预览用的 object URL（草稿里已有的旧图没有真实文件，仅按数量占位展示）
   const [imgUrls, setImgUrls] = useState<string[]>([]);
@@ -796,8 +797,16 @@ export function ComposePage({
                 </label>
 
                 <div className="compose-shop-field">
-                  <span className="compose-shop-field__label">
-                    {t('优点返还比例')} · {shopRebate}%
+                  <span className="compose-shop-field__label compose-shop-field__label--row">
+                    <span>{t('优点返还比例')} · {shopRebate}%</span>
+                    <button
+                      type="button"
+                      className="compose-shop-info-btn"
+                      onClick={() => setRebateInfoOpen(true)}
+                      aria-label={t('什么是优点返还')}
+                    >
+                      <Info size={13} strokeWidth={2} />
+                    </button>
                   </span>
                   <input
                     type="range" min={0} max={SHOP_MAX_REBATE_PERCENT} step={5}
@@ -852,6 +861,30 @@ export function ComposePage({
       </div>
 
       {/* 选择同步频道：支持搜索，避免频道数量达到千级时一次性渲染全部选项 */}
+      {rebateInfoOpen && (
+        <div className="sheet-backdrop" onClick={() => setRebateInfoOpen(false)}>
+          <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+            <div className="sheet-header">
+              <span className="sheet-title">{t('优点返还比例')}</span>
+              <button type="button" className="modal-close" onClick={() => setRebateInfoOpen(false)} aria-label={t('关闭')}>
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+            <div className="pb-info-sheet-body">
+              <p className="pb-info-sheet-para">
+                {t('买家下单后，按成交额乘以这个比例获得「优点」积分奖励。')}
+              </p>
+              <p className="pb-info-sheet-para">
+                {t('每 {pb} PB 成交额可返 1 优点，买家满 {per} 优点兑 1 张 ADN 抽奖券。', { pb: MERIT_PB_PER_POINT, per: MERIT_PER_ADN })}
+              </p>
+              <p className="pb-info-sheet-para">
+                {t('比例可设 0–{max}%，设得越高，商品对买家越有吸引力。', { max: SHOP_MAX_REBATE_PERCENT })}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {channelPickerOpen && (
         <div className="sheet-backdrop" onClick={() => setChannelPickerOpen(false)}>
           <div className="payment-sheet channel-picker-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>

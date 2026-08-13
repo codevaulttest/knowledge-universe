@@ -5,7 +5,7 @@ import { formatTokenAmount } from '../stakeConfig';
 import type { Post } from '../types';
 
 /** 商城封面：无图或图片全部锁定时显示默认占位 */
-function shopCoverUsesPlaceholder(post: Post): boolean {
+export function shopCoverUsesPlaceholder(post: Post): boolean {
   if (post.kind === 'text') return true;
   if (post.kind === 'article' && post.articleHasCover === false) return true;
   if (post.kind === 'image') {
@@ -16,7 +16,7 @@ function shopCoverUsesPlaceholder(post: Post): boolean {
   return false;
 }
 
-function shopCoverVisibleImgCount(post: Post): number {
+export function shopCoverVisibleImgCount(post: Post): number {
   if (post.kind !== 'image') return 1;
   const total = post.imageCount ?? 1;
   return Math.max(1, Math.floor(post.visiblePercent / 100 * total));
