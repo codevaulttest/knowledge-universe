@@ -704,6 +704,7 @@ export const en: Record<string, string> = {
   '买家下单后，按成交额乘以这个比例获得「优点」积分奖励。': 'After an order, the buyer earns Merit points equal to the order total times this rate.',
   '每 {pb} PB 成交额可返 1 优点，买家满 {per} 优点兑 1 张 ADN 抽奖券。': 'Every {pb} PB of order total returns 1 Merit; {per} Merit converts to 1 ADN raffle ticket.',
   '比例可设 0–{max}%，设得越高，商品对买家越有吸引力。': 'Set anywhere from 0–{max}%; the higher it is, the more appealing your product is to buyers.',
+  '参与小黄车的帖子对所有人公开': 'Posts on sale are public to everyone.',
   '购买此商品，{price} PB': 'Buy this item, {price} PB',
   '购买': 'Buy',
   '小黄车': 'On sale',

@@ -2308,6 +2308,16 @@ button {
   white-space: nowrap;
 }
 .visibility-opts { display: flex; gap: 7px; flex-wrap: wrap; }
+.visibility-locked {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 16px;
+  background: var(--ku-color-shop-bg);
+  border: 1px solid var(--ku-color-shop-border);
+  font: var(--ku-text-action);
+  color: var(--ku-color-shop-strong);
+}
 .vis-btn {
   padding: 5px 12px;
   border-radius: 16px;

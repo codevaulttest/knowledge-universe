@@ -186,7 +186,8 @@ export function ComposePage({
     const postData = {
       title: (articleMode ? articleTitle : text).trim(),
       kind,
-      visiblePercent: joinNode ? visibility : 100,
+      // 参与小黄车的帖子对所有人公开，让买家下单前能看清商品
+      visiblePercent: shop ? 100 : joinNode ? visibility : 100,
       isNode: joinNode,
       stakeTier,
       articleHasCover: articleMode ? hasCover : undefined,
@@ -824,7 +825,7 @@ export function ComposePage({
           </div>
         )}
 
-        {/* 付费可见度设置 */}
+        {/* 付费可见度设置；参与小黄车时锁定为公开，让买家下单前能看清商品 */}
         {!isEditMode && stakeTier > 0 && (
           <div className="compose-section compose-section--divider">
             <div className="visibility-row">
@@ -832,30 +833,38 @@ export function ComposePage({
                 <Eye size={16} strokeWidth={2} aria-hidden="true" />
                 {t('免费可见比例')}
               </span>
-              <div className="visibility-opts">
-                {[
-                  { v: 0, label: t('完全隐藏') },
-                  { v: 10, label: '10%' as const },
-                  { v: 30, label: '30%' as const },
-                  { v: 50, label: '50%' as const },
-                  { v: 100, label: t('公开') },
-                ].map(({ v, label }) => (
-                  <button
-                    key={v}
-                    type="button"
-                    className={`vis-btn${visibility === v ? ' vis-btn--active' : ''}`}
-                    onClick={() => setVisibility(v)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              {shopEnabled ? (
+                <span className="visibility-locked">{t('公开')}</span>
+              ) : (
+                <div className="visibility-opts">
+                  {[
+                    { v: 0, label: t('完全隐藏') },
+                    { v: 10, label: '10%' as const },
+                    { v: 30, label: '30%' as const },
+                    { v: 50, label: '50%' as const },
+                    { v: 100, label: t('公开') },
+                  ].map(({ v, label }) => (
+                    <button
+                      key={v}
+                      type="button"
+                      className={`vis-btn${visibility === v ? ' vis-btn--active' : ''}`}
+                      onClick={() => setVisibility(v)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            {selectedChannel && stakeTier > 0 && (
+            {shopEnabled ? (
+              <p className="compose-stake-hint">
+                {t('参与小黄车的帖子对所有人公开')}
+              </p>
+            ) : selectedChannel && stakeTier > 0 ? (
               <p className="compose-stake-hint">
                 {t('建议单条解锁价为该档月费的 2–10 倍')}
               </p>
-            )}
+            ) : null}
           </div>
         )}
       </div>
