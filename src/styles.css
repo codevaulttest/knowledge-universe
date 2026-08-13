@@ -10888,7 +10888,7 @@ html[lang="zh-TW"] .planet-hero-title {
   border: none;
   border-radius: var(--ku-radius-card);
   background: var(--ku-color-shop-btn);
-  color: #fff;
+  color: var(--ku-color-shop-btn-text);
   font: var(--ku-text-action-cta);
   cursor: pointer;
 }
