@@ -13,7 +13,8 @@ export type ShippingAddress = {
   id: string;
   name: string;
   phone: string;
-  detail: string;
+  region?: string;  // 省 市 区（空格分隔），如「广东 深圳 南山区」；旧地址可能未拆分
+  detail: string;   // 街道门牌等详细地址
   isDefault?: boolean;
 };
 

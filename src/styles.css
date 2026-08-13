@@ -11419,6 +11419,62 @@ html[lang="zh-TW"] .planet-hero-title {
   margin-top: 12px;
 }
 .shop-addr-detail { min-height: 64px; resize: none; }
+.shop-addr-region-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--ku-color-border-control);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-meta);
+  font: var(--ku-text-body);
+  text-align: left;
+  cursor: pointer;
+}
+.shop-addr-region-btn--filled { color: var(--ku-color-text-primary); }
+.shop-addr-region-btn > svg:first-child { color: var(--ku-color-shop-strong); flex-shrink: 0; }
+.shop-addr-region-text { flex: 1; min-width: 0; }
+.shop-addr-region-btn > svg:last-child { color: var(--ku-color-text-meta); flex-shrink: 0; }
+
+/* 省 / 市 / 区级联选择器 */
+.region-cols {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+  height: 300px;
+}
+.region-col {
+  flex: 1;
+  min-width: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--ku-color-border);
+}
+.region-col:last-child { border-right: none; }
+.region-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 11px 8px;
+  border: none;
+  background: none;
+  color: var(--ku-color-text-primary);
+  font: var(--ku-text-body);
+  text-align: left;
+  cursor: pointer;
+}
+.region-cell--active {
+  background: var(--ku-color-shop-bg);
+  color: var(--ku-color-shop-strong);
+  font-weight: 600;
+}
+.region-cell-text { flex: 1; min-width: 0; }
+.region-cell-check { color: var(--ku-color-shop-strong); flex-shrink: 0; }
 .shop-addr-save-btn {
   width: 100%;
   margin-top: 4px;
@@ -11445,12 +11501,34 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 .shop-addr-item {
   display: flex;
-  align-items: stretch;
+  flex-direction: column;
   border: 1px solid var(--ku-color-border-card);
   border-radius: var(--ku-radius-card);
   background: var(--ku-color-bg-phone);
   overflow: hidden;
 }
+.shop-addr-item-row {
+  display: flex;
+  align-items: stretch;
+}
+.shop-addr-setdefault,
+.shop-addr-default-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin: 0 12px 10px;
+  font: var(--ku-text-caption);
+}
+.shop-addr-setdefault {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ku-color-text-secondary);
+  cursor: pointer;
+}
+.shop-addr-setdefault:hover { color: var(--ku-color-shop-strong); }
+.shop-addr-default-flag { color: var(--ku-color-shop-strong); }
 .shop-addr-item-main {
   flex: 1;
   display: flex;
@@ -11470,7 +11548,6 @@ html[lang="zh-TW"] .planet-hero-title {
   justify-content: center;
   width: 44px;
   border: none;
-  border-left: 1px solid var(--ku-color-border-card);
   background: none;
   color: var(--ku-color-text-meta);
   cursor: pointer;

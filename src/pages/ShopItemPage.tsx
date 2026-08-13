@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ChevronRight, MapPin, Minus, Package, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
+import { Check, ChevronRight, Circle, CircleCheck, MapPin, Minus, Package, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import type { ShippingAddress, ShopOrder } from '../types';
@@ -8,11 +8,12 @@ import { shopCoverUsesPlaceholder, shopCoverVisibleImgCount } from './ShopPage';
 import { formatTokenAmount } from '../stakeConfig';
 import { computeShopFee, computeUnitMerit, formatShopFee, MERIT_PER_ADN } from '../shopConfig';
 import { Ios26Alert } from '../components/Overlays';
+import { RegionPicker } from '../components/RegionPicker';
 
 export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () => void }) {
   const {
     posts, navigate, t, requireWallet,
-    shippingAddresses, defaultAddress, addShippingAddress, removeShippingAddress,
+    shippingAddresses, defaultAddress, addShippingAddress, removeShippingAddress, setDefaultAddress,
     placeShopOrder, showToast, openImageLightbox,
   } = useApp();
 
@@ -25,7 +26,9 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   // 新增地址表单
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
+  const [formRegion, setFormRegion] = useState('');
   const [formDetail, setFormDetail] = useState('');
+  const [regionPickerOpen, setRegionPickerOpen] = useState(false);
   const [pendingDeleteAddrId, setPendingDeleteAddrId] = useState<string | null>(null);
 
   if (!post || !post.shop) {
@@ -55,16 +58,19 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     setQty(q => Math.min(Math.max(1, q + delta), Math.max(1, stock)));
   };
 
+  const formValid = !!(formName.trim() && formPhone.trim() && formRegion && formDetail.trim());
+
   const submitAddress = () => {
-    if (!formName.trim() || !formPhone.trim() || !formDetail.trim()) return;
+    if (!formValid) return;
     const addr = addShippingAddress({
       name: formName.trim(),
       phone: formPhone.trim(),
+      region: formRegion,
       detail: formDetail.trim(),
       isDefault: shippingAddresses.length === 0,
     });
     setSelectedAddressId(addr.id);
-    setFormName(''); setFormPhone(''); setFormDetail('');
+    setFormName(''); setFormPhone(''); setFormRegion(''); setFormDetail('');
     setAddOpen(false);
     setPickerOpen(false);
   };
@@ -78,6 +84,8 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
       else showToast(t('下单失败，请稍后重试'));
     });
   };
+
+  const fullAddr = (a: ShippingAddress) => [a.region, a.detail].filter(Boolean).join(' ');
 
   const deleteAddress = (addrId: string) => {
     const remaining = shippingAddresses.filter(a => a.id !== addrId);
@@ -172,7 +180,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             {selectedAddress ? (
               <span className="shop-item-addr-text">
                 <span className="shop-item-addr-line1">{selectedAddress.name} · {selectedAddress.phone}</span>
-                <span className="shop-item-addr-line2">{selectedAddress.detail}</span>
+                <span className="shop-item-addr-line2">{fullAddr(selectedAddress)}</span>
               </span>
             ) : (
               <span className="shop-item-addr-text shop-item-addr-empty">{t('请选择收货地址')}</span>
@@ -217,8 +225,17 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
               <div className="shop-addr-form">
                 <input className="compose-shop-input" placeholder={t('收货人姓名')} value={formName} onChange={e => setFormName(e.target.value)} />
                 <input className="compose-shop-input" placeholder={t('手机号')} value={formPhone} onChange={e => setFormPhone(e.target.value)} />
-                <textarea className="compose-shop-input shop-addr-detail" placeholder={t('详细地址')} value={formDetail} onChange={e => setFormDetail(e.target.value)} />
-                <button type="button" className="shop-addr-save-btn" onClick={submitAddress} disabled={!formName.trim() || !formPhone.trim() || !formDetail.trim()}>
+                <button
+                  type="button"
+                  className={`shop-addr-region-btn${formRegion ? ' shop-addr-region-btn--filled' : ''}`}
+                  onClick={() => setRegionPickerOpen(true)}
+                >
+                  <MapPin size={15} strokeWidth={2} aria-hidden="true" />
+                  <span className="shop-addr-region-text">{formRegion || t('选择省 / 市 / 区')}</span>
+                  <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
+                </button>
+                <textarea className="compose-shop-input shop-addr-detail" placeholder={t('详细地址（街道、门牌号）')} value={formDetail} onChange={e => setFormDetail(e.target.value)} />
+                <button type="button" className="shop-addr-save-btn" onClick={submitAddress} disabled={!formValid}>
                   {t('保存并使用')}
                 </button>
               </div>
@@ -230,28 +247,40 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                       key={addr.id}
                       className={`shop-addr-item${selectedAddressId === addr.id ? ' shop-addr-item--active' : ''}`}
                     >
-                      <button
-                        type="button"
-                        className="shop-addr-item-main"
-                        onClick={() => { setSelectedAddressId(addr.id); setPickerOpen(false); }}
-                      >
-                        <span className="shop-item-addr-text">
-                          <span className="shop-item-addr-line1">
-                            {addr.name} · {addr.phone}
-                            {addr.isDefault && <span className="shop-addr-default-tag">{t('默认')}</span>}
+                      <div className="shop-addr-item-row">
+                        <button
+                          type="button"
+                          className="shop-addr-item-main"
+                          onClick={() => { setSelectedAddressId(addr.id); setPickerOpen(false); }}
+                        >
+                          <span className="shop-item-addr-text">
+                            <span className="shop-item-addr-line1">{addr.name} · {addr.phone}</span>
+                            <span className="shop-item-addr-line2">{fullAddr(addr)}</span>
                           </span>
-                          <span className="shop-item-addr-line2">{addr.detail}</span>
+                          {selectedAddressId === addr.id && <Check size={16} strokeWidth={2.4} className="shop-addr-check" />}
+                        </button>
+                        <button
+                          type="button"
+                          className="shop-addr-delete"
+                          onClick={() => setPendingDeleteAddrId(addr.id)}
+                          aria-label={t('删除')}
+                        >
+                          <Trash2 size={16} strokeWidth={2} />
+                        </button>
+                      </div>
+                      {addr.isDefault ? (
+                        <span className="shop-addr-default-flag">
+                          <CircleCheck size={15} strokeWidth={2} />{t('默认地址')}
                         </span>
-                        {selectedAddressId === addr.id && <Check size={16} strokeWidth={2.4} className="shop-addr-check" />}
-                      </button>
-                      <button
-                        type="button"
-                        className="shop-addr-delete"
-                        onClick={() => setPendingDeleteAddrId(addr.id)}
-                        aria-label={t('删除')}
-                      >
-                        <Trash2 size={16} strokeWidth={2} />
-                      </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="shop-addr-setdefault"
+                          onClick={() => setDefaultAddress(addr.id)}
+                        >
+                          <Circle size={15} strokeWidth={2} />{t('设为默认')}
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -262,6 +291,14 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             )}
           </div>
         </div>
+      )}
+
+      {/* 省 / 市 / 区级联选择 */}
+      {regionPickerOpen && (
+        <RegionPicker
+          onSelect={(region) => { setFormRegion(region); setRegionPickerOpen(false); }}
+          onClose={() => setRegionPickerOpen(false)}
+        />
       )}
 
       {/* 删除地址二次确认 */}

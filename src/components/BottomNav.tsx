@@ -1,11 +1,11 @@
 import { Home, MessageCircle, Plus, User } from 'lucide-react';
-import { useRef } from 'react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, DM_CONVERSATIONS } from '../mockData';
 import type { Route } from '../types';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 
-const HOME_DOUBLE_TAP_MS = 400;
+// 判定是否已在顶部的阈值（px）
+const HOME_TOP_THRESHOLD = 8;
 
 export function BottomNav({ route, setTab }: {
   route: Route;
@@ -13,7 +13,6 @@ export function BottomNav({ route, setTab }: {
 }) {
   const { navigate, navigateRoot, openCompose, requireWallet, t, refreshHomeFeed } = useApp();
   const unreadDmCount = DM_CONVERSATIONS.reduce((s, c) => s + c.unread, 0);
-  const lastHomeTapAt = useRef(0);
 
   const isHome = route.page === 'P0';
   const isPlanet = route.page === 'P_PLANET';
@@ -22,20 +21,18 @@ export function BottomNav({ route, setTab }: {
 
   const activeCol = isHome ? 0 : isPlanet ? 1 : isDm ? 3 : isMine ? 4 : -1;
 
+  // 首页点击：不在顶部先滚回顶部，已在顶部再点才刷新 feed
   const onHomeClick = () => {
     if (!isHome) {
-      lastHomeTapAt.current = 0;
       navigate({ page: 'P0', tab: 0 });
       return;
     }
-    const now = Date.now();
-    if (now - lastHomeTapAt.current < HOME_DOUBLE_TAP_MS) {
-      lastHomeTapAt.current = 0;
-      refreshHomeFeed();
+    const scroller = document.querySelector<HTMLElement>('.scroll-area');
+    if (scroller && scroller.scrollTop > HOME_TOP_THRESHOLD) {
+      scroller.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    lastHomeTapAt.current = now;
-    setTab(0);
+    refreshHomeFeed();
   };
 
   return (
