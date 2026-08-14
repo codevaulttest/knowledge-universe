@@ -754,6 +754,7 @@ export const en: Record<string, string> = {
   '订单已确认，已扣 {pb} PB': 'Order confirmed, {pb} PB charged',
   '订单确认失败，商品款未扣除': 'Order confirmation failed, no PB charged',
   '链上确认中，确认后自动更新为待发货': 'Confirming on-chain — updates to “To ship” automatically',
+  '链上确认未通过，商品款未扣除，可重新下单': 'On-chain confirmation failed — no payment charged, you can order again',
   '下单成功': 'Order placed',
   '已扣商品款 {pb} PB、Gas 费 {sup} SUP，货款将于收货后次月 15 日结算给卖家': 'Charged {pb} PB for the item plus {sup} SUP gas. Payment settles to the lister on the 15th of next month after receipt.',
   '预计返 {merit} 优点': 'Est. {merit} merit back',

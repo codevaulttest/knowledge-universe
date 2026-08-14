@@ -611,9 +611,9 @@ export default function App() {
     showToast(t('订单已确认，已扣 {pb} PB', { pb: formatTokenAmount(totalPb) }));
   };
 
-  // 下单第 2 步（失败分支）：链上确认未通过 → 撤销订单，未扣款、库存不变，toast 通知
+  // 下单第 2 步（失败分支）：链上确认未通过 → 订单置「已取消」保留记录，未扣款、库存不变，toast 通知
   const failShopOrder = (orderId: string) => {
-    setShopOrders(prev => prev.filter(o => !(o.id === orderId && o.status === 'submitting')));
+    setShopOrders(prev => prev.map(o => o.id === orderId && o.status === 'submitting' ? { ...o, status: 'failed' } : o));
     showToast(t('订单确认失败，商品款未扣除'));
   };
 

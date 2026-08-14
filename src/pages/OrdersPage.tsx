@@ -95,6 +95,10 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
                   <p className="order-card-settle-note">{t('链上确认中，确认后自动更新为待发货')}</p>
                 )}
 
+                {o.status === 'failed' && (
+                  <p className="order-card-settle-note">{t('链上确认未通过，商品款未扣除，可重新下单')}</p>
+                )}
+
                 {o.status === 'to_settle' && (
                   <p className="order-card-settle-note">{t('已完成，货款将于次月 15 日结算')}</p>
                 )}
