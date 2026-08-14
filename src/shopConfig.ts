@@ -38,6 +38,8 @@ export function formatShopFee(amount: number): string {
 /** 订单状态在两种语言下的短标签 */
 export function shopOrderStatusLabel(status: ShopOrderStatus, zh: boolean): string {
   const map: Record<ShopOrderStatus, [string, string]> = {
+    submitting: ['确认中', 'Confirming'],
+    failed:     ['已取消', 'Cancelled'],
     to_ship:   ['待发货', 'To ship'],
     shipped:   ['已发货', 'Shipped'],
     completed: ['已完成', 'Completed'],

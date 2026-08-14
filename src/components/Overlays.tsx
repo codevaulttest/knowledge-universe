@@ -44,45 +44,73 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
   const { openLink, t } = useApp();
   const [idx, setIdx] = useState(initialIndex);
   const [dragX, setDragX] = useState(0);
+  const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartX = useRef<number | null>(null);
+  const dragStartY = useRef<number | null>(null);
+  // 首次移动超过阈值后锁定手势方向：横向切图 / 纵向下滑关闭，避免斜滑时两种手势打架
+  const dragAxis = useRef<'x' | 'y' | null>(null);
   const total = post.imageCount ?? 3;
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     dragStartX.current = event.clientX;
+    dragStartY.current = event.clientY;
+    dragAxis.current = null;
     setIsDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (dragStartX.current === null) return;
-    let delta = event.clientX - dragStartX.current;
-    // 拖到首/末张时做橡皮筋阻尼，暗示已到边界
-    if (idx === 0 && delta > 0) delta /= 3;
-    if (idx === total - 1 && delta < 0) delta /= 3;
-    setDragX(delta);
+    if (dragStartX.current === null || dragStartY.current === null) return;
+    const dx = event.clientX - dragStartX.current;
+    const dy = event.clientY - dragStartY.current;
+    if (dragAxis.current === null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      dragAxis.current = Math.abs(dy) > Math.abs(dx) ? 'y' : 'x';
+    }
+    if (dragAxis.current === 'x') {
+      let delta = dx;
+      // 拖到首/末张时做橡皮筋阻尼，暗示已到边界
+      if (idx === 0 && delta > 0) delta /= 3;
+      if (idx === total - 1 && delta < 0) delta /= 3;
+      setDragX(delta);
+    } else {
+      // 只允许向下滑关闭；向上做强阻尼，避免图片被拖飞
+      setDragY(dy > 0 ? dy : dy / 4);
+    }
   };
 
   const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (dragStartX.current === null) return;
-
-    const dragDistance = event.clientX - dragStartX.current;
+    if (dragStartX.current === null || dragStartY.current === null) return;
+    const dx = event.clientX - dragStartX.current;
+    const dy = event.clientY - dragStartY.current;
+    const axis = dragAxis.current;
     dragStartX.current = null;
+    dragStartY.current = null;
+    dragAxis.current = null;
     setIsDragging(false);
     setDragX(0);
+    setDragY(0);
 
-    if (dragDistance < -40) {
+    if (axis === 'y') {
+      if (dy > 100) onClose(); // 下滑足够远即关闭
+      return;
+    }
+    if (dx < -40) {
       setIdx(current => Math.min(current + 1, total - 1));
-    } else if (dragDistance > 40) {
+    } else if (dx > 40) {
       setIdx(current => Math.max(current - 1, 0));
     }
   };
 
   const handlePointerCancel = () => {
     dragStartX.current = null;
+    dragStartY.current = null;
+    dragAxis.current = null;
     setIsDragging(false);
     setDragX(0);
+    setDragY(0);
   };
 
   const handleUnlock = () => {
@@ -91,16 +119,15 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
   };
 
   return (
-    <div className="lightbox-overlay" role="dialog" aria-modal="true" aria-label={t('查看图片')}>
-      {/* Header */}
-      <div className="lightbox-header">
-        <AuthorName name={post.author} className="lightbox-author" />
-        <span className="lightbox-counter">{idx + 1} / {total}</span>
-        <button type="button" className="lightbox-close" onClick={onClose} aria-label={t('关闭')}>
-          <X size={20} strokeWidth={2} />
-        </button>
-      </div>
-
+    <div
+      className="lightbox-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('查看图片')}
+      // 下滑过程中背景随位移渐隐，给出"即将关闭"的反馈
+      style={dragY > 0 ? { opacity: 1 - Math.min(dragY / 600, 0.35) } : undefined}
+    >
+      {/* 沉浸式看图：无任何 chrome——左右滑切图，向下滑关闭 */}
       {/* Stage */}
       <div
         className="lightbox-stage"
@@ -112,7 +139,7 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
         <div
           className="lightbox-track"
           style={{
-            transform: `translateX(calc(${-idx * 100}% + ${dragX}px))`,
+            transform: `translateX(calc(${-idx * 100}% + ${dragX}px)) translateY(${dragY}px)`,
             transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         >
@@ -140,20 +167,6 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
         </div>
       </div>
 
-      {/* Dots */}
-      <div className="lightbox-dots" role="tablist">
-        {Array.from({ length: total }).map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            role="tab"
-            aria-selected={i === idx}
-            aria-label={t('第 {i} 张', { i: i + 1 })}
-            className={`lightbox-dot${i === idx ? ' lightbox-dot--active' : ''}${i >= visibleImgCount ? ' lightbox-dot--locked' : ''}`}
-            onClick={() => setIdx(i)}
-          />
-        ))}
-      </div>
     </div>
   );
 }

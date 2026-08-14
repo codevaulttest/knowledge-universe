@@ -43,6 +43,7 @@ export type AppContextValue = {
   // tierUpdate 传入即代表本次连带修改了频道可见档位（30 天冷却期由调用方校验后才允许传入）
   updatePost: (postId: string, newTitle: string, tierUpdate?: { minTierIndex: number | undefined }) => void;
   incrementReplies: (postId: string) => void;
+  decrementReplies: (postId: string) => void;
   stagePendingPost: (data: NewPostData) => void;
   publishPost: (data: NewPostData) => void;
   openImageLightbox: (post: Post, imgIdx: number, imgCount: number) => void;
@@ -123,7 +124,7 @@ export type AppContextValue = {
   addShippingAddress: (data: Omit<ShippingAddress, 'id'>) => ShippingAddress;
   setDefaultAddress: (addressId: string) => void;
   removeShippingAddress: (addressId: string) => void;
-  /** 买家下单：扣 PB + SUP，生成订单，返回新订单 */
+  /** 买家下单：创建「确认中」订单并立即返回，链上确认在后台异步完成（成功扣款转「待发货」，失败撤单，均 toast 通知） */
   placeShopOrder: (postId: string, quantity: number, address: ShippingAddress) => ShopOrder | undefined;
   /** 卖家发货：填物流公司 + 快递单号 */
   shipShopOrder: (orderId: string, carrier: string, trackingNo: string) => void;

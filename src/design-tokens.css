@@ -55,6 +55,7 @@
   --ku-color-heat:             #ff4824;  /* 热度火焰图标 */
   --ku-color-notification-badge: #ef4444;  /* 待处理/未读红色数字角标 */
   --ku-color-text-danger:      #c62828;  /* 危险操作文字（删除等） */
+  --ku-color-danger-bg:        #fde8e8;  /* 危险/失败态浅底（下单失败等） */
   --ku-color-verified:         #1B6BFF;  /* 用户蓝 V 认证标识 */
   --ku-color-verified-check:   #ffffff;  /* 蓝 V 内勾色 */
   --ku-color-genesis-silver:      #94a3b8;  /* 创世节点·银（1000 档持有者）*/
@@ -206,7 +207,7 @@
   --ku-post-gap:               14px;   /* 帖子间距 */
   --ku-author-meta-gap:        12px;   /* 头像 → 作者信息间距 */
   --ku-detail-composer-gap:    9px;    /* 详情页底部回复栏控件间距 */
-  --ku-detail-composer-padding-bottom: 14px; /* 详情页底部回复栏底部留白 */
+  --ku-detail-composer-padding-bottom: 24px; /* 详情页底部回复栏底部留白：固定抬升，让"发送"避开手机圆角（真机上 max() 再取更大的安全区） */
   --ku-search-header-height:   56px;
   --ku-search-input-height:    38px;
   --ku-search-input-icon-size: 16px;

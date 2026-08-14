@@ -4,7 +4,7 @@ import type { AppContextValue } from './AppContext';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import { computeUnitMerit } from './shopConfig';
-import { postHasStake } from './stakeConfig';
+import { postHasStake, formatTokenAmount } from './stakeConfig';
 import { translate } from './locales';
 import { isChinese } from './i18n';
 import { BottomNav } from './components/BottomNav';
@@ -472,6 +472,11 @@ export default function App() {
     recordTaskInteraction(postId);
   }, []);
 
+  // 删除自己的评论后回收计数；不减任务进度（互动一旦发生即视为完成，删除评论不倒扣）
+  const decrementReplies = useCallback((postId: string) => {
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, replies: Math.max(0, p.replies - 1) } : p));
+  }, []);
+
   const handleConfirmDelete = () => {
     if (!confirmDelete) return;
     deletePost(confirmDelete.postId);
@@ -593,16 +598,32 @@ export default function App() {
     });
   };
 
-  // 买家下单：扣 PB（单价×数量）+ SUP（手续费×数量），生成一条订单
+  // 下单第 2 步：链上确认通过 → 扣款、减库存、订单转「待发货」，toast 通知
+  const confirmShopOrder = (order: ShopOrder) => {
+    const totalPb = order.unitPrice * order.quantity;
+    const totalSup = Math.round(order.unitFee * order.quantity * 10000) / 10000;
+    deductPb(totalPb, 'purchase');
+    if (totalSup > 0) deductSup(totalSup, 'purchase');
+    setPosts(ps => ps.map(p => p.id === order.postId && p.shop
+      ? { ...p, shop: { ...p.shop, stock: Math.max(0, p.shop.stock - order.quantity) } }
+      : p));
+    setShopOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'to_ship' } : o));
+    showToast(t('订单已确认，已扣 {pb} PB', { pb: formatTokenAmount(totalPb) }));
+  };
+
+  // 下单第 2 步（失败分支）：链上确认未通过 → 撤销订单，未扣款、库存不变，toast 通知
+  const failShopOrder = (orderId: string) => {
+    setShopOrders(prev => prev.filter(o => !(o.id === orderId && o.status === 'submitting')));
+    showToast(t('订单确认失败，商品款未扣除'));
+  };
+
+  // 买家下单：先创建「确认中」订单（不扣款、不减库存）并立即返回，
+  // 链上确认在后台异步完成——计时器挂在 App 层，用户关闭商品页/离开也不中断。
   const placeShopOrder = (postId: string, quantity: number, address: ShippingAddress) => {
     const post = posts.find(p => p.id === postId);
     if (!post?.shop) return;
     const { price, rebatePercent } = post.shop;
     const unitFee = Math.round(price * 0.0001 * 10000) / 10000;
-    const totalPb = price * quantity;
-    const totalSup = unitFee * quantity;
-    deductPb(totalPb, 'purchase');
-    if (totalSup > 0) deductSup(totalSup, 'purchase');
     const order: ShopOrder = {
       id: `ord-${Date.now()}`,
       postId,
@@ -615,15 +636,16 @@ export default function App() {
       quantity,
       rebatePercent,
       address,
-      status: 'to_ship',
+      status: 'submitting',
       createdAt: Date.now(),
       estMerit: computeUnitMerit(price, rebatePercent) * quantity,
     };
     setShopOrders(prev => [order, ...prev]);
-    // 扣减库存
-    setPosts(prev => prev.map(p => p.id === postId && p.shop
-      ? { ...p, shop: { ...p.shop, stock: Math.max(0, p.shop.stock - quantity) } }
-      : p));
+    // 后台模拟链上确认（演示用 ~6s；真实可能数分钟）：约 12% 概率失败
+    setTimeout(() => {
+      if (Math.random() < 0.12) failShopOrder(order.id);
+      else confirmShopOrder(order);
+    }, 6000);
     return order;
   };
 
@@ -793,7 +815,7 @@ export default function App() {
     outgoingTips, recordOutgoingTip,
     requestPostInteraction, beginPaidInteraction,
     deletePost, requestDeletePost,
-    openEditPost, updatePost, incrementReplies,
+    openEditPost, updatePost, incrementReplies, decrementReplies,
     stagePendingPost, publishPost,
     openArticleReader, openVideoPlayer,
     activityGroups, unreadActivityCount, markAllRead,

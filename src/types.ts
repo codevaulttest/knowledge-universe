@@ -21,7 +21,7 @@ export type ShippingAddress = {
 /**
  * 订单状态机：待发货 → 已发货 → 已完成（买家确认/7天自动）→ 待结算（次月15日）→ 已结算
  */
-export type ShopOrderStatus = 'to_ship' | 'shipped' | 'completed' | 'to_settle' | 'settled';
+export type ShopOrderStatus = 'submitting' | 'failed' | 'to_ship' | 'shipped' | 'completed' | 'to_settle' | 'settled';
 
 export type ShopOrder = {
   id: string;

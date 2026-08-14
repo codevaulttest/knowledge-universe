@@ -1,5 +1,6 @@
 import { ClipboardList, Package } from 'lucide-react';
 import { useApp } from '../AppContext';
+import { CURRENT_USER } from '../mockData';
 import { MediaPlaceholder, PageHeader } from '../components/shared';
 import { formatTokenAmount } from '../stakeConfig';
 import type { Post } from '../types';
@@ -24,8 +25,13 @@ export function shopCoverVisibleImgCount(post: Post): number {
 
 /** 商城内容（商品网格 + 我的订单入口）——供「商城」tab 与独立商城页复用 */
 export function ShopFeed() {
-  const { posts, navigate, t } = useApp();
+  const { posts, shopOrders, navigate, t } = useApp();
   const products = posts.filter(p => p.shop);
+  // 待处理：作为买家已发货待收货 + 作为卖家待发货
+  const pendingOrderCount = shopOrders.filter(o =>
+    (o.buyerName === CURRENT_USER && o.status === 'shipped')
+    || (o.sellerName === CURRENT_USER && o.status === 'to_ship')
+  ).length;
 
   return (
     <>
@@ -38,6 +44,11 @@ export function ShopFeed() {
         >
           <ClipboardList size={16} strokeWidth={2} />
           {t('我的订单')}
+          {pendingOrderCount > 0 && (
+            <span className="shop-orders-link-badge" aria-label={t('{count} 笔待处理', { count: pendingOrderCount })}>
+              {pendingOrderCount}
+            </span>
+          )}
         </button>
       </div>
       {products.length === 0 ? (

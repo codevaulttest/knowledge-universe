@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ChevronRight, Circle, CircleCheck, MapPin, Minus, Package, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
+import { Check, ChevronRight, Circle, CircleCheck, Clock, MapPin, Minus, Package, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import type { ShippingAddress, ShopOrder } from '../types';
@@ -22,7 +22,8 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(defaultAddress?.id ?? null);
-  const [placed, setPlaced] = useState<ShopOrder | null>(null);
+  // 下单后的「已提交」确认弹窗（可关闭；链上确认在后台异步进行）
+  const [submittedOrder, setSubmittedOrder] = useState<ShopOrder | null>(null);
   // 新增地址表单
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
@@ -81,8 +82,9 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     if (!selectedAddress) { setPickerOpen(true); return; }
     requireWallet(() => {
       const order = placeShopOrder(post.id, qty, selectedAddress);
-      if (order) setPlaced(order);
-      else showToast(t('下单失败，请稍后重试'));
+      if (!order) { showToast(t('下单失败，请稍后重试')); return; }
+      // 弹出「已提交」确认弹窗；链上确认在后台异步完成（成功/失败均由 App toast 通知）。
+      setSubmittedOrder(order);
     });
   };
 
@@ -330,27 +332,24 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
         />
       )}
 
-      {/* 下单成功 */}
-      {placed && (
+      {/* 订单已提交：链上确认在后台进行，弹窗可关闭 */}
+      {submittedOrder && (
         <div className="sheet-backdrop">
           <div className="payment-sheet shop-success" role="dialog" aria-modal="true">
-            <div className="shop-success-check"><Check size={30} strokeWidth={2.6} /></div>
-            <p className="shop-success-title">{t('下单成功')}</p>
+            <div className="shop-success-check shop-success-check--pending"><Clock size={28} strokeWidth={2.4} /></div>
+            <p className="shop-success-title">{t('订单已提交')}</p>
             <p className="shop-success-sub">
-              {t('已扣商品款 {pb} PB、Gas 费 {sup} SUP，货款将于收货后次月 15 日结算给卖家', {
-                pb: formatTokenAmount(placed.unitPrice * placed.quantity),
-                sup: formatShopFee(Math.round(placed.unitFee * placed.quantity * 10000) / 10000),
-              })}
+              {t('链上确认中，确认后自动扣款并转为待发货，结果会通知你，可在「我的订单」查看进度')}
             </p>
             <div className="shop-success-merit">
               <Sparkles size={14} strokeWidth={2} />
-              {t('预计返 {merit} 优点', { merit: placed.estMerit })}
+              {t('预计返 {merit} 优点', { merit: submittedOrder.estMerit })}
             </div>
             <div className="shop-success-actions">
-              <button type="button" className="shop-success-btn shop-success-btn--ghost" onClick={() => { setPlaced(null); onClose(); }}>
+              <button type="button" className="shop-success-btn shop-success-btn--ghost" onClick={() => { setSubmittedOrder(null); onClose(); }}>
                 {t('继续逛')}
               </button>
-              <button type="button" className="shop-success-btn" onClick={() => { setPlaced(null); navigate({ page: 'P_ORDERS', role: 'buyer' }); }}>
+              <button type="button" className="shop-success-btn" onClick={() => { setSubmittedOrder(null); navigate({ page: 'P_ORDERS', role: 'buyer' }); }}>
                 {t('查看订单')}
               </button>
             </div>

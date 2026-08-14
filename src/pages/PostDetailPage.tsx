@@ -4,7 +4,7 @@ import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_ACTORS, POST_REPLIES, replyLikesStore, likedReplyIdsStore } from '../mockData';
 import type { Reply } from '../types';
 import { Actions, ActorsSheet } from '../components/PostCard';
-import { TipModal } from '../components/Overlays';
+import { TipModal, Ios26Alert } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, GeminiNodeBadge, MediaPlaceholder, PageHeader, PostContent } from '../components/shared';
 import { postHasStake } from '../stakeConfig';
 import { localizeTime } from '../i18n';
@@ -41,7 +41,7 @@ function sortReplies(replies: Reply[], likes: Record<string, number>): Reply[] {
 export function PostDetailPage({ postId, scrollToComments }: { postId: string; scrollToComments?: boolean }) {
   const {
     goBack, navigate, showToast, openLink, linkedPostIds, posts, requestDeletePost,
-    openImageLightbox, incrementReplies, language, t, requestPostInteraction,
+    openImageLightbox, incrementReplies, decrementReplies, language, t, requestPostInteraction,
     channels, subscribedChannelTiers, userProfile, requireWallet, walletConnected,
   } = useApp();
   const post = posts.find(p => p.id === postId);
@@ -55,6 +55,9 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const [newReplies, setNewReplies] = useState<Reply[]>([]);
   const [replyLikes, setReplyLikes] = useState<Record<string, number>>(() => ({ ...replyLikesStore }));
   const [likedReplyIds, setLikedReplyIds] = useState<Set<string>>(() => new Set(likedReplyIdsStore));
+  // 会话内删除自己的评论：记录已删 id 后过滤，不直接改动快照/模块级存储的源列表
+  const [deletedReplyIds, setDeletedReplyIds] = useState<Set<string>>(() => new Set());
+  const [pendingDeleteReplyId, setPendingDeleteReplyId] = useState<string | null>(null);
   const repliesSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -116,7 +119,18 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
     });
   };
 
-  const displayReplies = [...newReplies, ...snapshotReplies];
+  const confirmDeleteReply = () => {
+    const replyId = pendingDeleteReplyId;
+    if (!replyId) return;
+    setDeletedReplyIds(prev => new Set(prev).add(replyId));
+    // 若删的是本会话新发的评论，也从 newReplies 移除，保持数据一致
+    setNewReplies(r => r.filter(x => x.id !== replyId));
+    decrementReplies(post.id);
+    setPendingDeleteReplyId(null);
+    showToast(t('评论已删除'));
+  };
+
+  const displayReplies = [...newReplies, ...snapshotReplies].filter(r => !deletedReplyIds.has(r.id));
 
   return (
     <div className="page">
@@ -292,6 +306,16 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
                       <Heart size={13} strokeWidth={2} fill={liked ? 'currentColor' : 'none'} />
                       {likeCount > 0 && <span>{likeCount}</span>}
                     </button>
+                    {r.author === CURRENT_USER && (
+                      <button
+                        type="button"
+                        className="reply-delete-btn"
+                        onClick={() => setPendingDeleteReplyId(r.id)}
+                        aria-label={t('删除评论')}
+                      >
+                        <Trash2 size={13} strokeWidth={2} />
+                      </button>
+                    )}
                   </div>
                   <p className="detail-reply-text">{r.text}</p>
                 </div>
@@ -349,6 +373,17 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
 
       {actorsTab && (
         <ActorsSheet postId={post.id} initialTab={actorsTab} onClose={() => setActorsTab(null)} />
+      )}
+
+      {pendingDeleteReplyId && (
+        <Ios26Alert
+          title={t('删除评论')}
+          message={t('确定要删除这条评论吗？')}
+          cancelLabel={t('取消')}
+          confirmLabel={t('删除')}
+          onCancel={() => setPendingDeleteReplyId(null)}
+          onConfirm={confirmDeleteReply}
+        />
       )}
     </div>
   );
