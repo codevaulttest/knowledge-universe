@@ -28,6 +28,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const [formPhone, setFormPhone] = useState('');
   const [formRegion, setFormRegion] = useState('');
   const [formDetail, setFormDetail] = useState('');
+  const [formSetDefault, setFormSetDefault] = useState(false);
   const [regionPickerOpen, setRegionPickerOpen] = useState(false);
   const [pendingDeleteAddrId, setPendingDeleteAddrId] = useState<string | null>(null);
 
@@ -67,10 +68,10 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
       phone: formPhone.trim(),
       region: formRegion,
       detail: formDetail.trim(),
-      isDefault: shippingAddresses.length === 0,
+      isDefault: formSetDefault || shippingAddresses.length === 0,
     });
     setSelectedAddressId(addr.id);
-    setFormName(''); setFormPhone(''); setFormRegion(''); setFormDetail('');
+    setFormName(''); setFormPhone(''); setFormRegion(''); setFormDetail(''); setFormSetDefault(false);
     setAddOpen(false);
     setPickerOpen(false);
   };
@@ -235,6 +236,19 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                   <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
                 </button>
                 <textarea className="compose-shop-input shop-addr-detail" placeholder={t('详细地址（街道、门牌号）')} value={formDetail} onChange={e => setFormDetail(e.target.value)} />
+                {shippingAddresses.length > 0 && (
+                  <button
+                    type="button"
+                    className={`shop-addr-default-toggle${formSetDefault ? ' shop-addr-default-toggle--on' : ''}`}
+                    onClick={() => setFormSetDefault(v => !v)}
+                    aria-pressed={formSetDefault}
+                  >
+                    {formSetDefault
+                      ? <CircleCheck size={16} strokeWidth={2} aria-hidden="true" />
+                      : <Circle size={16} strokeWidth={2} aria-hidden="true" />}
+                    {t('设为默认地址')}
+                  </button>
+                )}
                 <button type="button" className="shop-addr-save-btn" onClick={submitAddress} disabled={!formValid}>
                   {t('保存并使用')}
                 </button>

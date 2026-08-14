@@ -745,6 +745,7 @@ export const en: Record<string, string> = {
   '默认': 'Default',
   '默认地址': 'Default address',
   '设为默认': 'Set as default',
+  '设为默认地址': 'Set as default address',
   '下单成功': 'Order placed',
   '已扣商品款 {pb} PB、Gas 费 {sup} SUP，货款将于收货后次月 15 日结算给卖家': 'Charged {pb} PB for the item plus {sup} SUP gas. Payment settles to the seller on the 15th of next month after receipt.',
   '预计返 {merit} 优点': 'Est. {merit} merit back',

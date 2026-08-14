@@ -11491,6 +11491,29 @@ html[lang="zh-TW"] .planet-hero-title {
   color: var(--ku-color-text-meta);
   cursor: default;
 }
+.shop-addr-default-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-caption);
+  cursor: pointer;
+}
+.shop-addr-default-toggle:hover { color: var(--ku-color-shop-strong); }
+.shop-addr-default-toggle--on { color: var(--ku-color-shop-strong); }
+/* 默认地址勾选态：实心圆 + 白色对勾 */
+.shop-addr-default-toggle--on .lucide-circle-check circle,
+.shop-addr-default-flag .lucide-circle-check circle {
+  fill: var(--ku-color-shop-strong);
+}
+.shop-addr-default-toggle--on .lucide-circle-check path,
+.shop-addr-default-flag .lucide-circle-check path {
+  stroke: var(--ku-color-bg-phone);
+}
 .shop-addr-list {
   display: flex;
   flex-direction: column;
