@@ -243,6 +243,9 @@ export function PostCard({
   const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= post.minTierIndex!);
   const channelLocked = !!requiredTier && !meetsChannelGate && !isOwn;
   const openChannelGate = () => channel && openChannelSubscribe(channel.id);
+  const channelLockLabel = channelLocked
+    ? (mySubTierIdx != null ? t('升级到『{name}』解锁', { name: requiredTier!.name }) : t('订阅『{name}』解锁', { name: requiredTier!.name }))
+    : undefined;
 
   const contentUnlocked = isOwn || linkedPostIds.has(post.id) || post.visiblePercent === 100;
   const imgUnlocked = !channelLocked && contentUnlocked;
@@ -360,7 +363,12 @@ export function PostCard({
         )}
       </div>
       {post.kind === 'article' ? (
-        <ArticleFeedCard post={post} onClick={() => (channelLocked ? openChannelGate() : openArticleReader(post))} />
+        <ArticleFeedCard
+          post={post}
+          onClick={() => (channelLocked ? openChannelGate() : openArticleReader(post))}
+          locked={channelLocked}
+          lockLabel={channelLockLabel}
+        />
       ) : (
         <>
           <PostContent
@@ -368,7 +376,7 @@ export function PostCard({
             collapseLines={4}
             alwaysExpand={isOwn}
             forceLocked={channelLocked}
-            lockLabel={channelLocked ? (mySubTierIdx != null ? t('升级到『{name}』解锁', { name: requiredTier!.name }) : t('订阅『{name}』解锁', { name: requiredTier!.name })) : undefined}
+            lockLabel={channelLockLabel}
             onUnlockOverride={channelLocked ? openChannelGate : undefined}
           />
           <MediaPlaceholder
@@ -381,6 +389,7 @@ export function PostCard({
             imageRatios={post.imageRatios}
             visibleImgCount={visibleImgCount}
             visiblePercent={channelLocked ? 0 : post.visiblePercent}
+            lockActionLabel={channelLocked ? channelLockLabel : undefined}
             onImageClick={post.kind === 'image' ? (idx) => {
               if (channelLocked) {
                 openChannelGate();

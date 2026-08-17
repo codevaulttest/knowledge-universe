@@ -721,6 +721,16 @@ button {
   mask-image: linear-gradient(to bottom, black 0%, black 45%, transparent 100%);
 }
 
+/* 频道会员门槛锁定：预览文字边界已在数据层截断（lockedTeaser 硬字数上限），照常排版展示，不做渐隐/省略号等额外视觉截断 */
+.post-content-wrap.is-locked-teaser .post-title {
+  margin-bottom: 0;
+  max-height: none;
+  white-space: normal;
+  overflow: visible;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
 /* Feed 文字截断（4 行 + “全文”按钮）*/
 .post-content-wrap--clamp {
   position: relative;

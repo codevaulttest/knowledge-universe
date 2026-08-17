@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Ellipsis, Eye, Flame, HandCoins, Heart, ShoppingCart, Trash2, User } from 'lucide-react';
+import { Ellipsis, Eye, Flame, Gem, HandCoins, Heart, Radio, ShoppingCart, Trash2, User } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_ACTORS, POST_REPLIES, replyLikesStore, likedReplyIdsStore } from '../mockData';
 import type { Reply } from '../types';
 import { Actions, ActorsSheet } from '../components/PostCard';
 import { TipModal, Ios26Alert } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, GeminiNodeBadge, MediaPlaceholder, PageHeader, PostContent } from '../components/shared';
-import { postHasStake } from '../stakeConfig';
 import { localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
 
@@ -41,8 +40,8 @@ function sortReplies(replies: Reply[], likes: Record<string, number>): Reply[] {
 export function PostDetailPage({ postId, scrollToComments }: { postId: string; scrollToComments?: boolean }) {
   const {
     goBack, navigate, showToast, openLink, linkedPostIds, posts, requestDeletePost,
-    openImageLightbox, incrementReplies, decrementReplies, language, t, requestPostInteraction,
-    channels, subscribedChannelTiers, userProfile, requireWallet, walletConnected,
+    openImageLightbox, incrementReplies, decrementReplies, language, t,
+    channels, subscribedChannelTiers, openChannelSubscribe, userProfile, requireWallet, walletConnected,
   } = useApp();
   const post = posts.find(p => p.id === postId);
   const [replyText, setReplyText] = useState('');
@@ -71,7 +70,17 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const isOwn = post.author === CURRENT_USER;
   const displayName = isOwn ? userProfile.nickname : post.author;
   const isLinked = linkedPostIds.has(post.id);
-  const unlocked = isOwn || isLinked || post.visiblePercent === 100;
+  // 频道会员门槛：与 PostCard 一致，未达标时强制锁定，优先于按比例解锁
+  const channel = post.channelId ? channels.find(c => c.id === post.channelId) : undefined;
+  const requiredTier = channel && post.minTierIndex != null ? channel.tiers[post.minTierIndex] : undefined;
+  const mySubTierIdx = channel ? subscribedChannelTiers[channel.id] : undefined;
+  const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= post.minTierIndex!);
+  const channelLocked = !!requiredTier && !meetsChannelGate && !isOwn;
+  const openChannelGate = () => channel && openChannelSubscribe(channel.id);
+  const channelLockLabel = channelLocked
+    ? (mySubTierIdx != null ? t('升级到『{name}』解锁', { name: requiredTier!.name }) : t('订阅『{name}』解锁', { name: requiredTier!.name }))
+    : undefined;
+  const unlocked = (isOwn || isLinked || post.visiblePercent === 100) && !channelLocked;
   const hasActors = isOwn && !!POST_ACTORS[post.id];
   const heat = post.heat ?? derivedStat(post.id, 1, 300, 260000);
   const views = post.views ?? derivedStat(post.id, 2, 80, 4200);
@@ -93,14 +102,8 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const handleSendReply = () => {
     if (!replyText.trim()) return;
     requireWallet(() => {
-      if (postHasStake(post)) {
-        requestPostInteraction(post.id, 'comment', {
-          onSkip: submitReply,
-          onPaid: submitReply,
-        });
-        return;
-      }
       submitReply();
+      showToast(t('评论成功'));
     });
   };
 
@@ -148,7 +151,21 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
               <AuthorName name={displayName} as="h2" />
               {getGenesisTier(post.author) && <GenesisBadge tier={getGenesisTier(post.author)!} />}
             </span>
-            <span className="author-time">{localizeTime(post.time, language)}</span>
+            <div className="author-meta-row">
+              <span className="author-time">{localizeTime(post.time, language)}</span>
+              {channel && (
+                <span className="post-channel-badge" aria-label={t('归属频道《{name}》', { name: channel.name })}>
+                  <Radio size={11} strokeWidth={2.2} />
+                  {channel.name}
+                </span>
+              )}
+              {isOwn && requiredTier && (
+                <span className="post-tier-badge" aria-label={t('需订阅达到 {name} 及以上', { name: requiredTier.name })}>
+                  <Gem size={11} strokeWidth={2.2} />
+                  {requiredTier.name}
+                </span>
+              )}
+            </div>
           </div>
           {isOwn && (
             <div className="more-menu-wrap" style={{ position: 'relative' }}>
@@ -172,7 +189,13 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
 
         {/* 正文（detail 展示全量或按 N% 遮罩）*/}
         <div className="detail-body">
-          <PostContent post={post} alwaysExpand={unlocked} />
+          <PostContent
+            post={post}
+            alwaysExpand={unlocked}
+            forceLocked={channelLocked}
+            lockLabel={channelLockLabel}
+            onUnlockOverride={channelLocked ? openChannelGate : undefined}
+          />
           <MediaPlaceholder
             kind={post.kind}
             articleHasCover={post.articleHasCover}
@@ -182,9 +205,15 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
             images={post.images}
             imageRatios={post.imageRatios}
             visibleImgCount={post.kind === 'image'
-              ? (unlocked ? (post.imageCount ?? 3) : Math.floor(post.visiblePercent / 100 * (post.imageCount ?? 3)))
+              ? (channelLocked ? 0 : unlocked ? (post.imageCount ?? 3) : Math.floor(post.visiblePercent / 100 * (post.imageCount ?? 3)))
               : (post.imageCount ?? 3)}
+            visiblePercent={channelLocked ? 0 : post.visiblePercent}
+            lockActionLabel={channelLocked ? channelLockLabel : undefined}
             onImageClick={post.kind === 'image' ? (idx) => {
+              if (channelLocked) {
+                openChannelGate();
+                return;
+              }
               const total = post.imageCount ?? 3;
               const vCount = unlocked ? total : Math.floor(post.visiblePercent / 100 * total);
               if (idx >= vCount) {
@@ -193,6 +222,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
                 openImageLightbox(post, idx, vCount);
               }
             } : undefined}
+            onVideoClick={post.kind === 'video' && channelLocked ? openChannelGate : undefined}
           />
 
           {/* 热力值/打赏（+知识宇宙节点）：与首页 Feed 同步 */}

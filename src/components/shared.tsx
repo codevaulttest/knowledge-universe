@@ -411,6 +411,7 @@ function MediaCarousel({
   images,
   imageRatios,
   onImageClick,
+  lockActionLabel,
 }: {
   imageCount: number;
   visibleImgCount: number;
@@ -418,6 +419,8 @@ function MediaCarousel({
   images?: string[];
   imageRatios?: number[];
   onImageClick?: (idx: number) => void;
+  /** 锁图角标动作文案覆盖，如频道门槛锁用"订阅"、按次付费锁用默认的"解锁" */
+  lockActionLabel?: string;
 }) {
   const { t } = useApp();
   const clickable = !!onImageClick;
@@ -511,7 +514,7 @@ function MediaCarousel({
                 key={i}
                 className={`media-carousel-slide${locked ? ' media-carousel-slide--locked' : ''}${clickable ? ' media-carousel-slide--clickable' : ''}`}
                 style={{
-                  ...(images?.[i] ? { backgroundImage: `url('${images[i]}')` } : {}),
+                  ...(!locked && images?.[i] ? { backgroundImage: `url('${images[i]}')` } : {}),
                   ...(widthPct !== undefined ? { flex: `0 0 ${widthPct}%` } : {}),
                 }}
                 onClick={clickable ? (e) => { e.stopPropagation(); if (!drag.current.moved) onImageClick!(i); } : undefined}
@@ -526,7 +529,7 @@ function MediaCarousel({
                     {clickable && (
                       <div className="img-lock-badge">
                         <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
-                        <span>{t('解锁')}</span>
+                        <span>{lockActionLabel ?? t('解锁')}</span>
                       </div>
                     )}
                   </div>
@@ -536,7 +539,7 @@ function MediaCarousel({
           })}
         </div>
         <div className="media-carousel-overlay-counter">{idx + 1} / {imageCount}</div>
-        {lockedCount > 0 && (
+        {lockedCount > 0 && lockedCount < imageCount && (
           <div className="media-carousel-overlay-lock">
             <Lock size={12} strokeWidth={2.5} aria-hidden="true" />
             <span>{t('{locked} 张待解锁', { locked: lockedCount })}</span>
@@ -561,6 +564,7 @@ export function MediaPlaceholder({
   onImageClick,
   onArticleClick,
   onVideoClick,
+  lockActionLabel,
 }: {
   kind: Post['kind'];
   articleHasCover?: boolean;
@@ -574,6 +578,8 @@ export function MediaPlaceholder({
   onImageClick?: (idx: number) => void;
   onArticleClick?: () => void;
   onVideoClick?: () => void;
+  /** 锁图角标动作文案覆盖，如频道门槛锁用"订阅"、按次付费锁用默认的"解锁" */
+  lockActionLabel?: string;
 }) {
   const { t } = useApp();
   if (kind === 'text') return null;
@@ -648,6 +654,7 @@ export function MediaPlaceholder({
         images={images}
         imageRatios={imageRatios}
         onImageClick={onImageClick}
+        lockActionLabel={lockActionLabel}
       />
     );
   }
@@ -663,7 +670,7 @@ export function MediaPlaceholder({
           <div
             key={i}
             className={`img-grid-cell${clickable ? ' img-grid-cell--clickable' : ''}${locked ? ' img-grid-cell--locked' : ''}`}
-            style={images?.[i] ? { backgroundImage: `url('${images[i]}')` } : undefined}
+            style={!locked && images?.[i] ? { backgroundImage: `url('${images[i]}')` } : undefined}
             onClick={clickable ? (e) => { e.stopPropagation(); onImageClick!(i); } : undefined}
             role={clickable ? 'button' : undefined}
             tabIndex={clickable ? 0 : undefined}
@@ -676,7 +683,7 @@ export function MediaPlaceholder({
                 {clickable && (
                   <div className="img-lock-badge">
                     <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
-                    <span>{t('解锁')}</span>
+                    <span>{lockActionLabel ?? t('解锁')}</span>
                   </div>
                 )}
               </div>
@@ -688,10 +695,10 @@ export function MediaPlaceholder({
   );
 }
 
-export function ArticleFeedCard({ post, onClick }: { post: Post; onClick?: () => void }) {
+export function ArticleFeedCard({ post, onClick, locked = false, lockLabel }: { post: Post; onClick?: () => void; /** 频道会员门槛未达标：隐藏摘要，标题走固定预览 */ locked?: boolean; lockLabel?: string }) {
   const { t } = useApp();
   const preview = post.articlePreview ?? post.title.replace(/\n+/g, ' ');
-  const title = post.title.split('\n')[0]?.trim() || post.title;
+  const title = locked ? lockedTeaser(post.title) : (post.title.split('\n')[0]?.trim() || post.title);
 
   const handleClick = onClick
     ? (e: React.MouseEvent) => { e.stopPropagation(); onClick(); }
@@ -716,13 +723,55 @@ export function ArticleFeedCard({ post, onClick }: { post: Post; onClick?: () =>
       {post.articleHasCover !== false && <div className="media media-article article-feed-card-cover" data-layer="article-cover" />}
       <div className="article-feed-card-body">
         <h3 className="article-feed-card-title">{title}</h3>
-        <p className="article-feed-card-preview">{preview}</p>
+        {locked ? (
+          <div className="unlock-hint" data-layer="unlock-hint">
+            <Lock size={11} strokeWidth={2.5} />
+            <span>{lockLabel ?? t('参与知识宇宙解锁')}</span>
+          </div>
+        ) : (
+          <p className="article-feed-card-preview">{preview}</p>
+        )}
       </div>
     </div>
   );
 }
 
 // ── PostContent ────────────────────────────────────────────────
+
+/** 会员门槛锁定态的固定预览字数上限（加权单位）：与屏幕宽度、visiblePercent 无关，跨设备统一 */
+const LOCKED_TEASER_CAP = 60;
+
+/** 全角字符（中日韩统一表意文字、假名、谚文、全角标点等）实际显示宽度约为半角字符的两倍，计权重 2；
+ * 英文字母、数字、半角标点、空格计权重 1。避免中英文混排标题在同一字数上限下渲染宽度差一倍。 */
+function charWeight(ch: string): number {
+  const code = ch.codePointAt(0) ?? 0;
+  const isFullWidth =
+    (code >= 0x1100 && code <= 0x115F) || // 谚文字母
+    (code >= 0x2E80 && code <= 0x303E) || // 中日韩部首、符号
+    (code >= 0x3041 && code <= 0x33FF) || // 平假名/片假名..中日韩兼容
+    (code >= 0x3400 && code <= 0x4DBF) || // 中日韩扩展 A
+    (code >= 0x4E00 && code <= 0x9FFF) || // 中日韩统一表意文字
+    (code >= 0xA960 && code <= 0xA97F) ||
+    (code >= 0xAC00 && code <= 0xD7A3) || // 谚文音节
+    (code >= 0xF900 && code <= 0xFAFF) || // 中日韩兼容表意文字
+    (code >= 0xFF00 && code <= 0xFF60) || // 全角字符
+    (code >= 0xFFE0 && code <= 0xFFE6);
+  return isFullWidth ? 2 : 1;
+}
+
+/** 频道会员锁定时的固定预览文案：只取创作者换行分出的第一段，并按加权字数硬上限截断，不看屏幕宽度；截断处交给正常排版收尾，不拼省略号字符 */
+function lockedTeaser(title: string): string {
+  const firstPara = title.split('\n')[0] ?? '';
+  let weight = 0;
+  let result = '';
+  for (const ch of firstPara) {
+    const w = charWeight(ch);
+    if (weight + w > LOCKED_TEASER_CAP) break;
+    weight += w;
+    result += ch;
+  }
+  return result;
+}
 
 export function PostContent({
   post,
@@ -761,13 +810,13 @@ export function PostContent({
   }, [post.title, collapseLines, alwaysExpand, isPaid]);
 
   return (
-    <div className={`post-content-wrap${isPaid ? ' is-paid' : ''}${shouldClamp ? ' post-content-wrap--clamp' : ''}`} data-layer="post-content">
+    <div className={`post-content-wrap${isPaid ? ' is-paid' : ''}${forceLocked ? ' is-locked-teaser' : ''}${shouldClamp ? ' post-content-wrap--clamp' : ''}`} data-layer="post-content">
       <p
         ref={textRef}
-        className={`post-title${shouldClamp ? ' post-title--clamped' : ''}${collapseLines > 0 ? ` post-title--max-${collapseLines}` : ''}`}
-        style={shouldClamp ? { '--clamp-lines': collapseLines } as React.CSSProperties : undefined}
+        className={`post-title${forceLocked ? ' post-title--locked-teaser' : shouldClamp ? ' post-title--clamped' : ''}${collapseLines > 0 && !forceLocked ? ` post-title--max-${collapseLines}` : ''}`}
+        style={shouldClamp && !forceLocked ? { '--clamp-lines': collapseLines } as React.CSSProperties : undefined}
       >
-        {post.title}
+        {forceLocked ? lockedTeaser(post.title) : post.title}
       </p>
       {shouldClamp && overflowing && (
         <button
@@ -793,7 +842,7 @@ export function PostContent({
             onClick={(e) => { e.stopPropagation(); onUnlockOverride ? onUnlockOverride() : openLink(post.id, 'unlock'); }}
           >
             <Lock size={11} strokeWidth={2.5} />
-            <span>{lockLabel ?? t('解锁全部内容')}</span>
+            <span>{lockLabel ?? t('参与知识宇宙解锁')}</span>
           </div>
         </>
       )}
