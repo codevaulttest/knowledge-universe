@@ -1849,11 +1849,13 @@ export function CheckInModal({
 // ChannelSubscribeModal — 频道订阅（多档选择）
 // ═══════════════════════════════════════════════════════════════
 
-export function ChannelSubscribeModal({ channelId, onClose }: { channelId: string; onClose: () => void }) {
+export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }: { channelId: string; requiredTierIndex?: number; onClose: () => void }) {
   const { t, channels, subscribedChannelTiers, subscribeToChannelTier, unsubscribeFromChannel } = useApp();
   const channel = channels.find(c => c.id === channelId);
   const currentTierIndex = subscribedChannelTiers[channelId];
-  const [selected, setSelected] = useState<number | null>(currentTierIndex ?? null);
+  // 从内容门槛锁点进来时，默认选中该内容要求的档位，省去用户再手动挑一次；
+  // 已订阅档位优先（此时 requiredTierIndex 通常已满足，不会走到这个入口）
+  const [selected, setSelected] = useState<number | null>(currentTierIndex ?? requiredTierIndex ?? null);
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done'>('select');
   const [confirmUnsub, setConfirmUnsub] = useState(false);
 

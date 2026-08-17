@@ -242,7 +242,7 @@ export function PostCard({
   const mySubTierIdx = channel ? subscribedChannelTiers[channel.id] : undefined;
   const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= post.minTierIndex!);
   const channelLocked = !!requiredTier && !meetsChannelGate && !isOwn;
-  const openChannelGate = () => channel && openChannelSubscribe(channel.id);
+  const openChannelGate = () => channel && openChannelSubscribe(channel.id, post.minTierIndex);
   const channelLockLabel = channelLocked
     ? (mySubTierIdx != null ? t('升级到『{name}』解锁', { name: requiredTier!.name }) : t('订阅『{name}』解锁', { name: requiredTier!.name }))
     : undefined;

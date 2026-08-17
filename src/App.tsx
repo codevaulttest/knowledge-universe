@@ -185,6 +185,7 @@ export default function App() {
   const [manageChannelId, setManageChannelId] = useState<string | null>(null);
   const [channelCreatedPromptId, setChannelCreatedPromptId] = useState<string | null>(null);
   const [channelSubscribeId, setChannelSubscribeId] = useState<string | null>(null);
+  const [channelSubscribeRequiredTier, setChannelSubscribeRequiredTier] = useState<number | undefined>(undefined);
 
   const MOCK_DRAFTS: Draft[] = [
     {
@@ -539,8 +540,11 @@ export default function App() {
     showToast(t('已重置档位设置冷却期'));
   };
 
-  const openChannelSubscribe = (channelId: string) => {
-    requireWallet(() => setChannelSubscribeId(channelId));
+  const openChannelSubscribe = (channelId: string, requiredTierIndex?: number) => {
+    requireWallet(() => {
+      setChannelSubscribeRequiredTier(requiredTierIndex);
+      setChannelSubscribeId(channelId);
+    });
   };
 
   const subscribeToChannelTier = (channelId: string, tierIndex: number) => {
@@ -1014,6 +1018,7 @@ export default function App() {
         {channelSubscribeId && (
           <ChannelSubscribeModal
             channelId={channelSubscribeId}
+            requiredTierIndex={channelSubscribeRequiredTier}
             onClose={() => setChannelSubscribeId(null)}
           />
         )}

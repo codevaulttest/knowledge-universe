@@ -67,7 +67,7 @@ export type AppContextValue = {
   channels: Channel[];
   // 频道 id → 当前订阅的档位下标（未订阅则不在此 map 中）
   subscribedChannelTiers: Record<string, number>;
-  openChannelSubscribe: (channelId: string) => void;
+  openChannelSubscribe: (channelId: string, requiredTierIndex?: number) => void;
   subscribeToChannelTier: (channelId: string, tierIndex: number) => void;
   unsubscribeFromChannel: (channelId: string) => void;
   // 开通频道：一步完成——校验通过后直接建号（1000 PB + 100 PB + 0.1 SUP 由弹窗自身走支付动画后调用）
