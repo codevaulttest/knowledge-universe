@@ -803,7 +803,7 @@ export function PostContent({
   /** 解锁点击行为覆盖，如跳转频道订阅弹窗而非常规按次付费解锁 */
   onUnlockOverride?: () => void;
 }) {
-  const { openLink, linkedPostIds, t } = useApp();
+  const { openLink, linkedPostIds, showToast, t } = useApp();
   // 频道锁与按次付费锁是两套独立机制：分别判断，叠加时两个入口都要展示，避免付了频道费才发现按次付费还没解锁
   const stakeLocked = post.visiblePercent < 100 && !alwaysExpand && !linkedPostIds.has(post.id);
   const stacked = forceLocked && stakeLocked;
@@ -860,12 +860,18 @@ export function PostContent({
                 <span>{lockLabelBare ?? lockLabel ?? t('解锁')}</span>
               </div>
               {/* 按次付费锁必须在频道锁解决后才能点——此分支只在频道锁仍生效时渲染，天然处于禁用态；
-                  频道锁解决后 stacked 变 false，会走下面的单锁分支渲染出可点击的"解锁" */}
-              <div className="unlock-hint unlock-hint--disabled" aria-disabled="true">
+                  点了不跳付费流程，只用 toast 说明原因；频道锁解决后 stacked 变 false，
+                  会走下面的单锁分支渲染出可点击的"解锁" */}
+              <div
+                className="unlock-hint unlock-hint--disabled"
+                role="button"
+                tabIndex={0}
+                aria-disabled="true"
+                onClick={(e) => { e.stopPropagation(); showToast(t('先{label}才能解锁全文', { label: lockLabelBare ?? lockLabel ?? '' })); }}
+              >
                 <Lock size={11} strokeWidth={2.5} />
                 <span>{t('解锁')}</span>
               </div>
-              <span className="unlock-hint-note">{t('先{label}才能解锁全文', { label: lockLabelBare ?? lockLabel ?? '' })}</span>
             </div>
           ) : (
             <div

@@ -794,15 +794,11 @@ button {
 .unlock-hint-group .unlock-hint {
   margin: 0;
 }
-/* 按次付费锁必须先解决频道锁才能点：禁用态不可点击，颜色仍达标，靠 opacity 只传达"不可操作"这一交互状态（非文字弱化） */
+/* 按次付费锁必须先解决频道锁才能点：视觉上呈禁用态（opacity 只传达"不可操作"这一交互状态，非文字弱化），
+   但仍可点击——点击不跳付费流程，弹 toast 说明还差哪一步，不占用额外一行空间 */
 .unlock-hint--disabled {
-  cursor: default;
+  cursor: pointer;
   opacity: 0.5;
-  pointer-events: none;
-}
-.unlock-hint-note {
-  font: var(--ku-text-caption);
-  color: var(--ku-color-text-secondary);
 }
 
 /* ── Media Cards ── */
