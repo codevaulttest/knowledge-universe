@@ -230,6 +230,16 @@
   --ku-media-article-ratio:    2.5 / 1; /* 文章 feed 封面比例 */
   --ku-media-video-ratio:      16 / 9;  /* 视频封面比例 */
   --ku-media-grid-gap:         3px;
+  /* 竖图画框最大高度：竖图不满宽，按此高度反推宽度、居左，超高不裁只缩窄（方向 C） */
+  --ku-media-frame-max-h:      min(480px, 60vh);
+  /* 多图 Carousel（左右滑）：以封面画框为准、其余张 cover 进同一画框 */
+  --ku-media-carousel-ratio:       3 / 2;   /* 横向封面画框比例 */
+  --ku-media-carousel-ratio-tall:  3 / 4;   /* 竖向封面画框比例 */
+  --ku-media-carousel-slide-width: 88%;     /* 当前张宽度，剩余 12% 为下一张露边 */
+  --ku-media-carousel-gap:         8px;     /* 张与张的间距 */
+  --ku-media-carousel-overlay-bg:   var(--ku-genesis-overlay-chip);       /* 页码/待解锁角标底 */
+  --ku-media-carousel-overlay-ring: var(--ku-genesis-overlay-chip-ring);  /* 角标描边 */
+  --ku-media-carousel-overlay-text: #ffffff;                              /* 角标文字（深底上恒白） */
   --ku-tabs-padding-top:       10px;
   --ku-layout-max-width:       480px;  /* 桌面端 phone-shell 居中限宽 */
   --ku-nav-bottom:             24px;

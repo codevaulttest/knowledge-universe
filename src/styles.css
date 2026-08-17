@@ -858,6 +858,80 @@ button {
 .img-grid--4 { grid-template-columns: repeat(3, 1fr); }
 .img-grid--multi { grid-template-columns: repeat(3, 1fr); }
 
+/* ── 多图 Carousel（左右滑，替代 ≥2 张宫格）── */
+.media-carousel {
+  position: relative;
+  width: 100%;
+  border-radius: 12px 0 0 12px; /* 左圆右方：右侧不收口，读作"向右还有、可滑" */
+  overflow: hidden;
+  touch-action: pan-y; /* 横滑走 carousel，竖滑冒泡给 feed 滚动 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+.media-carousel-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--ku-media-carousel-ratio);
+  overflow: hidden;
+}
+.media-carousel--tall .media-carousel-viewport {
+  aspect-ratio: var(--ku-media-carousel-ratio-tall);
+}
+.media-carousel-track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: var(--ku-media-carousel-gap);
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+.media-carousel-slide {
+  position: relative;
+  flex: 0 0 var(--ku-media-carousel-slide-width);
+  height: 100%;
+  border-radius: var(--ku-radius-media); /* 每张自身圆角；容器右侧方角负责"向右延续" */
+  overflow: hidden;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  -webkit-tap-highlight-color: transparent;
+}
+.media-carousel-slide--clickable { cursor: pointer; }
+.media-carousel-slide--locked::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--ku-locked-media-scrim);
+  z-index: 1;
+}
+.media-carousel-overlay-counter,
+.media-carousel-overlay-lock {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-media-carousel-overlay-bg);
+  box-shadow: inset 0 0 0 1px var(--ku-media-carousel-overlay-ring);
+  color: var(--ku-media-carousel-overlay-text);
+  font: var(--ku-text-locked-media);
+  pointer-events: none;
+}
+.media-carousel-overlay-counter { top: 8px; right: 8px; }
+.media-carousel-overlay-lock { left: 8px; bottom: 8px; }
+/* 各张封面（本地 SVG 插画资产，颜色属插画例外，可硬编码）*/
+.media-carousel-slide:nth-child(1) { background-color: #f4e4c4; background-image: url('/img/p1.svg'); }
+.media-carousel-slide:nth-child(2) { background-color: #1a1b2e; background-image: url('/img/p2.svg'); }
+.media-carousel-slide:nth-child(3) { background-color: #e8eef4; background-image: url('/img/p3.svg'); }
+.media-carousel-slide:nth-child(4) { background-color: #f8faff; background-image: url('/img/p4.svg'); }
+.media-carousel-slide:nth-child(5) { background-color: #0f1117; background-image: url('/img/p5.svg'); }
+.media-carousel-slide:nth-child(6) { background-color: #f0faf4; background-image: url('/img/p6.svg'); }
+.media-carousel-slide:nth-child(7) { background-color: #fdf6e3; background-image: url('/img/p7.svg'); }
+.media-carousel-slide:nth-child(8) { background-color: #f5f0e8; background-image: url('/img/p8.svg'); }
+.media-carousel-slide:nth-child(9) { background-color: #eef2f7; background-image: url('/img/p9.svg'); }
+
 .img-grid-cell {
   position: relative;
   overflow: hidden;
@@ -874,6 +948,7 @@ button {
 /* 各格图片（本地 SVG 插画资产）*/
 .img-grid-cell:nth-child(1) { background: #f4e4c4 url('/img/p1.svg') center/cover no-repeat; }
 .img-grid--tall .img-grid-cell:nth-child(1) { background: #f4e4c4 url('/img/p1-tall.svg') center/cover no-repeat; }
+.img-grid--1-tall .img-grid-cell:nth-child(1) { background: #f4e4c4 url('/img/p1-tall.svg') center/cover no-repeat; }
 .img-grid-cell:nth-child(2) { background: #1a1b2e url('/img/p2.svg') center/cover no-repeat; }
 .img-grid-cell:nth-child(3) { background: #e8eef4 url('/img/p3.svg') center/cover no-repeat; }
 .img-grid-cell:nth-child(4) { background: #f8faff url('/img/p4.svg') center/cover no-repeat; }
@@ -1001,13 +1076,15 @@ button {
 .lightbox-track {
   display: flex;
   width: 100%;
+  height: 100%;
   will-change: transform;
 }
 .lightbox-media {
   position: relative;
   flex: 0 0 100%;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  height: 100%;
+  align-self: stretch;
 }
 .lightbox-img {
   width: 100%;

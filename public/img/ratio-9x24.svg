@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 2400" font-family="system-ui, -apple-system, sans-serif">
+  <rect width="900" height="2400" fill="#4d7c0f"/>
+  <rect x="0" y="0" width="900" height="126" fill="#3a5e0b"/>
+  <rect x="0" y="2274" width="900" height="126" fill="#3a5e0b"/>
+  <text x="450" y="63" fill="#ffffff" font-size="68" font-weight="700" text-anchor="middle" dominant-baseline="central" opacity="0.9">TOP</text>
+  <text x="450" y="2337" fill="#ffffff" font-size="68" font-weight="700" text-anchor="middle" dominant-baseline="central" opacity="0.9">BOTTOM</text>
+  <text x="450" y="1172.8" fill="#ffffff" font-size="198" font-weight="800" text-anchor="middle" dominant-baseline="central">9:24</text>
+  <text x="450" y="1338.6" fill="#ffffff" font-size="68" font-weight="600" text-anchor="middle" dominant-baseline="central" opacity="0.85">900×2400</text>
+  <rect x="18" y="48" width="864" height="2304" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="7" stroke-dasharray="27 18"/>
+</svg>

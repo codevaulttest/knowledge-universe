@@ -375,12 +375,160 @@ export function PageHeader({ title, onBack, action, className }: { title?: React
   );
 }
 
+// ── MediaCarousel（多图左右滑，替代宫格）──────────────────────────
+// 规则见 docs/multi-image-carousel-spec.md：封面画框固定、其余张 cover 进同画框；
+// 画框比例统一规则：真实宽高比夹到 [3:4, 16:9]。宽于 16:9 取 16:9、瘦于 3:4 取 3:4、其余取真实值。
+// 单图与多图 carousel 共用同一函数，保证同一套裁切/定框逻辑。
+const FRAME_MIN = 9 / 21;  // 竖图上限（最高、最瘦的框）：与 21:9 对称，两个方向都到 21:9，好记
+const FRAME_MAX = 21 / 9;  // 横图上限（最扁的框）：放到 21:9，全景等宽图零裁切；更宽（如 1:16 横条）才裁
+export function clampFrameRatio(ratio: number): number {
+  return Math.min(FRAME_MAX, Math.max(FRAME_MIN, ratio));
+}
+
+// 方向 C：竖图（画框比例 < 1）不满宽——按最大高度反推宽度（宽 = 最大高 × 比例），
+// 超高只缩窄、不裁切，居左留右白边。横图/方图（≥1）照旧满宽，返回 undefined 走默认 100%。
+function frameCapWidth(frameRatio: number): string | undefined {
+  return frameRatio < 1
+    ? `min(100%, calc(var(--ku-media-frame-max-h) * ${frameRatio}))`
+    : undefined;
+}
+
+// 右上页码 + 左下待解锁角标（无底部圆点，省垂直空间）；横滑走 carousel、竖滑照常滚 feed。
+function MediaCarousel({
+  imageCount,
+  visibleImgCount,
+  frameRatio,
+  images,
+  onImageClick,
+}: {
+  imageCount: number;
+  visibleImgCount: number;
+  frameRatio: number;
+  images?: string[];
+  onImageClick?: (idx: number) => void;
+}) {
+  const { t } = useApp();
+  const clickable = !!onImageClick;
+  const lockedCount = Math.max(0, imageCount - visibleImgCount);
+  const [idx, setIdx] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  // 拖拽临时态放 ref，避免每帧 setState 重渲染；moved 用于区分「滑动」与「点击看大图」
+  const drag = useRef({ x0: 0, w: 0, active: false, moved: false });
+  const GAP = 8; // 与 --ku-media-carousel-gap 保持一致（JS 需用数值计算位移）
+
+  const slideWidth = () =>
+    (trackRef.current?.children[0] as HTMLElement | undefined)?.getBoundingClientRect().width ?? 0;
+
+  const settle = (i: number) => {
+    const tr = trackRef.current;
+    if (!tr) return;
+    tr.style.transition = '';
+    tr.style.transform = `translateX(${-(i * (slideWidth() + GAP))}px)`;
+  };
+
+  useEffect(() => { settle(idx); });
+
+  useEffect(() => {
+    const onResize = () => settle(idx);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [idx]);
+
+  // 拖拽期间把 move/up 挂到 window：既能在露边滑出元素后继续收事件，
+  // 又不用 setPointerCapture——capture 会把随后的 click 改派到容器上，
+  // 绕过 slide 自身的 onClick+stopPropagation，导致 feed 里误跳帖子详情。
+  const handleMove = (e: PointerEvent) => onMove(e.clientX);
+  const handleEnd = (e: PointerEvent) => {
+    onUp(e.clientX);
+    window.removeEventListener('pointermove', handleMove);
+    window.removeEventListener('pointerup', handleEnd);
+    window.removeEventListener('pointercancel', handleEnd);
+  };
+  const handleDown = (e: React.PointerEvent) => {
+    const tr = trackRef.current;
+    if (!tr) return;
+    drag.current = { x0: e.clientX, w: slideWidth(), active: true, moved: false };
+    tr.style.transition = 'none';
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleEnd);
+    window.addEventListener('pointercancel', handleEnd);
+  };
+  const onMove = (x: number) => {
+    const d = drag.current;
+    if (!d.active) return;
+    const dx = x - d.x0;
+    if (Math.abs(dx) > 4) d.moved = true;
+    if (trackRef.current) trackRef.current.style.transform = `translateX(${-(idx * (d.w + GAP)) + dx}px)`;
+  };
+  const onUp = (x: number) => {
+    const d = drag.current;
+    if (!d.active) return;
+    d.active = false;
+    const dx = x - d.x0;
+    let next = idx;
+    if (dx < -40) next = Math.min(imageCount - 1, idx + 1);
+    else if (dx > 40) next = Math.max(0, idx - 1);
+    if (next === idx) settle(idx); else setIdx(next);
+  };
+
+  return (
+    <div
+      className="media-carousel"
+      data-layer="image-cover"
+      style={{ width: frameCapWidth(frameRatio) }}
+      onPointerDown={handleDown}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="media-carousel-viewport" style={{ aspectRatio: String(frameRatio) }}>
+        <div className="media-carousel-track" ref={trackRef}>
+          {Array.from({ length: imageCount }, (_, i) => {
+            const locked = i >= visibleImgCount;
+            return (
+              <div
+                key={i}
+                className={`media-carousel-slide${locked ? ' media-carousel-slide--locked' : ''}${clickable ? ' media-carousel-slide--clickable' : ''}`}
+                style={images?.[i] ? { backgroundImage: `url('${images[i]}')` } : undefined}
+                onClick={clickable ? (e) => { e.stopPropagation(); if (!drag.current.moved) onImageClick!(i); } : undefined}
+                role={clickable ? 'button' : undefined}
+                tabIndex={clickable ? 0 : undefined}
+                aria-label={clickable ? (locked ? t('点击解锁查看图片') : t('查看大图')) : undefined}
+                onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') onImageClick!(i); } : undefined}
+              >
+                {locked && (
+                  <div className="img-lock-overlay" aria-hidden="true">
+                    <KnowledgePlanetIcon className="img-lock-pattern" />
+                    {clickable && (
+                      <div className="img-lock-badge">
+                        <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
+                        <span>{t('解锁')}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="media-carousel-overlay-counter">{idx + 1} / {imageCount}</div>
+        {lockedCount > 0 && (
+          <div className="media-carousel-overlay-lock">
+            <Lock size={12} strokeWidth={2.5} aria-hidden="true" />
+            <span>{t('{locked} 张待解锁', { locked: lockedCount })}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── MediaPlaceholder ───────────────────────────────────────────
 export function MediaPlaceholder({
   kind,
   articleHasCover = true,
   imageCount = 3,
   imageAspect = 'landscape',
+  imageRatio,
+  images,
   visibleImgCount = 3,
   visiblePercent = 100,
   onImageClick,
@@ -391,6 +539,8 @@ export function MediaPlaceholder({
   articleHasCover?: boolean;
   imageCount?: number;
   imageAspect?: 'landscape' | 'tall';
+  imageRatio?: number;
+  images?: string[];
   visibleImgCount?: number;
   visiblePercent?: number;
   onImageClick?: (idx: number) => void;
@@ -458,24 +608,33 @@ export function MediaPlaceholder({
       </div>
     );
   }
-  // image — 多图网格，支持 1-9 张
+  // image — 画框比例统一由真实宽高比夹取 [3:4,16:9]；缺省回退旧的 landscape/tall 两档
+  const frameRatio = clampFrameRatio(imageRatio ?? (imageAspect === 'tall' ? 9 / 16 : 16 / 9));
+  // 多图（≥2 张）走左右滑 carousel；单图用同一画框比例
+  if (imageCount >= 2) {
+    return (
+      <MediaCarousel
+        imageCount={imageCount}
+        visibleImgCount={visibleImgCount}
+        frameRatio={frameRatio}
+        images={images}
+        onImageClick={onImageClick}
+      />
+    );
+  }
   const clickable = !!onImageClick;
-  const colClass = imageCount === 1 ? 'img-grid--1'
-    : imageCount === 2 ? 'img-grid--2'
-    : imageCount === 3 ? 'img-grid--3'
-    : imageCount === 4 ? 'img-grid--4'
-    : imageCount <= 6 ? 'img-grid--3'
-    : 'img-grid--multi';
   const lockedCount = Math.max(0, imageCount - visibleImgCount);
-  const tall = imageCount === 1 && imageAspect === 'tall';
+  // 竖图（画框比例 < 1）换竖构图插画资产；用独立类只换背景图，不带旧 tall 的窄宽约束
+  const tallArt = frameRatio < 1;
   return (
-    <div className={`img-grid ${colClass}${tall ? ' img-grid--tall' : ''}${lockedCount > 0 ? ' img-grid--has-locked' : ''}`} data-layer="image-cover">
+    <div className={`img-grid img-grid--1${tallArt ? ' img-grid--1-tall' : ''}${lockedCount > 0 ? ' img-grid--has-locked' : ''}`} data-layer="image-cover" style={{ aspectRatio: String(frameRatio), width: frameCapWidth(frameRatio) }}>
       {Array.from({ length: imageCount }, (_, i) => {
         const locked = i >= visibleImgCount;
         return (
           <div
             key={i}
             className={`img-grid-cell${clickable ? ' img-grid-cell--clickable' : ''}${locked ? ' img-grid-cell--locked' : ''}`}
+            style={images?.[i] ? { backgroundImage: `url('${images[i]}')` } : undefined}
             onClick={clickable ? (e) => { e.stopPropagation(); onImageClick!(i); } : undefined}
             role={clickable ? 'button' : undefined}
             tabIndex={clickable ? 0 : undefined}

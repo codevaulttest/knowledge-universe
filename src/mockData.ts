@@ -374,6 +374,73 @@ export function getChannelSubscribers(channel: Channel): ChannelSubscriber[] {
 }
 
 export const ALL_POSTS: Post[] = [
+  // ── 图片比例走查（首屏可见）：单图不同宽高比 + 多图 carousel 不同封面比例 ──
+  // 规则见 docs/image-display-spec.md：画框比例 = clamp(真实比例, 9:21, 21:9)，cover 居中裁。
+  // 按钮组合走查：链接=isNode、兑换=shop，覆盖 全有/只链接/只兑换/都没有 四种
+  {
+    id: 'ratio-single-249', author: '比例走查', time: '刚刚',
+    title: '单图 · 超宽 24:9（超出上限：画框夹到 21:9，裁左右 ~12.5%，点开看全）',
+    kind: 'image', imageCount: 1, imageRatio: 24 / 9, images: ['/img/ratio-24x9.svg'], visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
+  },
+  {
+    id: 'ratio-single-pano', author: '比例走查', time: '刚刚',
+    title: '单图 · 全景 21:9（横图上限，满宽不裁，最矮 ~150px）',
+    kind: 'image', imageCount: 1, imageRatio: 21 / 9, images: ['/img/ratio-21x9.svg'], visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Rz1aP7',
+    rating: 0, replies: 0, links: 12, shares: 0, saves: 0, likes: 0,
+    shop: { price: 1800, rebatePercent: 40, stock: 30 },
+  },
+  {
+    id: 'ratio-single-169', author: '比例走查', time: '刚刚',
+    title: '单图 · 横图 16:9（区间内，满宽不裁；横图上限已放宽到 21:9）',
+    kind: 'image', imageCount: 1, imageRatio: 16 / 9, images: ['/img/ratio-16x9.svg'], visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Rz2bK4',
+    rating: 0, replies: 0, links: 8, shares: 0, saves: 0, likes: 0,
+  },
+  {
+    id: 'ratio-single-11', author: '比例走查', time: '刚刚',
+    title: '单图 · 方图 1:1（区间内，满宽不裁）',
+    kind: 'image', imageCount: 1, imageRatio: 1, images: ['/img/ratio-1x1.svg'], visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
+    shop: { price: 680, rebatePercent: 30, stock: 120 },
+  },
+  {
+    id: 'ratio-single-34', author: '比例走查', time: '刚刚',
+    title: '单图 · 竖图 3:4（区间内，不裁；窄屏满宽，超最大高则按高定宽居左）',
+    kind: 'image', imageCount: 1, imageRatio: 3 / 4, images: ['/img/ratio-3x4.svg'], visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
+  },
+  {
+    id: 'ratio-single-916', author: '比例走查', time: '刚刚',
+    title: '单图 · 瘦长 9:16（区间内，不裁；超最大高→按高定宽、缩窄居左，不吃屏）',
+    kind: 'image', imageCount: 1, imageRatio: 9 / 16, images: ['/img/ratio-9x16.svg'], visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Rz3cT9',
+    rating: 0, replies: 0, links: 5, shares: 0, saves: 0, likes: 0,
+    shop: { price: 2600, rebatePercent: 50, stock: 8 },
+  },
+  {
+    id: 'ratio-single-921', author: '比例走查', time: '刚刚',
+    title: '单图 · 超高 9:21（竖图上限，不裁；按最大高定宽、缩到最窄居左）',
+    kind: 'image', imageCount: 1, imageRatio: 9 / 21, images: ['/img/ratio-9x21.svg'], visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
+  },
+  {
+    id: 'ratio-single-924', author: '比例走查', time: '刚刚',
+    title: '单图 · 超高 9:24（超出上限：画框夹到 9:21 裁上下 ~12.5%，且缩窄居左，点开看全）',
+    kind: 'image', imageCount: 1, imageRatio: 9 / 24, images: ['/img/ratio-9x24.svg'], visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
+  },
+  {
+    id: 'ratio-multi-169', author: '比例走查', time: '刚刚',
+    title: '多图 carousel · 封面 16:9（3 张，画框由封面定，其余 cover 进同框）',
+    kind: 'image', imageCount: 3, imageRatio: 16 / 9, images: ['/img/ratio-16x9.svg', '/img/ratio-21x9.svg', '/img/ratio-1x1.svg'], visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
+    shop: { price: 999, rebatePercent: 35, stock: 60 },
+  },
+  {
+    id: 'ratio-multi-34-lock', author: '比例走查', time: '刚刚',
+    title: '多图 carousel · 封面 3:4 竖框（5 张，后 2 张锁定，看角标与解锁遮罩）',
+    kind: 'image', imageCount: 5, imageRatio: 3 / 4, images: ['/img/ratio-3x4.svg', '/img/ratio-9x16.svg', '/img/ratio-1x1.svg', '/img/ratio-16x9.svg', '/img/ratio-21x9.svg'], visiblePercent: 60, isNode: true, stakeTier: 1000, nodeId: 'Rt5mK9',
+    rating: 0, replies: 0, links: 3, shares: 0, saves: 0, likes: 0,
+  },
   {
     id: 'p1', author: 'AI 效率研究所', time: '2 小时前',
     title: 'AI 产品截图 × 提示词模板合集。精选 12 款工具的实测截图，附 3 个月高频使用总结的提示词模板，拿来即用。',

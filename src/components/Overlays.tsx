@@ -15,17 +15,21 @@ import { CHECK_IN_MAX_DAILY, CHECK_IN_REWARD, type ClaimPreview } from '../check
 
 
 // Lightbox photo backgrounds — local SVG illustrations, same order as img-grid-cell nth-child
-const IMG_GRADIENTS = [
-  "#f4e4c4 url('/img/p1.svg') center/cover no-repeat",
-  "#1a1b2e url('/img/p2.svg') center/cover no-repeat",
-  "#e8eef4 url('/img/p3.svg') center/cover no-repeat",
-  "#f8faff url('/img/p4.svg') center/cover no-repeat",
-  "#0f1117 url('/img/p5.svg') center/cover no-repeat",
-  "#f0faf4 url('/img/p6.svg') center/cover no-repeat",
-  "#fdf6e3 url('/img/p7.svg') center/cover no-repeat",
-  "#f5f0e8 url('/img/p8.svg') center/cover no-repeat",
-  "#0e1a48 url('/img/p9.svg') center/cover no-repeat",
+// index 映射的占位图源（帖子未显式给 images 时回退）
+const IMG_FALLBACK_SRC = [
+  '/img/p1.svg', '/img/p2.svg', '/img/p3.svg', '/img/p4.svg', '/img/p5.svg',
+  '/img/p6.svg', '/img/p7.svg', '/img/p8.svg', '/img/p9.svg',
 ];
+// lightbox 显示完整原图不裁切：contain 居中，黑底衬边，比例跟随图片自身
+function lightboxBg(src: string): React.CSSProperties {
+  return {
+    backgroundColor: '#000',
+    backgroundImage: `url('${src}')`,
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'contain',
+  };
+}
 const IMG_LABELS = ['图片 1', '图片 2', '图片 3', '图片 4', '图片 5', '图片 6', '图片 7', '图片 8', '图片 9'];
 
 function payCtxToSupReason(payCtx: PayCtx): SupTransactionReason {
@@ -149,7 +153,7 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
               <div className="lightbox-media" key={i}>
                 <div
                   className={`lightbox-img${slideLocked ? ' lightbox-img--locked' : ''}`}
-                  style={{ background: IMG_GRADIENTS[i] }}
+                  style={lightboxBg(post.images?.[i] ?? IMG_FALLBACK_SRC[i % IMG_FALLBACK_SRC.length])}
                   aria-label={IMG_LABELS[i]}
                 />
                 {slideLocked && (

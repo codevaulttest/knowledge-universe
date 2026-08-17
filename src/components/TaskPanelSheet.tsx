@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { AlertTriangle, Check, ChevronRight, FileText, Info, Sparkles, X } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { BSP_GUARANTEE_MIN_INTERACTIONS } from '../bspConfig';
 import {
   TASK_CELEBRATE_EVERY,
   TASK_INTERACTION_BASE_RATIO,
@@ -110,13 +109,11 @@ export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** BSP 巨星投流任务弹窗：发帖 + 保底互动门槛 */
+/** BSP 巨星投流任务弹窗：发帖即达标 */
 export function BspTaskSheet({ onClose }: { onClose: () => void }) {
   const { t } = useApp();
   const { tab, setTab, snapshot } = useTaskDaySnapshot();
   const [rulesOpen, setRulesOpen] = useState(false);
-  const guaranteeCount = Math.min(snapshot.interactedCount, BSP_GUARANTEE_MIN_INTERACTIONS);
-  const guaranteePercent = (guaranteeCount / BSP_GUARANTEE_MIN_INTERACTIONS) * 100;
 
   return (
     <>
@@ -130,7 +127,7 @@ export function BspTaskSheet({ onClose }: { onClose: () => void }) {
           </div>
 
           <p className="task-panel-note">
-            {t('需当天发帖，且互动帖任务完成 {min} 次以上，次日才享有 BSP 打赏保底。', { min: BSP_GUARANTEE_MIN_INTERACTIONS })}
+            {t('当天发帖，次日即可享有 BSP 打赏保底。')}
           </p>
 
           <button type="button" className="bsp-rules-entry task-panel-rules-entry" onClick={() => setRulesOpen(true)}>
@@ -151,26 +148,6 @@ export function BspTaskSheet({ onClose }: { onClose: () => void }) {
                 {snapshot.posted ? t('已发布内容') : t('还没有发布内容')}
               </span>
             </span>
-          </div>
-
-          <div className={`task-card task-card--interaction${guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS ? ' task-card--done' : ''}`}>
-            <div className="task-card-head">
-              <span className="task-card-icon" aria-hidden="true">
-                {guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS
-                  ? <Check size={16} strokeWidth={2.6} />
-                  : <Sparkles size={16} strokeWidth={1.9} />}
-              </span>
-              <span className="task-card-body">
-                <span className="task-card-title">{t('保底互动门槛')}</span>
-                <span className="task-card-desc">
-                  {t('已互动 {count} / {total} 次', { count: guaranteeCount, total: BSP_GUARANTEE_MIN_INTERACTIONS })}
-                </span>
-              </span>
-            </div>
-
-            <div className="task-progress-track" aria-hidden="true">
-              <div className="task-progress-fill" style={{ width: `${guaranteePercent}%` }} />
-            </div>
           </div>
         </div>
       </div>
@@ -252,11 +229,7 @@ function BspTaskRulesSheet({ onClose }: { onClose: () => void }) {
           </p>
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('发帖任务：')}</strong>
-            {t('当天至少发布 1 篇内容即视为完成。它是 BSP 巨星投流每日打赏保底的门槛：当天发帖、且互动帖任务完成 {min} 次以上，次日才享有打赏保底。', { min: BSP_GUARANTEE_MIN_INTERACTIONS })}
-          </p>
-          <p className="pb-info-sheet-para">
-            <strong className="pb-info-sheet-label">{t('保底互动门槛：')}</strong>
-            {t('需当天发帖，且互动帖任务完成 {min} 次以上，次日才享有 BSP 打赏保底。', { min: BSP_GUARANTEE_MIN_INTERACTIONS })}
+            {t('当天至少发布 1 篇内容即视为完成。它是 BSP 巨星投流每日打赏保底的唯一门槛：当天发帖，次日即享有打赏保底。')}
           </p>
           <div className="sup-deposit-warning">
             <AlertTriangle size={16} strokeWidth={2} aria-hidden="true" />

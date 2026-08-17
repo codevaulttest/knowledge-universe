@@ -178,6 +178,8 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
             articleHasCover={post.articleHasCover}
             imageCount={post.imageCount ?? 3}
             imageAspect={post.imageAspect}
+            imageRatio={post.imageRatio}
+            images={post.images}
             visibleImgCount={post.kind === 'image'
               ? (unlocked ? (post.imageCount ?? 3) : Math.floor(post.visiblePercent / 100 * (post.imageCount ?? 3)))
               : (post.imageCount ?? 3)}

@@ -376,6 +376,8 @@ export function PostCard({
             articleHasCover={post.articleHasCover}
             imageCount={totalImgs}
             imageAspect={post.imageAspect}
+            imageRatio={post.imageRatio}
+            images={post.images}
             visibleImgCount={visibleImgCount}
             visiblePercent={channelLocked ? 0 : post.visiblePercent}
             onImageClick={post.kind === 'image' ? (idx) => {

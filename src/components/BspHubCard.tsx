@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronRight, Crown, History } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { BSP_GUARANTEE_MIN_INTERACTIONS, type BspInvestment } from '../bspConfig';
+import type { BspInvestment } from '../bspConfig';
 import { BspTaskSheet } from './TaskPanelSheet';
 
 /**
@@ -22,16 +22,11 @@ export function BspHubCard({
 
   const hasRecords = investments.length > 0;
   const posted = taskSnapshotToday.posted;
-  const guaranteeCount = Math.min(taskSnapshotToday.interactedCount, BSP_GUARANTEE_MIN_INTERACTIONS);
-  const bspReady = posted && guaranteeCount >= BSP_GUARANTEE_MIN_INTERACTIONS;
+  const bspReady = posted;
 
   const thresholdMeta = bspReady
     ? t('明日可享 BSP 打赏保底')
-    : t('互动 {count} / {total} · {postStatus}', {
-        count: guaranteeCount,
-        total: BSP_GUARANTEE_MIN_INTERACTIONS,
-        postStatus: posted ? t('已发帖') : t('尚未发帖'),
-      });
+    : t('尚未发帖');
 
   return (
     <>
