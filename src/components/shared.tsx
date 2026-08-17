@@ -734,7 +734,7 @@ export function ArticleFeedCard({ post, onClick, locked = false, lockLabel }: { 
         {locked ? (
           <div className="unlock-hint" data-layer="unlock-hint">
             <Lock size={11} strokeWidth={2.5} />
-            <span>{lockLabel ?? t('参与知识宇宙解锁')}</span>
+            <span>{lockLabel ?? t('解锁')}</span>
           </div>
         ) : (
           <p className="article-feed-card-preview">{preview}</p>
@@ -787,6 +787,7 @@ export function PostContent({
   collapseLines = 0,
   forceLocked = false,
   lockLabel,
+  lockLabelBare,
   onUnlockOverride,
 }: {
   post: Post;
@@ -795,13 +796,18 @@ export function PostContent({
   collapseLines?: number;
   /** 频道会员门槛未达标时强制锁定，无视 visiblePercent（频道锁优先于按比例解锁）*/
   forceLocked?: boolean;
-  /** 锁定提示文案覆盖，如"订阅『Lv.2』解锁" */
+  /** 锁定提示文案覆盖，如"订阅『Lv.2』解锁"；仅频道锁单独生效（不叠加按次付费锁）时使用 */
   lockLabel?: string;
+  /** 频道锁与按次付费锁叠加时使用的文案，不带"解锁"承诺，如"订阅『Lv.2』" */
+  lockLabelBare?: string;
   /** 解锁点击行为覆盖，如跳转频道订阅弹窗而非常规按次付费解锁 */
   onUnlockOverride?: () => void;
 }) {
   const { openLink, linkedPostIds, t } = useApp();
-  const isPaid = forceLocked || (post.visiblePercent < 100 && !alwaysExpand && !linkedPostIds.has(post.id));
+  // 频道锁与按次付费锁是两套独立机制：分别判断，叠加时两个入口都要展示，避免付了频道费才发现按次付费还没解锁
+  const stakeLocked = post.visiblePercent < 100 && !alwaysExpand && !linkedPostIds.has(post.id);
+  const stacked = forceLocked && stakeLocked;
+  const isPaid = forceLocked || stakeLocked;
   const [clamped, setClamped] = useState(true);
   const [overflowing, setOverflowing] = useState(false);
   const textRef = useRef<HTMLParagraphElement>(null);
@@ -842,16 +848,37 @@ export function PostContent({
       {isPaid && (
         <>
           <div className="content-mask" data-layer="content-mask" />
-          <div
-            className="unlock-hint"
-            data-layer="unlock-hint"
-            role="button"
-            tabIndex={0}
-            onClick={(e) => { e.stopPropagation(); onUnlockOverride ? onUnlockOverride() : openLink(post.id, 'unlock'); }}
-          >
-            <Lock size={11} strokeWidth={2.5} />
-            <span>{lockLabel ?? t('参与知识宇宙解锁')}</span>
-          </div>
+          {stacked ? (
+            <div className="unlock-hint-group" data-layer="unlock-hint-group">
+              <div
+                className="unlock-hint"
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); onUnlockOverride ? onUnlockOverride() : openLink(post.id, 'unlock'); }}
+              >
+                <Lock size={11} strokeWidth={2.5} />
+                <span>{lockLabelBare ?? lockLabel ?? t('解锁')}</span>
+              </div>
+              {/* 按次付费锁必须在频道锁解决后才能点——此分支只在频道锁仍生效时渲染，天然处于禁用态；
+                  频道锁解决后 stacked 变 false，会走下面的单锁分支渲染出可点击的"解锁" */}
+              <div className="unlock-hint unlock-hint--disabled" aria-disabled="true">
+                <Lock size={11} strokeWidth={2.5} />
+                <span>{t('解锁')}</span>
+              </div>
+              <span className="unlock-hint-note">{t('先{label}才能解锁全文', { label: lockLabelBare ?? lockLabel ?? '' })}</span>
+            </div>
+          ) : (
+            <div
+              className="unlock-hint"
+              data-layer="unlock-hint"
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); onUnlockOverride ? onUnlockOverride() : openLink(post.id, 'unlock'); }}
+            >
+              <Lock size={11} strokeWidth={2.5} />
+              <span>{lockLabel ?? t('解锁')}</span>
+            </div>
+          )}
         </>
       )}
     </div>

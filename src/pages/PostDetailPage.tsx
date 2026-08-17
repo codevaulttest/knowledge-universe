@@ -80,6 +80,10 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const channelLockLabel = channelLocked
     ? (mySubTierIdx != null ? t('升级到『{name}』解锁', { name: requiredTier!.name }) : t('订阅『{name}』解锁', { name: requiredTier!.name }))
     : undefined;
+  // 频道锁与按次付费锁叠加时（visiblePercent < 100），订阅不承诺解锁内容比例，文案不带"解锁"，避免"解锁至 0%"的荒谬措辞
+  const channelLockLabelBare = channelLocked
+    ? (mySubTierIdx != null ? t('升级到『{name}』', { name: requiredTier!.name }) : t('订阅『{name}』', { name: requiredTier!.name }))
+    : undefined;
   const unlocked = (isOwn || isLinked || post.visiblePercent === 100) && !channelLocked;
   const hasActors = isOwn && !!POST_ACTORS[post.id];
   const heat = post.heat ?? derivedStat(post.id, 1, 300, 260000);
@@ -194,6 +198,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
             alwaysExpand={unlocked}
             forceLocked={channelLocked}
             lockLabel={channelLockLabel}
+            lockLabelBare={channelLockLabelBare}
             onUnlockOverride={channelLocked ? openChannelGate : undefined}
           />
           <MediaPlaceholder
@@ -208,7 +213,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
               ? (channelLocked ? 0 : unlocked ? (post.imageCount ?? 3) : Math.floor(post.visiblePercent / 100 * (post.imageCount ?? 3)))
               : (post.imageCount ?? 3)}
             visiblePercent={channelLocked ? 0 : post.visiblePercent}
-            lockActionLabel={channelLocked ? channelLockLabel : undefined}
+            lockActionLabel={channelLocked ? (post.visiblePercent < 100 ? channelLockLabelBare : channelLockLabel) : undefined}
             onImageClick={post.kind === 'image' ? (idx) => {
               if (channelLocked) {
                 openChannelGate();

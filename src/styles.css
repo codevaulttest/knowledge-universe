@@ -783,6 +783,28 @@ button {
 }
 .unlock-hint:hover { background: var(--ku-unlock-bg-hover); }
 
+/* 频道锁与按次付费锁叠加：两个入口各自独立展示，纵向堆叠，不共用一个锁位 */
+.unlock-hint-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 7px 0 9px;
+}
+.unlock-hint-group .unlock-hint {
+  margin: 0;
+}
+/* 按次付费锁必须先解决频道锁才能点：禁用态不可点击，颜色仍达标，靠 opacity 只传达"不可操作"这一交互状态（非文字弱化） */
+.unlock-hint--disabled {
+  cursor: default;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.unlock-hint-note {
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-secondary);
+}
+
 /* ── Media Cards ── */
 .media {
   position: relative;   /* 必须，绝对定位子元素（books/laptop/nodes 等）以此为基准 */

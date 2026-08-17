@@ -246,6 +246,11 @@ export function PostCard({
   const channelLockLabel = channelLocked
     ? (mySubTierIdx != null ? t('升级到『{name}』解锁', { name: requiredTier!.name }) : t('订阅『{name}』解锁', { name: requiredTier!.name }))
     : undefined;
+  // 频道锁与按次付费锁叠加时（visiblePercent < 100），订阅本身不承诺解锁任何内容比例，
+  // 文案不带"解锁"字样，避免出现"解锁至 0%"这种自相矛盾的措辞——内容解锁完全交给下面的按次付费入口
+  const channelLockLabelBare = channelLocked
+    ? (mySubTierIdx != null ? t('升级到『{name}』', { name: requiredTier!.name }) : t('订阅『{name}』', { name: requiredTier!.name }))
+    : undefined;
 
   const contentUnlocked = isOwn || linkedPostIds.has(post.id) || post.visiblePercent === 100;
   const imgUnlocked = !channelLocked && contentUnlocked;
@@ -377,6 +382,7 @@ export function PostCard({
             alwaysExpand={isOwn}
             forceLocked={channelLocked}
             lockLabel={channelLockLabel}
+            lockLabelBare={channelLockLabelBare}
             onUnlockOverride={channelLocked ? openChannelGate : undefined}
           />
           <MediaPlaceholder
@@ -389,7 +395,7 @@ export function PostCard({
             imageRatios={post.imageRatios}
             visibleImgCount={visibleImgCount}
             visiblePercent={channelLocked ? 0 : post.visiblePercent}
-            lockActionLabel={channelLocked ? channelLockLabel : undefined}
+            lockActionLabel={channelLocked ? (post.visiblePercent < 100 ? channelLockLabelBare : channelLockLabel) : undefined}
             onImageClick={post.kind === 'image' ? (idx) => {
               if (channelLocked) {
                 openChannelGate();
