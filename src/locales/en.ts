@@ -268,7 +268,7 @@ export const en: Record<string, string> = {
   '原理与实践': 'Theory & Practice',
   '点击解锁查看图片': 'Unlock to view image',
   '查看大图': 'View full image',
-  '{locked} 张待解锁': '{locked} locked',
+  '解锁全部内容（{count} 张）': 'Unlock all ({count} photos)',
   '全文': 'Show full text',
   '全文2': 'Full text',
   '在知识宇宙中查看节点 {nodeId}': 'View node {nodeId} in Wisverse',

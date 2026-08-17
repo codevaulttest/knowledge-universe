@@ -403,7 +403,7 @@ function frameCapWidth(frameRatio: number): string | undefined {
     : undefined;
 }
 
-// 右上页码 + 左下待解锁角标（无底部圆点，省垂直空间）；横滑走 carousel、竖滑照常滚 feed。
+// 右上页码（无底部圆点，省垂直空间）；横滑走 carousel、竖滑照常滚 feed。
 function MediaCarousel({
   imageCount,
   visibleImgCount,
@@ -424,7 +424,6 @@ function MediaCarousel({
 }) {
   const { t } = useApp();
   const clickable = !!onImageClick;
-  const lockedCount = Math.max(0, imageCount - visibleImgCount);
   const [idx, setIdx] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   // 拖拽临时态放 ref，避免每帧 setState 重渲染；moved 用于区分「滑动」与「点击看大图」
@@ -529,7 +528,7 @@ function MediaCarousel({
                     {clickable && (
                       <div className="img-lock-badge">
                         <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
-                        <span>{lockActionLabel ?? t('解锁全部内容')}</span>
+                        <span>{lockActionLabel ?? t('解锁全部内容（{count} 张）', { count: imageCount })}</span>
                       </div>
                     )}
                   </div>
@@ -539,12 +538,6 @@ function MediaCarousel({
           })}
         </div>
         <div className="media-carousel-overlay-counter">{idx + 1} / {imageCount}</div>
-        {lockedCount > 0 && lockedCount < imageCount && (
-          <div className="media-carousel-overlay-lock">
-            <Lock size={12} strokeWidth={2.5} aria-hidden="true" />
-            <span>{t('{locked} 张待解锁', { locked: lockedCount })}</span>
-          </div>
-        )}
       </div>
     </div>
   );

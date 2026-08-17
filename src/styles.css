@@ -932,8 +932,7 @@ button {
   background: var(--ku-locked-media-scrim);
   z-index: 1;
 }
-.media-carousel-overlay-counter,
-.media-carousel-overlay-lock {
+.media-carousel-overlay-counter {
   position: absolute;
   z-index: 3;
   display: inline-flex;
@@ -946,9 +945,9 @@ button {
   color: var(--ku-media-carousel-overlay-text);
   font: var(--ku-text-locked-media);
   pointer-events: none;
+  top: 8px;
+  right: 8px;
 }
-.media-carousel-overlay-counter { top: 8px; right: 8px; }
-.media-carousel-overlay-lock { left: 8px; bottom: 8px; }
 /* 各张封面（本地 SVG 插画资产，颜色属插画例外，可硬编码）*/
 .media-carousel-slide:nth-child(1) { background-color: #f4e4c4; background-image: url('/img/p1.svg'); }
 .media-carousel-slide:nth-child(2) { background-color: #1a1b2e; background-image: url('/img/p2.svg'); }
