@@ -529,7 +529,7 @@ function MediaCarousel({
                     {clickable && (
                       <div className="img-lock-badge">
                         <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
-                        <span>{lockActionLabel ?? t('解锁')}</span>
+                        <span>{lockActionLabel ?? t('解锁全部内容')}</span>
                       </div>
                     )}
                   </div>
@@ -641,7 +641,7 @@ export function MediaPlaceholder({
         {locked ? (
           <div className="img-lock-badge img-lock-badge--video">
             <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
-            <span>{lockActionLabel ?? t('解锁')}</span>
+            <span>{lockActionLabel ?? t('解锁全部内容')}</span>
           </div>
         ) : (
           <div className="play"><span /></div>
@@ -691,7 +691,7 @@ export function MediaPlaceholder({
                 {clickable && (
                   <div className="img-lock-badge">
                     <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
-                    <span>{lockActionLabel ?? t('解锁')}</span>
+                    <span>{lockActionLabel ?? t('解锁全部内容')}</span>
                   </div>
                 )}
               </div>
@@ -734,7 +734,7 @@ export function ArticleFeedCard({ post, onClick, locked = false, lockLabel }: { 
         {locked ? (
           <div className="unlock-hint" data-layer="unlock-hint">
             <Lock size={11} strokeWidth={2.5} />
-            <span>{lockLabel ?? t('解锁')}</span>
+            <span>{lockLabel ?? t('解锁全部内容')}</span>
           </div>
         ) : (
           <p className="article-feed-card-preview">{preview}</p>
@@ -857,7 +857,7 @@ export function PostContent({
                 onClick={(e) => { e.stopPropagation(); onUnlockOverride ? onUnlockOverride() : openLink(post.id, 'unlock'); }}
               >
                 <Lock size={11} strokeWidth={2.5} />
-                <span>{lockLabelBare ?? lockLabel ?? t('解锁')}</span>
+                <span>{lockLabelBare ?? lockLabel ?? t('解锁全部内容')}</span>
               </div>
               {/* 按次付费锁必须在频道锁解决后才能点——此分支只在频道锁仍生效时渲染，天然处于禁用态；
                   点了不跳付费流程，只用 toast 说明原因；频道锁解决后 stacked 变 false，
@@ -870,7 +870,7 @@ export function PostContent({
                 onClick={(e) => { e.stopPropagation(); showToast(t('先{label}才能解锁全文', { label: lockLabelBare ?? lockLabel ?? '' })); }}
               >
                 <Lock size={11} strokeWidth={2.5} />
-                <span>{t('解锁')}</span>
+                <span>{t('解锁全部内容')}</span>
               </div>
             </div>
           ) : (
@@ -882,7 +882,7 @@ export function PostContent({
               onClick={(e) => { e.stopPropagation(); onUnlockOverride ? onUnlockOverride() : openLink(post.id, 'unlock'); }}
             >
               <Lock size={11} strokeWidth={2.5} />
-              <span>{lockLabel ?? t('解锁')}</span>
+              <span>{lockLabel ?? t('解锁全部内容')}</span>
             </div>
           )}
         </>
