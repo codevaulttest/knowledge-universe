@@ -626,18 +626,26 @@ export function MediaPlaceholder({
     );
   }
   if (kind === 'video') {
+    const locked = visiblePercent < 100;
     return (
       <div
-        className={`media media-video${onVideoClick ? ' media-video--clickable' : ''}`}
+        className={`media media-video${onVideoClick ? ' media-video--clickable' : ''}${locked ? ' media-video--locked' : ''}`}
         data-layer="video-cover"
         onClick={onVideoClick ? (e) => { e.stopPropagation(); onVideoClick(); } : undefined}
         role={onVideoClick ? 'button' : undefined}
         tabIndex={onVideoClick ? 0 : undefined}
-        aria-label={t('播放视频')}
+        aria-label={locked ? t('点击解锁播放视频') : t('播放视频')}
         onKeyDown={onVideoClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onVideoClick(); } : undefined}
       >
         <div className="video-text"><span>{t('RAG 技术')}</span><span>{t('原理与实践')}</span><i /></div>
-        <div className="play"><span /></div>
+        {locked ? (
+          <div className="img-lock-badge img-lock-badge--video">
+            <Lock size={13} strokeWidth={2.5} aria-hidden="true" />
+            <span>{lockActionLabel ?? t('解锁')}</span>
+          </div>
+        ) : (
+          <div className="play"><span /></div>
+        )}
         <span className="duration">18:42</span>
       </div>
     );

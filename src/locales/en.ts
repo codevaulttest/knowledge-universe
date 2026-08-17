@@ -261,6 +261,7 @@ export const en: Record<string, string> = {
   '长文': 'Article',
   '阅读全文': 'Read article',
   '播放视频': 'Play video',
+  '点击解锁播放视频': 'Unlock to play video',
   'RAG 技术': 'RAG Technology',
   '原理与实践': 'Theory & Practice',
   '点击解锁查看图片': 'Unlock to view image',

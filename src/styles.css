@@ -1207,6 +1207,18 @@ button {
   background: rgba(0, 0, 0, 0.48); font: var(--ku-text-duration);
 }
 
+/* 频道会员门槛锁定的视频封面：半透明遮罩保留首帧画面可见（仅调暗），解锁提示用不透明徽标叠在最上层保证可读 */
+.media-video--locked::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--ku-lightbox-lock-overlay);
+}
+.media-video--locked .img-lock-badge {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2;
+}
+
 /* ── GeminiNodeBadge（全宽信息条）── */
 .gemini-badge {
   display: flex;
