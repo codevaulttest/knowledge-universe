@@ -54,6 +54,7 @@ export type Post = {
   imageAspect?: 'landscape' | 'tall'; // 单图构图：默认横图，'tall' 为瘦长竖图
   imageRatio?: number; // 封面/单图真实宽高比（宽÷高）；渲染时夹到 [3:4, 16:9] 定画框。缺省回退 imageAspect
   images?: string[]; // 各画框真实图源（按序对应 1..imageCount）；缺省回退 index 映射的 p1..p9 占位图
+  imageRatios?: number[]; // 多图时各张真实宽高比（按序对应 images）；缺省回退封面 imageRatio（旧行为：全部等宽）
   visiblePercent: number;
   isNode: boolean;
   stakeTier: StakeTier;

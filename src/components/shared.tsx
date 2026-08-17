@@ -376,13 +376,23 @@ export function PageHeader({ title, onBack, action, className }: { title?: React
 }
 
 // ── MediaCarousel（多图左右滑，替代宫格）──────────────────────────
-// 规则见 docs/multi-image-carousel-spec.md：封面画框固定、其余张 cover 进同画框；
-// 画框比例统一规则：真实宽高比夹到 [3:4, 16:9]。宽于 16:9 取 16:9、瘦于 3:4 取 3:4、其余取真实值。
+// 规则：封面决定画框高 H；其余每张按自己的真实比例在 H 下算出宽度，
+// 再夹到 [H×FRAME_MIN, min(列宽, H×FRAME_MAX)]——复用与单图同一组比例上下限，不额外开 token。
 // 单图与多图 carousel 共用同一函数，保证同一套裁切/定框逻辑。
 const FRAME_MIN = 9 / 21;  // 竖图上限（最高、最瘦的框）：与 21:9 对称，两个方向都到 21:9，好记
 const FRAME_MAX = 21 / 9;  // 横图上限（最扁的框）：放到 21:9，全景等宽图零裁切；更宽（如 1:16 横条）才裁
 export function clampFrameRatio(ratio: number): number {
   return Math.min(FRAME_MAX, Math.max(FRAME_MIN, ratio));
+}
+
+// 非封面张的宽度百分比（相对画框列宽）：自身比例 ÷ 封面画框比例 = 高固定时的自然宽度占比，
+// 再夹到 [FRAME_MIN/frameRatio, min(88%, FRAME_MAX/frameRatio)]——88% 与封面同宽、与 --ku-media-carousel-slide-width 保持一致。
+const MAX_SLIDE_PCT = 88;
+function nonCoverSlideWidthPct(ratio: number, frameRatio: number): number {
+  const natural = (ratio / frameRatio) * 100;
+  const minPct = (FRAME_MIN / frameRatio) * 100;
+  const maxPct = Math.min(MAX_SLIDE_PCT, (FRAME_MAX / frameRatio) * 100);
+  return Math.min(maxPct, Math.max(minPct, natural));
 }
 
 // 方向 C：竖图（画框比例 < 1）不满宽——按最大高度反推宽度（宽 = 最大高 × 比例），
@@ -399,12 +409,14 @@ function MediaCarousel({
   visibleImgCount,
   frameRatio,
   images,
+  imageRatios,
   onImageClick,
 }: {
   imageCount: number;
   visibleImgCount: number;
   frameRatio: number;
   images?: string[];
+  imageRatios?: number[];
   onImageClick?: (idx: number) => void;
 }) {
   const { t } = useApp();
@@ -413,17 +425,26 @@ function MediaCarousel({
   const [idx, setIdx] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   // 拖拽临时态放 ref，避免每帧 setState 重渲染；moved 用于区分「滑动」与「点击看大图」
-  const drag = useRef({ x0: 0, w: 0, active: false, moved: false });
+  const drag = useRef({ x0: 0, offset: 0, active: false, moved: false });
   const GAP = 8; // 与 --ku-media-carousel-gap 保持一致（JS 需用数值计算位移）
 
-  const slideWidth = () =>
-    (trackRef.current?.children[0] as HTMLElement | undefined)?.getBoundingClientRect().width ?? 0;
+  // 各张宽度不再统一（封面按封面自身比例定宽，其余张各自算），滑动位移改累加各张实际渲染宽度
+  const cumulativeOffset = (i: number) => {
+    const tr = trackRef.current;
+    if (!tr) return 0;
+    let total = 0;
+    for (let k = 0; k < i; k++) {
+      const el = tr.children[k] as HTMLElement | undefined;
+      total += (el?.getBoundingClientRect().width ?? 0) + GAP;
+    }
+    return total;
+  };
 
   const settle = (i: number) => {
     const tr = trackRef.current;
     if (!tr) return;
     tr.style.transition = '';
-    tr.style.transform = `translateX(${-(i * (slideWidth() + GAP))}px)`;
+    tr.style.transform = `translateX(${-cumulativeOffset(i)}px)`;
   };
 
   useEffect(() => { settle(idx); });
@@ -447,7 +468,7 @@ function MediaCarousel({
   const handleDown = (e: React.PointerEvent) => {
     const tr = trackRef.current;
     if (!tr) return;
-    drag.current = { x0: e.clientX, w: slideWidth(), active: true, moved: false };
+    drag.current = { x0: e.clientX, offset: cumulativeOffset(idx), active: true, moved: false };
     tr.style.transition = 'none';
     window.addEventListener('pointermove', handleMove);
     window.addEventListener('pointerup', handleEnd);
@@ -458,7 +479,7 @@ function MediaCarousel({
     if (!d.active) return;
     const dx = x - d.x0;
     if (Math.abs(dx) > 4) d.moved = true;
-    if (trackRef.current) trackRef.current.style.transform = `translateX(${-(idx * (d.w + GAP)) + dx}px)`;
+    if (trackRef.current) trackRef.current.style.transform = `translateX(${-d.offset + dx}px)`;
   };
   const onUp = (x: number) => {
     const d = drag.current;
@@ -483,11 +504,16 @@ function MediaCarousel({
         <div className="media-carousel-track" ref={trackRef}>
           {Array.from({ length: imageCount }, (_, i) => {
             const locked = i >= visibleImgCount;
+            // 封面（第 1 张）固定与画框同宽（默认 88%，走 CSS token）；其余张按自身真实比例算宽度，无数据时回退封面比例（等宽，旧行为）
+            const widthPct = i === 0 ? undefined : nonCoverSlideWidthPct(imageRatios?.[i] ?? frameRatio, frameRatio);
             return (
               <div
                 key={i}
                 className={`media-carousel-slide${locked ? ' media-carousel-slide--locked' : ''}${clickable ? ' media-carousel-slide--clickable' : ''}`}
-                style={images?.[i] ? { backgroundImage: `url('${images[i]}')` } : undefined}
+                style={{
+                  ...(images?.[i] ? { backgroundImage: `url('${images[i]}')` } : {}),
+                  ...(widthPct !== undefined ? { flex: `0 0 ${widthPct}%` } : {}),
+                }}
                 onClick={clickable ? (e) => { e.stopPropagation(); if (!drag.current.moved) onImageClick!(i); } : undefined}
                 role={clickable ? 'button' : undefined}
                 tabIndex={clickable ? 0 : undefined}
@@ -529,6 +555,7 @@ export function MediaPlaceholder({
   imageAspect = 'landscape',
   imageRatio,
   images,
+  imageRatios,
   visibleImgCount = 3,
   visiblePercent = 100,
   onImageClick,
@@ -541,6 +568,7 @@ export function MediaPlaceholder({
   imageAspect?: 'landscape' | 'tall';
   imageRatio?: number;
   images?: string[];
+  imageRatios?: number[];
   visibleImgCount?: number;
   visiblePercent?: number;
   onImageClick?: (idx: number) => void;
@@ -618,6 +646,7 @@ export function MediaPlaceholder({
         visibleImgCount={visibleImgCount}
         frameRatio={frameRatio}
         images={images}
+        imageRatios={imageRatios}
         onImageClick={onImageClick}
       />
     );

@@ -378,6 +378,7 @@ export function PostCard({
             imageAspect={post.imageAspect}
             imageRatio={post.imageRatio}
             images={post.images}
+            imageRatios={post.imageRatios}
             visibleImgCount={visibleImgCount}
             visiblePercent={channelLocked ? 0 : post.visiblePercent}
             onImageClick={post.kind === 'image' ? (idx) => {
