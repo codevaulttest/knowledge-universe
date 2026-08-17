@@ -9,6 +9,7 @@ archive
 CLAUDE.md
 AGENTS.md
 .claude/
+.agents/
 raw_context/
 design-qa.md
 docs/
