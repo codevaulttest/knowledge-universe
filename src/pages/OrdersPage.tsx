@@ -33,6 +33,17 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
     setShipping(null); setCarrier(''); setTrackingNo('');
   };
 
+  const formatOrderTime = (ts: number) => {
+    const diff = Date.now() - ts;
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return t('刚刚');
+    if (min < 60) return `${min}${t('分钟前')}`;
+    const hours = Math.floor(min / 60);
+    if (hours < 24) return `${hours}${t('小时前')}`;
+    const days = Math.floor(hours / 24);
+    return `${days}${t('天前')}`;
+  };
+
   return (
     <div className="page">
       <PageHeader title={t('我的订单')} onBack={canGoBack ? goBack : undefined} />
@@ -71,7 +82,7 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
 
                 <div className="order-card-meta">
                   <span>{role === 'buyer' ? t('卖家：{name}', { name: o.sellerName }) : t('买家：{name}', { name: o.buyerName })}</span>
-                  <span>× {o.quantity}</span>
+                  <span>{formatOrderTime(o.createdAt)} · × {o.quantity}</span>
                 </div>
 
                 <div className="order-card-price">

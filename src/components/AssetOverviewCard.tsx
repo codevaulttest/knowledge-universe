@@ -121,7 +121,7 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
                 <div className="asset-overview-tomorrow-stats-text">
                   <span className={`asset-overview-post-status${posted ? ' asset-overview-post-status--done' : ''}`}>
                     {posted ? <Check size={14} strokeWidth={2.6} /> : <Circle size={14} strokeWidth={1.9} />}
-                    {posted ? t('今日已发帖') : t('尚未发帖')}
+                    {posted ? t('今天已发帖') : t('尚未发帖')}
                   </span>
 
                   <span className={`asset-overview-post-status${isFull ? ' asset-overview-post-status--done' : ''}`}>
@@ -178,7 +178,7 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
                 {t('需在北京时间当天 22:00 前点击"领取空投"，逾期未领取则本轮空投作废。')}
               </p>
               <p className="pb-info-sheet-para">
-                {t('可领取比例取决于昨日互动帖任务完成度，完成度越高可领取比例越高。')}
+                {t('可领取额度取决于昨日互动帖任务完成度，完成度越高可领取额度越高。')}
               </p>
               <button
                 type="button"

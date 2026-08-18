@@ -117,10 +117,10 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             <MediaPlaceholder
               kind={post.kind}
               articleHasCover={post.articleHasCover}
-              imageCount={post.kind === 'image' ? 1 : post.imageCount}
+              imageCount={post.imageCount}
               imageAspect={post.imageAspect}
               visibleImgCount={shopCoverVisibleImgCount(post)}
-              onImageClick={post.kind === 'image' ? () => openImageLightbox(post, 0, shopCoverVisibleImgCount(post)) : undefined}
+              onImageClick={post.kind === 'image' ? (idx) => openImageLightbox(post, idx, shopCoverVisibleImgCount(post)) : undefined}
             />
           )}
         </div>

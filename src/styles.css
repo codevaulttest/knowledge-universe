@@ -2046,28 +2046,6 @@ button {
   flex-direction: column;
   gap: 16px;
 }
-/* Auto-detected type chip */
-.compose-type-row { display: flex; align-items: center; gap: 8px; }
-.compose-type-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 13px;
-  border-radius: 14px;
-  font: 400 13px/1 var(--ku-font-family);
-  background: var(--ku-color-bg-card);
-  border: 1px solid var(--ku-color-border);
-  color: var(--ku-color-text-secondary);
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-.compose-type-chip--active {
-  background: var(--ku-color-primary-alpha-06);
-  border-color: var(--ku-color-primary);
-  color: var(--ku-color-primary);
-}
-.compose-type-chip--btn { cursor: pointer; }
-.compose-type-chip--btn:hover { border-color: var(--ku-color-primary); color: var(--ku-color-primary); }
-.compose-type-chip--dim { opacity: 0.35; pointer-events: none; }
 /* Article title */
 .compose-title-input {
   width: 100%;
@@ -8368,8 +8346,8 @@ button {
 }
 
 .asset-overview-tomorrow-max {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--ku-color-text-secondary);
 }
 
@@ -8404,7 +8382,7 @@ button {
   font-family: var(--ku-font-mono);
   font-size: 14px;
   font-weight: 700;
-  color: var(--ku-color-text-primary);
+  color: var(--ku-color-primary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -8413,8 +8391,8 @@ button {
   align-items: center;
   flex-shrink: 0;
   gap: 5px;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--ku-color-text-secondary);
   white-space: nowrap;
 }
@@ -8434,12 +8412,12 @@ button {
 
 .asset-overview-go-btn {
   flex-shrink: 0;
-  padding: var(--ku-planet2-space-xxs) var(--ku-planet2-space-sm);
+  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-base);
   border: none;
   border-radius: var(--ku-planet2-radius-pill);
   background: var(--ku-color-primary);
   color: var(--ku-color-on-primary);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--ku-planet2-shadow-card);
@@ -10911,10 +10889,11 @@ html[lang="zh-TW"] .planet-hero-title {
 .task-progress-marker {
   position: absolute;
   top: -2px;
-  width: 2px;
+  width: 3px;
   height: 12px;
-  background: var(--ku-color-bg-phone);
-  border-left: 1px dashed var(--ku-color-border-card);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-primary-dark);
+  transform: translateX(-1.5px);
 }
 
 .task-milestone-row {

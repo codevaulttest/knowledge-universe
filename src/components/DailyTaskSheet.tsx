@@ -164,7 +164,7 @@ function DailyTaskRulesSheet({ onClose }: { onClose: () => void }) {
             {t('每天对任意 {total} 篇帖子完成点赞/评论/收藏/踩任一操作即视为完成 1 篇（同一帖子多次操作只算一次）。', { total: TASK_INTERACTION_POOL_SIZE })}
           </p>
           <p className="pb-info-sheet-para">
-            <strong className="pb-info-sheet-label">{t('次日空投比例：')}</strong>
+            <strong className="pb-info-sheet-label">{t('次日空投额度：')}</strong>
             {t('按互动帖数量分档换算，次日生效：{t1} 篇 {r1}%；{t2} 篇 {r2}%；{total} 篇 100%。', {
               t1: TASK_INTERACTION_TIERS[0].count,
               r1: TASK_INTERACTION_TIERS[0].ratio,
@@ -231,7 +231,7 @@ function DailyTaskHistorySheet({
           </span>
           <span className="task-calendar-legend-item">
             <span className="task-calendar-legend-swatch" aria-hidden="true">%</span>
-            {t('次日空投领取比例')}
+            {t('次日空投额度')}
           </span>
           <span className="task-calendar-legend-item">
             <span className="task-calendar-legend-swatch">+</span>

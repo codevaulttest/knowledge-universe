@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type ChangeEvent, type CSSProperties } from 'react';
-import { Camera, Check, ChevronRight, Eye, FileText, Image, Info, Plus, Radio, Save, Search, Send, ShoppingCart, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
+import { Camera, Check, ChevronRight, Eye, FileText, Info, Plus, Radio, Save, Search, Send, ShoppingCart, Trash2, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { ImageWithFallback } from '../components/ImageWithFallback';
@@ -104,7 +104,7 @@ export function ComposePage({
 
   const canPublish = (articleMode
     ? articleTitle.trim().length > 0 && articleBodyHasContent
-    : text.trim().length > 0 && !isOverLimit) && shopValid;
+    : (text.trim().length > 0 || imgCount > 0 || hasVideo) && !isOverLimit) && shopValid;
 
   const canSaveDraft = !isEditMode && (
     articleMode
@@ -268,11 +268,6 @@ export function ComposePage({
     setArticleMode(v => !v);
   };
 
-  const isTyped = kind !== 'text';
-  const kindLabel: Record<Post['kind'], string> = {
-    text: t('纯文字'), image: t('图文'), video: t('视频'), article: t('文章'),
-  };
-
   const blockDefs = [
     { tag: 'p',  label: t('正文') },
     { tag: 'h1', label: 'H1' },
@@ -346,20 +341,6 @@ export function ComposePage({
       </div>
 
       <div className="compose-modal-body compose-body">
-        {/* 类型标签行：编辑模式隐藏 */}
-          {!isEditMode && (!draft || articleMode) && (
-            <div className="compose-type-row">
-              {!articleMode && isTyped && (
-              <span className="compose-type-chip compose-type-chip--active">
-                {kind === 'image' && <Image size={11} strokeWidth={2} aria-hidden />}
-                {kind === 'video' && <Video size={11} strokeWidth={2} aria-hidden />}
-                {kindLabel[kind]}
-              </span>
-            )}
-            {/* 长文类型暂未开放 */}
-          </div>
-        )}
-
         {/* —— 长文模式 —— */}
         {articleMode && !isEditMode && (
           <>
