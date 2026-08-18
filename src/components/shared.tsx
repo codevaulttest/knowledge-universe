@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, FileText, Gem, Link, Lock, Radio, RotateCcw, Settings, Star, Wallet } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, FileText, Gem, ImageOff, Link, Lock, Radio, RotateCcw, Settings, Star, Wallet } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { isVerifiedAuthor } from '../mockData';
 import type { Channel, Post } from '../types';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
+import { ImageWithFallback } from './ImageWithFallback';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
@@ -75,7 +76,15 @@ export function AuthorName({
   return <span className={rowClass}>{content}</span>;
 }
 
-export function Avatar({ index, seed, onClick }: { index: number; seed?: string; onClick?: (e: React.MouseEvent) => void }) {
+export function Avatar({ index, seed, avatarUrl, onClick }: { index: number; seed?: string; avatarUrl?: string; onClick?: (e: React.MouseEvent) => void }) {
+  const generated = (
+    <BoringAvatar
+      size="100%"
+      name={seed ?? String(index)}
+      variant="beam"
+      colors={AVATAR_COLORS}
+    />
+  );
   return (
     <div
       className="avatar"
@@ -83,12 +92,10 @@ export function Avatar({ index, seed, onClick }: { index: number; seed?: string;
       onClick={onClick}
       style={onClick ? { cursor: 'pointer' } : undefined}
     >
-      <BoringAvatar
-        size="100%"
-        name={seed ?? String(index)}
-        variant="beam"
-        colors={AVATAR_COLORS}
-      />
+      {avatarUrl
+        ? <ImageWithFallback src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} fallback={generated} />
+        : generated
+      }
     </div>
   );
 }
@@ -373,6 +380,20 @@ export function PageHeader({ title, onBack, action, className }: { title?: React
       {action && <div className="page-header-action">{action}</div>}
     </div>
   );
+}
+
+// 探测图片是否加载失败（用于封面图等只能用 CSS backgroundImage 渲染、无法直接用 <img onError> 的场景）
+function useImageBroken(src?: string): boolean {
+  const [broken, setBroken] = useState(false);
+  useEffect(() => {
+    if (!src) { setBroken(false); return; }
+    setBroken(false);
+    const img = new window.Image();
+    img.onload = () => setBroken(false);
+    img.onerror = () => setBroken(true);
+    img.src = src;
+  }, [src]);
+  return broken;
 }
 
 // ── MediaCarousel（多图左右滑，替代宫格）──────────────────────────
@@ -663,15 +684,18 @@ export function MediaPlaceholder({
   const lockedCount = Math.max(0, imageCount - visibleImgCount);
   // 竖图（画框比例 < 1）换竖构图插画资产；用独立类只换背景图，不带旧 tall 的窄宽约束
   const tallArt = frameRatio < 1;
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- imageCount 恒为 1，非条件调用
+  const broken = useImageBroken(images?.[0]);
   return (
     <div className={`img-grid img-grid--1${tallArt ? ' img-grid--1-tall' : ''}${lockedCount > 0 ? ' img-grid--has-locked' : ''}`} data-layer="image-cover" style={{ aspectRatio: String(frameRatio), width: frameCapWidth(frameRatio) }}>
       {Array.from({ length: imageCount }, (_, i) => {
         const locked = i >= visibleImgCount;
+        const cellBroken = i === 0 && broken;
         return (
           <div
             key={i}
             className={`img-grid-cell${clickable ? ' img-grid-cell--clickable' : ''}${locked ? ' img-grid-cell--locked' : ''}`}
-            style={!locked && images?.[i] ? { backgroundImage: `url('${images[i]}')` } : undefined}
+            style={!locked && images?.[i] && !cellBroken ? { backgroundImage: `url('${images[i]}')` } : undefined}
             onClick={clickable ? (e) => { e.stopPropagation(); onImageClick!(i); } : undefined}
             role={clickable ? 'button' : undefined}
             tabIndex={clickable ? 0 : undefined}
@@ -687,6 +711,11 @@ export function MediaPlaceholder({
                     <span>{lockActionLabel ?? t('解锁全部内容')}</span>
                   </div>
                 )}
+              </div>
+            )}
+            {!locked && cellBroken && (
+              <div className="image-fallback" aria-hidden="true">
+                <ImageOff size={22} strokeWidth={1.8} />
               </div>
             )}
           </div>

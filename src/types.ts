@@ -45,6 +45,7 @@ export type ShopOrder = {
 export type Post = {
   id: string;
   author: string;
+  avatarUrl?: string; // 作者头像图源；未设置或加载失败=回退按 seed 生成的头像
   time: string;
   title: string;
   articlePreview?: string;

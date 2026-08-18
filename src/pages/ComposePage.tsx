@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, type ChangeEvent, type CSSPro
 import { Camera, Check, ChevronRight, Eye, FileText, Image, Info, Plus, Radio, Save, Search, Send, ShoppingCart, Trash2, Video, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
+import { ImageWithFallback } from '../components/ImageWithFallback';
 import { useChannelListSearch } from '../components/channelSearch';
 import { CURRENT_USER } from '../mockData';
 import type { Draft, Post, ShopInfo, StakeTier } from '../types';
@@ -573,7 +574,7 @@ export function ComposePage({
               <div className="compose-video-thumb">
                 {draft?.thumbnailUrl ? (
                   <div className="compose-video-cover">
-                    <img src={draft.thumbnailUrl} alt="" className="compose-video-cover-img" />
+                    <ImageWithFallback src={draft.thumbnailUrl} alt="" className="compose-video-cover-img" />
                     <div className="compose-video-cover-play"><span /></div>
                   </div>
                 ) : (

@@ -129,9 +129,9 @@
     "STLiti", "Liti SC", "华文隶书", "Noto Serif SC", serif;
 
   /* ── 字号 / 行高 / 字重组合 ── */
-  --ku-text-author-name:       700 15px/19px var(--ku-font-family);  /* 作者姓名 */
+  --ku-text-author-name:       700 16px/20px var(--ku-font-family);  /* 作者姓名 */
   --ku-text-tab:               600 15px/1 var(--ku-font-family);     /* Tab 标签 */
-  --ku-text-post-body:         400 15px/1.62 var(--ku-font-family);  /* 帖子正文 — iOS 标准正文尺寸 */
+  --ku-text-post-body:         400 16px/1.62 var(--ku-font-family);  /* 帖子正文 — iOS 标准正文尺寸 */
   --ku-text-node-label:        600 12px/1 var(--ku-font-family);     /* 节点 cell label */
   --ku-text-node-value:        400 13px/16px var(--ku-font-family);  /* 节点 cell value */
   --ku-text-node-code:         inherit;                               /* 节点编号（继承主色） */
@@ -140,9 +140,11 @@
   --ku-text-node-head:         600 12px/1 var(--ku-font-family);     /* 节点卡头部 */
   --ku-text-action:            400 13px/1 var(--ku-font-family);     /* 操作栏数字 */
   --ku-text-action-cta:        600 12px/1 var(--ku-font-family);    /* 操作栏 CTA 按钮文字 */
+  --ku-text-action-cta-lg:     600 13px/1 var(--ku-font-family);    /* 操作栏 CTA 按钮文字 — 大号（Feed 关注按钮 / 热力赞助行） */
   --ku-text-badge:             600 12px/1 var(--ku-font-family);     /* 徽章 */
   --ku-text-body-sm:           400 14px/1.5 var(--ku-font-family);   /* 小号正文 / 作者名 */
   --ku-text-meta:              400 12px/1.4 var(--ku-font-family);  /* 时间戳、辅助 */
+  --ku-text-meta-lg:           400 13px/1.4 var(--ku-font-family);  /* 时间戳、辅助 — 大号（帖子作者行 / 转发条） */
   --ku-text-duration:          400 12px/15px var(--ku-font-family);  /* 视频时长 */
   --ku-text-reward-chip:       400 12px/1 var(--ku-font-family);     /* 收益芯片 */
   --ku-text-caption:           400 12px/1 var(--ku-font-family);     /* 最小辅助文字 */
@@ -271,7 +273,6 @@
   --ku-modal-compact-width:    280px;
   --ku-modal-screen-padding:   24px;
   --ku-modal-content-padding:  20px;
-  --ku-checkin-modal-padding-top: 24px;
   --ku-modal-max-height:       calc(100vh - 48px);
   --ku-lightbox-lock-icon-size: 28px;
   --ku-lightbox-lock-gap:      12px;

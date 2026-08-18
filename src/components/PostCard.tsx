@@ -280,7 +280,7 @@ export function PostCard({
           onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: repostedBy.name }); }}
         >
           <span className="repost-banner-avatar"><Avatar index={repostedBy.avatarIdx} seed={repostedBy.name === CURRENT_USER ? userProfile.avatarSeed : repostedBy.name} /></span>
-          <Repeat2 size={13} strokeWidth={2.4} className="repost-banner-icon" />
+          <Repeat2 size={14} strokeWidth={2.4} className="repost-banner-icon" />
           <span className="repost-banner-text">
             {repostedBy.name === CURRENT_USER
               ? t('你转发了')
@@ -296,7 +296,7 @@ export function PostCard({
       ) : (
       <>
       <div className="author-row">
-        <Avatar index={index} seed={avatarSeed} onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} />
+        <Avatar index={index} seed={avatarSeed} avatarUrl={post.avatarUrl} onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} />
         <div className="author-meta" onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') navigate({ page: 'P6', authorName: post.author }); }}>
           <span className="post-author-name-row">
             <AuthorName name={displayName} as="h2" />
@@ -421,17 +421,17 @@ export function PostCard({
           leftContent={(
             <>
               <span className="post-heat">
-                <Flame size={16} strokeWidth={2.25} />
+                <Flame size={17} strokeWidth={2.25} />
                 {formatCount(heat, language)}
               </span>
               {isOwn ? (
                 <span className="post-heat-tip-btn post-heat-tip-btn--received">
-                  <HandCoins size={13} strokeWidth={2.25} />
+                  <HandCoins size={14} strokeWidth={2.25} />
                   {t('{tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
                 </span>
               ) : (
                 <span className="post-heat-tip-btn">
-                  <HandCoins size={13} strokeWidth={2.25} />
+                  <HandCoins size={14} strokeWidth={2.25} />
                   {t('打赏')}
                 </span>
               )}

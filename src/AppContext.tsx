@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
-import type { TaskDaySnapshot } from './taskConfig';
+import type { TaskCalendarDay, TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
   navigate: (route: Route) => void;
@@ -52,8 +52,9 @@ export type AppContextValue = {
   activityGroups: ActivityGroup[];
   unreadActivityCount: number;
   markAllRead: () => void;
-  openCheckIn: () => void;
-  checkInClaimable: boolean;
+  openDailyTask: () => void;
+  /** 今天是否还有可领取/待达成的每日任务奖励，供入口红点展示 */
+  dailyTaskAlert: boolean;
   recentSearches: string[];
   saveRecentSearch: (query: string) => void;
   removeRecentSearch: (query: string) => void;
@@ -113,6 +114,8 @@ export type AppContextValue = {
   taskSnapshotYesterday: TaskDaySnapshot;
   /** 每完成 5 篇互动帖 +1，供任务面板监听触发一次性庆祝动效 */
   taskCelebrateSignal: number;
+  /** 当前自然月的日历格子（含首尾灰显的相邻月填充天），供历史日历以常见日历样式展示 */
+  getDailyTaskCalendar: () => TaskCalendarDay[];
   // 开发工具：重置/模拟今日任务，便于演示
   resetDemoTasks: () => void;
   simulateDemoTaskInteractions: (count: number) => void;

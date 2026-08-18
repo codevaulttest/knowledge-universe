@@ -8,6 +8,7 @@ import { PostCard } from '../components/PostCard';
 import { DevPanel } from '../components/DevPanel';
 import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelCard, ChannelMemberBadge, GenesisBadge, PageHeader } from '../components/shared';
+import { ImageWithFallback } from '../components/ImageWithFallback';
 import { useChannelListSearch } from '../components/channelSearch';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
@@ -144,10 +145,12 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               onClick={() => setShowEditProfile(true)}
               aria-label={t('编辑资料')}
             >
-              {userProfile.avatarUrl
-                ? <img src={userProfile.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                : <BoringAvatar size="100%" name={userProfile.avatarSeed} variant="beam" colors={AVATAR_COLORS} />
-              }
+              <ImageWithFallback
+                src={userProfile.avatarUrl}
+                alt=""
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                fallback={<BoringAvatar size="100%" name={userProfile.avatarSeed} variant="beam" colors={AVATAR_COLORS} />}
+              />
             </button>
           ) : (
             <Avatar index={firstPost ? ALL_POSTS.indexOf(firstPost) % 3 : 0} seed={authorName} />
@@ -557,10 +560,12 @@ function EditProfileModal({
               aria-label={t('更换头像')}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
             >
-              {avatarUrl
-                ? <img src={avatarUrl} alt="" className="edit-profile-avatar-img" />
-                : <BoringAvatar size="100%" name={userProfile.avatarSeed} variant="beam" colors={AVATAR_COLORS} />
-              }
+              <ImageWithFallback
+                src={avatarUrl}
+                alt=""
+                className="edit-profile-avatar-img"
+                fallback={<BoringAvatar size="100%" name={userProfile.avatarSeed} variant="beam" colors={AVATAR_COLORS} />}
+              />
               <div className="edit-profile-avatar-badge">
                 <Camera size={12} strokeWidth={2.5} />
               </div>
@@ -1009,7 +1014,7 @@ function DraftItem({ draft, onEdit, onDelete }: { draft: Draft; onEdit: () => vo
     <div className="draft-item" onClick={onEdit}>
       {hasThumbnail && (
         <div className="draft-item-thumb">
-          <img src={draft.thumbnailUrl} alt="" className="draft-item-thumb-img" />
+          <ImageWithFallback src={draft.thumbnailUrl} alt="" className="draft-item-thumb-img" />
         </div>
       )}
       <div className="draft-item-body">

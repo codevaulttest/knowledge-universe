@@ -182,7 +182,7 @@ function ChannelDiscoverFeed() {
 }
 
 export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 1 | 2 | 3) => void }) {
-  const { followedAuthors, navigate, unreadActivityCount, openCheckIn, checkInClaimable, t, walletConnected, connectWallet, requireWallet, homeFeedRefreshNonce, showToast } = useApp();
+  const { followedAuthors, navigate, unreadActivityCount, openDailyTask, dailyTaskAlert, t, walletConnected, connectWallet, requireWallet, homeFeedRefreshNonce, showToast } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevTabRef = useRef(tab);
   const lastRefreshNonce = useRef(homeFeedRefreshNonce);
@@ -225,12 +225,12 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
           <button
             type="button"
             className="feed-bell-btn feed-checkin-btn"
-            onClick={openCheckIn}
-            aria-label={t('每日签到')}
+            onClick={openDailyTask}
+            aria-label={t('每日任务')}
           >
             <CalendarCheck size={22} strokeWidth={2} />
-            <span className="feed-checkin-label">{t('签到')}</span>
-            {checkInClaimable && <span className="feed-bell-dot feed-bell-dot--plain" aria-hidden="true" />}
+            <span className="feed-checkin-label">{t('任务')}</span>
+            {dailyTaskAlert && <span className="feed-bell-dot feed-bell-dot--plain" aria-hidden="true" />}
           </button>
         </div>
         <nav className="tabs" data-layer="top-tabs">

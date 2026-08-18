@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
-import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, HandCoins, Gift, CalendarCheck, Flame, Plus, Save, Wallet } from 'lucide-react';
+import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, HandCoins, Gift, Plus, Save, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
@@ -11,7 +11,6 @@ import { formatCount } from '../formatCount';
 import type { Channel, ChannelTier, InteractionAction, PayCtx, Post, PostAction, SupTransactionReason } from '../types';
 import { formatSuperAmount, formatSupAmount, stakeTierDescription, SUPER_BY_TIER, SUP_COST_BY_TIER } from '../stakeConfig';
 import type { StakeTier } from '../types';
-import { CHECK_IN_MAX_DAILY, CHECK_IN_REWARD, type ClaimPreview } from '../checkInConfig';
 
 
 // Lightbox photo backgrounds — local SVG illustrations, same order as img-grid-cell nth-child
@@ -1680,166 +1679,6 @@ export function TipModal({
             ? t('确认打赏 {selected} PB', { selected: amount })
             : t('请选择数额')}
         </button>
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// CheckInModal — 每日签到领取空投
-// ═══════════════════════════════════════════════════════════════
-
-export function CheckInModal({
-  preview,
-  onClaim,
-  onClose,
-}: {
-  preview: ClaimPreview;
-  onClaim: () => void;
-  onClose: () => void;
-}) {
-  const { t, language, walletConnected, connectWallet } = useApp();
-  const zh = isChinese(language);
-  const [status, setStatus] = useState<'idle' | 'done'>('idle');
-  // 签到本身就是"连接钱包"的入口按钮，点击直接连接（不弹二次确认）；连接成功后自动补上领取
-  const [pendingGuestClaim, setPendingGuestClaim] = useState(false);
-
-  const rewardName = zh ? CHECK_IN_REWARD.name.zh : CHECK_IN_REWARD.name.en;
-  const symbol = zh ? CHECK_IN_REWARD.symbol.zh : CHECK_IN_REWARD.symbol.en;
-
-  // 今日已签到（从常驻入口打开）：仅展示连签进度，不再可领取；游客态没有身份，不适用这个状态
-  const alreadyClaimed = walletConnected && !preview.shouldShow;
-  const showAsDone = status === 'done' || alreadyClaimed;
-
-  // 游客态不知道真实连签天数，网格固定停在第 1 天作为福利预览
-  const displayDay = walletConnected ? Math.min(preview.claimDay, CHECK_IN_MAX_DAILY) : 1;
-  const streakCount = preview.claimDay;
-  const afterBalance = Math.max(0, preview.balance + preview.reward - preview.penalty);
-  const shownBalance = status === 'done' ? afterBalance : preview.balance;
-
-  const handleClaim = () => {
-    if (status !== 'idle') return;
-    if (!walletConnected) {
-      setPendingGuestClaim(true);
-      connectWallet();
-      return;
-    }
-    onClaim();
-    setStatus('done');
-    setTimeout(onClose, 1500);
-  };
-
-  useEffect(() => {
-    if (pendingGuestClaim && walletConnected) {
-      setPendingGuestClaim(false);
-      onClaim();
-      setStatus('done');
-      setTimeout(onClose, 1500);
-    }
-  }, [pendingGuestClaim, walletConnected, onClaim]);
-
-  return (
-    <div className="sheet-backdrop" onClick={status === 'idle' ? onClose : undefined}>
-      <div className="checkin-modal" role="dialog" aria-modal="true" aria-label={t('每日签到')} onClick={e => e.stopPropagation()}>
-        <div className="checkin-modal-header">
-          <span className="checkin-hero-title">{t('每日签到')}</span>
-          <button type="button" className="modal-close checkin-close" onClick={onClose} aria-label={t('关闭')}>
-            <X size={18} strokeWidth={2} />
-          </button>
-        </div>
-
-        <div className="checkin-hero">
-          <div className="checkin-hero-icon" aria-hidden="true">
-            <CalendarCheck size={28} strokeWidth={1.9} />
-          </div>
-          <span className="checkin-hero-sub">
-            {t('连续签到，免费领{rewardName}', { rewardName })}
-          </span>
-        </div>
-
-        {walletConnected && (
-          <div className="checkin-streak">
-            <Flame size={13} strokeWidth={2.2} aria-hidden="true" />
-            <span>
-              {showAsDone
-                ? t('已连续签到 {streakCount} 天', { streakCount })
-                : t('连续签到第 {streakCount} 天', { streakCount })}
-            </span>
-          </div>
-        )}
-
-        {walletConnected && preview.isBroken && status === 'idle' && !alreadyClaimed && (
-          <div className="checkin-break" role="status">
-            {t('签到中断了，已扣除 {penalty} {symbol}，今天起重新累积', { penalty: preview.penalty, symbol })}
-          </div>
-        )}
-
-        <div className="checkin-grid">
-          {Array.from({ length: CHECK_IN_MAX_DAILY }, (_, idx) => {
-            const day = idx + 1;
-            const claimed = day < displayDay || (showAsDone && day === displayDay);
-            const isToday = day === displayDay && !showAsDone;
-            const isCap = day === CHECK_IN_MAX_DAILY;
-            return (
-              <div
-                key={day}
-                className={`checkin-day${claimed ? ' is-claimed' : ''}${isToday ? ' is-today' : ''}`}
-              >
-                <span className="checkin-day-label">
-                  {isCap ? t('第{day}天起', { day }) : t('第{day}天', { day })}
-                </span>
-                <span className="checkin-day-token" aria-hidden="true">
-                  {claimed ? <Check size={15} strokeWidth={2.6} /> : <Gift size={14} strokeWidth={1.9} />}
-                </span>
-                <span className="checkin-day-amount">
-                  +{day}
-                  <span className="checkin-day-symbol">{symbol}</span>
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        <p className="checkin-rule">
-          {t('第 1 天领 1 {symbol}，往后每天多领 1，第 {CHECK_IN_MAX_DAILY} 天起每天稳定领 {CHECK_IN_MAX_DAILY} {symbol}；中断后会扣除 {CHECK_IN_MAX_DAILY} {symbol}，并从第 1 天重新开始。', { symbol, CHECK_IN_MAX_DAILY })}
-        </p>
-
-        {status === 'done' ? (
-          <div className="checkin-done">
-            <span className="checkin-done-icon" aria-hidden="true">
-              <Check size={20} strokeWidth={3} />
-            </span>
-            <span className="checkin-done-text">
-              {t('已领取 +{reward} {symbol}', { reward: preview.reward, symbol })}
-            </span>
-          </div>
-        ) : alreadyClaimed ? (
-          <>
-            <div className="checkin-done checkin-done--static">
-              <span className="checkin-done-icon" aria-hidden="true">
-                <Check size={20} strokeWidth={3} />
-              </span>
-              <span className="checkin-done-text">
-                {t('今日已签到，明天再来')}
-              </span>
-            </div>
-            <button type="button" className="checkin-ghost-btn" onClick={onClose}>
-              {t('知道了')}
-            </button>
-          </>
-        ) : (
-          <button type="button" className="checkin-claim-btn" onClick={handleClaim}>
-            {walletConnected
-              ? t('领取今日奖励 +{reward} {symbol}', { reward: preview.reward, symbol })
-              : t('连接钱包，领取签到奖励')}
-          </button>
-        )}
-
-        {walletConnected && (
-          <span className="checkin-balance">
-            {t('累计已领 {shownBalance} {symbol}', { shownBalance, symbol })}
-          </span>
-        )}
       </div>
     </div>
   );

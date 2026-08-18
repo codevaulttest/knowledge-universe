@@ -374,6 +374,13 @@ export function getChannelSubscribers(channel: Channel): ChannelSubscriber[] {
 }
 
 export const ALL_POSTS: Post[] = [
+  // ── 图片兜底走查（首屏可见）：封面图地址失效，验证加载失败时的兜底展示 ──
+  {
+    id: 'fallback-demo', author: '兜底走查', time: '刚刚',
+    title: '封面图地址已失效：回退到裂图占位',
+    kind: 'image', imageCount: 1, imageRatio: 16 / 9, images: ['https://broken.invalid/cover.jpg'], visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
+  },
   // ── 图片比例走查（首屏可见）：单图不同宽高比 + 多图 carousel 不同封面比例 ──
   // 规则见 docs/image-display-spec.md：画框比例 = clamp(真实比例, 9:21, 21:9)，cover 居中裁。
   // 按钮组合走查：链接=isNode、兑换=shop，覆盖 全有/只链接/只兑换/都没有 四种

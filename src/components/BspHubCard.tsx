@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ChevronRight, Crown, History } from 'lucide-react';
 import { useApp } from '../AppContext';
 import type { BspInvestment } from '../bspConfig';
-import { BspTaskSheet } from './TaskPanelSheet';
+import { DailyTaskSheet } from './DailyTaskSheet';
 
 /**
  * 巨星投流统一入口：标题栏右侧投流记录 + 主 CTA；
@@ -72,7 +72,7 @@ export function BspHubCard({
         )}
       </section>
 
-      {bspTaskOpen && <BspTaskSheet onClose={() => setBspTaskOpen(false)} />}
+      {bspTaskOpen && <DailyTaskSheet onClose={() => setBspTaskOpen(false)} hasBspRecords={hasRecords} />}
     </>
   );
 }

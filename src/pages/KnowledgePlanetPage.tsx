@@ -679,9 +679,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
             className="planet-quick-action-btn planet-quick-action-btn--channel planet-quick-action-btn--channel-solo"
             onClick={handleCreateChannel}
           >
-            <span className="planet-quick-action-icon">
-              <Radio size={20} strokeWidth={2} />
-            </span>
+            <Radio size={18} strokeWidth={2} aria-hidden />
             <span className="planet-quick-action-label">{t('抢先开通频道')}</span>
           </button>
 

@@ -3,13 +3,13 @@ import { CalendarClock, ChevronRight, Gift, Info, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT } from '../mockData';
 import { formatTokenAmount } from '../stakeConfig';
-import { InteractionTaskSheet } from './TaskPanelSheet';
-import { TASK_INTERACTION_POOL_SIZE } from '../taskConfig';
+import { DailyTaskSheet } from './DailyTaskSheet';
+import { TASK_BONUS_PB, TASK_BONUS_THRESHOLD, TASK_INTERACTION_POOL_SIZE } from '../taskConfig';
 
 export function AssetOverviewCard() {
   const { t, navigateRoot, walletConnected, airdropClaimed, claimAirdrop, taskSnapshotToday, taskSnapshotYesterday } = useApp();
   const [airdropRuleOpen, setAirdropRuleOpen] = useState(false);
-  const [interactionTaskOpen, setInteractionTaskOpen] = useState(false);
+  const [dailyTaskOpen, setDailyTaskOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -85,20 +85,20 @@ export function AssetOverviewCard() {
           </div>
         </div>
 
-        {/* 每日互动任务 */}
+        {/* 每日任务：互动进度条同时决定 10 PB 里程碑与次日空投比例 */}
         <div className="asset-overview-tomorrow">
           <button
             type="button"
             className="asset-overview-tomorrow-head"
-            onClick={() => setInteractionTaskOpen(true)}
-            aria-label={t('查看互动帖任务')}
+            onClick={() => setDailyTaskOpen(true)}
+            aria-label={t('查看每日任务')}
           >
             <span className="asset-overview-icon-col">
               <span className="asset-overview-tomorrow-icon">
                 <CalendarClock size={20} strokeWidth={1.8} />
               </span>
             </span>
-            <span className="asset-overview-tomorrow-title">{t('今日互动任务')}</span>
+            <span className="asset-overview-tomorrow-title">{t('每日任务')}</span>
             <ChevronRight size={15} strokeWidth={2} className="asset-overview-toggle-chevron" />
           </button>
 
@@ -124,9 +124,13 @@ export function AssetOverviewCard() {
 
             <div className="asset-overview-tomorrow-action">
               <span className="asset-overview-tomorrow-hint">
-                {isFull
-                  ? t('明天可领满额')
-                  : t('再完成 {remaining} 次，明天就能领满', { remaining })}
+                {taskSnapshotToday.bonusEligible
+                  ? t('已获得 +{bonus} PB，明天可领满额', { bonus: TASK_BONUS_PB })
+                  : isFull
+                    ? t('明天可领满额')
+                    : interacted >= TASK_BONUS_THRESHOLD
+                      ? t('再完成 {remaining} 次，明天就能领满', { remaining })
+                      : t('满 {threshold} 次互动当日到账 +{bonus} PB', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB })}
               </span>
               {!isFull && (
                 <button
@@ -172,10 +176,10 @@ export function AssetOverviewCard() {
               <button
                 type="button"
                 className="bsp-rules-entry"
-                onClick={() => { setAirdropRuleOpen(false); setInteractionTaskOpen(true); }}
+                onClick={() => { setAirdropRuleOpen(false); setDailyTaskOpen(true); }}
               >
                 <CalendarClock size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
-                <span className="bsp-rules-entry-text">{t('查看互动帖任务')}</span>
+                <span className="bsp-rules-entry-text">{t('查看每日任务')}</span>
                 <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
               </button>
             </div>
@@ -183,7 +187,7 @@ export function AssetOverviewCard() {
         </div>
       )}
 
-      {interactionTaskOpen && <InteractionTaskSheet onClose={() => setInteractionTaskOpen(false)} />}
+      {dailyTaskOpen && <DailyTaskSheet onClose={() => setDailyTaskOpen(false)} />}
     </>
   );
 }

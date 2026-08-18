@@ -6,11 +6,10 @@ import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPo
 import { computeUnitMerit } from './shopConfig';
 import { postHasStake, formatTokenAmount } from './stakeConfig';
 import { translate } from './locales';
-import { isChinese } from './i18n';
 import { BottomNav } from './components/BottomNav';
-import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, CheckInModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
-import { commitClaim, getClaimPreview, CHECK_IN_REWARD, type ClaimPreview } from './checkInConfig';
-import { getTaskSnapshot, getYesterdaySnapshot, markInteracted, markPosted, resetTasks, simulateInteractedCount, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
+import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
+import { DailyTaskSheet } from './components/DailyTaskSheet';
+import { getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, markInteracted, markPosted, resetTasks, simulateInteractedCount, TASK_BONUS_PB, TASK_BONUS_THRESHOLD, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
 import { Toast } from './components/shared';
 import { TaskCelebrationOverlay } from './components/TaskCelebrationOverlay';
 import { ComposePage } from './pages/ComposePage';
@@ -55,8 +54,7 @@ export default function App() {
   const [videoPlayerPost, setVideoPlayerPost] = useState<Post | null>(null);
   const [activityGroups, setActivityGroups] = useState(ACTIVITY_GROUPS);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [checkInPreview, setCheckInPreview] = useState<ClaimPreview | null>(null);
-  const [checkInClaimable, setCheckInClaimable] = useState(false);
+  const [dailyTaskOpen, setDailyTaskOpen] = useState(false);
 
   // 演示默认使用已连接的钱包；断开后仍可作为游客浏览帖子。
   const [walletConnected, setWalletConnected] = useState(true);
@@ -104,17 +102,31 @@ export default function App() {
   // 每完成 N 篇互动帖 +1，供任务面板监听触发一次性庆祝动效
   const [taskCelebrateSignal, setTaskCelebrateSignal] = useState(0);
 
+  // 「一发十赞」里程碑刚达成时（发帖 + 互动帖满 10）当日直接到账 +10 PB，只触发一次
+  const applyBonusIfNewlyEligible = (before: TaskDaySnapshot, after: TaskDaySnapshot) => {
+    if (!before.bonusEligible && after.bonusEligible) {
+      setPbBalance(prev => prev + TASK_BONUS_PB);
+      showToast(t('已发帖 + 满 {threshold} 次互动，获得 +{bonus} PB', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB }));
+    }
+  };
+
   const recordTaskInteraction = (postId: string) => {
+    const before = getTaskSnapshot();
     const { state, added } = markInteracted(postId);
-    setTaskSnapshotToday(getTaskSnapshot());
+    const after = getTaskSnapshot();
+    setTaskSnapshotToday(after);
+    applyBonusIfNewlyEligible(before, after);
     if (added && state.interactedPostIds.length > 0 && state.interactedPostIds.length % TASK_CELEBRATE_EVERY === 0) {
       setTaskCelebrateSignal(s => s + 1);
     }
   };
 
   const recordTaskPosted = () => {
+    const before = getTaskSnapshot();
     markPosted();
-    setTaskSnapshotToday(getTaskSnapshot());
+    const after = getTaskSnapshot();
+    setTaskSnapshotToday(after);
+    applyBonusIfNewlyEligible(before, after);
   };
 
   // 开发工具：重置今日任务记录，便于重新体验任务面板
@@ -266,27 +278,13 @@ export default function App() {
     document.documentElement.lang = language;
   }, [language]);
 
-  // 每天首次进入知识宇宙：弹出签到领取空投
-  useEffect(() => {
-    const preview = getClaimPreview();
-    setCheckInClaimable(preview.shouldShow);
-    if (preview.shouldShow) setCheckInPreview(preview);
-  }, []);
-
-  // 常驻入口：随时打开签到（已领取则展示连签进度）；未连接钱包时先引导连接
-  const openCheckIn = () => {
-    requireWallet(() => setCheckInPreview(getClaimPreview()));
+  // 常驻入口：随时打开「每日任务」面板；未连接钱包时先引导连接
+  const openDailyTask = () => {
+    requireWallet(() => setDailyTaskOpen(true));
   };
 
-  const handleClaimCheckIn = () => {
-    if (!checkInPreview) return;
-    requireWallet(() => {
-      commitClaim(checkInPreview);
-      setCheckInClaimable(false);
-      const symbol = isChinese(language) ? CHECK_IN_REWARD.symbol.zh : CHECK_IN_REWARD.symbol.en;
-      showToast(t('领取成功！+{reward} {symbol}', { reward: checkInPreview.reward, symbol }));
-    });
-  };
+  // 今天是否还有可领取/可达成的奖励，供入口红点展示
+  const dailyTaskAlert = (!airdropClaimed && Date.now() <= getAirdropDeadline()) || !taskSnapshotToday.bonusEligible;
 
 
   const route = stack[stack.length - 1];
@@ -823,7 +821,7 @@ export default function App() {
     stagePendingPost, publishPost,
     openArticleReader, openVideoPlayer,
     activityGroups, unreadActivityCount, markAllRead,
-    openCheckIn, checkInClaimable,
+    openDailyTask, dailyTaskAlert,
     recentSearches, saveRecentSearch, removeRecentSearch, clearRecentSearches,
     drafts, saveDraft, updateDraft, deleteDraft,
     userProfile, updateUserProfile,
@@ -838,7 +836,7 @@ export default function App() {
     walletAddress, walletConnecting, disconnectWallet,
     pbBalance, deductPb, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
     airdropClaimed, claimAirdrop,
-    taskSnapshotToday, taskSnapshotYesterday, taskCelebrateSignal,
+    taskSnapshotToday, taskSnapshotYesterday, taskCelebrateSignal, getDailyTaskCalendar: getTaskCalendarMonth,
     resetDemoTasks, simulateDemoTaskInteractions,
     shopOrders, shippingAddresses, defaultAddress,
     addShippingAddress, setDefaultAddress, removeShippingAddress,
@@ -1023,14 +1021,8 @@ export default function App() {
           />
         )}
 
-        {/* 覆盖层：每日签到领取空投 */}
-        {checkInPreview && (
-          <CheckInModal
-            preview={checkInPreview}
-            onClaim={handleClaimCheckIn}
-            onClose={() => setCheckInPreview(null)}
-          />
-        )}
+        {/* 覆盖层：每日任务（发帖 + 互动帖里程碑 + 空投领取 + BSP 保底） */}
+        {dailyTaskOpen && <DailyTaskSheet onClose={() => setDailyTaskOpen(false)} />}
 
         {/* Toast */}
         {/* 覆盖层：连接钱包二次确认（游客触发需身份/资产/链上能力的操作时弹出） */}
