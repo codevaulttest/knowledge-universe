@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronRight, Copy, Gem, Info, Loader2, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, X } from 'lucide-react';
+import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronRight, Copy, Crown, Gem, Info, Loader2, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { AssetOverviewCard } from '../components/AssetOverviewCard';
 import { PlanetHeroBalances } from '../components/PlanetHeroBalances';
 import { PlanetAnnouncementBanner } from '../components/PlanetAnnouncementBanner';
-import { BspHubCard } from '../components/BspHubCard';
 import { BspInvestSheet } from '../components/BspInvestSheet';
-import { BspRecordList } from '../components/BspRecordList';
+import { BspRecordList, BspRecordSummary } from '../components/BspRecordList';
 import { BspRulesSheet } from '../components/BspRulesSheet';
 import { DevPanel } from '../components/DevPanel';
 import { PageHeader, PullToRefresh } from '../components/shared';
@@ -665,23 +664,31 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
           </div>
 
           {/* ── 资产概览：空投主区 + 今日互动任务 ── */}
-          <AssetOverviewCard />
+          <AssetOverviewCard hasBspRecords={bspRecords.length > 0} />
 
-          {/* ── 巨星投流：主 CTA + 保底门槛 + 投流记录（频道单独一行） ── */}
-          <BspHubCard
-            investments={bspRecords}
-            onOpenInvest={handleOpenBsp}
-            onOpenRecords={() => setBspRecordsOpen(true)}
-          />
-
-          <button
-            type="button"
-            className="planet-quick-action-btn planet-quick-action-btn--channel planet-quick-action-btn--channel-solo"
-            onClick={handleCreateChannel}
-          >
-            <Radio size={18} strokeWidth={2} aria-hidden />
-            <span className="planet-quick-action-label">{t('抢先开通频道')}</span>
-          </button>
+          {/* ── Quick Actions: BSP 巨星投流 / 创建频道 ── */}
+          <div className="planet-quick-actions">
+            <button
+              type="button"
+              className="planet-quick-action-btn planet-quick-action-btn--genesis"
+              onClick={handleOpenBsp}
+            >
+              <span className="planet-quick-action-icon">
+                <Crown size={20} strokeWidth={2} />
+              </span>
+              <span className="planet-quick-action-label">{t('BSP 巨星投流')}</span>
+            </button>
+            <button
+              type="button"
+              className="planet-quick-action-btn planet-quick-action-btn--channel"
+              onClick={handleCreateChannel}
+            >
+              <span className="planet-quick-action-icon">
+                <Radio size={20} strokeWidth={2} />
+              </span>
+              <span className="planet-quick-action-label">{t('抢先开通频道')}</span>
+            </button>
+          </div>
 
           {!walletAddress ? (
             <div className="planet-wallet-empty" data-layer="wallet-empty">
@@ -705,6 +712,13 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
             </div>
           ) : (
           <>
+
+          {/* ── BSP 巨星投流：交易历史摘要，完整记录收进底部弹层 ── */}
+          <BspRecordSummary
+            investments={bspRecords}
+            onOpen={() => setBspRecordsOpen(true)}
+            onOpenInvest={handleOpenBsp}
+          />
 
           {/* ── Node Section ── */}
           <div className="planet-section">

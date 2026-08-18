@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Check, ChevronRight, FileText, Gift, Info, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Circle, Gift, History, Info, MousePointerClick, Sparkles, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import {
   TASK_BONUS_PB,
@@ -57,7 +57,7 @@ export function DailyTaskSheet({
               <span className="task-card-icon" aria-hidden="true">
                 {interacted >= TASK_INTERACTION_POOL_SIZE
                   ? <Check size={16} strokeWidth={2.6} />
-                  : <Sparkles size={16} strokeWidth={1.9} />}
+                  : <MousePointerClick size={16} strokeWidth={1.9} />}
               </span>
               <span className="task-card-body">
                 <span className="task-card-title">{t('互动帖任务')}</span>
@@ -65,7 +65,10 @@ export function DailyTaskSheet({
                   {t('今天已互动 {count} / {total} 次', { count: interacted, total: TASK_INTERACTION_POOL_SIZE })}
                 </span>
               </span>
-              <span className="task-card-ratio">{taskSnapshotToday.claimRatio}%</span>
+              <span className="task-card-ratio-col">
+                <span className="task-card-ratio">{taskSnapshotToday.claimRatio}%</span>
+                <span className="task-card-ratio-label">{t('空投额度')}</span>
+              </span>
             </div>
 
             <div className="task-progress-track">
@@ -95,7 +98,7 @@ export function DailyTaskSheet({
           {/* 发帖任务：10 PB 里程碑与 BSP 保底的共同前置条件 */}
           <div className={`task-card${posted ? ' task-card--done' : ''}`}>
             <span className="task-card-icon" aria-hidden="true">
-              {posted ? <Check size={16} strokeWidth={2.6} /> : <FileText size={16} strokeWidth={1.9} />}
+              {posted ? <Check size={16} strokeWidth={2.6} /> : <Circle size={16} strokeWidth={1.9} />}
             </span>
             <span className="task-card-body">
               <span className="task-card-title">{t('发帖任务')}</span>
@@ -103,12 +106,15 @@ export function DailyTaskSheet({
                 {posted ? t('已发布内容') : t('还没有发布内容')}
               </span>
             </span>
+            <span className={`task-card-status${posted ? ' task-card-status--done' : ''}`}>
+              {posted ? t('已完成') : t('待完成')}
+            </span>
           </div>
 
           {hasBspRecords && (
             <div className={`task-card${bspReady ? ' task-card--done' : ''}`}>
               <span className="task-card-icon" aria-hidden="true">
-                {bspReady ? <Check size={16} strokeWidth={2.6} /> : <FileText size={16} strokeWidth={1.9} />}
+                {bspReady ? <Check size={16} strokeWidth={2.6} /> : <Circle size={16} strokeWidth={1.9} />}
               </span>
               <span className="task-card-body">
                 <span className="task-card-title">{t('BSP 巨星投流保底')}</span>
@@ -116,11 +122,14 @@ export function DailyTaskSheet({
                   {bspReady ? t('明日可享 BSP 打赏保底') : t('还没有发布内容')}
                 </span>
               </span>
+              <span className={`task-card-status${bspReady ? ' task-card-status--done' : ''}`}>
+                {bspReady ? t('已完成') : t('待完成')}
+              </span>
             </div>
           )}
 
           <button type="button" className="bsp-rules-entry task-panel-rules-entry" onClick={() => setHistoryOpen(true)}>
-            <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
+            <History size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
             <span className="bsp-rules-entry-text">{t('本月任务收益历史')}</span>
             <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
           </button>
@@ -215,6 +224,21 @@ function DailyTaskHistorySheet({
 
         <div className="task-calendar-month">{monthLabel}</div>
 
+        <div className="task-calendar-legend">
+          <span className="task-calendar-legend-item">
+            <Check size={11} strokeWidth={2.6} aria-hidden="true" />
+            {t('当日已发帖')}
+          </span>
+          <span className="task-calendar-legend-item">
+            <span className="task-calendar-legend-swatch" aria-hidden="true">%</span>
+            {t('次日空投领取比例')}
+          </span>
+          <span className="task-calendar-legend-item">
+            <span className="task-calendar-legend-swatch">+</span>
+            {t('当日里程碑奖励')}
+          </span>
+        </div>
+
         <div className="task-calendar-weekdays">
           {weekdayLabels.map((label, i) => (
             <span key={i} className="task-calendar-weekday">{label}</span>
@@ -238,7 +262,7 @@ function DailyTaskHistorySheet({
                 {snapshot && (
                   <>
                     <span className="task-calendar-day-token" aria-hidden="true">
-                      {snapshot.posted ? <Check size={12} strokeWidth={2.6} /> : <FileText size={11} strokeWidth={1.9} />}
+                      {snapshot.posted ? <Check size={12} strokeWidth={2.6} /> : <Circle size={11} strokeWidth={1.9} />}
                     </span>
                     <span className="task-calendar-day-ratio">{snapshot.claimRatio}%</span>
                     {snapshot.bonusEligible && (

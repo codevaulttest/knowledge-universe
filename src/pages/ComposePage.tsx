@@ -85,6 +85,12 @@ export function ComposePage({
   useEffect(() => {
     if (!shopEligible && shopEnabled) setShopEnabled(false);
   }, [shopEligible, shopEnabled]);
+  // 选中 1000 PB 时把小黄车开关滚入可视区域：2x2 网格已经省出不少高度，
+  // 但更长的机型/字号下仍可能差一点，滚动兜底确保用户一定能看到
+  const shopSectionRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (shopEligible) shopSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [shopEligible]);
   const shopPriceNum = Number(shopPrice);
   const shopStockNum = Number(shopStock);
   const shopValid = !shopEnabled || (
@@ -707,7 +713,7 @@ export function ComposePage({
             <p className="compose-stake-hint">
               {t('选择质押面额，创建可链接的知识宇宙节点；可选择不加入')}
             </p>
-            <div className="stake-tier-list" role="radiogroup" aria-label={t('知识宇宙面额')}>
+            <div className="stake-tier-list stake-tier-list--grid2" role="radiogroup" aria-label={t('知识宇宙面额')}>
               {STAKE_TIERS.map(tier => {
                 const active = stakeTier === tier;
                 const zh = isChinese(language);
@@ -743,84 +749,84 @@ export function ComposePage({
                 <span className="compose-stake-gas-value">{SUP_COST_BY_TIER[stakeTier as Exclude<typeof stakeTier, 0>]} SUP</span>
               </div>
             )}
-          </div>
-        )}
 
-        {/* 小黄车：仅 1000 PB 节点帖可挂载，把帖子变成可下单商品；
-            紧跟节点档位之后，避免选中 1000 PB 后模块被推到折叠线以下、用户看不到 */}
-        {!isEditMode && shopEligible && (
-          <div className="compose-section compose-shop-section">
-            <button
-              type="button"
-              className="compose-shop-toggle"
-              role="switch"
-              aria-checked={shopEnabled}
-              onClick={() => setShopEnabled(v => !v)}
-            >
-              <span className="compose-shop-toggle__label">
-                <ShoppingCart size={16} strokeWidth={2} />
-                {t('参与小黄车')}
-              </span>
-              <span className={`compose-shop-switch${shopEnabled ? ' compose-shop-switch--on' : ''}`} aria-hidden="true">
-                <span className="compose-shop-switch__dot" />
-              </span>
-            </button>
-            <p className="compose-stake-hint">
-              {t('开启后，读者能直接下单买走你的商品')}
-            </p>
-
-            {shopEnabled && (
-              <div className="compose-shop-fields">
-                <label className="compose-shop-field">
-                  <span className="compose-shop-field__label">{t('商品价格（PB）')}</span>
-                  <input
-                    type="number" inputMode="numeric" min={1}
-                    className="compose-shop-input"
-                    placeholder={t('如 2000')}
-                    value={shopPrice}
-                    onChange={e => setShopPrice(e.target.value)}
-                  />
-                  {shopPriceNum > 0 && (
-                    <span className="compose-shop-field__hint">
-                      {t('下单另收 {fee} SUP/件手续费', { fee: computeShopFee(shopPriceNum) })}
-                    </span>
-                  )}
-                </label>
-
-                <label className="compose-shop-field">
-                  <span className="compose-shop-field__label">{t('库存')}</span>
-                  <input
-                    type="number" inputMode="numeric" min={1} step={1}
-                    className="compose-shop-input"
-                    placeholder={t('如 50')}
-                    value={shopStock}
-                    onChange={e => setShopStock(e.target.value)}
-                  />
-                </label>
-
-                <div className="compose-shop-field">
-                  <span className="compose-shop-field__label compose-shop-field__label--row">
-                    <span>{t('优点返还比例')} · {shopRebate}%</span>
-                    <button
-                      type="button"
-                      className="compose-shop-info-btn"
-                      onClick={() => setRebateInfoOpen(true)}
-                      aria-label={t('什么是优点返还')}
-                    >
-                      <Info size={13} strokeWidth={2} />
-                    </button>
+            {/* 小黄车：仅 1000 PB 节点帖可挂载。内联在同一张卡片里而非独立 section，
+                这样选中 1000 PB 后开关就在原地展开，不会被推到折叠线以下 */}
+            {shopEligible && (
+              <div className="compose-shop-section" ref={shopSectionRef}>
+                <button
+                  type="button"
+                  className="compose-shop-toggle"
+                  role="switch"
+                  aria-checked={shopEnabled}
+                  onClick={() => setShopEnabled(v => !v)}
+                >
+                  <span className="compose-shop-toggle__label">
+                    <ShoppingCart size={16} strokeWidth={2} />
+                    {t('参与小黄车')}
                   </span>
-                  <input
-                    type="range" min={0} max={SHOP_MAX_REBATE_PERCENT} step={5}
-                    className="compose-shop-range"
-                    value={shopRebate}
-                    style={{ '--shop-range-pct': `${(shopRebate / SHOP_MAX_REBATE_PERCENT) * 100}%` } as CSSProperties}
-                    onChange={e => setShopRebate(Number(e.target.value))}
-                  />
-                  <span className="compose-shop-field__hint">
-                    {t('买家按此比例获得优点返还')}
+                  <span className={`compose-shop-switch${shopEnabled ? ' compose-shop-switch--on' : ''}`} aria-hidden="true">
+                    <span className="compose-shop-switch__dot" />
                   </span>
-                </div>
+                </button>
+                <p className="compose-stake-hint">
+                  {t('开启后，读者能直接下单买走你的商品')}
+                </p>
+
+                {shopEnabled && (
+                  <div className="compose-shop-fields">
+                    <label className="compose-shop-field">
+                      <span className="compose-shop-field__label">{t('商品价格（PB）')}</span>
+                      <input
+                        type="number" inputMode="numeric" min={1}
+                        className="compose-shop-input"
+                        placeholder={t('如 2000')}
+                        value={shopPrice}
+                        onChange={e => setShopPrice(e.target.value)}
+                      />
+                      {shopPriceNum > 0 && (
+                        <span className="compose-shop-field__hint">
+                          {t('下单另收 {fee} SUP/件手续费', { fee: computeShopFee(shopPriceNum) })}
+                        </span>
+                      )}
+                    </label>
+
+                    <label className="compose-shop-field">
+                      <span className="compose-shop-field__label">{t('库存')}</span>
+                      <input
+                        type="number" inputMode="numeric" min={1} step={1}
+                        className="compose-shop-input"
+                        placeholder={t('如 50')}
+                        value={shopStock}
+                        onChange={e => setShopStock(e.target.value)}
+                      />
+                    </label>
+
+                    <div className="compose-shop-field">
+                      <span className="compose-shop-field__label compose-shop-field__label--row">
+                        <span>{t('优点返还比例')} · {shopRebate}%</span>
+                        <button
+                          type="button"
+                          className="compose-shop-info-btn"
+                          onClick={() => setRebateInfoOpen(true)}
+                          aria-label={t('什么是优点返还')}
+                        >
+                          <Info size={13} strokeWidth={2} />
+                        </button>
+                      </span>
+                      <input
+                        type="range" min={0} max={SHOP_MAX_REBATE_PERCENT} step={5}
+                        className="compose-shop-range"
+                        value={shopRebate}
+                        style={{ '--shop-range-pct': `${(shopRebate / SHOP_MAX_REBATE_PERCENT) * 100}%` } as CSSProperties}
+                        onChange={e => setShopRebate(Number(e.target.value))}
+                      />
+                      <span className="compose-shop-field__hint">
+                        {t('买家按此比例获得优点返还')}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

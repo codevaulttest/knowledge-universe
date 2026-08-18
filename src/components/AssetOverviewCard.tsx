@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { CalendarClock, ChevronRight, Gift, Info, X } from 'lucide-react';
+import { CalendarClock, Check, ChevronRight, Circle, Gift, Info, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT } from '../mockData';
 import { formatTokenAmount } from '../stakeConfig';
 import { DailyTaskSheet } from './DailyTaskSheet';
-import { TASK_BONUS_PB, TASK_BONUS_THRESHOLD, TASK_INTERACTION_POOL_SIZE } from '../taskConfig';
+import { TASK_INTERACTION_POOL_SIZE } from '../taskConfig';
 
-export function AssetOverviewCard() {
+export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: boolean }) {
   const { t, navigateRoot, walletConnected, airdropClaimed, claimAirdrop, taskSnapshotToday, taskSnapshotYesterday } = useApp();
   const [airdropRuleOpen, setAirdropRuleOpen] = useState(false);
   const [dailyTaskOpen, setDailyTaskOpen] = useState(false);
@@ -26,6 +26,7 @@ export function AssetOverviewCard() {
   const remaining = Math.max(0, TASK_INTERACTION_POOL_SIZE - interacted);
   const isFull = remaining === 0;
   const progressPct = Math.min(100, (interacted / TASK_INTERACTION_POOL_SIZE) * 100);
+  const posted = taskSnapshotToday.posted;
 
   if (!walletConnected) return null;
 
@@ -87,60 +88,66 @@ export function AssetOverviewCard() {
 
         {/* 每日任务：互动进度条同时决定 10 PB 里程碑与次日空投比例 */}
         <div className="asset-overview-tomorrow">
-          <button
-            type="button"
-            className="asset-overview-tomorrow-head"
-            onClick={() => setDailyTaskOpen(true)}
-            aria-label={t('查看每日任务')}
-          >
-            <span className="asset-overview-icon-col">
-              <span className="asset-overview-tomorrow-icon">
-                <CalendarClock size={20} strokeWidth={1.8} />
+          <div className="asset-overview-tomorrow-head-row">
+            <button
+              type="button"
+              className="asset-overview-tomorrow-head"
+              onClick={() => setDailyTaskOpen(true)}
+              aria-label={t('查看每日任务')}
+            >
+              <span className="asset-overview-icon-col">
+                <span className="asset-overview-tomorrow-icon">
+                  <CalendarClock size={20} strokeWidth={1.8} />
+                </span>
               </span>
-            </span>
-            <span className="asset-overview-tomorrow-title">{t('每日任务')}</span>
-            <ChevronRight size={15} strokeWidth={2} className="asset-overview-toggle-chevron" />
-          </button>
+              <span className="asset-overview-tomorrow-title">{t('每日任务')}</span>
+              <ChevronRight size={15} strokeWidth={2} className="asset-overview-toggle-chevron" />
+            </button>
+
+            {!isFull && (
+              <button
+                type="button"
+                className="asset-overview-go-btn"
+                onClick={() => navigateRoot({ page: 'P0', tab: 0 })}
+              >
+                {t('去互动')}
+              </button>
+            )}
+          </div>
 
           <div className="asset-overview-tomorrow-body">
             <div className="asset-overview-tomorrow-stats">
-              <div className="asset-overview-tomorrow-amount">
-                <span className="asset-overview-tomorrow-amount-value">
-                  {tomorrowRatio}
-                  <span className="asset-overview-airdrop-unit">%</span>
-                </span>
-                <span className="asset-overview-tomorrow-max">{t('额度')}</span>
+              <div className="asset-overview-tomorrow-stats-row">
+                <div className="asset-overview-tomorrow-stats-text">
+                  <span className={`asset-overview-post-status${posted ? ' asset-overview-post-status--done' : ''}`}>
+                    {posted ? <Check size={14} strokeWidth={2.6} /> : <Circle size={14} strokeWidth={1.9} />}
+                    {posted ? t('今日已发帖') : t('尚未发帖')}
+                  </span>
+
+                  <span className={`asset-overview-post-status${isFull ? ' asset-overview-post-status--done' : ''}`}>
+                    {isFull ? <Check size={14} strokeWidth={2.6} /> : <Circle size={14} strokeWidth={1.9} />}
+                    {t('今天已互动')}{' '}
+                    <span className="asset-overview-tomorrow-caption-count">
+                      {interacted} / {TASK_INTERACTION_POOL_SIZE}
+                    </span>{' '}
+                    {t('次')}
+                  </span>
+                </div>
+
+                <div className="asset-overview-tomorrow-amount">
+                  <span className="asset-overview-tomorrow-amount-value">
+                    {tomorrowRatio}
+                    <span className="asset-overview-airdrop-unit">%</span>
+                  </span>
+                  <span className="asset-overview-tomorrow-max">{t('空投额度')}</span>
+                </div>
               </div>
 
               <div className="asset-overview-tomorrow-progress">
                 <span className="asset-overview-tomorrow-track">
                   <span className="asset-overview-tomorrow-fill" style={{ width: `${progressPct}%` }} />
                 </span>
-                <span className="asset-overview-tomorrow-caption">
-                  {t('今天已互动 {count} / {total} 次', { count: interacted, total: TASK_INTERACTION_POOL_SIZE })}
-                </span>
               </div>
-            </div>
-
-            <div className="asset-overview-tomorrow-action">
-              <span className="asset-overview-tomorrow-hint">
-                {taskSnapshotToday.bonusEligible
-                  ? t('已获得 +{bonus} PB，明天可领满额', { bonus: TASK_BONUS_PB })
-                  : isFull
-                    ? t('明天可领满额')
-                    : interacted >= TASK_BONUS_THRESHOLD
-                      ? t('再完成 {remaining} 次，明天就能领满', { remaining })
-                      : t('满 {threshold} 次互动当日到账 +{bonus} PB', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB })}
-              </span>
-              {!isFull && (
-                <button
-                  type="button"
-                  className="asset-overview-go-btn"
-                  onClick={() => navigateRoot({ page: 'P0', tab: 0 })}
-                >
-                  {t('去互动')}
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -187,7 +194,7 @@ export function AssetOverviewCard() {
         </div>
       )}
 
-      {dailyTaskOpen && <DailyTaskSheet onClose={() => setDailyTaskOpen(false)} />}
+      {dailyTaskOpen && <DailyTaskSheet onClose={() => setDailyTaskOpen(false)} hasBspRecords={hasBspRecords} />}
     </>
   );
 }

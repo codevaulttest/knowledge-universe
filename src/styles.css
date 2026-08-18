@@ -2567,6 +2567,16 @@ button {
   border-color: var(--ku-color-primary);
   background: var(--ku-color-primary-alpha-06);
 }
+/* 发帖页知识宇宙档位：2x2 网格代替纵向堆叠，省出的高度让选中 1000 PB 后
+   小黄车开关不用滚动就能露出来 */
+.stake-tier-list--grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.stake-tier-list--grid2 .stake-tier-option {
+  min-height: 64px;
+}
 .stake-tier-option:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -6826,6 +6836,34 @@ button {
   color: var(--ku-color-primary);
   margin-bottom: 4px;
 }
+.task-calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 6px 10px;
+  margin-bottom: 14px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-primary-alpha-04);
+}
+.task-calendar-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 500 13px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-meta);
+}
+.task-calendar-legend-item svg {
+  color: var(--ku-color-primary);
+}
+.task-calendar-legend-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  height: 15px;
+  font: 700 13px/1 var(--ku-font-mono);
+  color: var(--ku-color-primary);
+}
 .task-calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -6833,8 +6871,8 @@ button {
 }
 .task-calendar-weekday {
   text-align: center;
-  font: 600 12px/1 var(--ku-font-family);
-  color: var(--ku-color-text-meta);
+  font: 700 12px/1 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
 }
 .task-calendar-grid {
   display: grid;
@@ -6878,8 +6916,8 @@ button {
   width: 20px;
   height: 20px;
   border-radius: var(--ku-radius-circle);
-  background: var(--ku-color-primary-alpha-06);
-  color: var(--ku-color-primary);
+  background: var(--ku-color-border-card);
+  color: var(--ku-color-text-meta);
 }
 .task-calendar-day.is-posted .task-calendar-day-token {
   background: var(--ku-color-primary);
@@ -8231,11 +8269,18 @@ button {
   border-top: 1px solid var(--ku-color-border-card);
 }
 
+.asset-overview-tomorrow-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ku-planet2-space-md);
+}
+
 .asset-overview-tomorrow-head {
   display: flex;
   align-items: center;
   gap: var(--ku-planet2-space-sm);
-  width: 100%;
+  min-width: 0;
   padding: 0;
   border: none;
   background: none;
@@ -8261,7 +8306,7 @@ button {
 }
 
 .asset-overview-tomorrow-title {
-  flex: 1;
+  flex-shrink: 0;
   min-width: 0;
   font-size: 13px;
   line-height: 1.3;
@@ -8285,8 +8330,24 @@ button {
 
 .asset-overview-tomorrow-stats {
   display: flex;
-  align-items: center;
-  gap: var(--ku-planet2-space-sm);
+  flex-direction: column;
+  gap: var(--ku-planet2-space-xxs);
+  min-width: 0;
+  margin-top: var(--ku-planet2-space-xxs);
+}
+
+.asset-overview-tomorrow-stats-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ku-planet2-space-md);
+  min-width: 0;
+}
+
+.asset-overview-tomorrow-stats-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -8300,7 +8361,7 @@ button {
 
 .asset-overview-tomorrow-amount-value {
   font-family: var(--ku-font-mono);
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1;
   color: var(--ku-color-primary);
@@ -8315,18 +8376,20 @@ button {
 .asset-overview-tomorrow-progress {
   display: flex;
   align-items: center;
-  gap: var(--ku-planet2-space-xs);
-  flex: 1;
+  gap: var(--ku-planet2-space-md);
   min-width: 0;
-  margin-top: 0;
+  margin-top: var(--ku-planet2-space-xxs);
 }
 
 .asset-overview-tomorrow-track {
+  position: relative;
+  display: block;
   flex: 1;
+  min-width: 0;
   height: 6px;
   border-radius: var(--ku-radius-pill);
   background: var(--ku-color-primary-alpha-06);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .asset-overview-tomorrow-fill {
@@ -8337,28 +8400,37 @@ button {
   transition: width var(--ku-motion-fast);
 }
 
-.asset-overview-tomorrow-caption {
+.asset-overview-tomorrow-caption-count {
+  font-family: var(--ku-font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ku-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.asset-overview-post-status {
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
-  font-size: 12px;
-  color: var(--ku-color-text-meta);
+  gap: 5px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ku-color-text-secondary);
   white-space: nowrap;
 }
 
-.asset-overview-tomorrow-action {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ku-planet2-space-xs);
-  margin-top: 0;
+.asset-overview-post-status svg {
+  color: var(--ku-color-text-meta);
 }
 
-.asset-overview-tomorrow-hint {
-  min-width: 0;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.3;
-  color: var(--ku-color-text-primary);
+.asset-overview-post-status--done {
+  color: var(--ku-color-primary);
 }
+
+.asset-overview-post-status--done svg {
+  color: var(--ku-color-primary);
+}
+
 
 .asset-overview-go-btn {
   flex-shrink: 0;
@@ -10785,10 +10857,39 @@ html[lang="zh-TW"] .planet-hero-title {
   color: var(--ku-color-text-meta);
 }
 
+.task-card-ratio-col {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
 .task-card-ratio {
   flex-shrink: 0;
   font: 700 15px/1 var(--ku-font-mono);
   color: var(--ku-color-primary);
+}
+
+.task-card-ratio-label {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ku-color-text-secondary);
+}
+
+.task-card-status {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: var(--ku-radius-pill);
+  border: 1px solid var(--ku-color-border-card);
+  color: var(--ku-color-text-meta);
+  font: 600 12px/1.3 var(--ku-font-family);
+}
+
+.task-card-status--done {
+  border-color: transparent;
+  background: var(--ku-color-primary-alpha-14);
+  color: var(--ku-color-primary-dark);
 }
 
 .task-progress-track {
