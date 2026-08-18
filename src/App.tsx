@@ -55,6 +55,8 @@ export default function App() {
   const [activityGroups, setActivityGroups] = useState(ACTIVITY_GROUPS);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [dailyTaskOpen, setDailyTaskOpen] = useState(false);
+  // 首页信息流下滑沉浸效果：顶部/底部导航渐隐；离开首页时复位
+  const [navBarsHidden, setNavBarsHidden] = useState(false);
 
   // 演示默认使用已连接的钱包；断开后仍可作为游客浏览帖子。
   const [walletConnected, setWalletConnected] = useState(true);
@@ -295,6 +297,10 @@ export default function App() {
   const navigateRoot = (r: Route) => setStack([r]);
   const goBack = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
   const setTab = (t: 0 | 1 | 2 | 3) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
+
+  useEffect(() => {
+    if (pageRoute.page !== 'P0' && navBarsHidden) setNavBarsHidden(false);
+  }, [pageRoute.page, navBarsHidden]);
 
   const [posts, setPosts] = useState<Post[]>(ALL_POSTS.filter(p => p.kind !== 'article'));
   const [homeFeedRefreshNonce, setHomeFeedRefreshNonce] = useState(0);
@@ -841,6 +847,7 @@ export default function App() {
     shopOrders, shippingAddresses, defaultAddress,
     addShippingAddress, setDefaultAddress, removeShippingAddress,
     placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle,
+    navBarsHidden, setNavBarsHidden,
   };
 
 

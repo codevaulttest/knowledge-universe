@@ -11,7 +11,7 @@ export function BottomNav({ route, setTab }: {
   route: Route;
   setTab: (t: 0 | 1 | 2 | 3) => void;
 }) {
-  const { navigate, navigateRoot, openCompose, requireWallet, t, refreshHomeFeed } = useApp();
+  const { navigate, navigateRoot, openCompose, requireWallet, t, refreshHomeFeed, navBarsHidden } = useApp();
   const unreadDmCount = DM_CONVERSATIONS.reduce((s, c) => s + c.unread, 0);
 
   const isHome = route.page === 'P0';
@@ -37,7 +37,7 @@ export function BottomNav({ route, setTab }: {
 
   return (
     <nav
-      className="bottom-nav"
+      className={`bottom-nav${navBarsHidden ? ' bottom-nav--hidden' : ''}`}
       data-layer="bottom-nav"
       style={{ '--nav-active-col': activeCol } as React.CSSProperties}
     >

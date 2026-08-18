@@ -72,6 +72,26 @@ button {
   }
 }
 
+/* ── Feed Header Shell（下滑渐隐容器：grid-rows 收起高度 + 内层上滑，让出沉浸空间）── */
+.feed-header-shell {
+  display: grid;
+  grid-template-rows: 1fr;
+  flex: 0 0 auto;
+  transition: grid-template-rows 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.feed-header-shell > .feed-header {
+  min-height: 0;
+  overflow: hidden;
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.28s ease;
+}
+.feed-header-shell--hidden {
+  grid-template-rows: 0fr;
+}
+.feed-header-shell--hidden > .feed-header {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
 /* ── Top Tabs（三 tab + 发帖按钮，非滚动）── */
 .feed-header {
   position: relative;
@@ -1712,6 +1732,14 @@ button {
   isolation: isolate;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.28s ease;
+}
+
+/* 首页信息流下滑时渐隐让出沉浸空间 */
+.bottom-nav--hidden {
+  transform: translateY(140%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* 旧 Safari（不支持 overflow:clip）：backdrop-filter compositing 可能失效，用不透明背景兜底 */

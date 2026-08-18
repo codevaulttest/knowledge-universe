@@ -135,6 +135,9 @@ export type AppContextValue = {
   confirmShopReceipt: (orderId: string) => void;
   /** 开发工具：模拟 T+15 月结到账（待结算 → 已结算） */
   simulateShopSettle: (orderId: string) => void;
+  /** 首页信息流下滑时，顶部/底部导航渐隐让出沉浸空间 */
+  navBarsHidden: boolean;
+  setNavBarsHidden: Dispatch<SetStateAction<boolean>>;
 };
 
 

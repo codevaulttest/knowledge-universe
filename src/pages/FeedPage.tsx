@@ -181,14 +181,45 @@ function ChannelDiscoverFeed() {
   );
 }
 
+// 下滑判定阈值（px）：滚动距离超过它才切换导航显隐，避免抖动
+const NAV_HIDE_SCROLL_DELTA = 6;
+// 距顶部多近内强制显示导航（避免刚滚动一点就误隐藏）
+const NAV_HIDE_TOP_GUARD = 24;
+
 export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 1 | 2 | 3) => void }) {
-  const { followedAuthors, navigate, unreadActivityCount, openDailyTask, dailyTaskAlert, t, walletConnected, connectWallet, requireWallet, homeFeedRefreshNonce, showToast } = useApp();
+  const { followedAuthors, navigate, unreadActivityCount, openDailyTask, dailyTaskAlert, t, walletConnected, connectWallet, requireWallet, homeFeedRefreshNonce, showToast, navBarsHidden, setNavBarsHidden } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevTabRef = useRef(tab);
   const lastRefreshNonce = useRef(homeFeedRefreshNonce);
   const [slideClass, setSlideClass] = useState('');
   const [feedKey, setFeedKey] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+
+  // 下滑时顶部/底部导航渐隐让出沉浸空间，上滑或回到顶部时恢复
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastTop = el.scrollTop;
+    let ticking = false;
+    const handleScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const top = el.scrollTop;
+        const delta = top - lastTop;
+        if (top < NAV_HIDE_TOP_GUARD) setNavBarsHidden(false);
+        else if (delta > NAV_HIDE_SCROLL_DELTA) setNavBarsHidden(true);
+        else if (delta < -NAV_HIDE_SCROLL_DELTA) setNavBarsHidden(false);
+        lastTop = top;
+        ticking = false;
+      });
+    };
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [setNavBarsHidden]);
+
+  // 离开首页信息流时复位，避免导航停在隐藏态
+  useEffect(() => () => setNavBarsHidden(false), [setNavBarsHidden]);
 
   useEffect(() => {
     if (homeFeedRefreshNonce === lastRefreshNonce.current) return;
@@ -220,6 +251,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
 
   return (
     <>
+      <div className={`feed-header-shell${navBarsHidden ? ' feed-header-shell--hidden' : ''}`}>
       <div className="feed-header" data-layer="feed-header">
         <div className="feed-header-left">
           <button
@@ -264,6 +296,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
             </button>
           )}
         </div>
+      </div>
       </div>
       <div className={`scroll-area${slideClass ? ` ${slideClass}` : ''}`} ref={scrollRef}>
         {refreshing && (
