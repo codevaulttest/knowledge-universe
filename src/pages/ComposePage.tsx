@@ -108,6 +108,23 @@ export function ComposePage({
     ? articleTitle.trim().length > 0 && articleBodyHasContent
     : (text.trim().length > 0 || imgCount > 0 || hasVideo) && !isOverLimit) && shopValid;
 
+  const publishBlockReason = (): string | null => {
+    if (articleMode) {
+      if (articleTitle.trim().length === 0) return t('请输入文章标题');
+      if (!articleBodyHasContent) return t('请输入文章正文');
+    } else {
+      if (isOverLimit) return t('内容超出字数限制');
+      if (text.trim().length === 0 && imgCount === 0 && !hasVideo) return t('请输入内容或添加图片');
+    }
+    if (shopEnabled) {
+      if (!hasContacts) return t('请先设置联系方式');
+      if (!(shopPriceNum > 0 && Number.isFinite(shopPriceNum))) return t('请填写商品单价');
+      if (!(shopStockNum >= 1 && Number.isInteger(shopStockNum))) return t('请填写库存');
+      if (!(shopRebate >= 0 && shopRebate <= SHOP_MAX_REBATE_PERCENT)) return t('优点返还比例超出范围');
+    }
+    return null;
+  };
+
   const canSaveDraft = !isEditMode && (
     articleMode
       ? articleTitle.trim().length > 0
@@ -182,7 +199,12 @@ export function ComposePage({
   }, [handleCloseAttempt, onRegisterCloseHandler]);
 
   const handlePublish = () => {
-    if (!canPublish || publishing) return;
+    if (publishing) return;
+    if (!canPublish) {
+      const reason = publishBlockReason();
+      if (reason) showToast(reason);
+      return;
+    }
     if (isEditMode) {
       const tierChanged = editPostChannel && editMinTierIndex !== editPost.minTierIndex;
       updatePost(editPost.id, text.trim(), tierChanged ? { minTierIndex: editMinTierIndex } : undefined);
@@ -334,7 +356,7 @@ export function ComposePage({
             className={`publish-btn${canPublish && !publishing ? '' : ' publish-btn--disabled'}`}
             type="button"
             onClick={handlePublish}
-            disabled={!canPublish || publishing}
+            disabled={publishing}
           >
             {isEditMode ? <Save size={14} strokeWidth={2.2} /> : <Send size={14} strokeWidth={2.2} />}
             {publishing ? t('发布中…') : isEditMode ? t('保存') : t('发布')}
