@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Check, Search, TrendingUp, X } from 'lucide-react';
+import { Check, Search, ShoppingCart, TrendingUp, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { PostCard } from '../components/PostCard';
@@ -7,9 +7,8 @@ import { Avatar, AuthorName } from '../components/shared';
 
 const TRENDING = ['AI Agent', 'RAG 技术', '独立开发', 'Figma 组件', 'Prompt 工程', 'Web3', '知识宇宙', '数据方法论'];
 
-export function SearchPage() {
+export function SearchPage({ onClose }: { onClose: () => void }) {
   const {
-    goBack,
     navigate,
     posts,
     followedAuthors,
@@ -24,6 +23,7 @@ export function SearchPage() {
   const [debouncedQ, setDebouncedQ] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [tab, setTab] = useState<'all' | 'posts' | 'users'>('all');
+  const [shopOnly, setShopOnly] = useState(false);
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -45,12 +45,12 @@ export function SearchPage() {
   }, [query]);
 
   const matchedPosts = useMemo(() => {
-    if (!debouncedQ) return [];
+    if (!debouncedQ && !shopOnly) return [];
     return posts.filter(post =>
-      post.title.toLowerCase().includes(debouncedQ) ||
-      post.author.toLowerCase().includes(debouncedQ),
+      (shopOnly ? !!post.shop : true) &&
+      (!debouncedQ || post.title.toLowerCase().includes(debouncedQ) || post.author.toLowerCase().includes(debouncedQ)),
     );
-  }, [debouncedQ, posts]);
+  }, [debouncedQ, posts, shopOnly]);
 
   const matchedUsers = useMemo(() => {
     if (!debouncedQ) return [];
@@ -62,41 +62,58 @@ export function SearchPage() {
 
   const visiblePosts = tab === 'users' ? [] : matchedPosts;
   const visibleUsers = tab === 'posts' ? [] : matchedUsers;
-  const hasQuery = query.trim().length > 0;
+  const hasQuery = query.trim().length > 0 || shopOnly;
   const hasResults = visiblePosts.length > 0 || visibleUsers.length > 0;
 
   const applyQuery = (nextQuery: string) => setQuery(nextQuery);
   const commitQuery = () => saveRecentSearch(query);
+  const goToProfile = (authorName: string) => {
+    commitQuery();
+    navigate({ page: 'P6', authorName });
+  };
 
   return (
-    <div className="page search-page">
-      <div className="search-header">
-        <button type="button" className="back-btn" onClick={goBack} aria-label={t('返回')}>
-          <ArrowLeft size={22} strokeWidth={2} />
-        </button>
-        <div className="search-input-wrap">
-          <Search size={16} strokeWidth={2} className="search-input-icon" />
-          <input
-            className="search-input"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder={t('搜索帖子、创作者、话题')}
-            autoFocus
-          />
-          {query && (
-            <button
-              type="button"
-              className="search-clear-btn"
-              onClick={() => setQuery('')}
-              aria-label={t('清空搜索词')}
-            >
-              <X size={14} strokeWidth={2.2} />
-            </button>
-          )}
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="search-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div className="search-header">
+          <div className="search-input-wrap">
+            <Search size={16} strokeWidth={2} className="search-input-icon" />
+            <input
+              className="search-input"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder={t('搜索帖子、创作者、话题')}
+              autoFocus
+            />
+            {query && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => setQuery('')}
+                aria-label={t('清空搜索词')}
+              >
+                <X size={14} strokeWidth={2.2} />
+              </button>
+            )}
+          </div>
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
+            <X size={18} strokeWidth={2} />
+          </button>
         </div>
-      </div>
 
-      <div className="scroll-area">
+        <div className="search-filter-row">
+          <button
+            type="button"
+            className={`search-chip${shopOnly ? ' search-chip--active' : ''}`}
+            onClick={() => setShopOnly(v => !v)}
+            aria-pressed={shopOnly}
+          >
+            <ShoppingCart size={14} strokeWidth={2} />
+            {t('小黄车帖子')}
+          </button>
+        </div>
+
+        <div className="search-modal-scroll">
         {!hasQuery ? (
           <div className="search-content">
             {recentSearches.length > 0 && (
@@ -210,10 +227,7 @@ export function SearchPage() {
                             <div
                               key={user.name}
                               className="follow-list-item"
-                              onClick={() => {
-                                commitQuery();
-                                navigate({ page: 'P6', authorName: user.name });
-                              }}
+                              onClick={() => goToProfile(user.name)}
                             >
                               <Avatar index={user.avatarIdx} seed={user.name} />
                               <div className="follow-item-info">
@@ -243,6 +257,7 @@ export function SearchPage() {
             </div>
           </>
         )}
+        </div>
       </div>
     </div>
   );

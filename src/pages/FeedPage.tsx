@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, CalendarCheck, RefreshCw, Wallet } from 'lucide-react';
+import { Bell, CalendarCheck, RefreshCw, Search, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
 import type { Channel, Post, RepostedBy } from '../types';
@@ -187,7 +187,7 @@ const NAV_HIDE_SCROLL_DELTA = 6;
 const NAV_HIDE_TOP_GUARD = 24;
 
 export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 1 | 2 | 3) => void }) {
-  const { followedAuthors, navigate, unreadActivityCount, openDailyTask, dailyTaskAlert, t, walletConnected, connectWallet, requireWallet, homeFeedRefreshNonce, showToast, navBarsHidden, setNavBarsHidden } = useApp();
+  const { followedAuthors, navigate, unreadActivityCount, openDailyTask, dailyTaskAlert, t, walletConnected, connectWallet, requireWallet, homeFeedRefreshNonce, showToast, navBarsHidden, setNavBarsHidden, openSearch } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevTabRef = useRef(tab);
   const lastRefreshNonce = useRef(homeFeedRefreshNonce);
@@ -272,6 +272,14 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
           <button className={tab === 3 ? 'active' : ''} type="button" onClick={() => goTab(3)}>{t('商城')}</button>
         </nav>
         <div className="feed-header-right">
+          <button
+            type="button"
+            className="feed-bell-btn"
+            onClick={openSearch}
+            aria-label={t('搜索')}
+          >
+            <Search size={22} strokeWidth={2} />
+          </button>
           {!walletConnected && (
             <button
               type="button"

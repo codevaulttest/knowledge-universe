@@ -5844,6 +5844,25 @@ button {
   background: var(--ku-color-bg-phone);
 }
 
+/* ─── 搜索弹窗：居中显示，替代整页跳转 ─── */
+.search-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--ku-modal-width);
+  max-height: var(--ku-modal-max-height);
+  overflow: hidden;
+  background: var(--ku-color-bg-phone);
+  border-radius: var(--ku-radius-modal);
+  box-shadow: var(--ku-shadow-modal);
+}
+
+.search-modal-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .search-header {
   display: flex;
   align-items: center;
@@ -5852,6 +5871,7 @@ button {
   padding: 0 var(--ku-feed-padding-x);
   border-bottom: 1px solid var(--ku-color-border);
   background: var(--ku-color-bg-phone);
+  flex-shrink: 0;
 }
 
 .search-input-wrap {
@@ -5961,6 +5981,19 @@ button {
 .search-chip--recent:active {
   background: var(--ku-color-primary-alpha-06);
   border-color: var(--ku-color-primary-alpha-14);
+}
+
+/* ─── 筛选态：仅看小黄车帖子 ─── */
+.search-chip--active {
+  background: var(--ku-color-primary-alpha-14);
+  border-color: var(--ku-color-primary);
+  color: var(--ku-color-primary);
+}
+
+.search-filter-row {
+  display: flex;
+  padding: var(--ku-search-content-padding-top) var(--ku-feed-padding-x) 0;
+  flex-shrink: 0;
 }
 
 .search-chip-label {

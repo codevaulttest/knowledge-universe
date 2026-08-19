@@ -55,6 +55,9 @@ export default function App() {
   const [activityGroups, setActivityGroups] = useState(ACTIVITY_GROUPS);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [dailyTaskOpen, setDailyTaskOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const openSearch = () => setSearchOpen(true);
+  const closeSearch = () => setSearchOpen(false);
   // 首页信息流下滑沉浸效果：顶部/底部导航渐隐；离开首页时复位
   const [navBarsHidden, setNavBarsHidden] = useState(false);
 
@@ -293,7 +296,7 @@ export default function App() {
   const shopItemOpen = route.page === 'P_SHOP_ITEM';
   const pageRoute = shopItemOpen && stack.length > 1 ? stack[stack.length - 2]! : route;
   const tab = pageRoute.page === 'P0' ? pageRoute.tab : 0;
-  const navigate = (r: Route) => setStack(s => [...s, r]);
+  const navigate = (r: Route) => { setSearchOpen(false); setStack(s => [...s, r]); };
   const navigateRoot = (r: Route) => setStack([r]);
   const goBack = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
   const setTab = (t: 0 | 1 | 2 | 3) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
@@ -742,7 +745,7 @@ export default function App() {
   const clearRecentSearches = () => setRecentSearches([]);
 
   const isOwnProfile = pageRoute.page === 'P6' && pageRoute.authorName === CURRENT_USER;
-  const showBottomNav = pageRoute.page === 'P0' || pageRoute.page === 'P_PLANET' || pageRoute.page === 'P_SEARCH' || pageRoute.page === 'P7' || pageRoute.page === 'P_DM' || pageRoute.page === 'P_SHOP' || isOwnProfile;
+  const showBottomNav = pageRoute.page === 'P0' || pageRoute.page === 'P_PLANET' || pageRoute.page === 'P7' || pageRoute.page === 'P_DM' || pageRoute.page === 'P_SHOP' || isOwnProfile;
 
   const [composeDraftId, setComposeDraftId] = useState<string | null>(null);
   const [pendingNewPost, setPendingNewPost] = useState<NewPostData | null>(null);
@@ -829,6 +832,7 @@ export default function App() {
     activityGroups, unreadActivityCount, markAllRead,
     openDailyTask, dailyTaskAlert,
     recentSearches, saveRecentSearch, removeRecentSearch, clearRecentSearches,
+    searchOpen, openSearch, closeSearch,
     drafts, saveDraft, updateDraft, deleteDraft,
     userProfile, updateUserProfile,
     channels: visibleChannels, subscribedChannelTiers,
@@ -860,7 +864,6 @@ export default function App() {
         {pageRoute.page === 'P6' && <ProfilePage authorName={pageRoute.authorName} />}
         {pageRoute.page === 'P_CHANNEL' && <ChannelPage channelId={pageRoute.channelId} />}
         {pageRoute.page === 'P7' && <ActivityPage />}
-        {pageRoute.page === 'P_SEARCH' && <SearchPage />}
         {pageRoute.page === 'P_PLANET' && <KnowledgePlanetPage initialSearch={pageRoute.searchNodeCode} openBsp={pageRoute.openBsp} />}
         {pageRoute.page === 'P_DM' && <DmListPage />}
         {pageRoute.page === 'P_DM_CHAT' && <DmChatPage peerId={pageRoute.peerId} />}
@@ -1030,6 +1033,9 @@ export default function App() {
 
         {/* 覆盖层：每日任务（发帖 + 互动帖里程碑 + 空投领取 + BSP 保底） */}
         {dailyTaskOpen && <DailyTaskSheet onClose={() => setDailyTaskOpen(false)} />}
+
+        {/* 覆盖层：搜索（居中弹窗） */}
+        {searchOpen && <SearchPage onClose={closeSearch} />}
 
         {/* Toast */}
         {/* 覆盖层：连接钱包二次确认（游客触发需身份/资产/链上能力的操作时弹出） */}
