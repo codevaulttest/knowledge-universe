@@ -95,7 +95,8 @@ export function ComposePage({
   const shopPriceNum = Number(shopPrice);
   const shopStockNum = Number(shopStock);
   const shopValid = !shopEnabled || (
-    shopPriceNum > 0
+    hasContacts
+    && shopPriceNum > 0
     && Number.isFinite(shopPriceNum)
     && shopStockNum >= 1
     && Number.isInteger(shopStockNum)
@@ -757,7 +758,7 @@ export function ComposePage({
 
                 {shopEnabled && !hasContacts && (
                   <div className="compose-shop-contacts-nudge">
-                    <span>{t('设置联系方式，让买家下单后能找到你')}</span>
+                    <span>{t('联系方式是小黄车必填项，方便买家下单后找到你')}</span>
                     <button type="button" className="compose-shop-contacts-nudge__btn" onClick={() => { openEditProfileContacts(); handleCloseAttempt(); }}>
                       {t('去设置')}
                     </button>

@@ -46,7 +46,7 @@ export const en: Record<string, string> = {
   '微信号': 'WeChat ID',
   'WhatsApp 号码': 'WhatsApp number',
   '电话号码': 'Phone number',
-  '设置联系方式，让买家下单后能找到你': 'Add your contact info so buyers can reach you after ordering',
+  '联系方式是小黄车必填项，方便买家下单后找到你': 'Contact info is required for shop items so buyers can reach you after ordering',
   '去设置': 'Set up',
   '清空': 'Clear',
   '已复制': 'Copied',
