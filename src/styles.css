@@ -11375,6 +11375,29 @@ html[lang="zh-TW"] .planet-hero-title {
   align-items: baseline;
   gap: 10px;
 }
+.shop-item-seller-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.shop-item-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-badge);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-body-sm);
+  cursor: pointer;
+}
+.shop-item-save--active {
+  border-color: var(--ku-color-shop-border);
+  background: var(--ku-color-shop-bg);
+  color: var(--ku-color-shop-strong);
+}
 .shop-item-price {
   color: var(--ku-color-shop-strong);
   font: 700 26px/1 var(--ku-font-family);
@@ -11389,7 +11412,6 @@ html[lang="zh-TW"] .planet-hero-title {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  align-self: flex-start;
   padding: 0;
   border: none;
   background: none;

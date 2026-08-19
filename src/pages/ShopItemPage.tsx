@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ChevronRight, Circle, CircleCheck, Clock, MapPin, Minus, Package, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
+import { Bookmark, Check, ChevronRight, Circle, CircleCheck, Clock, MapPin, Minus, Package, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import type { ShippingAddress, ShopOrder } from '../types';
@@ -15,6 +15,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     posts, navigate, t, requireWallet,
     shippingAddresses, defaultAddress, addShippingAddress, removeShippingAddress, setDefaultAddress,
     placeShopOrder, showToast, openImageLightbox,
+    savedPostIds, togglePostAction,
   } = useApp();
 
   const post = posts.find(p => p.id === postId);
@@ -49,6 +50,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
 
   const { price, rebatePercent, stock } = post.shop;
   const isOwn = post.author === CURRENT_USER;
+  const saved = savedPostIds.has(post.id);
   const unitFee = computeShopFee(price);
   const totalPb = price * qty;
   const totalSup = Math.round(unitFee * qty * 10000) / 10000;
@@ -129,16 +131,28 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
         <div className="shop-item-body">
           <div className="shop-item-intro">
             <h2 className="shop-item-title">{post.title}</h2>
-            <button
-              type="button"
-              className="shop-item-seller"
-              onClick={() => navigate({ page: 'P6', authorName: post.author })}
-              aria-label={t('卖家：{name}', { name: post.author })}
-            >
-              <Store size={14} strokeWidth={2} aria-hidden="true" />
-              {post.author}
-              <ChevronRight size={15} strokeWidth={2} aria-hidden="true" />
-            </button>
+            <div className="shop-item-seller-row">
+              <button
+                type="button"
+                className="shop-item-seller"
+                onClick={() => navigate({ page: 'P6', authorName: post.author })}
+                aria-label={t('卖家：{name}', { name: post.author })}
+              >
+                <Store size={14} strokeWidth={2} aria-hidden="true" />
+                {post.author}
+                <ChevronRight size={15} strokeWidth={2} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className={`shop-item-save${saved ? ' shop-item-save--active' : ''}`}
+                onClick={() => togglePostAction(post.id, 'save')}
+                aria-pressed={saved}
+                aria-label={saved ? t('取消收藏') : t('收藏')}
+              >
+                <Bookmark size={19} strokeWidth={2} fill={saved ? 'currentColor' : 'none'} />
+                {saved ? t('已收藏') : t('收藏')}
+              </button>
+            </div>
           </div>
           <div className="shop-item-pricebar">
             <span className="shop-item-price">{formatTokenAmount(price)} <span className="shop-item-price-unit">PB</span></span>

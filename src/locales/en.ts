@@ -37,6 +37,7 @@ export const en: Record<string, string> = {
   '点赞': 'like',
   '踩': 'dislike',
   '收藏': 'save',
+  '取消收藏': 'Unsave',
   '确认转发？': 'Repost this post?',
   '取消': 'Cancel',
   '转发': 'Repost',
