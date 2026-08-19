@@ -1336,8 +1336,8 @@ button {
   margin-left: 1px;
 }
 
-/* ── 热力值 + 赞助入口（覆盖 GeminiNodeBadge 左侧内容，见 .gemini-left）──
-   热度与赞助分离：无外层胶囊，🔥热度 与「赞助」为两个独立 pill；
+/* ── 热力值 + 助力入口（覆盖 GeminiNodeBadge 左侧内容，见 .gemini-left）──
+   热度与助力合并为同一个 pill：🔥热度 · 助力；
    在 .post-heat-gemini-row 内靠右；有链接/购买时它们靠左 */
 .gemini-badge--heat {
   width: fit-content;
@@ -1355,17 +1355,7 @@ button {
 .gemini-badge--heat .gemini-left {
   gap: 8px;
 }
-/* 🔥热度 单独保留中性色胶囊背景（高度与链接/购买/赞助胶囊对齐） */
-.gemini-badge--heat .post-heat {
-  height: 26px;
-  padding: 0 10px;
-  border-radius: var(--ku-radius-card);
-  background: var(--ku-color-bg-page);
-}
-.gemini-badge--heat .post-heat-tip-btn {
-  margin-left: 0;
-}
-/* Feed：热力值/赞助 + 链接按钮同行 */
+/* Feed：热力值/助力 + 链接按钮同行 */
 .post-heat-gemini-row {
   display: flex;
   align-items: center;
@@ -1378,39 +1368,46 @@ button {
 .post-heat-gemini-row > .post-shop-btn {
   margin: 0;
 }
-/* 赞助/热力值徽章靠右，其余（链接 + 购买）留在左侧；
+/* 助力/热力值徽章靠右，其余（链接 + 购买）留在左侧；
    重置徽章自带的 margin-top，避免在本行内被下推、破坏垂直居中 */
 .post-heat-gemini-row > .gemini-badge {
   margin: 0 0 0 auto;
 }
+/* 左「热力值」浅底金字 + 细竖线分隔 + 右「助力」CTA 金底白字，两段拼接成一个整体圆角 pill */
 .post-heat {
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  height: 26px;
+  border-radius: var(--ku-radius-card);
+  overflow: hidden;
+  font: var(--ku-text-action-cta-lg);
+}
+.post-heat-value {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  flex-shrink: 0;
-  color: var(--ku-color-genesis-gold);
-  font: var(--ku-text-action-cta-lg);
+  padding: 0 10px;
+  background: var(--ku-color-genesis-gold-bg);
+  color: var(--ku-color-genesis-gold-text);
 }
-.post-heat-tip-btn {
+.post-heat-divider {
+  align-self: center;
+  width: 1px;
+  height: 14px;
+  background: var(--ku-color-border-control);
+}
+.post-heat-cta {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  margin-left: 6px;
-  height: 26px;
   padding: 0 12px;
-  border: none;
-  border-radius: var(--ku-radius-card);
   background: var(--ku-color-genesis-gold);
   color: #fff;
-  font: var(--ku-text-action-cta-lg);
 }
-/* 已收到打赏（自己主页帖子）：描边展示态，不用实心 CTA */
-.post-heat-tip-btn--received {
-  padding: 0 10px;
-  border: 1.5px solid var(--ku-color-genesis-gold);
-  background: transparent;
-  color: var(--ku-color-genesis-gold);
+/* 已收到打赏（自己主页帖子）：CTA 段改为描边展示态，不用实心底色 */
+.post-heat-cta--received {
+  background: var(--ku-color-genesis-gold-bg);
+  color: var(--ku-color-genesis-gold-text);
 }
 
 /* 浏览量：与其它操作图标同色，不可点击 */
@@ -5513,6 +5510,14 @@ button {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* 助力留言：完整展示，不做单行/多行截断 */
+.activity-tip-message {
+  font: 400 13px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+  margin: 2px 0 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 .activity-post-summary {
   font: 400 12.5px/1.4 var(--ku-font-family);
   color: var(--ku-color-text-secondary);
@@ -5630,6 +5635,12 @@ button {
 .actors-item-time {
   font: 400 12px/1 var(--ku-font-family);
   color: var(--ku-color-text-meta);
+}
+.actors-item-message {
+  font: 400 12.5px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .actors-item-amount {
   display: inline-flex;

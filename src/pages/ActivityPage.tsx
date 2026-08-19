@@ -14,7 +14,7 @@ const ACTION_LABEL: Record<ActivityType, { zh: string; en: string }> = {
   save:    { zh: '收藏', en: 'bookmarked' },
   comment: { zh: '评论', en: 'commented on' },
   link:    { zh: '链接', en: 'linked' },
-  tip:     { zh: '赞助', en: 'sponsored' },
+  tip:     { zh: '助力', en: 'sponsored' },
   subscribe: { zh: '订阅', en: 'subscribed to' },
 };
 
@@ -55,15 +55,15 @@ function groupText(group: ActivityGroup, zh: boolean): string {
     const amount = group.tipAmount != null ? `（${group.tipAmount} PB）` : '';
     const amountEn = group.tipAmount != null ? ` (${group.tipAmount} PB)` : '';
     if (actors.length === 1) {
-      return zh ? `${actors[0].user} 赞助了你的帖子${amount}` : `${actors[0].user} sponsored your post${amountEn}`;
+      return zh ? `${actors[0].user} 助力了你的帖子${amount}` : `${actors[0].user} sponsored your post${amountEn}`;
     }
     if (actors.length === 2) {
       return zh
-        ? `${actors[0].user}、${actors[1].user} 赞助了你的帖子${amount}`
+        ? `${actors[0].user}、${actors[1].user} 助力了你的帖子${amount}`
         : `${actors[0].user} and ${actors[1].user} sponsored your post${amountEn}`;
     }
     return zh
-      ? `${actors[0].user}、${actors[1].user} 等 ${actors.length} 人赞助了你的帖子${amount}`
+      ? `${actors[0].user}、${actors[1].user} 等 ${actors.length} 人助力了你的帖子${amount}`
       : `${actors[0].user}, ${actors[1].user} and ${actors.length - 2} others sponsored your post${amountEn}`;
   }
   if (group.type === 'link') {
@@ -128,6 +128,9 @@ function ActivityItem({
         {group.commentText && (
           <p className="activity-comment-text">「{group.commentText}」</p>
         )}
+        {group.tipMessage && (
+          <p className="activity-tip-message">「{group.tipMessage}」</p>
+        )}
         <p className="activity-post-summary">{postTitle}</p>
         <p className="activity-time">{group.time}</p>
       </div>
@@ -170,7 +173,7 @@ export function ActivityPage() {
     { key: 'like',    zh: '点赞',   en: 'Likes' },
     { key: 'share',   zh: '转发',   en: 'Reposts' },
     { key: 'save',    zh: '收藏',   en: 'Saves' },
-    { key: 'tip',     zh: '赞助',   en: 'Sponsorships' },
+    { key: 'tip',     zh: '助力',   en: 'Sponsorships' },
     { key: 'subscribe', zh: '订阅', en: 'Subscriptions' },
   ];
 

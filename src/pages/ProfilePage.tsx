@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Edit3, FileText, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -979,7 +979,7 @@ function OutgoingTipItem({ tip, onOpen }: { tip: OutgoingTip; onOpen: () => void
   return (
     <button type="button" className="tip-history-item" onClick={onOpen}>
       <div className="tip-history-item-icon" aria-hidden="true">
-        <HandCoins size={16} strokeWidth={2} />
+        <Flame size={16} strokeWidth={2} />
       </div>
       <div className="tip-history-item-body">
         <div className="tip-history-item-title">{title}</div>

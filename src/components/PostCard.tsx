@@ -34,7 +34,7 @@ export function ActorsSheet({ postId, initialTab, onClose }: {
     { key: 'like',    zh: '点赞', en: 'Likes' },
     { key: 'share',   zh: '转发', en: 'Reposts' },
     { key: 'save',    zh: '收藏', en: 'Saves' },
-    { key: 'tip',     zh: '赞助', en: 'Sponsorships' },
+    { key: 'tip',     zh: '助力', en: 'Sponsorships' },
   ];
 
   return (
@@ -75,6 +75,9 @@ export function ActorsSheet({ postId, initialTab, onClose }: {
                     <AuthorName name={entry.user} />
                   </span>
                   <span className="actors-item-time">{entry.time}</span>
+                  {tab === 'tip' && entry.message && (
+                    <span className="actors-item-message">「{entry.message}」</span>
+                  )}
                 </div>
                 {tab === 'tip' ? (
                   <span className="actors-item-amount">
@@ -419,23 +422,18 @@ export function PostCard({
             ? () => navigate({ page: 'P_PLANET', searchNodeCode: post.nodeId })
             : undefined}
           leftContent={(
-            <>
-              <span className="post-heat">
+            <span className="post-heat">
+              <span className="post-heat-value">
                 <Flame size={17} strokeWidth={2.25} />
                 {formatCount(heat, language)}
               </span>
-              {isOwn ? (
-                <span className="post-heat-tip-btn post-heat-tip-btn--received">
-                  <HandCoins size={14} strokeWidth={2.25} />
-                  {t('{tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
-                </span>
-              ) : (
-                <span className="post-heat-tip-btn">
-                  <HandCoins size={14} strokeWidth={2.25} />
-                  {t('打赏')}
-                </span>
-              )}
-            </>
+              <span className="post-heat-divider" />
+              <span className={`post-heat-cta${isOwn ? ' post-heat-cta--received' : ''}`}>
+                {isOwn
+                  ? t('{tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })
+                  : t('打赏')}
+              </span>
+            </span>
           )}
           onLeftClick={isOwn
             ? (hasActors ? () => setActorsTab('tip') : undefined)

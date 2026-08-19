@@ -62,6 +62,7 @@
   --ku-color-genesis-silver-bg:   #eef2f7;
   --ku-color-genesis-gold:        #d69e2e;  /* 创世节点·金（10000 档持有者）*/
   --ku-color-genesis-gold-bg:     #fdf3d9;
+  --ku-color-genesis-gold-text:   #8b6508;  /* 金色系文字专用（浅底深字场景），比 --ku-color-genesis-gold 更深以满足 4.5:1 对比度 */
   --ku-color-member-badge:        #7C3AED;  /* 频道会员身份小标——与创世节点金/银色系区分，避免混淆 */
   --ku-color-member-badge-bg:     #efe6ff;
 

@@ -893,6 +893,7 @@ export const ACTIVITY_GROUPS: ActivityGroup[] = [
     id: 'agt1', type: 'tip', postId: 'p9', time: '1 小时前', isRead: false,
     actors: [{ user: '阿May的研究笔记', avatarIdx: 1 }],
     tipAmount: 100,
+    tipMessage: '这篇写得太到位了，双系统理论配上这张图一下就理解了，冲！',
   },
   {
     id: 'agt2', type: 'tip', postId: 'p9', time: '2 小时前', isRead: false,
@@ -1009,9 +1010,9 @@ export const POST_ACTORS: Record<string, PostActors> = {
       { user: '游牧开发者', avatarIdx: 2, time: '3 天前' },
     ],
     tips: [
-      { user: '阿May的研究笔记', avatarIdx: 1, time: '1 小时前', amount: 100 },
+      { user: '阿May的研究笔记', avatarIdx: 1, time: '1 小时前', amount: 100, message: '这篇写得太到位了，冲！' },
       { user: '极客前沿', avatarIdx: 1, time: '2 小时前', amount: 50 },
-      { user: '游牧开发者', avatarIdx: 2, time: '2 小时前', amount: 50 },
+      { user: '游牧开发者', avatarIdx: 2, time: '2 小时前', amount: 50, message: '收藏了，下次实操试试' },
       { user: '深海鱼炸弹', avatarIdx: 0, time: '4 天前', amount: 30 },
       { user: '设计师刘然', avatarIdx: 0, time: '4 天前', amount: 20 },
     ],
@@ -1035,7 +1036,7 @@ export const POST_ACTORS: Record<string, PostActors> = {
       { user: '极客前沿', avatarIdx: 1, time: '1 小时前' },
     ],
     tips: [
-      { user: '阿May的研究笔记', avatarIdx: 1, time: '30 分钟前', amount: 20 },
+      { user: '阿May的研究笔记', avatarIdx: 1, time: '30 分钟前', amount: 20, message: '卡片笔记法真的有用，已经开始用了' },
       { user: '游牧开发者', avatarIdx: 2, time: '1 小时前', amount: 10 },
     ],
   },

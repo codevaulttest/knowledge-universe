@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Ellipsis, Eye, Flame, Gem, HandCoins, Heart, Radio, ShoppingCart, Trash2, User } from 'lucide-react';
+import { Ellipsis, Eye, Flame, Gem, Heart, Radio, ShoppingCart, Trash2, User } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_ACTORS, POST_REPLIES, replyLikesStore, likedReplyIdsStore } from '../mockData';
 import type { Reply } from '../types';
@@ -239,25 +239,22 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
               ? () => navigate({ page: 'P_PLANET', searchNodeCode: post.nodeId })
               : undefined}
             leftContent={(
-              <>
-                <span className="post-heat">
+              <span className="post-heat">
+                <span className="post-heat-value">
                   <Flame size={16} strokeWidth={2.25} />
                   {formatCount(heat, language)}
                 </span>
-                {isOwn ? (
-                  (post.tipsReceived ?? 0) > 0 && (
-                    <span className="post-heat-tip-btn post-heat-tip-btn--received">
-                      <HandCoins size={13} strokeWidth={2.25} />
-                      {t('{tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })}
+                {(!isOwn || (post.tipsReceived ?? 0) > 0) && (
+                  <>
+                    <span className="post-heat-divider" />
+                    <span className={`post-heat-cta${isOwn ? ' post-heat-cta--received' : ''}`}>
+                      {isOwn
+                        ? t('{tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })
+                        : t('打赏')}
                     </span>
-                  )
-                ) : (
-                  <span className="post-heat-tip-btn">
-                    <HandCoins size={13} strokeWidth={2.25} />
-                    {t('打赏')}
-                  </span>
+                  </>
                 )}
-              </>
+              </span>
             )}
             onLeftClick={isOwn
               ? (hasActors ? () => setActorsTab('tip') : undefined)

@@ -185,6 +185,7 @@ export type ActivityGroup = {
   isRead: boolean;
   commentText?: string;
   tipAmount?: number; // type === 'tip' 时，该条打赏的金额（PB）
+  tipMessage?: string; // type === 'tip' 时，对方助力时附带的留言
   channelName?: string; // type === 'subscribe' 时，被订阅的频道名
   tierName?: string;    // type === 'subscribe' 时，订阅档位（如 Lv.2）
 };
@@ -194,6 +195,7 @@ export type PostActorEntry = {
   avatarIdx: number;
   time: string;
   amount?: number; // 打赏名单时表示该笔打赏金额（PB）
+  message?: string; // 打赏名单时，对方附带的留言
 };
 
 export type PostActors = {
