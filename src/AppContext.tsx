@@ -68,6 +68,11 @@ export type AppContextValue = {
   deleteDraft: (draftId: string) => void;
   userProfile: UserProfile;
   updateUserProfile: (profile: UserProfile) => void;
+  /** 跳转自己主页时是否自动展开「编辑资料」（用于小黄车联系方式发现引导，消费后需自行置回 false） */
+  editProfileAutoOpen: boolean;
+  setEditProfileAutoOpen: Dispatch<SetStateAction<boolean>>;
+  /** 跳转到自己的主页并自动展开「编辑资料」 */
+  openEditProfileContacts: () => void;
   channels: Channel[];
   // 频道 id → 当前订阅的档位下标（未订阅则不在此 map 中）
   subscribedChannelTiers: Record<string, number>;

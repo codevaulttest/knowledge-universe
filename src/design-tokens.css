@@ -73,6 +73,7 @@
   --ku-color-shop-border:        #f0d089;  /* 小黄车描边 */
   --ku-color-shop-btn:           #f5a623;  /* 购买按钮实心底 */
   --ku-color-shop-btn-text:      #3a2600;  /* 购买按钮文字（深棕，压在黄底上达标）*/
+  --ku-color-shop-text-on-tint:  #8a5c00;  /* 浅黄底（--ku-color-shop-bg）上的琥珀色文字/图标，比 shop-strong 更深以达标 4.5:1，同色系而非近黑 */
 
   /* ═══════════════════════════════════════════════════
      背景色 (Surface)

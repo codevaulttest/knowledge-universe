@@ -36,9 +36,10 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
     const timerId = window.setTimeout(() => {
       setDebouncedQ(trimmed.toLowerCase());
       setIsSearching(false);
+      saveRecentSearch(trimmed);
     }, 300);
     return () => window.clearTimeout(timerId);
-  }, [query]);
+  }, [query, saveRecentSearch]);
 
   useEffect(() => {
     setTab('all');
@@ -66,9 +67,7 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
   const hasResults = visiblePosts.length > 0 || visibleUsers.length > 0;
 
   const applyQuery = (nextQuery: string) => setQuery(nextQuery);
-  const commitQuery = () => saveRecentSearch(query);
   const goToProfile = (authorName: string) => {
-    commitQuery();
     navigate({ page: 'P6', authorName });
   };
 
@@ -209,7 +208,6 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
                             key={post.id}
                             post={post}
                             index={index % 3}
-                            onOpen={commitQuery}
                           />
                         ))}
                       </div>

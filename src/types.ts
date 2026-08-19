@@ -292,8 +292,16 @@ export type StakeModalRequest = {
   onAfterPay: () => void;
 };
 
+/** 个人联系方式（小黄车卖家可选填，买家在商品详情页可见）；键留空=未设置该渠道 */
+export type ProfileContacts = {
+  wechat?: string;
+  whatsapp?: string;
+  phone?: string;
+};
+
 export type UserProfile = {
   nickname: string;
   avatarSeed: string;
   avatarUrl?: string;
+  contacts?: ProfileContacts;
 };

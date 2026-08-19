@@ -7090,6 +7090,63 @@ button {
   transition: border-color var(--ku-motion-fast);
 }
 .edit-profile-input:focus { border-color: var(--ku-color-primary); }
+.edit-profile-hint {
+  margin: -4px 0 0;
+  font: 400 12px/1.5 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+}
+.edit-profile-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.edit-profile-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.edit-profile-contact-icon {
+  flex-shrink: 0;
+  color: var(--ku-color-text-secondary);
+}
+.edit-profile-contact-input-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.edit-profile-contact-input {
+  flex: 1;
+  padding-right: 34px;
+}
+.edit-profile-contact-clear {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: var(--ku-radius-circle);
+  background: none;
+  color: var(--ku-color-text-secondary);
+  cursor: pointer;
+  transition: background var(--ku-motion-fast), color var(--ku-motion-fast);
+}
+.edit-profile-contact-clear:active {
+  background: var(--ku-color-primary-alpha-06);
+  color: var(--ku-color-text-primary);
+}
+.edit-profile-contacts-more {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ku-color-primary);
+  font: 600 13px/1 var(--ku-font-family);
+  cursor: pointer;
+}
 .recharge-warning-banner {
   display: flex;
   align-items: flex-start;
@@ -11109,6 +11166,29 @@ html[lang="zh-TW"] .planet-hero-title {
   font: var(--ku-text-caption-strong);
   font-size: 14px;
 }
+.compose-shop-contacts-nudge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-shop-bg);
+  border: 1px solid var(--ku-color-shop-border);
+  font: var(--ku-text-meta);
+  color: var(--ku-color-shop-btn-text);
+}
+.compose-shop-contacts-nudge__btn {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: 600 12px/1 var(--ku-font-family);
+  color: var(--ku-color-shop-btn-text);
+  text-decoration: underline;
+  cursor: pointer;
+}
 .compose-shop-switch {
   position: relative;
   width: 42px;
@@ -11414,13 +11494,19 @@ html[lang="zh-TW"] .planet-hero-title {
   justify-content: space-between;
   gap: 10px;
 }
+.shop-item-seller-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
 .shop-item-save {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 6px 12px;
   border: 1px solid var(--ku-color-border-card);
-  border-radius: var(--ku-radius-badge);
+  border-radius: var(--ku-radius-pill);
   background: var(--ku-color-bg-phone);
   color: var(--ku-color-text-secondary);
   font: var(--ku-text-body-sm);
@@ -11430,6 +11516,49 @@ html[lang="zh-TW"] .planet-hero-title {
   border-color: var(--ku-color-shop-border);
   background: var(--ku-color-shop-bg);
   color: var(--ku-color-shop-strong);
+}
+.shop-item-contacts-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--ku-motion-fast);
+}
+.shop-item-contacts-reveal--open {
+  grid-template-rows: 1fr;
+}
+.shop-item-contacts-reveal-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+.shop-item-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+}
+.shop-item-contact-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-bg-phone);
+  border: 1px solid var(--ku-color-border-card);
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta);
+  cursor: pointer;
+}
+.shop-item-contacts-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-shop-bg);
+  border: 1px solid var(--ku-color-shop-border);
+  color: var(--ku-color-shop-text-on-tint);
+  font: var(--ku-text-body-sm);
+  cursor: pointer;
 }
 .shop-item-price {
   color: var(--ku-color-shop-strong);

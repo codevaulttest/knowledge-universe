@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
-import type { Channel, ChannelSubscriber, Draft, Language, OutgoingTip, RepostedBy } from '../types';
+import type { Channel, ChannelSubscriber, Draft, Language, OutgoingTip, ProfileContacts, RepostedBy, UserProfile } from '../types';
 import { PostCard } from '../components/PostCard';
 import { DevPanel } from '../components/DevPanel';
 import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
@@ -14,7 +14,7 @@ import { useChannelListSearch } from '../components/channelSearch';
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, editProfileAutoOpen, setEditProfileAutoOpen } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
@@ -47,6 +47,12 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const [confirmDeleteDraftId, setConfirmDeleteDraftId] = useState<string | null>(null);
   const [tipTarget, setTipTarget] = useState<{ context: 'post' | 'author'; postTitle?: string } | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  useEffect(() => {
+    if (isOwn && editProfileAutoOpen) {
+      setShowEditProfile(true);
+      setEditProfileAutoOpen(false);
+    }
+  }, [isOwn, editProfileAutoOpen, setEditProfileAutoOpen]);
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
   const tabsScrollRef = useRef<HTMLElement | null>(null);
   const [tabsCanScrollLeft, setTabsCanScrollLeft] = useState(false);
@@ -507,19 +513,31 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 // Edit Profile Modal
 // ═══════════════════════════════════════════════════════════════
 
+const CONTACT_FIELDS_PRIMARY: { key: keyof ProfileContacts; label: string; icon: typeof MessageCircle; placeholder: string }[] = [
+  { key: 'wechat', label: '微信', icon: MessageCircle, placeholder: '微信号' },
+  { key: 'phone', label: '电话', icon: Phone, placeholder: '电话号码' },
+];
+const CONTACT_FIELDS_MORE: { key: keyof ProfileContacts; label: string; icon: typeof MessageCircle; placeholder: string }[] = [
+  { key: 'whatsapp', label: 'WhatsApp', icon: MessageCircleMore, placeholder: 'WhatsApp 号码' },
+];
+
 function EditProfileModal({
   userProfile,
   onSave,
   onClose,
   t,
 }: {
-  userProfile: { nickname: string; avatarSeed: string; avatarUrl?: string };
-  onSave: (profile: { nickname: string; avatarSeed: string; avatarUrl?: string }) => void;
+  userProfile: UserProfile;
+  onSave: (profile: UserProfile) => void;
   onClose: () => void;
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [nickname, setNickname] = useState(userProfile.nickname);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(userProfile.avatarUrl);
+  const [contacts, setContacts] = useState<ProfileContacts>(userProfile.contacts ?? {});
+  const [moreContactsOpen, setMoreContactsOpen] = useState(
+    !!userProfile.contacts?.whatsapp?.trim()
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const trimmed = nickname.trim();
   const maskedWallet = `${MOCK_WALLET_ADDRESS.slice(0, 6)}...${MOCK_WALLET_ADDRESS.slice(-6)}`;
@@ -543,7 +561,7 @@ function EditProfileModal({
           <button
             type="button"
             className="edit-profile-save"
-            onClick={() => onSave({ nickname: trimmed, avatarSeed: userProfile.avatarSeed, avatarUrl })}
+            onClick={() => onSave({ nickname: trimmed, avatarSeed: userProfile.avatarSeed, avatarUrl, contacts })}
           >
             {t('保存')}
           </button>
@@ -600,6 +618,73 @@ function EditProfileModal({
               autoComplete="off"
             />
             <span className="edit-profile-charcount">{nickname.length}/24</span>
+          </div>
+
+          {/* 联系方式：小黄车卖家可选填，供买家在商品详情页联系 */}
+          <div className="edit-profile-field">
+            <label className="edit-profile-label">{t('小黄车联系方式')}</label>
+            <p className="edit-profile-hint">{t('填写后，买家能在你的小黄车商品页看到并联系你')}</p>
+            <div className="edit-profile-contacts">
+              {CONTACT_FIELDS_PRIMARY.map(({ key, label, icon: Icon, placeholder }) => (
+                <div className="edit-profile-contact-row" key={key}>
+                  <Icon size={16} strokeWidth={2} className="edit-profile-contact-icon" aria-hidden="true" />
+                  <div className="edit-profile-contact-input-wrap">
+                    <input
+                      className="edit-profile-input edit-profile-contact-input"
+                      value={contacts[key] ?? ''}
+                      placeholder={t(placeholder)}
+                      aria-label={t(label)}
+                      onChange={e => setContacts(c => ({ ...c, [key]: e.target.value }))}
+                      autoComplete="off"
+                    />
+                    {contacts[key] && (
+                      <button
+                        type="button"
+                        className="edit-profile-contact-clear"
+                        onClick={() => setContacts(c => ({ ...c, [key]: '' }))}
+                        aria-label={t('清空')}
+                      >
+                        <X size={13} strokeWidth={2.2} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {moreContactsOpen && CONTACT_FIELDS_MORE.map(({ key, label, icon: Icon, placeholder }) => (
+                <div className="edit-profile-contact-row" key={key}>
+                  <Icon size={16} strokeWidth={2} className="edit-profile-contact-icon" aria-hidden="true" />
+                  <div className="edit-profile-contact-input-wrap">
+                    <input
+                      className="edit-profile-input edit-profile-contact-input"
+                      value={contacts[key] ?? ''}
+                      placeholder={t(placeholder)}
+                      aria-label={t(label)}
+                      onChange={e => setContacts(c => ({ ...c, [key]: e.target.value }))}
+                      autoComplete="off"
+                    />
+                    {contacts[key] && (
+                      <button
+                        type="button"
+                        className="edit-profile-contact-clear"
+                        onClick={() => setContacts(c => ({ ...c, [key]: '' }))}
+                        aria-label={t('清空')}
+                      >
+                        <X size={13} strokeWidth={2.2} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {!moreContactsOpen && (
+                <button
+                  type="button"
+                  className="edit-profile-contacts-more"
+                  onClick={() => setMoreContactsOpen(true)}
+                >
+                  {t('其他联系方式')}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -23,7 +23,7 @@ export function ComposePage({
   draft?: Draft | null;
   onRegisterCloseHandler?: (handler: () => void) => void;
 }) {
-  const { openPay, showToast, updatePost, saveDraft, updateDraft, stagePendingPost, publishPost, t, language, channels } = useApp();
+  const { openPay, showToast, updatePost, saveDraft, updateDraft, stagePendingPost, publishPost, t, language, channels, userProfile, openEditProfileContacts } = useApp();
   const isEditMode = !!editPost;
   const myChannels = channels.filter(c => c.ownerName === CURRENT_USER);
   // 编辑已发布的频道帖子时，可见档位允许调整，但只能单向放宽（降低门槛/改成不限档位），
@@ -91,6 +91,7 @@ export function ComposePage({
   useEffect(() => {
     if (shopEligible) shopSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [shopEligible]);
+  const hasContacts = !!userProfile.contacts && Object.values(userProfile.contacts).some(v => v && v.trim());
   const shopPriceNum = Number(shopPrice);
   const shopStockNum = Number(shopStock);
   const shopValid = !shopEnabled || (
@@ -753,6 +754,15 @@ export function ComposePage({
                 <p className="compose-stake-hint">
                   {t('开启后，读者能直接下单买走你的商品')}
                 </p>
+
+                {shopEnabled && !hasContacts && (
+                  <div className="compose-shop-contacts-nudge">
+                    <span>{t('设置联系方式，让买家下单后能找到你')}</span>
+                    <button type="button" className="compose-shop-contacts-nudge__btn" onClick={() => { openEditProfileContacts(); handleCloseAttempt(); }}>
+                      {t('去设置')}
+                    </button>
+                  </div>
+                )}
 
                 {shopEnabled && (
                   <div className="compose-shop-fields">

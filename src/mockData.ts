@@ -1,4 +1,4 @@
-import type { ActivityGroup, Channel, ChannelSubscriber, DmConversation, OutgoingTip, Post, PostActors, Reply, ShippingAddress, ShopOrder } from './types';
+import type { ActivityGroup, Channel, ChannelSubscriber, DmConversation, OutgoingTip, Post, PostActors, ProfileContacts, Reply, ShippingAddress, ShopOrder } from './types';
 
 export type UserListItem = {
   name: string;
@@ -7,6 +7,14 @@ export type UserListItem = {
 };
 
 export const BATCH_SIZE = 3;
+
+/** 小黄车卖家联系方式演示数据（其余作者未设置=留空，走查时展示无联系方式的正常状态） */
+export const MOCK_SELLER_CONTACTS: Record<string, ProfileContacts> = {
+  '拾光杂货铺': { wechat: 'shiguang_shop', phone: '138****2233' },
+  '游牧开发者': { whatsapp: '+65 9123 4567' },
+  '设计师刘然': { wechat: 'liuran_design' },
+  '兜底走查': { wechat: 'daodi_qa' },
+};
 
 export const MOCK_WALLET_ADDRESS = '0x7a3fb8e2d1c94f6a5b3e0d9c8f2a7e1b4d6c3e8';
 export const DEFAULT_WALLET_DISPLAY = MOCK_WALLET_ADDRESS.slice(-6);
@@ -378,8 +386,9 @@ export const ALL_POSTS: Post[] = [
   {
     id: 'fallback-demo', author: '兜底走查', time: '刚刚',
     title: '封面图地址已失效：回退到裂图占位',
-    kind: 'image', imageCount: 1, imageRatio: 16 / 9, images: ['https://broken.invalid/cover.jpg'], visiblePercent: 100, isNode: false, stakeTier: 0,
+    kind: 'image', imageCount: 1, imageRatio: 16 / 9, images: ['https://broken.invalid/cover.jpg'], visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Rz0dW2',
     rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
+    shop: { price: 199, rebatePercent: 30, stock: 50 },
   },
   // ── 图片比例走查（首屏可见）：单图不同宽高比 + 多图 carousel 不同封面比例 ──
   // 规则见 docs/image-display-spec.md：画框比例 = clamp(真实比例, 9:21, 21:9)，cover 居中裁。

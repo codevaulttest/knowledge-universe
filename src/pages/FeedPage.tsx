@@ -249,6 +249,33 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
     requireWallet(() => setTab(next));
   };
 
+  // 左右拖拽切换标签页；触点落在多图 carousel 内时整段手势交给它自己处理，避免抢手势
+  const swipeRef = useRef<{ x0: number; y0: number; axis: 'x' | 'y' | 'ignore' | null }>({ x0: 0, y0: 0, axis: null });
+  const SWIPE_THRESHOLD = 60;
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    const ignore = !!(e.target as HTMLElement).closest('.media-carousel');
+    swipeRef.current = { x0: t.clientX, y0: t.clientY, axis: ignore ? 'ignore' : null };
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const s = swipeRef.current;
+    if (s.axis === 'ignore' || s.axis) return;
+    const t = e.touches[0];
+    const dx = t.clientX - s.x0;
+    const dy = t.clientY - s.y0;
+    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+      s.axis = Math.abs(dx) > Math.abs(dy) * 1.3 ? 'x' : 'y';
+    }
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const s = swipeRef.current;
+    if (s.axis !== 'x') return;
+    const dx = e.changedTouches[0].clientX - s.x0;
+    if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+    if (dx < 0 && tab < 3) goTab((tab + 1) as 0 | 1 | 2 | 3);
+    else if (dx > 0 && tab > 0) goTab((tab - 1) as 0 | 1 | 2 | 3);
+  };
+
   return (
     <>
       <div className={`feed-header-shell${navBarsHidden ? ' feed-header-shell--hidden' : ''}`}>
@@ -306,7 +333,13 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
         </div>
       </div>
       </div>
-      <div className={`scroll-area${slideClass ? ` ${slideClass}` : ''}`} ref={scrollRef}>
+      <div
+        className={`scroll-area${slideClass ? ` ${slideClass}` : ''}`}
+        ref={scrollRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {refreshing && (
           <div className="feed-loading" aria-live="polite">
             <span className="spinner" />

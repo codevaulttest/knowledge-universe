@@ -298,6 +298,12 @@ export default function App() {
   const tab = pageRoute.page === 'P0' ? pageRoute.tab : 0;
   const navigate = (r: Route) => { setSearchOpen(false); setStack(s => [...s, r]); };
   const navigateRoot = (r: Route) => setStack([r]);
+  // 跳转到自己的主页并自动展开「编辑资料」（用于小黄车联系方式发现引导）
+  const [editProfileAutoOpen, setEditProfileAutoOpen] = useState(false);
+  const openEditProfileContacts = () => {
+    navigate({ page: 'P6', authorName: CURRENT_USER });
+    setEditProfileAutoOpen(true);
+  };
   const goBack = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
   const setTab = (t: 0 | 1 | 2 | 3) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
 
@@ -731,14 +737,14 @@ export default function App() {
 
   const unreadActivityCount = activityGroups.filter(g => !g.isRead).length;
   const markAllRead = useCallback(() => setActivityGroups(gs => gs.map(g => ({ ...g, isRead: true }))), []);
-  const saveRecentSearch = (query: string) => {
+  const saveRecentSearch = useCallback((query: string) => {
     const normalized = query.trim();
     if (!normalized) return;
     setRecentSearches(previous => {
       const deduped = previous.filter(item => item !== normalized);
       return [normalized, ...deduped].slice(0, 8);
     });
-  };
+  }, []);
   const removeRecentSearch = (query: string) => {
     setRecentSearches(previous => previous.filter(item => item !== query));
   };
@@ -835,6 +841,7 @@ export default function App() {
     searchOpen, openSearch, closeSearch,
     drafts, saveDraft, updateDraft, deleteDraft,
     userProfile, updateUserProfile,
+    editProfileAutoOpen, setEditProfileAutoOpen, openEditProfileContacts,
     channels: visibleChannels, subscribedChannelTiers,
     openChannelSubscribe, subscribeToChannelTier, unsubscribeFromChannel,
     createChannel, updateChannel, resetChannelTierCooldown,

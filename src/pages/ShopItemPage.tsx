@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Bookmark, Check, ChevronRight, Circle, CircleCheck, Clock, MapPin, Minus, Package, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
+import { Bookmark, Check, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, Phone, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { CURRENT_USER } from '../mockData';
-import type { ShippingAddress, ShopOrder } from '../types';
+import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
+import type { ProfileContacts, ShippingAddress, ShopOrder } from '../types';
 import { MediaPlaceholder, PageHeader } from '../components/shared';
 import { shopCoverUsesPlaceholder, shopCoverVisibleImgCount } from './ShopPage';
 import { formatTokenAmount } from '../stakeConfig';
@@ -10,16 +10,23 @@ import { computeShopFee, computeUnitMerit, formatShopFee, MERIT_PER_ADN } from '
 import { Ios26Alert } from '../components/Overlays';
 import { RegionPicker } from '../components/RegionPicker';
 
+const CONTACT_CHANNELS: { key: keyof ProfileContacts; label: string; icon: typeof MessageCircle }[] = [
+  { key: 'wechat', label: '微信', icon: MessageCircle },
+  { key: 'whatsapp', label: 'WhatsApp', icon: MessageCircleMore },
+  { key: 'phone', label: '电话', icon: Phone },
+];
+
 export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () => void }) {
   const {
     posts, navigate, t, requireWallet,
     shippingAddresses, defaultAddress, addShippingAddress, removeShippingAddress, setDefaultAddress,
     placeShopOrder, showToast, openImageLightbox,
-    savedPostIds, togglePostAction,
+    savedPostIds, togglePostAction, userProfile,
   } = useApp();
 
   const post = posts.find(p => p.id === postId);
   const [qty, setQty] = useState(1);
+  const [contactsExpanded, setContactsExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(defaultAddress?.id ?? null);
@@ -51,6 +58,8 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const { price, rebatePercent, stock } = post.shop;
   const isOwn = post.author === CURRENT_USER;
   const saved = savedPostIds.has(post.id);
+  const sellerContacts = isOwn ? userProfile.contacts : MOCK_SELLER_CONTACTS[post.author];
+  const contactEntries = CONTACT_CHANNELS.filter(({ key }) => sellerContacts?.[key]?.trim());
   const unitFee = computeShopFee(price);
   const totalPb = price * qty;
   const totalSup = Math.round(unitFee * qty * 10000) / 10000;
@@ -142,17 +151,51 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                 {post.author}
                 <ChevronRight size={15} strokeWidth={2} aria-hidden="true" />
               </button>
-              <button
-                type="button"
-                className={`shop-item-save${saved ? ' shop-item-save--active' : ''}`}
-                onClick={() => togglePostAction(post.id, 'save')}
-                aria-pressed={saved}
-                aria-label={saved ? t('取消收藏') : t('收藏')}
-              >
-                <Bookmark size={19} strokeWidth={2} fill={saved ? 'currentColor' : 'none'} />
-                {saved ? t('已收藏') : t('收藏')}
-              </button>
+              <div className="shop-item-seller-actions">
+                {contactEntries.length > 0 && !contactsExpanded && (
+                  <button
+                    type="button"
+                    className="shop-item-contacts-toggle"
+                    onClick={() => setContactsExpanded(true)}
+                  >
+                    <MessageCircle size={19} strokeWidth={2} aria-hidden="true" />
+                    {t('联系商家')}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={`shop-item-save${saved ? ' shop-item-save--active' : ''}`}
+                  onClick={() => togglePostAction(post.id, 'save')}
+                  aria-pressed={saved}
+                  aria-label={saved ? t('取消收藏') : t('收藏')}
+                >
+                  <Bookmark size={19} strokeWidth={2} fill={saved ? 'currentColor' : 'none'} />
+                  {saved ? t('已收藏') : t('收藏')}
+                </button>
+              </div>
             </div>
+            {contactEntries.length > 0 && (
+              <div className={`shop-item-contacts-reveal${contactsExpanded ? ' shop-item-contacts-reveal--open' : ''}`}>
+                <div className="shop-item-contacts-reveal-inner">
+                  <div className="shop-item-contacts">
+                    {contactEntries.map(({ key, label, icon: Icon }) => (
+                      <button
+                        type="button"
+                        className="shop-item-contact-chip"
+                        key={key}
+                        onClick={() => {
+                          navigator.clipboard.writeText(sellerContacts![key]!);
+                          showToast(t('已复制'));
+                        }}
+                      >
+                        <Icon size={13} strokeWidth={2} aria-hidden="true" />
+                        {t(label)}：{sellerContacts![key]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           <div className="shop-item-pricebar">
             <span className="shop-item-price">{formatTokenAmount(price)} <span className="shop-item-price-unit">PB</span></span>
