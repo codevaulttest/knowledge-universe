@@ -153,10 +153,12 @@ function seedOrRealSnapshot(date: string, todayKey: string): TaskDaySnapshot {
   if (date === todayKey || state.posted || state.interactedPostIds.length > 0) {
     return getTaskSnapshot(date);
   }
-  // seed：demo 环境无历史数据时，用一份「隔天有记录」的示例节奏兜底
+  // seed：demo 环境无历史数据时，用一份「隔天有记录」的示例节奏兜底，
+  // 其中每 7 个有记录的天里包含 1 天互动满 TASK_INTERACTION_POOL_SIZE，便于日历深色档有样本可看
   const daysAgo = Math.round((new Date(todayKey).getTime() - new Date(date).getTime()) / DAY_MS);
   if (daysAgo % 2 === 1) {
-    const seedCount = 15 + ((daysAgo * 3) % 20);
+    const seedPattern = [18, 25, 33, TASK_INTERACTION_POOL_SIZE, 20, 28, 15];
+    const seedCount = seedPattern[((daysAgo - 1) / 2) % seedPattern.length];
     return {
       date,
       posted: true,

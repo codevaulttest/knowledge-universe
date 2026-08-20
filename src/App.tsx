@@ -583,23 +583,6 @@ export default function App() {
       : t('订阅成功！已解锁「{tierName}」专属内容', { tierName }));
   };
 
-  const unsubscribeFromChannel = (channelId: string) => {
-    setSubscribedChannelTiers(prev => {
-      const next = { ...prev };
-      delete next[channelId];
-      return next;
-    });
-    setExpiredChannelIds(prev => {
-      const next = new Set(prev);
-      next.delete(channelId);
-      return next;
-    });
-    setChannels(prev => prev.map(c => c.id === channelId
-      ? { ...c, subscriberCount: Math.max(0, c.subscriberCount - 1) }
-      : c));
-    showToast(t('已取消订阅'));
-  };
-
   // ── 小黄车：收货地址 + 订单 ──────────────────────────────────────
   const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>(MOCK_SHIPPING_ADDRESSES);
   const [shopOrders, setShopOrders] = useState<ShopOrder[]>(MOCK_SHOP_ORDERS);
@@ -860,7 +843,7 @@ export default function App() {
     userProfile, updateUserProfile,
     editProfileAutoOpen, setEditProfileAutoOpen, openEditProfileContacts,
     channels: visibleChannels, subscribedChannelTiers, expiredChannelIds,
-    openChannelSubscribe, subscribeToChannelTier, unsubscribeFromChannel,
+    openChannelSubscribe, subscribeToChannelTier,
     createChannel, updateChannel, resetChannelTierCooldown,
     openCreateChannel, createChannelOpen, closeCreateChannel,
     openManageChannel, closeManageChannel,

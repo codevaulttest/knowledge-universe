@@ -228,7 +228,7 @@ function DailyTaskHistorySheet({
 
         <div className="task-calendar-month">{monthLabel}</div>
 
-        <p className="task-calendar-caption">{t('深色日期代表当天已发帖，点开日期查看当天详情')}</p>
+        <p className="task-calendar-caption">{t('浅色代表已发帖或已互动，深色代表发帖且互动满 {total} 次，点开日期查看当天详情', { total: TASK_INTERACTION_POOL_SIZE })}</p>
 
         <div className="task-calendar-weekdays">
           {weekdayLabels.map((label, i) => (
@@ -249,7 +249,9 @@ function DailyTaskHistorySheet({
                   'task-calendar-day',
                   !day.inCurrentMonth && 'is-outside',
                   day.isToday && 'is-today',
-                  snapshot?.posted && 'is-posted',
+                  snapshot && (snapshot.posted && snapshot.interactedCount >= TASK_INTERACTION_POOL_SIZE
+                    ? 'is-full'
+                    : (snapshot.posted || snapshot.interactedCount > 0) && 'is-posted'),
                   day.date === selectedDate && 'is-selected',
                 ].filter(Boolean).join(' ')}
               >

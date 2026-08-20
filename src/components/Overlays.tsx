@@ -1689,7 +1689,7 @@ export function TipModal({
 // ═══════════════════════════════════════════════════════════════
 
 export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }: { channelId: string; requiredTierIndex?: number; onClose: () => void }) {
-  const { t, channels, subscribedChannelTiers, expiredChannelIds, subscribeToChannelTier, unsubscribeFromChannel } = useApp();
+  const { t, channels, subscribedChannelTiers, expiredChannelIds, subscribeToChannelTier } = useApp();
   const channel = channels.find(c => c.id === channelId);
   const currentTierIndex = subscribedChannelTiers[channelId];
   const isExpired = expiredChannelIds.has(channelId);
@@ -1697,7 +1697,6 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
   // 已订阅档位优先（此时 requiredTierIndex 通常已满足，不会走到这个入口）
   const [selected, setSelected] = useState<number | null>(currentTierIndex ?? requiredTierIndex ?? null);
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done'>('select');
-  const [confirmUnsub, setConfirmUnsub] = useState(false);
 
   if (!channel) return null;
   const selectedTier = selected !== null ? channel.tiers[selected] : null;
@@ -1789,28 +1788,7 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
                 : t('订阅'))
             : t('请选择档位')}
         </button>
-
-        {currentTierIndex != null && !isExpired && (
-          <button
-            type="button"
-            className="channel-unsub-btn"
-            onClick={() => setConfirmUnsub(true)}
-          >
-            {t('取消订阅')}
-          </button>
-        )}
       </div>
-
-      {confirmUnsub && (
-        <Ios26Alert
-          title={t('取消订阅？')}
-          message={t('取消后将立即失去该频道的会员专属内容访问权限。')}
-          cancelLabel={t('再想想')}
-          confirmLabel={t('取消订阅')}
-          onCancel={() => setConfirmUnsub(false)}
-          onConfirm={() => { unsubscribeFromChannel(channelId); onClose(); }}
-        />
-      )}
     </div>
   );
 }

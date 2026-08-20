@@ -4314,19 +4314,6 @@ button {
   color: var(--ku-color-text-secondary);
   border: 1px solid var(--ku-color-border-control);
 }
-.channel-unsub-btn {
-  display: block;
-  width: 100%;
-  margin-top: 10px;
-  padding: 8px;
-  border: none;
-  background: none;
-  color: var(--ku-color-text-secondary);
-  font: var(--ku-text-meta);
-  text-align: center;
-  cursor: pointer;
-}
-.channel-unsub-btn:active { opacity: 0.6; }
 .channel-create-entry {
   margin: 0 var(--ku-feed-padding-x) 14px;
   padding: 10px 14px;
@@ -6904,9 +6891,12 @@ button {
   color: var(--ku-color-text-meta);
 }
 .task-calendar-day.is-posted {
+  background: var(--ku-color-primary-alpha-14);
+}
+.task-calendar-day.is-full {
   background: var(--ku-color-primary);
 }
-.task-calendar-day.is-posted .task-calendar-day-num {
+.task-calendar-day.is-full .task-calendar-day-num {
   color: var(--ku-color-on-primary);
 }
 .task-calendar-day.is-today {

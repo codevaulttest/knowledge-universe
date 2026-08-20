@@ -80,7 +80,6 @@ export type AppContextValue = {
   expiredChannelIds: Set<string>;
   openChannelSubscribe: (channelId: string, requiredTierIndex?: number) => void;
   subscribeToChannelTier: (channelId: string, tierIndex: number) => void;
-  unsubscribeFromChannel: (channelId: string) => void;
   // 开通频道：一步完成——校验通过后直接建号（1000 PB + 100 PB + 0.1 SUP 由弹窗自身走支付动画后调用）
   createChannel: (data: NewChannelData) => string;
   updateChannel: (channelId: string, data: NewChannelData) => void;
