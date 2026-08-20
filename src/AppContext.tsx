@@ -35,6 +35,7 @@ export type AppContextValue = {
     postId: string,
     action: InteractionAction,
     handlers: { onSkip: () => void; onPaid: () => void },
+    options?: { presetComment?: string },
   ) => void;
   beginPaidInteraction: (postId: string, action: InteractionAction, onAfterPay: () => void) => void;
   deletePost: (postId: string) => void;

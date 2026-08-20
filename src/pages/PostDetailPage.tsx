@@ -9,7 +9,7 @@ import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, GeminiNodeBadge, 
 import { localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
 import { getShopMinPrice } from '../shopUtils';
-import { formatTokenAmount } from '../stakeConfig';
+import { formatTokenAmount, postHasStake } from '../stakeConfig';
 
 /** 与 PostCard 一致：未显式设置 heat/views 时按 id 派生稳定演示数值 */
 function derivedStat(id: string, salt: number, min: number, span: number): number {
@@ -44,6 +44,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
     goBack, navigate, showToast, openLink, linkedPostIds, posts, requestDeletePost,
     openImageLightbox, incrementReplies, decrementReplies, extraRepliesByPostId, language, t,
     channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, userProfile, requireWallet, walletConnected,
+    requestPostInteraction,
   } = useApp();
   const post = posts.find(p => p.id === postId);
   const [replyText, setReplyText] = useState('');
@@ -115,7 +116,51 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
 
   const handleSendReply = () => {
     if (!replyText.trim()) return;
+    const text = replyText.trim();
+    // 小黄车帖且卖家设了合伙人返还比例：评论即成为合伙人——弹窗选档后发布评论，无需再写一遍
+    if (!isOwn && post.shop && (post.shop.partnerRebatePercent ?? 0) > 0) {
+      requireWallet(() => {
+        requestPostInteraction(
+          post.id,
+          'partner',
+          {
+            onSkip: () => {
+              // 用发送时快照发帖，避免弹窗期间输入框被改动导致丢评
+              const newReply = {
+                id: `new-${Date.now()}`,
+                author: CURRENT_USER,
+                time: '刚刚' as const,
+                text,
+                avatarIdx: 0,
+                likes: 0,
+              };
+              setNewReplies(r => [newReply, ...r]);
+              incrementReplies(post.id);
+              setReplyText('');
+              showToast(t('评论成功'));
+            },
+            onPaid: () => setReplyText(''),
+          },
+          { presetComment: text },
+        );
+      });
+      return;
+    }
+    // 知识宇宙节点帖（非小黄车）：评论后弹出选档，可创建子节点或不参与
     requireWallet(() => {
+      if (postHasStake(post)) {
+        requestPostInteraction(post.id, 'comment', {
+          onSkip: () => {
+            submitReply();
+            showToast(t('评论成功'));
+          },
+          onPaid: () => {
+            submitReply();
+            showToast(t('评论成功'));
+          },
+        });
+        return;
+      }
       submitReply();
       showToast(t('评论成功'));
     });

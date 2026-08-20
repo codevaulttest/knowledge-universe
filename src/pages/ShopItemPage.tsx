@@ -22,7 +22,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     posts, navigate, t, requireWallet,
     shippingAddresses, defaultAddress, addShippingAddress, removeShippingAddress, setDefaultAddress,
     placeShopOrder, showToast, openImageLightbox,
-    savedPostIds, togglePostAction, userProfile, requestPostInteraction,
+    savedPostIds, togglePostAction, userProfile, requestPostInteraction, linkedPostIds,
   } = useApp();
 
   const post = posts.find(p => p.id === postId);
@@ -65,6 +65,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const price = activeVariant?.price ?? getShopMinPrice(post.shop);
   const stock = activeVariant?.stock ?? 0;
   const isOwn = post.author === CURRENT_USER;
+  const isPartner = linkedPostIds.has(post.id);
   const saved = savedPostIds.has(post.id);
   const sellerContacts = isOwn ? userProfile.contacts : MOCK_SELLER_CONTACTS[post.author];
   const contactEntries = CONTACT_CHANNELS.filter(({ key }) => sellerContacts?.[key]?.trim());
@@ -119,6 +120,10 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   };
 
   const joinPartner = () => {
+    if (isPartner) {
+      showToast(t('已加入合伙人'));
+      return;
+    }
     requireWallet(() => {
       requestPostInteraction(post.id, 'partner', { onSkip: () => {}, onPaid: () => {} });
     });
@@ -177,14 +182,18 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                 <ChevronRight size={15} strokeWidth={2} aria-hidden="true" />
               </button>
               <div className="shop-item-seller-actions">
-                {!isOwn && (
+                {!isOwn && partnerRebatePercent > 0 && (
                   <button
                     type="button"
-                    className="shop-item-join-partner"
+                    className={`shop-item-join-partner${isPartner ? ' shop-item-join-partner--done' : ''}`}
                     onClick={joinPartner}
+                    disabled={isPartner}
+                    aria-pressed={isPartner}
                   >
-                    <Users size={16} strokeWidth={2} aria-hidden="true" />
-                    {t('加入合伙人')}
+                    {isPartner
+                      ? <CircleCheck size={16} strokeWidth={2} aria-hidden="true" />
+                      : <Users size={16} strokeWidth={2} aria-hidden="true" />}
+                    {isPartner ? t('已加入合伙人') : t('加入合伙人')}
                   </button>
                 )}
                 {contactEntries.length > 0 && !contactsExpanded && (
@@ -326,18 +335,32 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             </div>
 
             {partnerRebatePercent > 0 && (
-              <button type="button" className="shop-item-partner-card" onClick={joinPartner}>
-                <div className="shop-item-partner-card-main">
-                  <Users size={16} strokeWidth={2} aria-hidden="true" />
-                  <p className="shop-item-partner-card-info">
-                    {t('合伙人共享 {merit} 优点(链接该贴自动成为合伙人)', { merit: formatMeritAmount(displayPartnerMerit) })}
-                  </p>
+              isPartner ? (
+                <div className="shop-item-partner-card shop-item-partner-card--done">
+                  <div className="shop-item-partner-card-main">
+                    <CircleCheck size={16} strokeWidth={2} aria-hidden="true" />
+                    <p className="shop-item-partner-card-info">
+                      {t('合伙人共享 {merit} 优点(链接该贴自动成为合伙人)', { merit: formatMeritAmount(displayPartnerMerit) })}
+                    </p>
+                  </div>
+                  <span className="shop-item-partner-card-action">
+                    {t('已加入合伙人')}
+                  </span>
                 </div>
-                <span className="shop-item-partner-card-action">
-                  {t('立即链接')}
-                  <ChevronRight size={15} strokeWidth={2.4} aria-hidden="true" />
-                </span>
-              </button>
+              ) : (
+                <button type="button" className="shop-item-partner-card" onClick={joinPartner}>
+                  <div className="shop-item-partner-card-main">
+                    <Users size={16} strokeWidth={2} aria-hidden="true" />
+                    <p className="shop-item-partner-card-info">
+                      {t('合伙人共享 {merit} 优点(链接该贴自动成为合伙人)', { merit: formatMeritAmount(displayPartnerMerit) })}
+                    </p>
+                  </div>
+                  <span className="shop-item-partner-card-action">
+                    {t('立即链接')}
+                    <ChevronRight size={15} strokeWidth={2.4} aria-hidden="true" />
+                  </span>
+                </button>
+              )
             )}
           </div>
         </div>

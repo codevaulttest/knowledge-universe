@@ -375,6 +375,7 @@ export default function App() {
     postId: string,
     action: InteractionAction,
     handlers: { onSkip: () => void; onPaid: () => void },
+    options?: { presetComment?: string },
   ) => {
     requireWallet(() => {
       const post = posts.find(p => p.id === postId);
@@ -386,6 +387,7 @@ export default function App() {
         postId,
         action,
         mode: action === 'partner' ? 'partner' : 'default',
+        presetComment: options?.presetComment,
         onSkip: handlers.onSkip,
         onAfterPay: handlers.onPaid,
       });
@@ -771,15 +773,17 @@ export default function App() {
     } else if (ctx === 'repost') {
       showToast(t('转发成功！子节点已创建'));
     } else if (ctx === 'interaction') {
-      if (paySheet.action === 'partner' && postId && pendingPartnerCommentRef.current?.postId === postId) {
+      if (paySheet.action === 'partner' && postId) {
         if (!linkedPostIds.has(postId)) {
           setLinkedPostIds(s => new Set(s).add(postId));
           setPosts(prev => prev.map(p =>
             p.id === postId ? { ...p, links: p.links + 1, visiblePercent: 100 } : p
           ));
         }
-        appendPostReply(postId, pendingPartnerCommentRef.current.text);
-        pendingPartnerCommentRef.current = null;
+        if (pendingPartnerCommentRef.current?.postId === postId) {
+          appendPostReply(postId, pendingPartnerCommentRef.current.text);
+          pendingPartnerCommentRef.current = null;
+        }
         showToast(t('已加入合伙人'));
       } else {
         showToast(t('子节点已创建'));
@@ -993,6 +997,7 @@ export default function App() {
             <GeminiStakeModal
               post={stakePost}
               mode={stakeModal.mode ?? (stakeModal.action === 'partner' ? 'partner' : 'default')}
+              presetComment={stakeModal.presetComment}
               onClose={() => setStakeModal(null)}
               onSkip={() => { stakeModal.onSkip(); setStakeModal(null); }}
               onParticipate={(tier, commentText) => {

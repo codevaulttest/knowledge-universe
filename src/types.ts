@@ -306,6 +306,8 @@ export type StakeModalRequest = {
   action: InteractionAction;
   /** partner：强制选档位 + 评论，隐藏「不参与」 */
   mode?: 'default' | 'partner';
+  /** 详情页已写好的评论：弹窗内不再要求二次输入 */
+  presetComment?: string;
   onSkip: () => void;
   onAfterPay: () => void;
 };

@@ -313,22 +313,26 @@ const INTERACTION_ACTION_LABEL: Record<InteractionAction, [string, string]> = {
 export function GeminiStakeModal({
   post,
   mode = 'default',
+  presetComment,
   onParticipate,
   onSkip,
   onClose,
 }: {
   post: Post;
   mode?: 'default' | 'partner';
+  /** 详情页已写好的评论：隐藏二次输入，确认时直接带上 */
+  presetComment?: string;
   onParticipate: (tier: Exclude<StakeTier, 0>, commentText?: string) => void;
   onSkip: () => void;
   onClose: () => void;
 }) {
   const { t } = useApp();
   const isPartner = mode === 'partner';
+  const hasPresetComment = Boolean(presetComment?.trim());
   const [selected, setSelected] = useState<Exclude<StakeTier, 0>>(10);
   const [commentText, setCommentText] = useState('');
   const tiers: Exclude<StakeTier, 0>[] = [10, 100, 1000];
-  const canConfirm = !isPartner || commentText.trim().length > 0;
+  const canConfirm = !isPartner || hasPresetComment || commentText.trim().length > 0;
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -342,7 +346,9 @@ export function GeminiStakeModal({
 
         <p className="gemini-stake-lead">
           {isPartner
-            ? t('选择面额并评论，链接该帖成为合伙人')
+            ? (hasPresetComment
+              ? t('选择面额成为合伙人，或仅发表评论')
+              : t('选择面额并评论，链接该帖成为合伙人'))
             : t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点')}
         </p>
 
@@ -366,7 +372,7 @@ export function GeminiStakeModal({
           <span className="compose-stake-gas-value">{SUP_COST_BY_TIER[selected]} SUP</span>
         </div>
 
-        {isPartner && (
+        {isPartner && !hasPresetComment && (
           <label className="gemini-stake-comment">
             <span className="gemini-stake-comment-label">{t('写评论加入合伙人')}</span>
             <textarea
@@ -383,15 +389,18 @@ export function GeminiStakeModal({
           type="button"
           className="gemini-stake-btn gemini-stake-btn--primary"
           disabled={!canConfirm}
-          onClick={() => onParticipate(selected, isPartner ? commentText.trim() : undefined)}
+          onClick={() => onParticipate(
+            selected,
+            isPartner ? (presetComment?.trim() || commentText.trim()) : undefined,
+          )}
         >
           {isPartner
             ? t('加入合伙人 · {selected} PB', { selected })
             : t('创建子节点 · {selected} PB', { selected })}
         </button>
-        {!isPartner && (
+        {(!isPartner || hasPresetComment) && (
           <button type="button" className="gemini-stake-btn gemini-stake-btn--secondary" onClick={onSkip}>
-            {t('不参与')}
+            {hasPresetComment ? t('仅评论') : t('不参与')}
           </button>
         )}
       </div>

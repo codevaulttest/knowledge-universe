@@ -11659,6 +11659,18 @@ html[lang="zh-TW"] .planet-hero-title {
   flex-shrink: 0;
   color: var(--ku-color-primary);
 }
+.shop-item-join-partner--done,
+.shop-item-join-partner:disabled {
+  cursor: default;
+  opacity: 1;
+  border-color: var(--ku-color-border-card);
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-secondary);
+}
+.shop-item-join-partner--done svg,
+.shop-item-join-partner:disabled svg {
+  color: var(--ku-color-text-secondary);
+}
 .shop-item-save {
   display: inline-flex;
   align-items: center;
@@ -11906,6 +11918,17 @@ html[lang="zh-TW"] .planet-hero-title {
   gap: 2px;
   font: var(--ku-text-caption-strong);
   color: var(--ku-color-primary);
+}
+.shop-item-partner-card--done {
+  cursor: default;
+  color: var(--ku-color-text-secondary);
+}
+.shop-item-partner-card--done .shop-item-partner-card-main > svg {
+  color: var(--ku-color-text-secondary);
+}
+.shop-item-partner-card--done .shop-item-partner-card-action {
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta);
 }
 .shop-item-merit {
   display: flex;
