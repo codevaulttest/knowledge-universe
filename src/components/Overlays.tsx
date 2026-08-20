@@ -307,7 +307,7 @@ const INTERACTION_ACTION_LABEL: Record<InteractionAction, [string, string]> = {
   dislike: ['踩', 'Dislike'],
   save: ['收藏', 'Save'],
   unlock: ['解锁', 'Unlock'],
-  partner: ['加入合伙人', 'Join as partner'],
+  partner: ['成为合伙人', 'Become a partner'],
 };
 
 export function GeminiStakeModal({
