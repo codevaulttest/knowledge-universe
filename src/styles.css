@@ -10687,7 +10687,7 @@ html[lang="zh-TW"] .planet-hero-title {
   letter-spacing: 0.08em;
 }
 
-/* 顶栏极简余额：白底 + 品牌色文字，不透明边框保证边界 */
+/* 顶栏极简余额：半透明白底 + 中性色文字，边框保证边界 */
 .planet-hero-balances {
   flex-shrink: 0;
   display: inline-flex;
@@ -10697,15 +10697,15 @@ html[lang="zh-TW"] .planet-hero-title {
   padding: var(--ku-planet2-space-xxs) var(--ku-planet2-space-xs) var(--ku-planet2-space-xxs) var(--ku-planet2-space-sm);
   border: 1px solid var(--ku-color-border-control);
   border-radius: var(--ku-planet2-radius-lg);
-  background: var(--ku-color-bg-phone);
-  color: var(--ku-color-primary);
+  background: var(--ku-planet-hero-balances-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   cursor: pointer;
   max-width: 46%;
 }
 
 .planet-hero-balances:active {
-  background: var(--ku-color-bg-page);
-  color: var(--ku-color-primary-dark);
+  background: var(--ku-planet-hero-balances-bg-active);
 }
 
 .planet-hero-balances-stack {
@@ -10733,9 +10733,14 @@ html[lang="zh-TW"] .planet-hero-title {
   font-size: 13px;
   font-weight: 600;
   line-height: 1.2;
+  color: var(--ku-color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.planet-hero-balances:active .planet-hero-balances-value {
+  color: var(--ku-color-text-strong);
 }
 
 .planet-hero-balances-unit {

@@ -10,3 +10,10 @@ export function dayKey(date: Date = new Date()): string {
 export function isPostVisible(post: { scheduledAt?: number }, now: number = Date.now()): boolean {
   return post.scheduledAt === undefined || post.scheduledAt <= now;
 }
+
+/** 定时发布时间的展示格式：2026-08-20 20:03，不随浏览器 locale 变化。 */
+export function formatScheduledAt(ts: number): string {
+  const d = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}

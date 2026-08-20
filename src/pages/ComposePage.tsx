@@ -80,6 +80,15 @@ export function ComposePage({
   // 定时发布：设定时间前，帖子仅作者本人可见
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduledAtLocal, setScheduledAtLocal] = useState('');
+  const scheduleInputRef = useRef<HTMLInputElement>(null);
+  // 打开开关的同一次点击里顺手拉起系统时间选择器，省去用户再点一次输入框
+  const handleScheduleToggle = () => {
+    setScheduleEnabled(v => {
+      const next = !v;
+      if (next) setTimeout(() => scheduleInputRef.current?.showPicker?.(), 0);
+      return next;
+    });
+  };
   const [articleMode, setArticleMode] = useState(draft?.kind === 'article');
   const [articleTitle, setArticleTitle] = useState(draft?.articleTitle ?? '');
   const [hasCover, setHasCover] = useState(draft?.articleHasCover ?? editPost?.articleHasCover !== false);
@@ -1021,7 +1030,7 @@ export function ComposePage({
               className="compose-shop-toggle"
               role="switch"
               aria-checked={scheduleEnabled}
-              onClick={() => setScheduleEnabled(v => !v)}
+              onClick={handleScheduleToggle}
             >
               <span className="compose-shop-toggle__label compose-schedule-toggle__label">
                 <Clock size={16} strokeWidth={2} />
@@ -1034,7 +1043,9 @@ export function ComposePage({
             <p className="compose-stake-hint">{t('到设定时间后，帖子才会对其他人可见')}</p>
             {scheduleEnabled && (
               <input
+                ref={scheduleInputRef}
                 type="datetime-local"
+                lang={isChinese(language) ? 'zh-CN' : 'en'}
                 className="compose-shop-input compose-schedule-input"
                 min={toLocalDateTimeInput(new Date(Date.now() + 60_000))}
                 value={scheduledAtLocal}

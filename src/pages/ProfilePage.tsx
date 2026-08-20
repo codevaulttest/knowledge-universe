@@ -10,7 +10,7 @@ import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelCard, ChannelMemberBadge, GenesisBadge, PageHeader } from '../components/shared';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 import { useChannelListSearch } from '../components/channelSearch';
-import { isPostVisible } from '../dateUtils';
+import { isPostVisible, formatScheduledAt } from '../dateUtils';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
@@ -421,7 +421,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 {isOwn && !isPostVisible(entry.post) && entry.post.scheduledAt && (
                   <p className="profile-scheduled-badge">
                     <Clock size={12} strokeWidth={2} aria-hidden />
-                    {t('定时发布 · {time}', { time: new Date(entry.post.scheduledAt).toLocaleString() })}
+                    {t('定时发布 · {time}', { time: formatScheduledAt(entry.post.scheduledAt) })}
                   </p>
                 )}
                 <PostCard

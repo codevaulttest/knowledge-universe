@@ -88,9 +88,12 @@ export function DailyTaskSheet({
                       : t('待完成')}
                 </span>
               </span>
-              <span className="task-milestone-chip">
-                <Sparkles size={12} strokeWidth={1.9} />
+              <span className={`task-milestone-chip${interacted >= TASK_INTERACTION_POOL_SIZE ? ' task-milestone-chip--done' : ''}`}>
+                {interacted >= TASK_INTERACTION_POOL_SIZE ? <Check size={12} strokeWidth={2.6} /> : <Sparkles size={12} strokeWidth={1.9} />}
                 {t('满 {total} 次互动 · 100% 空投', { total: TASK_INTERACTION_POOL_SIZE })}
+                <span className="task-milestone-chip-state">
+                  {interacted >= TASK_INTERACTION_POOL_SIZE ? t('已达成') : t('待完成')}
+                </span>
               </span>
             </div>
           </div>

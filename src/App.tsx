@@ -3,6 +3,7 @@ import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { buildInitialBspInvestments } from './bspConfig';
+import { formatScheduledAt } from './dateUtils';
 import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
@@ -842,7 +843,7 @@ export default function App() {
     setComposeDraftId(null);
     recordTaskPosted();
     if (data.scheduledAt) {
-      showToast(t('定时发布已设置，{time} 后自动展示', { time: new Date(data.scheduledAt).toLocaleString() }));
+      showToast(t('定时发布已设置，{time} 后自动展示', { time: formatScheduledAt(data.scheduledAt) }));
     } else {
       showToast(data.isNode
         ? t('发布成功！知识宇宙节点已生成')
