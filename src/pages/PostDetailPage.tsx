@@ -8,6 +8,8 @@ import { TipModal, Ios26Alert } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, GeminiNodeBadge, MediaPlaceholder, PageHeader, PostContent } from '../components/shared';
 import { localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
+import { getShopMinPrice, hasShopPriceRange } from '../shopUtils';
+import { formatTokenAmount } from '../stakeConfig';
 
 /** 与 PostCard 一致：未显式设置 heat/views 时按 id 派生稳定演示数值 */
 function derivedStat(id: string, salt: number, min: number, span: number): number {
@@ -68,6 +70,11 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   if (!post) return <div className="page"><PageHeader onBack={goBack} /><div className="empty-state">{t('帖子不存在')}</div></div>;
 
   const isOwn = post.author === CURRENT_USER;
+  const shopPriceFull = post.shop
+    ? (hasShopPriceRange(post.shop)
+      ? t('{price} PB 起', { price: formatTokenAmount(getShopMinPrice(post.shop)) })
+      : t('{price} PB', { price: formatTokenAmount(getShopMinPrice(post.shop)) }))
+    : '';
   const displayName = isOwn ? userProfile.nickname : post.author;
   const isLinked = linkedPostIds.has(post.id);
   // 频道会员门槛：与 PostCard 一致，未达标时强制锁定，优先于按比例解锁
@@ -273,7 +280,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
                   type="button"
                   className="post-shop-tag"
                   onClick={(e) => { e.stopPropagation(); navigate({ page: 'P_SHOP_ITEM', postId: post.id }); }}
-                  aria-label={t('本帖已参与小黄车，售价 {price} PB，点按预览商品页', { price: post.shop.price })}
+                  aria-label={t('本帖已参与小黄车，{price}，点按预览商品页', { price: shopPriceFull })}
                 >
                   <ShoppingCart size={13} strokeWidth={2.25} />
                   {t('小黄车')}
@@ -283,7 +290,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
                   type="button"
                   className="post-shop-btn"
                   onClick={(e) => { e.stopPropagation(); navigate({ page: 'P_SHOP_ITEM', postId: post.id }); }}
-                  aria-label={t('购买此商品，{price} PB', { price: post.shop.price })}
+                  aria-label={t('购买此商品，{price}', { price: shopPriceFull })}
                 >
                   <ShoppingCart size={13} strokeWidth={2.25} />
                   {t('购买')}

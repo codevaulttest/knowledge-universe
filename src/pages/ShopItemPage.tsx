@@ -7,6 +7,7 @@ import { MediaPlaceholder, PageHeader } from '../components/shared';
 import { shopCoverUsesPlaceholder, shopCoverVisibleImgCount } from './ShopPage';
 import { formatTokenAmount } from '../stakeConfig';
 import { computeShopFee, computeUnitMerit, formatShopFee, MERIT_PER_ADN } from '../shopConfig';
+import { getShopMinPrice, getShopTotalStock, getShopVariant, getShopVariants, isMultiVariantShop } from '../shopUtils';
 import { Ios26Alert } from '../components/Overlays';
 import { RegionPicker } from '../components/RegionPicker';
 
@@ -25,6 +26,10 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   } = useApp();
 
   const post = posts.find(p => p.id === postId);
+  const multiVariant = post?.shop ? isMultiVariantShop(post.shop) : false;
+  const variants = post?.shop ? getShopVariants(post.shop) : [];
+  const defaultVariantId = variants.find(v => v.stock > 0)?.id ?? variants[0]?.id ?? null;
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(defaultVariantId);
   const [qty, setQty] = useState(1);
   const [contactsExpanded, setContactsExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -55,7 +60,10 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     );
   }
 
-  const { price, rebatePercent, stock } = post.shop;
+  const { rebatePercent } = post.shop;
+  const activeVariant = getShopVariant(post.shop, multiVariant ? selectedVariantId ?? undefined : undefined);
+  const price = activeVariant?.price ?? getShopMinPrice(post.shop);
+  const stock = activeVariant?.stock ?? 0;
   const isOwn = post.author === CURRENT_USER;
   const saved = savedPostIds.has(post.id);
   const sellerContacts = isOwn ? userProfile.contacts : MOCK_SELLER_CONTACTS[post.author];
@@ -65,10 +73,17 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const totalSup = Math.round(unitFee * qty * 10000) / 10000;
   const estMerit = computeUnitMerit(price, rebatePercent) * qty;
   const selectedAddress = shippingAddresses.find(a => a.id === selectedAddressId) ?? defaultAddress ?? null;
-  const soldOut = stock <= 0;
+  const soldOut = getShopTotalStock(post.shop) <= 0;
+  const variantSoldOut = multiVariant && activeVariant && activeVariant.stock <= 0;
+  const canBuy = !soldOut && !variantSoldOut && activeVariant && activeVariant.stock > 0;
 
   const changeQty = (delta: number) => {
     setQty(q => Math.min(Math.max(1, q + delta), Math.max(1, stock)));
+  };
+
+  const selectVariant = (variantId: string) => {
+    setSelectedVariantId(variantId);
+    setQty(1);
   };
 
   const formValid = !!(formName.trim() && formPhone.trim() && formRegion && formDetail.trim());
@@ -89,10 +104,10 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   };
 
   const buy = () => {
-    if (soldOut || isOwn) return;
+    if (!canBuy || isOwn) return;
     if (!selectedAddress) { setPickerOpen(true); return; }
     requireWallet(() => {
-      const order = placeShopOrder(post.id, qty, selectedAddress);
+      const order = placeShopOrder(post.id, qty, selectedAddress, multiVariant ? selectedVariantId ?? undefined : undefined);
       if (!order) { showToast(t('下单失败，请稍后重试')); return; }
       // 弹出「已提交」确认弹窗；链上确认在后台异步完成（成功/失败均由 App toast 通知）。
       setSubmittedOrder(order);
@@ -209,6 +224,31 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             <span className="shop-item-price">{formatTokenAmount(price)} <span className="shop-item-price-unit">PB</span></span>
           </div>
 
+          {multiVariant && (
+            <div className="shop-item-variants">
+              <span className="shop-item-row-label">{t('选择规格')}</span>
+              <div className="shop-item-variant-chips">
+                {variants.map(v => {
+                  const out = v.stock <= 0;
+                  const selected = v.id === selectedVariantId;
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      className={`shop-item-variant-chip${selected ? ' shop-item-variant-chip--active' : ''}${out ? ' shop-item-variant-chip--disabled' : ''}`}
+                      disabled={out}
+                      onClick={() => !out && selectVariant(v.id)}
+                      aria-pressed={selected}
+                      aria-label={out ? t('该规格已售罄') : v.label}
+                    >
+                      {v.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* 数量 */}
           <div className="shop-item-qty-group">
             <div className="shop-item-row">
@@ -274,9 +314,9 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             type="button"
             className="shop-buy-btn"
             onClick={buy}
-            disabled={soldOut || isOwn}
+            disabled={!canBuy || isOwn}
           >
-            {isOwn ? t('这是你的商品') : soldOut ? t('已售罄') : t('立即购买')}
+            {isOwn ? t('这是你的商品') : soldOut ? t('已售罄') : variantSoldOut ? t('该规格已售罄') : t('立即购买')}
           </button>
         </div>
       </div>

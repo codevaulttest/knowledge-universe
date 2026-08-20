@@ -90,7 +90,11 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
 
                 <div className="order-card-meta">
                   <span>{role === 'buyer' ? t('卖家：{name}', { name: o.sellerName }) : t('买家：{name}', { name: o.buyerName })}</span>
-                  <span>{formatOrderTime(o.createdAt)} · × {o.quantity}</span>
+                  <span>
+                    {formatOrderTime(o.createdAt)}
+                    {o.variantLabel ? ` · ${t('规格：{label}', { label: o.variantLabel })}` : ''}
+                    {' · × '}{o.quantity}
+                  </span>
                 </div>
 
                 <div className="order-card-price">

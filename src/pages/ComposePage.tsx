@@ -12,6 +12,12 @@ import { isChinese } from '../i18n';
 
 const MAX_POST_CHARS = 500;
 
+type VariantDraft = { id: string; label: string; price: string; stock: string };
+
+function newVariantDraft(): VariantDraft {
+  return { id: `v-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, label: '', price: '', stock: '' };
+}
+
 /** Date → <input type="datetime-local"> 本地时区取值，格式 YYYY-MM-DDTHH:mm */
 function toLocalDateTimeInput(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -63,6 +69,8 @@ export function ComposePage({
   const [shopPrice, setShopPrice] = useState('');
   const [shopRebate, setShopRebate] = useState(40);
   const [shopStock, setShopStock] = useState('');
+  const [shopUseVariants, setShopUseVariants] = useState(false);
+  const [variantRows, setVariantRows] = useState<VariantDraft[]>([newVariantDraft()]);
   const [rebateInfoOpen, setRebateInfoOpen] = useState(false);
   const [imgCount, setImgCount] = useState(draft?.imgCount ?? 0);
   // 用户通过系统相册/拍照选中的图片，生成本地预览用的 object URL（草稿里已有的旧图没有真实文件，仅按数量占位展示）
@@ -103,14 +111,21 @@ export function ComposePage({
   const hasContacts = !!userProfile.contacts && Object.values(userProfile.contacts).some(v => v && v.trim());
   const shopPriceNum = Number(shopPrice);
   const shopStockNum = Number(shopStock);
+  const variantRowsValid = shopUseVariants && variantRows.every(row => {
+    const p = Number(row.price);
+    const s = Number(row.stock);
+    return row.label.trim().length > 0 && p > 0 && Number.isFinite(p) && s >= 1 && Number.isInteger(s);
+  });
   const shopValid = !shopEnabled || (
     hasContacts
-    && shopPriceNum > 0
-    && Number.isFinite(shopPriceNum)
-    && shopStockNum >= 1
-    && Number.isInteger(shopStockNum)
     && shopRebate >= 0
     && shopRebate <= SHOP_MAX_REBATE_PERCENT
+    && (shopUseVariants
+      ? variantRows.length >= 1 && variantRowsValid
+      : shopPriceNum > 0
+        && Number.isFinite(shopPriceNum)
+        && shopStockNum >= 1
+        && Number.isInteger(shopStockNum))
   );
 
   const scheduledAtMs = scheduledAtLocal ? new Date(scheduledAtLocal).getTime() : undefined;
@@ -130,8 +145,19 @@ export function ComposePage({
     }
     if (shopEnabled) {
       if (!hasContacts) return t('请先设置联系方式');
-      if (!(shopPriceNum > 0 && Number.isFinite(shopPriceNum))) return t('请填写商品单价');
-      if (!(shopStockNum >= 1 && Number.isInteger(shopStockNum))) return t('请填写库存');
+      if (shopUseVariants) {
+        if (variantRows.length < 1) return t('请至少添加一个规格');
+        if (!variantRowsValid) {
+          const badLabel = variantRows.some(r => !r.label.trim());
+          if (badLabel) return t('请填写规格名称');
+          const badPrice = variantRows.some(r => !(Number(r.price) > 0 && Number.isFinite(Number(r.price))));
+          if (badPrice) return t('请填写商品单价');
+          return t('请填写库存');
+        }
+      } else {
+        if (!(shopPriceNum > 0 && Number.isFinite(shopPriceNum))) return t('请填写商品单价');
+        if (!(shopStockNum >= 1 && Number.isInteger(shopStockNum))) return t('请填写库存');
+      }
       if (!(shopRebate >= 0 && shopRebate <= SHOP_MAX_REBATE_PERCENT)) return t('优点返还比例超出范围');
     }
     if (scheduleEnabled) {
@@ -228,7 +254,17 @@ export function ComposePage({
     }
     const joinNode = stakeTier > 0;
     const shop: ShopInfo | undefined = shopEligible && shopEnabled
-      ? { price: shopPriceNum, rebatePercent: shopRebate, stock: shopStockNum }
+      ? shopUseVariants
+        ? {
+            rebatePercent: shopRebate,
+            variants: variantRows.map(row => ({
+              id: row.id,
+              label: row.label.trim(),
+              price: Number(row.price),
+              stock: Number(row.stock),
+            })),
+          }
+        : { price: shopPriceNum, rebatePercent: shopRebate, stock: shopStockNum }
       : undefined;
     const postData = {
       title: (articleMode ? articleTitle : text).trim(),
@@ -806,32 +842,111 @@ export function ComposePage({
 
                 {shopEnabled && (
                   <div className="compose-shop-fields">
-                    <label className="compose-shop-field">
-                      <span className="compose-shop-field__label">{t('商品价格（PB）')}</span>
-                      <input
-                        type="number" inputMode="numeric" min={1}
-                        className="compose-shop-input"
-                        placeholder={t('如 2000')}
-                        value={shopPrice}
-                        onChange={e => setShopPrice(e.target.value)}
-                      />
-                      {shopPriceNum > 0 && (
-                        <span className="compose-shop-field__hint">
-                          {t('下单另收 {fee} SUP/件手续费', { fee: computeShopFee(shopPriceNum) })}
-                        </span>
-                      )}
-                    </label>
+                    <button
+                      type="button"
+                      className="compose-shop-toggle compose-shop-variant-mode"
+                      role="switch"
+                      aria-checked={shopUseVariants}
+                      onClick={() => {
+                        setShopUseVariants(v => {
+                          const next = !v;
+                          if (next && variantRows.length === 0) setVariantRows([newVariantDraft()]);
+                          return next;
+                        });
+                      }}
+                    >
+                      <span className="compose-shop-toggle__label">{t('添加规格')}</span>
+                      <span className={`compose-shop-switch${shopUseVariants ? ' compose-shop-switch--on' : ''}`} aria-hidden="true">
+                        <span className="compose-shop-switch__dot" />
+                      </span>
+                    </button>
 
-                    <label className="compose-shop-field">
-                      <span className="compose-shop-field__label">{t('库存')}</span>
-                      <input
-                        type="number" inputMode="numeric" min={1} step={1}
-                        className="compose-shop-input"
-                        placeholder={t('如 50')}
-                        value={shopStock}
-                        onChange={e => setShopStock(e.target.value)}
-                      />
-                    </label>
+                    {shopUseVariants ? (
+                      <div className="compose-shop-variants">
+                        {variantRows.map((row, idx) => (
+                          <div key={row.id} className="compose-shop-variant-row">
+                            <div className="compose-shop-variant-row__head">
+                              <span className="compose-shop-field__label">{t('规格名称')}</span>
+                              <button
+                                type="button"
+                                className="compose-shop-variant-remove"
+                                disabled={variantRows.length <= 1}
+                                onClick={() => setVariantRows(rows => rows.filter((_, i) => i !== idx))}
+                                aria-label={t('删除')}
+                              >
+                                <Trash2 size={16} strokeWidth={2} />
+                              </button>
+                            </div>
+                            <input
+                              type="text"
+                              className="compose-shop-input"
+                              placeholder={t('如 128G · 白色')}
+                              value={row.label}
+                              onChange={e => setVariantRows(rows => rows.map((r, i) => i === idx ? { ...r, label: e.target.value } : r))}
+                            />
+                            <div className="compose-shop-variant-row__nums">
+                              <label className="compose-shop-field">
+                                <span className="compose-shop-field__label">{t('商品价格（PB）')}</span>
+                                <input
+                                  type="number" inputMode="numeric" min={1}
+                                  className="compose-shop-input"
+                                  placeholder={t('如 2000')}
+                                  value={row.price}
+                                  onChange={e => setVariantRows(rows => rows.map((r, i) => i === idx ? { ...r, price: e.target.value } : r))}
+                                />
+                              </label>
+                              <label className="compose-shop-field">
+                                <span className="compose-shop-field__label">{t('库存')}</span>
+                                <input
+                                  type="number" inputMode="numeric" min={1} step={1}
+                                  className="compose-shop-input"
+                                  placeholder={t('如 50')}
+                                  value={row.stock}
+                                  onChange={e => setVariantRows(rows => rows.map((r, i) => i === idx ? { ...r, stock: e.target.value } : r))}
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          className="compose-shop-variant-add"
+                          onClick={() => setVariantRows(rows => [...rows, newVariantDraft()])}
+                        >
+                          <Plus size={16} strokeWidth={2} />
+                          {t('添加规格')}
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <label className="compose-shop-field">
+                          <span className="compose-shop-field__label">{t('商品价格（PB）')}</span>
+                          <input
+                            type="number" inputMode="numeric" min={1}
+                            className="compose-shop-input"
+                            placeholder={t('如 2000')}
+                            value={shopPrice}
+                            onChange={e => setShopPrice(e.target.value)}
+                          />
+                          {shopPriceNum > 0 && (
+                            <span className="compose-shop-field__hint">
+                              {t('下单另收 {fee} SUP/件手续费', { fee: computeShopFee(shopPriceNum) })}
+                            </span>
+                          )}
+                        </label>
+
+                        <label className="compose-shop-field">
+                          <span className="compose-shop-field__label">{t('库存')}</span>
+                          <input
+                            type="number" inputMode="numeric" min={1} step={1}
+                            className="compose-shop-input"
+                            placeholder={t('如 50')}
+                            value={shopStock}
+                            onChange={e => setShopStock(e.target.value)}
+                          />
+                        </label>
+                      </>
+                    )}
 
                     <div className="compose-shop-field">
                       <span className="compose-shop-field__label compose-shop-field__label--row">

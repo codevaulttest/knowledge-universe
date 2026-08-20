@@ -7,6 +7,8 @@ import { ArticleFeedCard, AuthorName, Avatar, GenesisBadge, GeminiNodeBadge, Med
 import { TipModal, Ios26Alert } from './Overlays';
 import { isChinese, localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
+import { getShopMinPrice, hasShopPriceRange } from '../shopUtils';
+import { formatTokenAmount } from '../stakeConfig';
 
 /** 未在 mock 数据里显式设置 heat/views 时，按 id 派生一个稳定的演示数值（同一帖子每次渲染保持一致）。*/
 function derivedStat(id: string, salt: number, min: number, span: number): number {
@@ -238,6 +240,11 @@ export function PostCard({
   const isFollowing = followedAuthors.has(post.author);
   const totalImgs = post.imageCount ?? 3;
   const genesisTier = getGenesisTier(post.author);
+  const shopPriceFull = post.shop
+    ? (hasShopPriceRange(post.shop)
+      ? t('{price} PB 起', { price: formatTokenAmount(getShopMinPrice(post.shop)) })
+      : t('{price} PB', { price: formatTokenAmount(getShopMinPrice(post.shop)) }))
+    : '';
 
   // 频道会员门槛：未达标时强制锁定，优先于按比例解锁（不看 visiblePercent）
   const channel = post.channelId ? channels.find(c => c.id === post.channelId) : undefined;
@@ -450,7 +457,7 @@ export function PostCard({
                 type="button"
                 className="post-shop-tag"
                 onClick={(e) => { e.stopPropagation(); navigate({ page: 'P_SHOP_ITEM', postId: post.id }); }}
-                aria-label={t('本帖已参与小黄车，售价 {price} PB，点按预览商品页', { price: post.shop.price })}
+                aria-label={t('本帖已参与小黄车，{price}，点按预览商品页', { price: shopPriceFull })}
               >
                 <ShoppingCart size={13} strokeWidth={2.25} />
                 {t('小黄车')}
@@ -460,7 +467,7 @@ export function PostCard({
                 type="button"
                 className="post-shop-btn"
                 onClick={(e) => { e.stopPropagation(); navigate({ page: 'P_SHOP_ITEM', postId: post.id }); }}
-                aria-label={t('购买此商品，{price} PB', { price: post.shop.price })}
+                aria-label={t('购买此商品，{price}', { price: shopPriceFull })}
               >
                 <ShoppingCart size={13} strokeWidth={2.25} />
                 {t('购买')}

@@ -11229,8 +11229,67 @@ html[lang="zh-TW"] .planet-hero-title {
   background: var(--ku-color-shop-btn);
   box-shadow: none;
 }
+.compose-shop-variant-mode {
+  margin-bottom: 4px;
+}
+.compose-shop-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.compose-shop-variant-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-secondary);
+  border: 1px solid var(--ku-color-border);
+}
+.compose-shop-variant-row__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+}
+.compose-shop-variant-row__nums {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.compose-shop-variant-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin: -4px -4px -4px 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--ku-radius-card);
+  background: transparent;
+  color: var(--ku-color-text-meta);
+  cursor: pointer;
+}
+.compose-shop-variant-remove:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.compose-shop-variant-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px dashed var(--ku-color-shop-border);
+  border-radius: var(--ku-radius-card);
+  background: transparent;
+  color: var(--ku-color-shop-strong);
+  font: var(--ku-text-caption-strong);
+  cursor: pointer;
+}
 
-/* ── 商城列表 ── */
 .shop-mall-bar {
   display: flex;
   align-items: center;
@@ -11378,6 +11437,42 @@ html[lang="zh-TW"] .planet-hero-title {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+.shop-item-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.shop-item-variant-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.shop-item-variant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid var(--ku-color-border);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-bg-primary);
+  color: var(--ku-color-text-primary);
+  font: var(--ku-text-caption-strong);
+  cursor: pointer;
+}
+.shop-item-variant-chip--active {
+  border-color: var(--ku-color-shop-border);
+  background: var(--ku-color-shop-bg);
+  color: var(--ku-color-shop-strong);
+}
+.shop-item-variant-chip--disabled {
+  color: var(--ku-color-text-meta);
+  cursor: default;
+}
+.shop-item-variant-chip__badge {
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-meta);
 }
 .shop-item-pricebar {
   display: flex;

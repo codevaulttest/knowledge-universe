@@ -1,11 +1,20 @@
 export type StakeTier = 0 | 10 | 100 | 1000;
 
 // ── 小黄车（帖子即商品）──────────────────────────────────────────
+/** 多规格商品的一个 SKU（扁平列表：卖家自填规格名 + 单价 + 库存） */
+export type ShopVariant = {
+  id: string;
+  label: string;   // 如 "128G · 白色"
+  price: number;   // PB，> 0
+  stock: number;   // 整数 >= 0
+};
+
 /** 卖家在发帖时为帖子挂载的小黄车配置（仅 1000 PB 节点帖可挂载） */
 export type ShopInfo = {
-  price: number;         // 商品单价（PB），必须 > 0
   rebatePercent: number; // 优点返还比例，0–90（平台固定收 10% 损耗，故上限 90）
-  stock: number;         // 库存
+  price?: number;        // 单规格：商品单价（PB），必须 > 0
+  stock?: number;        // 单规格：库存
+  variants?: ShopVariant[]; // 多规格：非空时忽略 price/stock
 };
 
 /** 买家收货地址 */
@@ -40,6 +49,8 @@ export type ShopOrder = {
   carrier?: string;    // 物流公司
   trackingNo?: string; // 快递单号
   estMerit: number;    // 本单预计返给买家的优点（占位）
+  variantId?: string;
+  variantLabel?: string;
 };
 
 export type Post = {

@@ -137,7 +137,7 @@ export type AppContextValue = {
   setDefaultAddress: (addressId: string) => void;
   removeShippingAddress: (addressId: string) => void;
   /** 买家下单：创建「确认中」订单并立即返回，链上确认在后台异步完成（成功扣款转「待发货」，失败撤单，均 toast 通知） */
-  placeShopOrder: (postId: string, quantity: number, address: ShippingAddress) => ShopOrder | undefined;
+  placeShopOrder: (postId: string, quantity: number, address: ShippingAddress, variantId?: string) => ShopOrder | undefined;
   /** 卖家发货：填物流公司 + 快递单号 */
   shipShopOrder: (orderId: string, carrier: string, trackingNo: string) => void;
   /** 买家确认收货 → 待结算（次月 15 日） */

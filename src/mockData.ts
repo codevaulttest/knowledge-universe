@@ -534,7 +534,28 @@ export const ALL_POSTS: Post[] = [
     title: '超大桌垫 900×400mm。细面微粒材质，防滑底，锁边处理。颜色：墨绿 / 深灰 / 米白可选。',
     kind: 'image', imageCount: 3, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Dm7sP3',
     rating: 4, replies: 17, links: 6, shares: 11, saves: 59, likes: 163,
-    shop: { price: 360, rebatePercent: 25, stock: 80 },
+    shop: {
+      rebatePercent: 25,
+      variants: [
+        { id: 'dm-green', label: '墨绿', price: 360, stock: 30 },
+        { id: 'dm-gray', label: '深灰', price: 360, stock: 25 },
+        { id: 'dm-beige', label: '米白', price: 380, stock: 25 },
+      ],
+    },
+  },
+  {
+    id: 'shop-iphone', author: '极客前沿', time: '1 天前',
+    title: 'iPhone 17 · 国行正品，支持验机。颜色与容量见规格，全国顺丰包邮。',
+    kind: 'image', imageCount: 4, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Ip7nQ2',
+    rating: 5, replies: 42, links: 14, shares: 28, saves: 156, likes: 428,
+    shop: {
+      rebatePercent: 20,
+      variants: [
+        { id: 'ip-128w', label: '128G · 白色', price: 5000, stock: 12 },
+        { id: 'ip-128b', label: '128G · 黑色', price: 5000, stock: 8 },
+        { id: 'ip-256g', label: '256G · 金色', price: 6000, stock: 5 },
+      ],
+    },
   },
   {
     id: 'shop-poster', author: '设计师刘然', time: '3 天前',

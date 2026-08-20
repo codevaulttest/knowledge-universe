@@ -5,6 +5,7 @@ import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_
 import { buildInitialBspInvestments } from './bspConfig';
 import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import { computeUnitMerit } from './shopConfig';
+import { getShopVariant, isMultiVariantShop } from './shopUtils';
 import { postHasStake, formatTokenAmount } from './stakeConfig';
 import { translate } from './locales';
 import { BottomNav } from './components/BottomNav';
@@ -622,9 +623,24 @@ export default function App() {
     const totalSup = Math.round(order.unitFee * order.quantity * 10000) / 10000;
     deductPb(totalPb, 'purchase');
     if (totalSup > 0) deductSup(totalSup, 'purchase');
-    setPosts(ps => ps.map(p => p.id === order.postId && p.shop
-      ? { ...p, shop: { ...p.shop, stock: Math.max(0, p.shop.stock - order.quantity) } }
-      : p));
+    setPosts(ps => ps.map(p => {
+      if (p.id !== order.postId || !p.shop) return p;
+      const shop = p.shop;
+      if (order.variantId && shop.variants?.length) {
+        return {
+          ...p,
+          shop: {
+            ...shop,
+            variants: shop.variants.map(v =>
+              v.id === order.variantId
+                ? { ...v, stock: Math.max(0, v.stock - order.quantity) }
+                : v
+            ),
+          },
+        };
+      }
+      return { ...p, shop: { ...shop, stock: Math.max(0, (shop.stock ?? 0) - order.quantity) } };
+    }));
     setShopOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'to_ship' } : o));
     showToast(t('订单已确认，已扣 {pb} PB', { pb: formatTokenAmount(totalPb) }));
   };
@@ -637,10 +653,13 @@ export default function App() {
 
   // 买家下单：先创建「确认中」订单（不扣款、不减库存）并立即返回，
   // 链上确认在后台异步完成——计时器挂在 App 层，用户关闭商品页/离开也不中断。
-  const placeShopOrder = (postId: string, quantity: number, address: ShippingAddress) => {
+  const placeShopOrder = (postId: string, quantity: number, address: ShippingAddress, variantId?: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post?.shop) return;
-    const { price, rebatePercent } = post.shop;
+    const variant = getShopVariant(post.shop, variantId);
+    if (!variant || variant.stock < quantity) return;
+    const { rebatePercent } = post.shop;
+    const price = variant.price;
     const unitFee = Math.round(price * 0.0001 * 10000) / 10000;
     const order: ShopOrder = {
       id: `ord-${Date.now()}`,
@@ -657,6 +676,8 @@ export default function App() {
       status: 'submitting',
       createdAt: Date.now(),
       estMerit: computeUnitMerit(price, rebatePercent) * quantity,
+      variantId: isMultiVariantShop(post.shop) ? variant.id : undefined,
+      variantLabel: isMultiVariantShop(post.shop) ? variant.label : undefined,
     };
     setShopOrders(prev => [order, ...prev]);
     // 后台模拟链上确认（演示用 ~6s；真实可能数分钟）：约 12% 概率失败
