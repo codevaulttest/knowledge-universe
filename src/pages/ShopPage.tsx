@@ -3,7 +3,7 @@ import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import { MediaPlaceholder, PageHeader } from '../components/shared';
 import { formatTokenAmount } from '../stakeConfig';
-import { getShopMinPrice, hasShopPriceRange } from '../shopUtils';
+import { getShopMinPrice } from '../shopUtils';
 import type { Post } from '../types';
 
 /** 商城封面：无图或图片全部锁定时显示默认占位 */
@@ -82,11 +82,7 @@ export function ShopFeed() {
                 <p className="shop-card-title">{p.title.split('\n')[0]}</p>
                 <div className="shop-card-foot">
                   <span className="shop-card-price">
-                    {hasShopPriceRange(p.shop!)
-                      ? t('{price} PB 起', { price: formatTokenAmount(getShopMinPrice(p.shop!)) })
-                      : <>
-                        {formatTokenAmount(getShopMinPrice(p.shop!))} <span className="shop-card-price-unit">PB</span>
-                      </>}
+                    {formatTokenAmount(getShopMinPrice(p.shop!))} <span className="shop-card-price-unit">PB</span>
                   </span>
                   <span className="shop-card-seller">{p.author}</span>
                 </div>

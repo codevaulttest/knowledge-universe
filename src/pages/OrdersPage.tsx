@@ -47,7 +47,7 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
   };
 
   return (
-    <div className="page">
+    <div className="page orders-page">
       <PageHeader title={t('我的订单')} onBack={canGoBack ? goBack : undefined} />
       <div className="orders-role-tabs" role="tablist">
         <button type="button" role="tab" aria-selected={role === 'buyer'} className={`orders-role-tab${role === 'buyer' ? ' orders-role-tab--active' : ''}`} onClick={() => setRole('buyer')}>

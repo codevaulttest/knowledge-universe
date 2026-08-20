@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CalendarClock, Check, ChevronRight, Circle, Gift, Info, X } from 'lucide-react';
+import { CalendarCheck, Check, ChevronRight, Circle, Gift, Info, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT } from '../mockData';
 import { formatTokenAmount } from '../stakeConfig';
@@ -91,7 +91,7 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
             onClick={() => setDailyTaskOpen(true)}
             aria-label={t('查看每日任务')}
           >
-            <CalendarClock size={15} strokeWidth={1.9} className="asset-overview-tomorrow-head-icon" aria-hidden="true" />
+            <CalendarCheck size={15} strokeWidth={1.9} className="asset-overview-tomorrow-head-icon" aria-hidden="true" />
             <span className="asset-overview-tomorrow-title">{t('今日任务')}</span>
 
             <span className="asset-overview-tomorrow-head-status">
@@ -149,7 +149,7 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
                 className="bsp-rules-entry"
                 onClick={() => { setAirdropRuleOpen(false); setDailyTaskOpen(true); }}
               >
-                <CalendarClock size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
+                <CalendarCheck size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
                 <span className="bsp-rules-entry-text">{t('查看每日任务')}</span>
                 <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
               </button>

@@ -7,7 +7,7 @@ import { ArticleFeedCard, AuthorName, Avatar, GenesisBadge, GeminiNodeBadge, Med
 import { TipModal, Ios26Alert } from './Overlays';
 import { isChinese, localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
-import { getShopMinPrice, hasShopPriceRange } from '../shopUtils';
+import { getShopMinPrice } from '../shopUtils';
 import { formatTokenAmount } from '../stakeConfig';
 
 /** 未在 mock 数据里显式设置 heat/views 时，按 id 派生一个稳定的演示数值（同一帖子每次渲染保持一致）。*/
@@ -241,9 +241,7 @@ export function PostCard({
   const totalImgs = post.imageCount ?? 3;
   const genesisTier = getGenesisTier(post.author);
   const shopPriceFull = post.shop
-    ? (hasShopPriceRange(post.shop)
-      ? t('{price} PB 起', { price: formatTokenAmount(getShopMinPrice(post.shop)) })
-      : t('{price} PB', { price: formatTokenAmount(getShopMinPrice(post.shop)) }))
+    ? t('{price} PB', { price: formatTokenAmount(getShopMinPrice(post.shop)) })
     : '';
 
   // 频道会员门槛：未达标时强制锁定，优先于按比例解锁（不看 visiblePercent）

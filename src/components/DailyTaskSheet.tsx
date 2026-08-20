@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AlertTriangle, Check, ChevronRight, Circle, Gift, History, Info, MousePointerClick, Sparkles, X } from 'lucide-react';
 import { useApp } from '../AppContext';
+import { calendarIntlLocale } from '../dateUtils';
 import {
   TASK_BONUS_PB,
   TASK_BONUS_THRESHOLD,
@@ -194,11 +195,6 @@ function DailyTaskRulesSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-const CALENDAR_INTL_LOCALE: Record<string, string> = {
-  'zh-CN': 'zh-CN', en: 'en-US', 'zh-TW': 'zh-TW', ko: 'ko-KR', ja: 'ja-JP',
-  ru: 'ru-RU', es: 'es-ES', fr: 'fr-FR', pt: 'pt-PT', th: 'th-TH', vi: 'vi-VN',
-};
-
 function DailyTaskHistorySheet({
   onClose,
   days,
@@ -207,7 +203,7 @@ function DailyTaskHistorySheet({
   days: TaskCalendarDay[];
 }) {
   const { t, language } = useApp();
-  const intlLocale = CALENDAR_INTL_LOCALE[language] ?? 'en-US';
+  const intlLocale = calendarIntlLocale(language);
   const anchor = days.find(d => d.inCurrentMonth)?.date ?? days[0].date;
   const monthLabel = new Intl.DateTimeFormat(intlLocale, { month: 'long' }).format(new Date(`${anchor}T00:00:00`));
   // 2023-01-01 是周日，用它取各语言"周几"的极简单字符标签，对齐 getDay() 的 0=周日 顺序

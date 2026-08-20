@@ -433,7 +433,6 @@ export const ALL_POSTS: Post[] = [
     title: '单图 · 方图 1:1（区间内，满宽不裁）',
     kind: 'image', imageCount: 1, imageRatio: 1, images: ['/img/ratio-1x1.svg'], visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
-    shop: { price: 680, rebatePercent: 30, partnerRebatePercent: 10, stock: 120 },
   },
   {
     id: 'ratio-single-34', author: '比例走查', time: '刚刚',
@@ -467,7 +466,6 @@ export const ALL_POSTS: Post[] = [
     images: ['/img/ratio-16x9.svg', '/img/ratio-21x9.svg', '/img/ratio-1x1.svg'],
     imageRatios: [16 / 9, 21 / 9, 1], visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
-    shop: { price: 999, rebatePercent: 35, partnerRebatePercent: 10, stock: 60 },
   },
   {
     id: 'ratio-multi-34-lock', author: '比例走查', time: '刚刚',

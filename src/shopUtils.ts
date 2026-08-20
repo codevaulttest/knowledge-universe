@@ -24,18 +24,11 @@ export function getShopVariant(shop: ShopInfo, variantId?: string): ShopVariant 
   return variants[0];
 }
 
-/** 列表/卡片展示价：单值或最低价（多规格不同价时配合 i18n「X PB 起」） */
+/** 列表/卡片展示价：取各 SKU 最低价 */
 export function getShopMinPrice(shop: ShopInfo): number {
   const variants = getShopVariants(shop);
   if (variants.length === 0) return shop.price ?? 0;
   return Math.min(...variants.map(v => v.price));
-}
-
-/** 多规格且各 SKU 价格不同 */
-export function hasShopPriceRange(shop: ShopInfo): boolean {
-  if (!isMultiVariantShop(shop)) return false;
-  const prices = shop.variants!.map(v => v.price);
-  return new Set(prices).size > 1;
 }
 
 /** 总库存（售罄判断） */
