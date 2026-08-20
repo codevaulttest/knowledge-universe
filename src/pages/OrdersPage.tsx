@@ -1,22 +1,24 @@
 import { useState } from 'react';
-import { PackageCheck, PackageOpen, Truck } from 'lucide-react';
+import { MessageCircle, PackageCheck, PackageOpen, Truck } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { CURRENT_USER } from '../mockData';
+import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
 import type { ShopOrder } from '../types';
 import { PageHeader } from '../components/shared';
 import { DevPanel } from '../components/DevPanel';
 import { isChinese } from '../i18n';
 import { formatTokenAmount } from '../stakeConfig';
 import { shopOrderStatusLabel, formatShopFee } from '../shopConfig';
+import { CONTACT_CHANNELS } from './ShopItemPage';
 
 export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }) {
-  const { shopOrders, goBack, canGoBack, navigate, t, language, shipShopOrder, confirmShopReceipt, simulateShopSettle } = useApp();
+  const { shopOrders, goBack, canGoBack, navigate, t, language, shipShopOrder, confirmShopReceipt, simulateShopSettle, userProfile, showToast } = useApp();
   const [role, setRole] = useState<'buyer' | 'seller'>(initialRole ?? 'buyer');
   const [shipping, setShipping] = useState<ShopOrder | null>(null);
   const [carrier, setCarrier] = useState('');
   const [trackingNo, setTrackingNo] = useState('');
   // 开发工具：模拟订单空态（不改动种子数据）
   const [demoEmpty, setDemoEmpty] = useState(false);
+  const [expandedContacts, setExpandedContacts] = useState<Set<string>>(new Set());
   const zh = isChinese(language);
 
   const orders = demoEmpty ? [] : shopOrders.filter(o =>
@@ -65,7 +67,13 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
           </div>
         ) : (
           <div className="orders-list">
-            {orders.map(o => (
+            {orders.map(o => {
+              const sellerContacts = role === 'buyer'
+                ? (o.sellerName === CURRENT_USER ? userProfile.contacts : MOCK_SELLER_CONTACTS[o.sellerName])
+                : undefined;
+              const contactEntries = CONTACT_CHANNELS.filter(({ key }) => sellerContacts?.[key]?.trim());
+              const contactsOpen = expandedContacts.has(o.id);
+              return (
               <div key={o.id} className="order-card">
                 <div className="order-card-head">
                   <button
@@ -95,6 +103,29 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
                   <span className="order-card-addr-detail">{o.address.detail}</span>
                 </div>
 
+                {contactEntries.length > 0 && (
+                  <div className={`shop-item-contacts-reveal${contactsOpen ? ' shop-item-contacts-reveal--open' : ''}`}>
+                    <div className="shop-item-contacts-reveal-inner">
+                      <div className="shop-item-contacts">
+                        {contactEntries.map(({ key, label, icon: Icon }) => (
+                          <button
+                            type="button"
+                            className="shop-item-contact-chip"
+                            key={key}
+                            onClick={() => {
+                              navigator.clipboard.writeText(sellerContacts![key]!);
+                              showToast(t('已复制'));
+                            }}
+                          >
+                            <Icon size={13} strokeWidth={2} aria-hidden="true" />
+                            {t(label)}：{sellerContacts![key]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {o.trackingNo && (
                   <div className="order-card-tracking">
                     <Truck size={14} strokeWidth={2} />
@@ -116,6 +147,16 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
 
                 {/* 操作区 */}
                 <div className="order-card-actions">
+                  {role === 'buyer' && contactEntries.length > 0 && !contactsOpen && (
+                    <button
+                      type="button"
+                      className="shop-item-contacts-toggle"
+                      onClick={() => setExpandedContacts(prev => new Set(prev).add(o.id))}
+                    >
+                      <MessageCircle size={15} strokeWidth={2} aria-hidden="true" />
+                      {t('联系商家')}
+                    </button>
+                  )}
                   {role === 'buyer' && o.status === 'shipped' && (
                     <button type="button" className="order-action-btn" onClick={() => confirmShopReceipt(o.id)}>
                       <PackageCheck size={15} strokeWidth={2} />{t('确认收货')}
@@ -133,7 +174,8 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

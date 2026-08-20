@@ -10,7 +10,7 @@ import { computeShopFee, computeUnitMerit, formatShopFee, MERIT_PER_ADN } from '
 import { Ios26Alert } from '../components/Overlays';
 import { RegionPicker } from '../components/RegionPicker';
 
-const CONTACT_CHANNELS: { key: keyof ProfileContacts; label: string; icon: typeof MessageCircle }[] = [
+export const CONTACT_CHANNELS: { key: keyof ProfileContacts; label: string; icon: typeof MessageCircle }[] = [
   { key: 'wechat', label: '微信', icon: MessageCircle },
   { key: 'whatsapp', label: 'WhatsApp', icon: MessageCircleMore },
   { key: 'phone', label: '电话', icon: Phone },
