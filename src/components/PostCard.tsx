@@ -225,7 +225,7 @@ export function PostCard({
   /** 透传给 GeminiNodeBadge：仅「我的主页」用空心链接按钮 */
   chainOutline?: boolean;
 }) {
-  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, openChannelSubscribe, requireWallet } = useApp();
+  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, requireWallet } = useApp();
   const [moreOpen, setMoreOpen] = useState(false);
   const [actorsTab, setActorsTab] = useState<PostAction | 'link' | 'tip' | null>(null);
   const [showTip, setShowTip] = useState(false);
@@ -242,12 +242,15 @@ export function PostCard({
   // 频道会员门槛：未达标时强制锁定，优先于按比例解锁（不看 visiblePercent）
   const channel = post.channelId ? channels.find(c => c.id === post.channelId) : undefined;
   const requiredTier = channel && post.minTierIndex != null ? channel.tiers[post.minTierIndex] : undefined;
-  const mySubTierIdx = channel ? subscribedChannelTiers[channel.id] : undefined;
+  const channelSubExpired = channel ? expiredChannelIds.has(channel.id) : false;
+  const mySubTierIdx = channel && !channelSubExpired ? subscribedChannelTiers[channel.id] : undefined;
   const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= post.minTierIndex!);
   const channelLocked = !!requiredTier && !meetsChannelGate && !isOwn;
   const openChannelGate = () => channel && openChannelSubscribe(channel.id, post.minTierIndex);
   const channelLockLabel = channelLocked
-    ? (mySubTierIdx != null ? t('升级到『{name}』解锁', { name: requiredTier!.name }) : t('订阅『{name}』解锁', { name: requiredTier!.name }))
+    ? (channelSubExpired
+      ? t('续费『{name}』解锁', { name: requiredTier!.name })
+      : mySubTierIdx != null ? t('升级到『{name}』解锁', { name: requiredTier!.name }) : t('订阅『{name}』解锁', { name: requiredTier!.name }))
     : undefined;
   // 频道锁与按次付费锁叠加时（visiblePercent < 100），订阅本身不承诺解锁任何内容比例，
   // 文案不带"解锁"字样，避免出现"解锁至 0%"这种自相矛盾的措辞——内容解锁完全交给下面的按次付费入口

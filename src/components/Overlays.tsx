@@ -548,7 +548,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
   onSuccess: (tier: Exclude<StakeTier, 0>) => void;
   onClose: () => void;
 }) {
-  const { t, language, channels, subscribedChannelTiers } = useApp();
+  const { t, language, channels, subscribedChannelTiers, expiredChannelIds } = useApp();
   const zh = isChinese(language);
   const [selected, setSelected] = useState<Exclude<StakeTier, 0>>(10);
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done' | 'failed'>('select');
@@ -562,7 +562,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
   const channel = post.channelId ? channels.find(c => c.id === post.channelId) : undefined;
   const requiredTier = channel && post.minTierIndex != null ? channel.tiers[post.minTierIndex] : undefined;
   const isOwn = post.author === CURRENT_USER;
-  const mySubTierIdx = channel ? subscribedChannelTiers[channel.id] : undefined;
+  const mySubTierIdx = channel && !expiredChannelIds.has(channel.id) ? subscribedChannelTiers[channel.id] : undefined;
   const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= post.minTierIndex!);
   const channelLocked = !!requiredTier && !meetsChannelGate && !isOwn;
   const showUnlockCopy = hasHiddenContent && !channelLocked;
@@ -1689,9 +1689,10 @@ export function TipModal({
 // ═══════════════════════════════════════════════════════════════
 
 export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }: { channelId: string; requiredTierIndex?: number; onClose: () => void }) {
-  const { t, channels, subscribedChannelTiers, subscribeToChannelTier, unsubscribeFromChannel } = useApp();
+  const { t, channels, subscribedChannelTiers, expiredChannelIds, subscribeToChannelTier, unsubscribeFromChannel } = useApp();
   const channel = channels.find(c => c.id === channelId);
   const currentTierIndex = subscribedChannelTiers[channelId];
+  const isExpired = expiredChannelIds.has(channelId);
   // 从内容门槛锁点进来时，默认选中该内容要求的档位，省去用户再手动挑一次；
   // 已订阅档位优先（此时 requiredTierIndex 通常已满足，不会走到这个入口）
   const [selected, setSelected] = useState<number | null>(currentTierIndex ?? requiredTierIndex ?? null);
@@ -1718,7 +1719,9 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
         pageStep={step}
         icon={<div className="pay-page-brand-icon"><KnowledgePlanetIcon className="gemini-icon" /></div>}
         productName={t('知识宇宙')}
-        remark={t('订阅《{name}》· {name2}', { name: channel.name, name2: selectedTier.name })}
+        remark={isExpired && selected === currentTierIndex
+          ? t('续费《{name}》· {name2}', { name: channel.name, name2: selectedTier.name })
+          : t('订阅《{name}》· {name2}', { name: channel.name, name2: selectedTier.name })}
         amountText={`${selectedTier.price} PB`}
         networkFee="1 PB"
         tokenFee={`${formatSupAmount(selectedTier.price / 10000)} SUP/${t('月')}`}
@@ -1733,7 +1736,7 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="payment-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
-          <span className="sheet-title">{t('订阅《{name}》', { name: channel.name })}</span>
+          <span className="sheet-title">{isExpired ? t('续费《{name}》', { name: channel.name }) : t('订阅《{name}》', { name: channel.name })}</span>
           <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
@@ -1744,7 +1747,7 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
             const isCurrent = currentTierIndex === idx;
             // 已下架档位不接受新订阅，只在是本人当前档位时保留展示（方便查看自己的订阅状态）
             if (tier.archived && !isCurrent) return null;
-            const isDowngrade = currentTierIndex != null && idx < currentTierIndex;
+            const isDowngrade = currentTierIndex != null && idx < currentTierIndex && !isExpired;
             return (
               <button
                 key={tier.id}
@@ -1762,7 +1765,9 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
                 </span>
                 <span className="stake-tier-option__desc">
                   {isCurrent
-                    ? (tier.archived ? t('当前档位（已下架，不影响你的权限）') : t('当前档位'))
+                    ? (isExpired
+                      ? t('已过期档位，续费恢复访问权限')
+                      : tier.archived ? t('当前档位（已下架，不影响你的权限）') : t('当前档位'))
                     : t('可看全部 {name} 及以下档位专属内容', { name: tier.name })}
                 </span>
               </button>
@@ -1773,17 +1778,19 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
         <button
           type="button"
           className="planet-confirm-btn"
-          disabled={selected === null || selected === currentTierIndex}
+          disabled={selected === null || (selected === currentTierIndex && !isExpired)}
           onClick={() => selected !== null && setStep('confirm')}
         >
           {selected !== null
-            ? (currentTierIndex != null && selected > currentTierIndex
-              ? t('升级订阅')
-              : t('订阅'))
+            ? (isExpired && selected === currentTierIndex
+              ? t('续费')
+              : currentTierIndex != null && selected > currentTierIndex
+                ? t('升级订阅')
+                : t('订阅'))
             : t('请选择档位')}
         </button>
 
-        {currentTierIndex != null && (
+        {currentTierIndex != null && !isExpired && (
           <button
             type="button"
             className="channel-unsub-btn"

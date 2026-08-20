@@ -41,7 +41,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const {
     goBack, navigate, showToast, openLink, linkedPostIds, posts, requestDeletePost,
     openImageLightbox, incrementReplies, decrementReplies, language, t,
-    channels, subscribedChannelTiers, openChannelSubscribe, userProfile, requireWallet, walletConnected,
+    channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, userProfile, requireWallet, walletConnected,
   } = useApp();
   const post = posts.find(p => p.id === postId);
   const [replyText, setReplyText] = useState('');
@@ -73,16 +73,21 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   // 频道会员门槛：与 PostCard 一致，未达标时强制锁定，优先于按比例解锁
   const channel = post.channelId ? channels.find(c => c.id === post.channelId) : undefined;
   const requiredTier = channel && post.minTierIndex != null ? channel.tiers[post.minTierIndex] : undefined;
-  const mySubTierIdx = channel ? subscribedChannelTiers[channel.id] : undefined;
+  const channelSubExpired = channel ? expiredChannelIds.has(channel.id) : false;
+  const mySubTierIdx = channel && !channelSubExpired ? subscribedChannelTiers[channel.id] : undefined;
   const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= post.minTierIndex!);
   const channelLocked = !!requiredTier && !meetsChannelGate && !isOwn;
   const openChannelGate = () => channel && openChannelSubscribe(channel.id, post.minTierIndex);
   const channelLockLabel = channelLocked
-    ? (mySubTierIdx != null ? t('升级到『{name}』解锁', { name: requiredTier!.name }) : t('订阅『{name}』解锁', { name: requiredTier!.name }))
+    ? (channelSubExpired
+      ? t('续费『{name}』解锁', { name: requiredTier!.name })
+      : mySubTierIdx != null ? t('升级到『{name}』解锁', { name: requiredTier!.name }) : t('订阅『{name}』解锁', { name: requiredTier!.name }))
     : undefined;
   // 频道锁与按次付费锁叠加时（visiblePercent < 100），订阅不承诺解锁内容比例，文案不带"解锁"，避免"解锁至 0%"的荒谬措辞
   const channelLockLabelBare = channelLocked
-    ? (mySubTierIdx != null ? t('升级到『{name}』', { name: requiredTier!.name }) : t('订阅『{name}』', { name: requiredTier!.name }))
+    ? (channelSubExpired
+      ? t('续费『{name}』', { name: requiredTier!.name })
+      : mySubTierIdx != null ? t('升级到『{name}』', { name: requiredTier!.name }) : t('订阅『{name}』', { name: requiredTier!.name }))
     : undefined;
   const unlocked = (isOwn || isLinked || post.visiblePercent === 100) && !channelLocked;
   const hasActors = isOwn && !!POST_ACTORS[post.id];
@@ -321,7 +326,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
             const likeCount = replyLikes[r.id] ?? r.likes;
             // 评论作者若是该频道的订阅会员，展示会员档位小标（mock 数据里预置的 channelTierName，
             // 或当前用户本人在自己已订阅的频道帖子下评论时动态计算）
-            const myTierName = post.channelId && r.author === CURRENT_USER
+            const myTierName = post.channelId && r.author === CURRENT_USER && !expiredChannelIds.has(post.channelId)
               ? channels.find(c => c.id === post.channelId)?.tiers[subscribedChannelTiers[post.channelId] ?? -1]?.name
               : undefined;
             const channelTierName = r.channelTierName ?? myTierName;

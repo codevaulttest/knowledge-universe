@@ -121,13 +121,17 @@ export function ChannelCard({
   /** 访客视角：在卡片右侧展示「订阅 / 已订阅」快捷入口 */
   showSubscribe?: boolean;
 }) {
-  const { t, subscribedChannelTiers, openChannelSubscribe } = useApp();
+  const { t, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe } = useApp();
   const subscribedTierIndex = subscribedChannelTiers[channel.id];
-  const isSubscribed = subscribedTierIndex != null;
-  const canSubscribe = isSubscribed || channel.tiers.some(tr => !tr.archived);
+  const isExpired = expiredChannelIds.has(channel.id);
+  const isSubscribed = subscribedTierIndex != null && !isExpired;
+  const canSubscribe = isSubscribed || isExpired || channel.tiers.some(tr => !tr.archived);
   const activeTiers = channel.tiers.filter(tr => !tr.archived);
-  const subscribedTier = isSubscribed ? channel.tiers[subscribedTierIndex] : undefined;
+  const subscribedTier = subscribedTierIndex != null ? channel.tiers[subscribedTierIndex] : undefined;
   const accessLabel = (() => {
+    if (subscribedTier && isExpired) {
+      return t('已过期 · {name}', { name: subscribedTier.name });
+    }
     if (subscribedTier) {
       return t('已订阅 · {name}', { name: subscribedTier.name });
     }
@@ -159,7 +163,7 @@ export function ChannelCard({
         <div className="channel-discover-meta">
           <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
           <span className="channel-discover-meta-dot" aria-hidden="true">·</span>
-          <span className={`channel-discover-access${activeTiers.length === 0 && !subscribedTier ? ' channel-discover-access--free' : ''}${subscribedTier ? ' channel-discover-access--subscribed' : ''}`}>
+          <span className={`channel-discover-access${activeTiers.length === 0 && !subscribedTier ? ' channel-discover-access--free' : ''}${subscribedTier && !isExpired ? ' channel-discover-access--subscribed' : ''}${isExpired ? ' channel-discover-access--expired' : ''}`}>
             {accessLabel}
           </span>
         </div>
@@ -181,7 +185,12 @@ export function ChannelCard({
           className={`channel-manage-btn channel-discover-subscribe-btn${isSubscribed ? ' channel-manage-btn--subscribed' : ''}`}
           onClick={e => { e.stopPropagation(); openChannelSubscribe(channel.id); }}
         >
-          {isSubscribed ? (
+          {isExpired ? (
+            <>
+              <RotateCcw size={13} strokeWidth={2.2} aria-hidden="true" />
+              {t('续费')}
+            </>
+          ) : isSubscribed ? (
             <>
               <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
               {t('已订阅')}

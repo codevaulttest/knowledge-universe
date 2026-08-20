@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, CircleCheck, Gem, Radio, Settings } from 'lucide-react';
+import { ChevronRight, CircleCheck, Gem, Radio, RotateCcw, Settings } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import { PostCard } from '../components/PostCard';
@@ -9,7 +9,7 @@ import { SubscriberListModal } from './ProfilePage';
 
 export function ChannelPage({ channelId }: { channelId: string }) {
   const {
-    goBack, canGoBack, navigate, channels, posts, subscribedChannelTiers,
+    goBack, canGoBack, navigate, channels, posts, subscribedChannelTiers, expiredChannelIds,
     openChannelSubscribe, openManageChannel, resetChannelTierCooldown, t,
   } = useApp();
   const channel = channels.find(c => c.id === channelId);
@@ -32,6 +32,7 @@ export function ChannelPage({ channelId }: { channelId: string }) {
   }
 
   const isOwn = channel.ownerName === CURRENT_USER;
+  const isSubExpired = expiredChannelIds.has(channel.id);
   const mySubscribedTierIndex = subscribedChannelTiers[channel.id];
   const channelPosts = posts.filter(p => p.channelId === channel.id && !p.deleted);
   const isExclusive = (p: (typeof channelPosts)[number]) => p.minTierIndex != null;
@@ -101,10 +102,15 @@ export function ChannelPage({ channelId }: { channelId: string }) {
             ) : (mySubscribedTierIndex != null || channel.tiers.some(tr => !tr.archived)) ? (
               <button
                 type="button"
-                className={`channel-manage-btn${mySubscribedTierIndex != null ? ' channel-manage-btn--subscribed' : ''}`}
+                className={`channel-manage-btn${mySubscribedTierIndex != null && !isSubExpired ? ' channel-manage-btn--subscribed' : ''}`}
                 onClick={() => openChannelSubscribe(channel.id)}
               >
-                {mySubscribedTierIndex != null ? (
+                {isSubExpired ? (
+                  <>
+                    <RotateCcw size={13} strokeWidth={2.2} aria-hidden="true" />
+                    {t('续费')}
+                  </>
+                ) : mySubscribedTierIndex != null ? (
                   <>
                     <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
                     {t('已订阅 · {name}', { name: channel.tiers[mySubscribedTierIndex].name })}

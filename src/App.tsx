@@ -197,7 +197,9 @@ export default function App() {
   const toggleDemoHideOwnChannels = useCallback(() => {
     setDemoHideOwnChannels(prev => !prev);
   }, []);
-  const [subscribedChannelTiers, setSubscribedChannelTiers] = useState<Record<string, number>>({});
+  const [subscribedChannelTiers, setSubscribedChannelTiers] = useState<Record<string, number>>({ 'channel-yanlei': 0 });
+  // 演示到期续费态：产品大叔的方法论频道保留铜牌订阅记录，但已到期失去权限
+  const [expiredChannelIds, setExpiredChannelIds] = useState<Set<string>>(new Set(['channel-yanlei']));
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
   const [manageChannelId, setManageChannelId] = useState<string | null>(null);
   const [channelCreatedPromptId, setChannelCreatedPromptId] = useState<string | null>(null);
@@ -561,20 +563,35 @@ export default function App() {
   };
 
   const subscribeToChannelTier = (channelId: string, tierIndex: number) => {
-    const isNewSubscriber = subscribedChannelTiers[channelId] == null;
+    const wasExpired = expiredChannelIds.has(channelId);
+    const isNewSubscriber = subscribedChannelTiers[channelId] == null || wasExpired;
     setSubscribedChannelTiers(prev => ({ ...prev, [channelId]: tierIndex }));
+    if (wasExpired) {
+      setExpiredChannelIds(prev => {
+        const next = new Set(prev);
+        next.delete(channelId);
+        return next;
+      });
+    }
     setChannels(prev => prev.map(c => c.id === channelId && isNewSubscriber
       ? { ...c, subscriberCount: c.subscriberCount + 1 }
       : c));
     const channel = channels.find(c => c.id === channelId);
     const tierName = channel?.tiers[tierIndex]?.name ?? '';
-    showToast(t('订阅成功！已解锁「{tierName}」专属内容', { tierName }));
+    showToast(wasExpired
+      ? t('续费成功！已恢复「{tierName}」专属内容访问权限', { tierName })
+      : t('订阅成功！已解锁「{tierName}」专属内容', { tierName }));
   };
 
   const unsubscribeFromChannel = (channelId: string) => {
     setSubscribedChannelTiers(prev => {
       const next = { ...prev };
       delete next[channelId];
+      return next;
+    });
+    setExpiredChannelIds(prev => {
+      const next = new Set(prev);
+      next.delete(channelId);
       return next;
     });
     setChannels(prev => prev.map(c => c.id === channelId
@@ -842,7 +859,7 @@ export default function App() {
     drafts, saveDraft, updateDraft, deleteDraft,
     userProfile, updateUserProfile,
     editProfileAutoOpen, setEditProfileAutoOpen, openEditProfileContacts,
-    channels: visibleChannels, subscribedChannelTiers,
+    channels: visibleChannels, subscribedChannelTiers, expiredChannelIds,
     openChannelSubscribe, subscribeToChannelTier, unsubscribeFromChannel,
     createChannel, updateChannel, resetChannelTierCooldown,
     openCreateChannel, createChannelOpen, closeCreateChannel,

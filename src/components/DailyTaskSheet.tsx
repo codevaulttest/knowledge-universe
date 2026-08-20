@@ -211,6 +211,10 @@ function DailyTaskHistorySheet({
   const weekdayLabels = Array.from({ length: 7 }, (_, i) =>
     new Intl.DateTimeFormat(intlLocale, { weekday: 'narrow' }).format(new Date(2023, 0, 1 + i))
   );
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    days.find(d => d.isToday && d.snapshot)?.date ?? null
+  );
+  const selectedDay = days.find(d => d.date === selectedDate);
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -224,20 +228,7 @@ function DailyTaskHistorySheet({
 
         <div className="task-calendar-month">{monthLabel}</div>
 
-        <div className="task-calendar-legend">
-          <span className="task-calendar-legend-item">
-            <Check size={11} strokeWidth={2.6} aria-hidden="true" />
-            {t('当日已发帖')}
-          </span>
-          <span className="task-calendar-legend-item">
-            <span className="task-calendar-legend-swatch" aria-hidden="true">%</span>
-            {t('次日空投额度')}
-          </span>
-          <span className="task-calendar-legend-item">
-            <span className="task-calendar-legend-swatch">+</span>
-            {t('当日里程碑奖励')}
-          </span>
-        </div>
+        <p className="task-calendar-caption">{t('深色日期代表当天已发帖，点开日期查看当天详情')}</p>
 
         <div className="task-calendar-weekdays">
           {weekdayLabels.map((label, i) => (
@@ -249,34 +240,47 @@ function DailyTaskHistorySheet({
           {days.map(day => {
             const snapshot = day.snapshot;
             return (
-              <div
+              <button
+                type="button"
                 key={day.date}
+                disabled={!snapshot}
+                onClick={() => setSelectedDate(day.date)}
                 className={[
                   'task-calendar-day',
                   !day.inCurrentMonth && 'is-outside',
                   day.isToday && 'is-today',
                   snapshot?.posted && 'is-posted',
+                  day.date === selectedDate && 'is-selected',
                 ].filter(Boolean).join(' ')}
               >
                 <span className="task-calendar-day-num">{day.day}</span>
-                {snapshot && (
-                  <>
-                    <span className="task-calendar-day-token" aria-hidden="true">
-                      {snapshot.posted ? <Check size={12} strokeWidth={2.6} /> : <Circle size={11} strokeWidth={1.9} />}
-                    </span>
-                    <span className="task-calendar-day-ratio">{snapshot.claimRatio}%</span>
-                    {snapshot.bonusEligible && (
-                      <span className="task-calendar-day-bonus">
-                        <span>+{TASK_BONUS_PB}</span>
-                        <span className="task-calendar-day-bonus-unit">PB</span>
-                      </span>
-                    )}
-                  </>
-                )}
-              </div>
+              </button>
             );
           })}
         </div>
+
+        {selectedDay?.snapshot && (
+          <div className="task-calendar-detail">
+            <span className="task-calendar-detail-date">
+              {new Intl.DateTimeFormat(intlLocale, { month: 'long', day: 'numeric' }).format(new Date(`${selectedDay.date}T00:00:00`))}
+            </span>
+            <span className={`task-calendar-detail-status${selectedDay.snapshot.posted ? ' is-posted' : ''}`}>
+              {selectedDay.snapshot.posted ? <Check size={13} strokeWidth={2.6} /> : <Circle size={13} strokeWidth={1.9} />}
+              {selectedDay.snapshot.posted ? t('当日已发帖') : t('当日未发帖')}
+            </span>
+            <span className="task-calendar-detail-row">
+              {t('当日互动')}<strong>{selectedDay.snapshot.interactedCount} / {TASK_INTERACTION_POOL_SIZE}</strong>
+            </span>
+            <span className="task-calendar-detail-row">
+              {t('次日空投额度')}<strong>{selectedDay.snapshot.claimRatio}%</strong>
+            </span>
+            {selectedDay.snapshot.bonusEligible && (
+              <span className="task-calendar-detail-row">
+                {t('当日里程碑奖励')}<strong>+{TASK_BONUS_PB} PB</strong>
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

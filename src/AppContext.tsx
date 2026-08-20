@@ -74,8 +74,10 @@ export type AppContextValue = {
   /** 跳转到自己的主页并自动展开「编辑资料」 */
   openEditProfileContacts: () => void;
   channels: Channel[];
-  // 频道 id → 当前订阅的档位下标（未订阅则不在此 map 中）
+  // 频道 id → 当前订阅的档位下标（未订阅则不在此 map 中；到期后仍保留，用于「续费」时回显原档位）
   subscribedChannelTiers: Record<string, number>;
+  // 已到期、待续费的频道 id（仍在 subscribedChannelTiers 中，但已失去会员权限）
+  expiredChannelIds: Set<string>;
   openChannelSubscribe: (channelId: string, requiredTierIndex?: number) => void;
   subscribeToChannelTier: (channelId: string, tierIndex: number) => void;
   unsubscribeFromChannel: (channelId: string) => void;
