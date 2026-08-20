@@ -184,6 +184,14 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                         className="shop-item-contact-chip"
                         key={key}
                         onClick={() => {
+                          if (key === 'phone') {
+                            window.location.href = `tel:${sellerContacts![key]}`;
+                            return;
+                          }
+                          if (key === 'whatsapp') {
+                            window.open(`https://wa.me/${sellerContacts![key]!.replace(/[^\d]/g, '')}`, '_blank');
+                            return;
+                          }
                           navigator.clipboard.writeText(sellerContacts![key]!);
                           showToast(t('已复制'));
                         }}

@@ -427,7 +427,6 @@ export function PostCard({
                 <Flame size={17} strokeWidth={2.25} />
                 {formatCount(heat, language)}
               </span>
-              <span className="post-heat-divider" />
               <span className={`post-heat-cta${isOwn ? ' post-heat-cta--received' : ''}`}>
                 {isOwn
                   ? t('{tipsReceived} PB', { tipsReceived: post.tipsReceived ?? 0 })
