@@ -2397,8 +2397,90 @@ button {
 .compose-schedule-input {
   margin-top: 14px;
 }
+.compose-schedule-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ku-color-text-primary);
+}
+.compose-schedule-trigger.is-placeholder {
+  color: var(--ku-color-text-meta);
+}
 .compose-shop-toggle__label.compose-schedule-toggle__label {
   color: var(--ku-color-text-primary);
+}
+.schedule-picker-sheet .planet-confirm-btn {
+  margin-top: 12px;
+}
+.schedule-picker-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.schedule-picker-month-label {
+  margin: 0;
+  text-align: center;
+  flex: 1;
+}
+.schedule-picker-month-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--ku-radius-card);
+  color: var(--ku-color-text-primary);
+  background: var(--ku-color-bg-root);
+}
+.schedule-picker-month-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.schedule-picker-time {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.schedule-picker-time-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.schedule-picker-select {
+  appearance: none;
+  min-width: 64px;
+  padding: 10px 12px;
+  border-radius: var(--ku-radius-card);
+  border: 1px solid var(--ku-color-border-control);
+  background: var(--ku-color-bg-root);
+  color: var(--ku-color-text-primary);
+  font: 600 15px/1 var(--ku-font-family);
+  text-align: center;
+}
+.schedule-picker-time-unit {
+  font: 500 13px/1 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+}
+.schedule-picker-time-sep {
+  font: 600 16px/1 var(--ku-font-family);
+  color: var(--ku-color-text-meta);
+}
+.schedule-picker-preview {
+  margin: 12px 0 0;
+  text-align: center;
+  font: 600 14px/1.4 var(--ku-font-family);
+  color: var(--ku-color-primary);
+}
+.schedule-picker-preview.is-invalid {
+  font: 500 13px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-meta);
 }
 .profile-scheduled-badge {
   display: flex;
@@ -3215,12 +3297,26 @@ button {
 .detail-reply-compose {
   flex: 0 0 auto;
   display: flex;
-  align-items: center;
-  gap: var(--ku-detail-composer-gap);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   padding: var(--ku-feed-padding-top) var(--ku-feed-padding-x)
     max(var(--ku-detail-composer-padding-bottom), env(safe-area-inset-bottom));
   border-top: 1px solid var(--ku-color-border);
   background: var(--ku-color-bg-phone);
+}
+.detail-reply-compose-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-detail-composer-gap);
+}
+.detail-reply-partner-hint {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-nav-active-bg);
+  color: var(--ku-color-primary);
+  font: var(--ku-text-body-sm);
 }
 .detail-scroll-area {
   padding-bottom: var(--ku-post-gap);
@@ -3989,6 +4085,35 @@ button {
   border: none;
   background: var(--ku-gradient-primary);
   color: var(--ku-color-on-primary);
+}
+.gemini-stake-btn--primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.gemini-stake-comment {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.gemini-stake-comment-label {
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-secondary);
+}
+.gemini-stake-comment-input {
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 12px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-primary);
+  font: var(--ku-text-body-sm);
+  line-height: 1.45;
+  resize: vertical;
+}
+.gemini-stake-comment-input::placeholder {
+  color: var(--ku-color-text-placeholder);
 }
 .gemini-stake-btn--secondary {
   border: 1px solid var(--ku-color-border-card);
@@ -6903,6 +7028,29 @@ button {
 }
 .task-calendar-day.is-outside .task-calendar-day-num {
   color: var(--ku-color-text-meta);
+}
+.schedule-picker-sheet .task-calendar-day.is-past .task-calendar-day-num {
+  color: var(--ku-color-text-meta);
+  opacity: 0.35;
+  font-weight: 500;
+}
+/* 定时选择器：今天用主色数字弱提示，选中用实心底，避免两个描边框看起来一样 */
+.schedule-picker-sheet .task-calendar-day.is-today {
+  border-color: transparent;
+}
+.schedule-picker-sheet .task-calendar-day.is-today .task-calendar-day-num {
+  color: var(--ku-color-primary);
+  font-weight: 700;
+}
+.schedule-picker-sheet .task-calendar-day.is-selected {
+  border-color: transparent;
+  box-shadow: none;
+  background: var(--ku-color-primary);
+}
+.schedule-picker-sheet .task-calendar-day.is-selected .task-calendar-day-num {
+  color: var(--ku-color-on-primary);
+  opacity: 1;
+  font-weight: 700;
 }
 .task-calendar-day.is-posted {
   background: var(--ku-color-primary-alpha-14);
@@ -11134,7 +11282,19 @@ html[lang="zh-TW"] .planet-hero-title {
 .compose-shop-field__label--row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.compose-shop-field__label-main {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
+  min-width: 0;
+}
+.compose-shop-field__label-value {
+  flex-shrink: 0;
+  font: var(--ku-text-caption-strong);
+  color: var(--ku-color-text-primary);
 }
 .compose-shop-info-btn {
   display: inline-flex;
@@ -11484,17 +11644,34 @@ html[lang="zh-TW"] .planet-hero-title {
   align-items: baseline;
   gap: 10px;
 }
-.shop-item-seller-row {
+.shop-item-seller-block {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
 }
 .shop-item-seller-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
   gap: 8px;
+}
+.shop-item-join-partner {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--ku-color-primary);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-nav-active-bg);
+  color: var(--ku-color-primary);
+  font: var(--ku-text-body-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.shop-item-join-partner svg {
   flex-shrink: 0;
+  color: var(--ku-color-primary);
 }
 .shop-item-save {
   display: inline-flex;
@@ -11571,12 +11748,24 @@ html[lang="zh-TW"] .planet-hero-title {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  max-width: 100%;
+  min-width: 0;
   padding: 0;
   border: none;
   background: none;
   color: var(--ku-color-text-secondary);
   font: var(--ku-text-body-sm);
   cursor: pointer;
+}
+.shop-item-seller-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+.shop-item-seller svg {
+  flex-shrink: 0;
 }
 .shop-item-seller svg:first-child {
   flex-shrink: 0;
@@ -11664,6 +11853,74 @@ html[lang="zh-TW"] .planet-hero-title {
   font: var(--ku-text-meta);
 }
 .shop-item-addr-empty { color: var(--ku-color-text-secondary); }
+
+/* 优点返还 + 合伙人提示（随内容滚动） */
+.shop-item-info-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.shop-item-merit-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-shop-bg);
+  color: var(--ku-color-shop-text-on-tint);
+}
+.shop-item-merit-card svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.shop-item-merit-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font: var(--ku-text-meta);
+}
+.shop-item-merit-card-text p {
+  margin: 0;
+}
+.shop-item-partner-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-nav-active-bg);
+  color: var(--ku-color-primary);
+  font: var(--ku-text-meta);
+  text-align: left;
+  cursor: pointer;
+}
+.shop-item-partner-card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.shop-item-partner-card-main > svg {
+  flex-shrink: 0;
+  color: var(--ku-color-primary);
+  margin-top: 1px;
+}
+.shop-item-partner-card-info {
+  margin: 0;
+  min-width: 0;
+}
+.shop-item-partner-card-action {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font: var(--ku-text-caption-strong);
+  color: var(--ku-color-primary);
+}
 .shop-item-merit {
   display: flex;
   align-items: center;
@@ -11688,18 +11945,22 @@ html[lang="zh-TW"] .planet-hero-title {
   background: var(--ku-color-bg-phone);
   border-top: 1px solid var(--ku-color-border);
 }
-/* 弹窗形态：普通流，不 absolute */
+/* 弹窗形态：固定在弹窗底部 */
 .shop-item-buybar--sheet {
+  flex-shrink: 0;
   position: static;
-  margin-top: 16px;
+  margin-top: 12px;
   padding: 12px 0 0;
-  background: none;
+  background: var(--ku-color-bg-phone);
+  border-top: 1px solid var(--ku-color-border);
 }
 /* 弹窗容器：固定最大高度，内部可滚动 */
 .shop-item-sheet {
   display: flex;
   flex-direction: column;
   max-height: var(--ku-modal-max-height);
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  overflow: hidden;
 }
 .shop-item-sheet .sheet-header {
   margin-bottom: 8px;
@@ -12134,4 +12395,26 @@ html[lang="zh-TW"] .planet-hero-title {
 .order-action-btn--ghost {
   background: var(--ku-color-bg-page);
   color: var(--ku-color-text-primary);
+}
+
+/* 订单页全文最小 14px（含卡片内复用的联系商家 chip） */
+.orders-page .orders-role-badge {
+  min-width: 20px;
+  height: 20px;
+  font: 700 14px/20px var(--ku-font-family);
+}
+.orders-page .order-status {
+  font: 600 14px/1 var(--ku-font-family);
+}
+.orders-page .order-card-meta,
+.orders-page .order-card-sup,
+.orders-page .order-card-addr,
+.orders-page .order-card-addr-detail,
+.orders-page .order-card-tracking,
+.orders-page .order-card-settle-note,
+.orders-page .shop-item-contact-chip {
+  font: 400 14px/1.4 var(--ku-font-family);
+}
+.orders-page .order-action-btn {
+  font: 600 14px/1 var(--ku-font-family);
 }

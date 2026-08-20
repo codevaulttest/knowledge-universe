@@ -7,8 +7,10 @@ import { useChannelListSearch } from '../components/channelSearch';
 import { CURRENT_USER } from '../mockData';
 import type { Draft, Post, ShopInfo, StakeTier } from '../types';
 import { STAKE_TIERS, stakeTierDescription, stakeTierLabel, SUP_COST_BY_TIER } from '../stakeConfig';
-import { SHOP_MAX_REBATE_PERCENT, MERIT_PB_PER_POINT, MERIT_PER_ADN, computeShopFee } from '../shopConfig';
+import { SHOP_MAX_REBATE_PERCENT, MERIT_PB_PER_POINT, MERIT_PER_ADN, computeShopFee, isRebateSplitValid } from '../shopConfig';
 import { isChinese } from '../i18n';
+import { formatScheduledAt } from '../dateUtils';
+import { ScheduleDateTimePicker } from '../components/ScheduleDateTimePicker';
 
 const MAX_POST_CHARS = 500;
 
@@ -16,12 +18,6 @@ type VariantDraft = { id: string; label: string; price: string; stock: string };
 
 function newVariantDraft(): VariantDraft {
   return { id: `v-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, label: '', price: '', stock: '' };
-}
-
-/** Date → <input type="datetime-local"> 本地时区取值，格式 YYYY-MM-DDTHH:mm */
-function toLocalDateTimeInput(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export function ComposePage({
@@ -68,6 +64,7 @@ export function ComposePage({
   const [shopEnabled, setShopEnabled] = useState(false);
   const [shopPrice, setShopPrice] = useState('');
   const [shopRebate, setShopRebate] = useState(40);
+  const [shopPartnerRebate, setShopPartnerRebate] = useState(0);
   const [shopStock, setShopStock] = useState('');
   const [shopUseVariants, setShopUseVariants] = useState(false);
   const [variantRows, setVariantRows] = useState<VariantDraft[]>([newVariantDraft()]);
@@ -80,14 +77,26 @@ export function ComposePage({
   // 定时发布：设定时间前，帖子仅作者本人可见
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduledAtLocal, setScheduledAtLocal] = useState('');
-  const scheduleInputRef = useRef<HTMLInputElement>(null);
-  // 打开开关的同一次点击里顺手拉起系统时间选择器，省去用户再点一次输入框
+  const [schedulePickerOpen, setSchedulePickerOpen] = useState(false);
+  // 打开开关的同一次点击里拉起自定义时间选择器，省去用户再点一次
   const handleScheduleToggle = () => {
-    setScheduleEnabled(v => {
-      const next = !v;
-      if (next) setTimeout(() => scheduleInputRef.current?.showPicker?.(), 0);
-      return next;
-    });
+    if (scheduleEnabled) {
+      setScheduleEnabled(false);
+      setSchedulePickerOpen(false);
+      return;
+    }
+    setScheduleEnabled(true);
+    setSchedulePickerOpen(true);
+  };
+  const handleSchedulePickerClose = () => {
+    setSchedulePickerOpen(false);
+    // 首次打开后若未确认时间就关掉，收回开关，避免留下无效的"已开启但未设时间"
+    if (!scheduledAtLocal) setScheduleEnabled(false);
+  };
+  const handleScheduleConfirm = (localValue: string) => {
+    setScheduledAtLocal(localValue);
+    setScheduleEnabled(true);
+    setSchedulePickerOpen(false);
   };
   const [articleMode, setArticleMode] = useState(draft?.kind === 'article');
   const [articleTitle, setArticleTitle] = useState(draft?.articleTitle ?? '');
@@ -127,8 +136,7 @@ export function ComposePage({
   });
   const shopValid = !shopEnabled || (
     hasContacts
-    && shopRebate >= 0
-    && shopRebate <= SHOP_MAX_REBATE_PERCENT
+    && isRebateSplitValid(shopRebate, shopPartnerRebate)
     && (shopUseVariants
       ? variantRows.length >= 1 && variantRowsValid
       : shopPriceNum > 0
@@ -167,7 +175,7 @@ export function ComposePage({
         if (!(shopPriceNum > 0 && Number.isFinite(shopPriceNum))) return t('请填写商品单价');
         if (!(shopStockNum >= 1 && Number.isInteger(shopStockNum))) return t('请填写库存');
       }
-      if (!(shopRebate >= 0 && shopRebate <= SHOP_MAX_REBATE_PERCENT)) return t('优点返还比例超出范围');
+      if (!isRebateSplitValid(shopRebate, shopPartnerRebate)) return t('返还比例合计超出范围');
     }
     if (scheduleEnabled) {
       if (scheduledAtMs === undefined || Number.isNaN(scheduledAtMs)) return t('请设置定时发布时间');
@@ -266,6 +274,7 @@ export function ComposePage({
       ? shopUseVariants
         ? {
             rebatePercent: shopRebate,
+            partnerRebatePercent: shopPartnerRebate,
             variants: variantRows.map(row => ({
               id: row.id,
               label: row.label.trim(),
@@ -273,7 +282,7 @@ export function ComposePage({
               stock: Number(row.stock),
             })),
           }
-        : { price: shopPriceNum, rebatePercent: shopRebate, stock: shopStockNum }
+        : { price: shopPriceNum, rebatePercent: shopRebate, partnerRebatePercent: shopPartnerRebate, stock: shopStockNum }
       : undefined;
     const postData = {
       title: (articleMode ? articleTitle : text).trim(),
@@ -959,25 +968,57 @@ export function ComposePage({
 
                     <div className="compose-shop-field">
                       <span className="compose-shop-field__label compose-shop-field__label--row">
-                        <span>{t('优点返还比例')} · {shopRebate}%</span>
-                        <button
-                          type="button"
-                          className="compose-shop-info-btn"
-                          onClick={() => setRebateInfoOpen(true)}
-                          aria-label={t('什么是优点返还')}
-                        >
-                          <Info size={13} strokeWidth={2} />
-                        </button>
+                        <span className="compose-shop-field__label-main">
+                          <span>{t('兑换方返还比例')}</span>
+                          <button
+                            type="button"
+                            className="compose-shop-info-btn"
+                            onClick={() => setRebateInfoOpen(true)}
+                            aria-label={t('什么是优点返还')}
+                          >
+                            <Info size={13} strokeWidth={2} />
+                          </button>
+                        </span>
+                        <span className="compose-shop-field__label-value">{shopRebate}%</span>
                       </span>
                       <input
-                        type="range" min={0} max={SHOP_MAX_REBATE_PERCENT} step={5}
+                        type="range" min={0} max={SHOP_MAX_REBATE_PERCENT - shopPartnerRebate} step={5}
                         className="compose-shop-range"
                         value={shopRebate}
                         style={{ '--shop-range-pct': `${(shopRebate / SHOP_MAX_REBATE_PERCENT) * 100}%` } as CSSProperties}
-                        onChange={e => setShopRebate(Number(e.target.value))}
+                        onChange={e => {
+                          const next = Number(e.target.value);
+                          setShopRebate(next);
+                          if (next + shopPartnerRebate > SHOP_MAX_REBATE_PERCENT) {
+                            setShopPartnerRebate(SHOP_MAX_REBATE_PERCENT - next);
+                          }
+                        }}
                       />
                       <span className="compose-shop-field__hint">
                         {t('买家按此比例获得优点返还')}
+                      </span>
+                    </div>
+
+                    <div className="compose-shop-field">
+                      <span className="compose-shop-field__label compose-shop-field__label--row">
+                        <span className="compose-shop-field__label-main">{t('合伙人返还比例')}</span>
+                        <span className="compose-shop-field__label-value">{shopPartnerRebate}%</span>
+                      </span>
+                      <input
+                        type="range" min={0} max={SHOP_MAX_REBATE_PERCENT - shopRebate} step={5}
+                        className="compose-shop-range"
+                        value={shopPartnerRebate}
+                        style={{ '--shop-range-pct': `${(shopPartnerRebate / SHOP_MAX_REBATE_PERCENT) * 100}%` } as CSSProperties}
+                        onChange={e => {
+                          const next = Number(e.target.value);
+                          setShopPartnerRebate(next);
+                          if (shopRebate + next > SHOP_MAX_REBATE_PERCENT) {
+                            setShopRebate(SHOP_MAX_REBATE_PERCENT - next);
+                          }
+                        }}
+                      />
+                      <span className="compose-shop-field__hint">
+                        {t('合伙人按此比例获得优点返还')}
                       </span>
                     </div>
                   </div>
@@ -1042,27 +1083,35 @@ export function ComposePage({
             </button>
             <p className="compose-stake-hint">{t('到设定时间后，帖子才会对其他人可见')}</p>
             {scheduleEnabled && (
-              <input
-                ref={scheduleInputRef}
-                type="datetime-local"
-                lang={isChinese(language) ? 'zh-CN' : 'en'}
-                className="compose-shop-input compose-schedule-input"
-                min={toLocalDateTimeInput(new Date(Date.now() + 60_000))}
-                value={scheduledAtLocal}
-                onChange={e => setScheduledAtLocal(e.target.value)}
+              <button
+                type="button"
+                className={`compose-shop-input compose-schedule-input compose-schedule-trigger${!scheduledAtLocal ? ' is-placeholder' : ''}`}
+                onClick={() => setSchedulePickerOpen(true)}
                 aria-label={t('定时发布')}
-              />
+              >
+                {scheduledAtLocal
+                  ? formatScheduledAt(new Date(scheduledAtLocal).getTime())
+                  : t('选择发布时间')}
+              </button>
             )}
           </div>
         )}
       </div>
+
+      {schedulePickerOpen && (
+        <ScheduleDateTimePicker
+          value={scheduledAtLocal}
+          onConfirm={handleScheduleConfirm}
+          onClose={handleSchedulePickerClose}
+        />
+      )}
 
       {/* 选择同步频道：支持搜索，避免频道数量达到千级时一次性渲染全部选项 */}
       {rebateInfoOpen && (
         <div className="sheet-backdrop" onClick={() => setRebateInfoOpen(false)}>
           <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
             <div className="sheet-header">
-              <span className="sheet-title">{t('优点返还比例')}</span>
+              <span className="sheet-title">{t('兑换方返还比例')}</span>
               <button type="button" className="modal-close" onClick={() => setRebateInfoOpen(false)} aria-label={t('关闭')}>
                 <X size={18} strokeWidth={2} />
               </button>

@@ -4,7 +4,7 @@ import type { AppContextValue } from './AppContext';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { buildInitialBspInvestments } from './bspConfig';
 import { formatScheduledAt } from './dateUtils';
-import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
 import { postHasStake, formatTokenAmount } from './stakeConfig';
@@ -46,7 +46,9 @@ export default function App() {
   const [stakeModal, setStakeModal] = useState<StakeModalRequest | null>(null);
   const [linkSheet, setLinkSheet] = useState<{ postId: string; mode: 'link' | 'unlock' } | null>(null);
   const pendingPaySuccessRef = useRef<(() => void) | null>(null);
+  const pendingPartnerCommentRef = useRef<{ postId: string; text: string } | null>(null);
   const pendingWalletActionRef = useRef<(() => void) | null>(null);
+  const [extraRepliesByPostId, setExtraRepliesByPostId] = useState<Record<string, Reply[]>>({});
 
   const [language, setLanguage] = useState<Language>('zh-CN');
   const [confirmDelete, setConfirmDelete] = useState<{ postId: string; onAfterDelete?: () => void } | null>(null);
@@ -383,6 +385,7 @@ export default function App() {
       setStakeModal({
         postId,
         action,
+        mode: action === 'partner' ? 'partner' : 'default',
         onSkip: handlers.onSkip,
         onAfterPay: handlers.onPaid,
       });
@@ -490,6 +493,22 @@ export default function App() {
     // 评论同样计入今日互动帖任务进度
     recordTaskInteraction(postId);
   }, []);
+
+  const appendPostReply = useCallback((postId: string, text: string) => {
+    const reply: Reply = {
+      id: `reply-${Date.now()}`,
+      author: CURRENT_USER,
+      time: t('刚刚'),
+      text: text.trim(),
+      avatarIdx: 0,
+      likes: 0,
+    };
+    setExtraRepliesByPostId(prev => ({
+      ...prev,
+      [postId]: [reply, ...(prev[postId] ?? [])],
+    }));
+    incrementReplies(postId);
+  }, [incrementReplies, t]);
 
   // 删除自己的评论后回收计数；不减任务进度（互动一旦发生即视为完成，删除评论不倒扣）
   const decrementReplies = useCallback((postId: string) => {
@@ -752,7 +771,19 @@ export default function App() {
     } else if (ctx === 'repost') {
       showToast(t('转发成功！子节点已创建'));
     } else if (ctx === 'interaction') {
-      showToast(t('子节点已创建'));
+      if (paySheet.action === 'partner' && postId && pendingPartnerCommentRef.current?.postId === postId) {
+        if (!linkedPostIds.has(postId)) {
+          setLinkedPostIds(s => new Set(s).add(postId));
+          setPosts(prev => prev.map(p =>
+            p.id === postId ? { ...p, links: p.links + 1, visiblePercent: 100 } : p
+          ));
+        }
+        appendPostReply(postId, pendingPartnerCommentRef.current.text);
+        pendingPartnerCommentRef.current = null;
+        showToast(t('已加入合伙人'));
+      } else {
+        showToast(t('子节点已创建'));
+      }
     }
     pendingPaySuccessRef.current?.();
     pendingPaySuccessRef.current = null;
@@ -860,7 +891,7 @@ export default function App() {
     outgoingTips, recordOutgoingTip,
     requestPostInteraction, beginPaidInteraction,
     deletePost, requestDeletePost,
-    openEditPost, updatePost, incrementReplies, decrementReplies,
+    openEditPost, updatePost, incrementReplies, decrementReplies, appendPostReply, extraRepliesByPostId,
     stagePendingPost, publishPost,
     openArticleReader, openVideoPlayer,
     activityGroups, unreadActivityCount, markAllRead,
@@ -950,6 +981,7 @@ export default function App() {
             onClose={() => {
               setPaySheet(null);
               pendingPaySuccessRef.current = null;
+              pendingPartnerCommentRef.current = null;
             }}
           />
         )}
@@ -960,11 +992,15 @@ export default function App() {
           return (
             <GeminiStakeModal
               post={stakePost}
+              mode={stakeModal.mode ?? (stakeModal.action === 'partner' ? 'partner' : 'default')}
               onClose={() => setStakeModal(null)}
               onSkip={() => { stakeModal.onSkip(); setStakeModal(null); }}
-              onParticipate={(tier) => {
+              onParticipate={(tier, commentText) => {
                 const { postId, action, onAfterPay } = stakeModal;
                 setStakeModal(null);
+                if (action === 'partner' && commentText) {
+                  pendingPartnerCommentRef.current = { postId, text: commentText };
+                }
                 pendingPaySuccessRef.current = onAfterPay;
                 setPaySheet({ ctx: 'interaction', postId, action, stakeTier: tier });
               }}

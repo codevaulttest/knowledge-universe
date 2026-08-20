@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import type { TaskCalendarDay, TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
@@ -44,6 +44,9 @@ export type AppContextValue = {
   updatePost: (postId: string, newTitle: string, tierUpdate?: { minTierIndex: number | undefined }) => void;
   incrementReplies: (postId: string) => void;
   decrementReplies: (postId: string) => void;
+  /** 付费互动（如加入合伙人）成功后追加的评论 */
+  appendPostReply: (postId: string, text: string) => void;
+  extraRepliesByPostId: Record<string, Reply[]>;
   stagePendingPost: (data: NewPostData) => void;
   publishPost: (data: NewPostData) => void;
   openImageLightbox: (post: Post, imgIdx: number, imgCount: number) => void;

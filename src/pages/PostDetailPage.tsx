@@ -8,7 +8,7 @@ import { TipModal, Ios26Alert } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelMemberBadge, GenesisBadge, GeminiNodeBadge, MediaPlaceholder, PageHeader, PostContent } from '../components/shared';
 import { localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
-import { getShopMinPrice, hasShopPriceRange } from '../shopUtils';
+import { getShopMinPrice } from '../shopUtils';
 import { formatTokenAmount } from '../stakeConfig';
 
 /** 与 PostCard 一致：未显式设置 heat/views 时按 id 派生稳定演示数值 */
@@ -42,7 +42,7 @@ function sortReplies(replies: Reply[], likes: Record<string, number>): Reply[] {
 export function PostDetailPage({ postId, scrollToComments }: { postId: string; scrollToComments?: boolean }) {
   const {
     goBack, navigate, showToast, openLink, linkedPostIds, posts, requestDeletePost,
-    openImageLightbox, incrementReplies, decrementReplies, language, t,
+    openImageLightbox, incrementReplies, decrementReplies, extraRepliesByPostId, language, t,
     channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, userProfile, requireWallet, walletConnected,
   } = useApp();
   const post = posts.find(p => p.id === postId);
@@ -71,9 +71,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
 
   const isOwn = post.author === CURRENT_USER;
   const shopPriceFull = post.shop
-    ? (hasShopPriceRange(post.shop)
-      ? t('{price} PB 起', { price: formatTokenAmount(getShopMinPrice(post.shop)) })
-      : t('{price} PB', { price: formatTokenAmount(getShopMinPrice(post.shop)) }))
+    ? t('{price} PB', { price: formatTokenAmount(getShopMinPrice(post.shop)) })
     : '';
   const displayName = isOwn ? userProfile.nickname : post.author;
   const isLinked = linkedPostIds.has(post.id);
@@ -149,7 +147,9 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
     showToast(t('评论已删除'));
   };
 
-  const displayReplies = [...newReplies, ...snapshotReplies].filter(r => !deletedReplyIds.has(r.id));
+  const sessionExtraReplies = extraRepliesByPostId[postId] ?? [];
+  const displayReplies = [...newReplies, ...sessionExtraReplies, ...snapshotReplies].filter(r => !deletedReplyIds.has(r.id));
+  const showPartnerHint = !isOwn && !!post.shop;
 
   return (
     <div className="page">
@@ -388,34 +388,39 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
 
       {/* 固定在详情页底部的回复输入 */}
       <div className="detail-reply-compose">
-        {walletConnected ? (
-          <Avatar index={0} seed={userProfile.avatarSeed} />
-        ) : (
-          <span className="avatar avatar--guest" aria-hidden="true">
-            <User size={16} strokeWidth={2} />
-          </span>
+        {showPartnerHint && (
+          <p className="detail-reply-partner-hint">{t('发表评论并链接，即可成为合伙人')}</p>
         )}
-        <input
-          className="reply-input"
-          placeholder={t('回复 {author}…', { author: post.author })}
-          value={replyText}
-          onChange={e => setReplyText(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') handleSendReply(); }}
-          onMouseDown={(e) => {
-            // 游客态：输入前先引导连接钱包，避免打完一段字才被打断、造成内容丢失的挫败感
-            if (walletConnected) return;
-            e.preventDefault();
-            requireWallet(() => {});
-          }}
-          onFocus={(e) => {
-            if (walletConnected) return;
-            e.currentTarget.blur();
-            requireWallet(() => {});
-          }}
-        />
-        <button className="reply-send" type="button" onClick={handleSendReply} disabled={!replyText.trim()}>
-          {t('发送')}
-        </button>
+        <div className="detail-reply-compose-row">
+          {walletConnected ? (
+            <Avatar index={0} seed={userProfile.avatarSeed} />
+          ) : (
+            <span className="avatar avatar--guest" aria-hidden="true">
+              <User size={16} strokeWidth={2} />
+            </span>
+          )}
+          <input
+            className="reply-input"
+            placeholder={t('回复 {author}…', { author: post.author })}
+            value={replyText}
+            onChange={e => setReplyText(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleSendReply(); }}
+            onMouseDown={(e) => {
+              // 游客态：输入前先引导连接钱包，避免打完一段字才被打断、造成内容丢失的挫败感
+              if (walletConnected) return;
+              e.preventDefault();
+              requireWallet(() => {});
+            }}
+            onFocus={(e) => {
+              if (walletConnected) return;
+              e.currentTarget.blur();
+              requireWallet(() => {});
+            }}
+          />
+          <button className="reply-send" type="button" onClick={handleSendReply} disabled={!replyText.trim()}>
+            {t('发送')}
+          </button>
+        </div>
       </div>
 
       {actorsTab && (

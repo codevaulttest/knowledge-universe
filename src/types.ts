@@ -11,7 +11,8 @@ export type ShopVariant = {
 
 /** 卖家在发帖时为帖子挂载的小黄车配置（仅 1000 PB 节点帖可挂载） */
 export type ShopInfo = {
-  rebatePercent: number; // 优点返还比例，0–90（平台固定收 10% 损耗，故上限 90）
+  rebatePercent: number; // 兑换方优点返还比例，0–90（平台固定收 10% 损耗，故上限 90）
+  partnerRebatePercent?: number; // 合伙人优点返还比例；与 rebatePercent 之和 ≤ 90
   price?: number;        // 单规格：商品单价（PB），必须 > 0
   stock?: number;        // 单规格：库存
   variants?: ShopVariant[]; // 多规格：非空时忽略 price/stock
@@ -233,7 +234,7 @@ export type Draft = {
   visibility?: number;
   savedAt: number; // timestamp
 };
-export type InteractionAction = PostAction | 'comment' | 'unlock';
+export type InteractionAction = PostAction | 'comment' | 'unlock' | 'partner';
 export type PayCtx = {
   ctx: 'post' | 'chain' | 'repost' | 'interaction';
   postId?: string;
@@ -255,6 +256,7 @@ export type SupTransactionReason =
   | 'dislike'
   | 'save'
   | 'unlock'
+  | 'partner'
   | 'bsp_invest'
   | 'purchase';
 
@@ -302,6 +304,8 @@ export type NewPostData = {
 export type StakeModalRequest = {
   postId: string;
   action: InteractionAction;
+  /** partner：强制选档位 + 评论，隐藏「不参与」 */
+  mode?: 'default' | 'partner';
   onSkip: () => void;
   onAfterPay: () => void;
 };

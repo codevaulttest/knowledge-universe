@@ -382,13 +382,29 @@ export function getChannelSubscribers(channel: Channel): ChannelSubscriber[] {
 }
 
 export const ALL_POSTS: Post[] = [
+  // ── 多规格小黄车演示（首条：推荐流 + 商城 Tab 均置顶）──
+  {
+    id: 'shop-iphone', author: '极客前沿', time: '1 天前',
+    title: 'iPhone 17 · 国行正品，支持验机。颜色与容量见规格，全国顺丰包邮。',
+    kind: 'image', imageCount: 4, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Ip7nQ2',
+    rating: 5, replies: 42, links: 14, shares: 28, saves: 156, likes: 428,
+    shop: {
+      rebatePercent: 20,
+      partnerRebatePercent: 5,
+      variants: [
+        { id: 'ip-128w', label: '128G · 白色', price: 5000, stock: 12 },
+        { id: 'ip-128b', label: '128G · 黑色', price: 5000, stock: 8 },
+        { id: 'ip-256g', label: '256G · 金色', price: 6000, stock: 5 },
+      ],
+    },
+  },
   // ── 图片兜底走查（首屏可见）：封面图地址失效，验证加载失败时的兜底展示 ──
   {
     id: 'fallback-demo', author: '兜底走查', time: '刚刚',
     title: '封面图地址已失效：回退到裂图占位',
     kind: 'image', imageCount: 1, imageRatio: 16 / 9, images: ['https://broken.invalid/cover.jpg'], visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Rz0dW2',
     rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
-    shop: { price: 199, rebatePercent: 30, stock: 50 },
+    shop: { price: 199, rebatePercent: 30, partnerRebatePercent: 10, stock: 50 },
   },
   // ── 图片比例走查（首屏可见）：单图不同宽高比 + 多图 carousel 不同封面比例 ──
   // 规则见 docs/image-display-spec.md：画框比例 = clamp(真实比例, 9:21, 21:9)，cover 居中裁。
@@ -404,7 +420,7 @@ export const ALL_POSTS: Post[] = [
     title: '单图 · 全景 21:9（横图上限，满宽不裁，最矮 ~150px）',
     kind: 'image', imageCount: 1, imageRatio: 21 / 9, images: ['/img/ratio-21x9.svg'], visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Rz1aP7',
     rating: 0, replies: 0, links: 12, shares: 0, saves: 0, likes: 0,
-    shop: { price: 1800, rebatePercent: 40, stock: 30 },
+    shop: { price: 1800, rebatePercent: 40, partnerRebatePercent: 10, stock: 30 },
   },
   {
     id: 'ratio-single-169', author: '比例走查', time: '刚刚',
@@ -417,7 +433,7 @@ export const ALL_POSTS: Post[] = [
     title: '单图 · 方图 1:1（区间内，满宽不裁）',
     kind: 'image', imageCount: 1, imageRatio: 1, images: ['/img/ratio-1x1.svg'], visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
-    shop: { price: 680, rebatePercent: 30, stock: 120 },
+    shop: { price: 680, rebatePercent: 30, partnerRebatePercent: 10, stock: 120 },
   },
   {
     id: 'ratio-single-34', author: '比例走查', time: '刚刚',
@@ -430,7 +446,7 @@ export const ALL_POSTS: Post[] = [
     title: '单图 · 瘦长 9:16（区间内，不裁；超最大高→按高定宽、缩窄居左，不吃屏）',
     kind: 'image', imageCount: 1, imageRatio: 9 / 16, images: ['/img/ratio-9x16.svg'], visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Rz3cT9',
     rating: 0, replies: 0, links: 5, shares: 0, saves: 0, likes: 0,
-    shop: { price: 2600, rebatePercent: 50, stock: 8 },
+    shop: { price: 2600, rebatePercent: 50, partnerRebatePercent: 10, stock: 8 },
   },
   {
     id: 'ratio-single-921', author: '比例走查', time: '刚刚',
@@ -451,7 +467,7 @@ export const ALL_POSTS: Post[] = [
     images: ['/img/ratio-16x9.svg', '/img/ratio-21x9.svg', '/img/ratio-1x1.svg'],
     imageRatios: [16 / 9, 21 / 9, 1], visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 0, links: 0, shares: 0, saves: 0, likes: 0,
-    shop: { price: 999, rebatePercent: 35, stock: 60 },
+    shop: { price: 999, rebatePercent: 35, partnerRebatePercent: 10, stock: 60 },
   },
   {
     id: 'ratio-multi-34-lock', author: '比例走查', time: '刚刚',
@@ -475,7 +491,7 @@ export const ALL_POSTS: Post[] = [
     kind: 'image', imageCount: 3, visiblePercent: 50, isNode: true, stakeTier: 1000, nodeId: 'Kx7mR2',
     rating: 4, replies: 18, links: 42, shares: 36, saves: 152, likes: 306, tipsReceived: 89,
     channelId: 'channel-aieff',
-    shop: { price: 2000, rebatePercent: 40, stock: 50 },
+    shop: { price: 2000, rebatePercent: 40, partnerRebatePercent: 10, stock: 50 },
   },
   // ── 商城封面占位样式演示（首屏可见）──
   {
@@ -483,7 +499,7 @@ export const ALL_POSTS: Post[] = [
     title: '《独立开发者的 100 条心法》电子版。纯文字交付，无配图；下单后私信发送 PDF 与 Notion 模板链接。',
     kind: 'text', visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Ph1tX9',
     rating: 4, replies: 12, links: 3, shares: 8, saves: 45, likes: 128,
-    shop: { price: 88, rebatePercent: 45, stock: 999 },
+    shop: { price: 88, rebatePercent: 45, partnerRebatePercent: 10, stock: 999 },
   },
   {
     id: 'shop-ph-article', author: '阿May的研究笔记', time: '10 天前',
@@ -491,14 +507,14 @@ export const ALL_POSTS: Post[] = [
     articlePreview: '从数据清洗、切片策略、检索召回、重排到评测闭环，这份清单把 RAG 上线前必须拍板的项逐条列清。',
     kind: 'article', articleHasCover: false, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Ph2aR4',
     rating: 5, replies: 19, links: 6, shares: 11, saves: 62, likes: 201,
-    shop: { price: 120, rebatePercent: 40, stock: 300 },
+    shop: { price: 120, rebatePercent: 40, partnerRebatePercent: 10, stock: 300 },
   },
   {
     id: 'shop-ph-locked', author: '极客前沿', time: '11 天前',
     title: '2025 技术书单完整版（含封面图）。帖子配图全部付费可见，商城列表展示默认小黄车占位封面。',
     kind: 'image', imageCount: 4, visiblePercent: 0, isNode: true, stakeTier: 1000, nodeId: 'Ph3lK7',
     rating: 3, replies: 27, links: 14, shares: 9, saves: 71, likes: 189,
-    shop: { price: 560, rebatePercent: 30, stock: 80 },
+    shop: { price: 560, rebatePercent: 30, partnerRebatePercent: 10, stock: 80 },
   },
   {
     id: 'shop-ph-video', author: '产品大叔严磊', time: '12 天前',
@@ -506,28 +522,28 @@ export const ALL_POSTS: Post[] = [
     kind: 'video', visiblePercent: 0, isNode: true, stakeTier: 1000, nodeId: 'Ph4vD2',
     rating: 4, replies: 33, links: 8, shares: 15, saves: 95, likes: 256,
     videoUrl: '/mock-video-2.mp4',
-    shop: { price: 1500, rebatePercent: 25, stock: 30 },
+    shop: { price: 1500, rebatePercent: 25, partnerRebatePercent: 10, stock: 30 },
   },
   {
     id: 'shop-mug', author: '拾光杂货铺', time: '4 小时前',
     title: '「知识星探」联名马克杯 · 陶瓷 400ml。附赠贴纸一套，晒单返优点。图为实拍，颜色以实物为准。',
     kind: 'image', imageCount: 3, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Sg9pL3',
     rating: 5, replies: 24, links: 12, shares: 8, saves: 66, likes: 188, tipsReceived: 12,
-    shop: { price: 800, rebatePercent: 30, stock: 120 },
+    shop: { price: 800, rebatePercent: 30, partnerRebatePercent: 10, stock: 120 },
   },
   {
     id: 'shop-mine', author: CURRENT_USER, time: '1 天前',
     title: '我的手作机械键盘（客制化 · 静电容轴）。整套含卫星轴调教与消音棉，支持改键。下单请备注配列。',
     kind: 'image', imageCount: 2, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Mk2wQ8',
     rating: 5, replies: 9, links: 5, shares: 3, saves: 41, likes: 97,
-    shop: { price: 12000, rebatePercent: 20, stock: 5 },
+    shop: { price: 12000, rebatePercent: 20, partnerRebatePercent: 10, stock: 5 },
   },
   {
     id: 'shop-notebook', author: '拾光杂货铺', time: '6 小时前',
     title: '手账本 A5 · 牛皮纸封面。内页 80g 道林纸，无酸墨水不洇墨。附赠 3 支彩墨钢笔一套。',
     kind: 'image', imageCount: 4, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Nb4rT6',
     rating: 5, replies: 31, links: 9, shares: 14, saves: 88, likes: 234,
-    shop: { price: 480, rebatePercent: 35, stock: 200 },
+    shop: { price: 480, rebatePercent: 35, partnerRebatePercent: 10, stock: 200 },
   },
   {
     id: 'shop-desk-mat', author: '游牧开发者', time: '2 天前',
@@ -536,6 +552,7 @@ export const ALL_POSTS: Post[] = [
     rating: 4, replies: 17, links: 6, shares: 11, saves: 59, likes: 163,
     shop: {
       rebatePercent: 25,
+      partnerRebatePercent: 10,
       variants: [
         { id: 'dm-green', label: '墨绿', price: 360, stock: 30 },
         { id: 'dm-gray', label: '深灰', price: 360, stock: 25 },
@@ -544,60 +561,46 @@ export const ALL_POSTS: Post[] = [
     },
   },
   {
-    id: 'shop-iphone', author: '极客前沿', time: '1 天前',
-    title: 'iPhone 17 · 国行正品，支持验机。颜色与容量见规格，全国顺丰包邮。',
-    kind: 'image', imageCount: 4, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Ip7nQ2',
-    rating: 5, replies: 42, links: 14, shares: 28, saves: 156, likes: 428,
-    shop: {
-      rebatePercent: 20,
-      variants: [
-        { id: 'ip-128w', label: '128G · 白色', price: 5000, stock: 12 },
-        { id: 'ip-128b', label: '128G · 黑色', price: 5000, stock: 8 },
-        { id: 'ip-256g', label: '256G · 金色', price: 6000, stock: 5 },
-      ],
-    },
-  },
-  {
     id: 'shop-poster', author: '设计师刘然', time: '3 天前',
     title: '「系统思维」极简主义装饰海报 A3。哑光铜版纸印刷，颜色准且不反光。',
     kind: 'image', imageCount: 2, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Ps2xQ9',
     rating: 5, replies: 22, links: 8, shares: 19, saves: 76, likes: 207,
-    shop: { price: 280, rebatePercent: 30, stock: 150 },
+    shop: { price: 280, rebatePercent: 30, partnerRebatePercent: 10, stock: 150 },
   },
   {
     id: 'shop-stand', author: '极客前沿', time: '4 天前',
     title: '铝合金笔记本支架 · 可折叠。六档角度调节，散热镂空设计，收纳厚度仅 1.2cm。',
     kind: 'image', imageCount: 5, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'St5hL1',
     rating: 4, replies: 38, links: 11, shares: 26, saves: 112, likes: 318,
-    shop: { price: 1200, rebatePercent: 20, stock: 40 },
+    shop: { price: 1200, rebatePercent: 20, partnerRebatePercent: 10, stock: 40 },
   },
   {
     id: 'shop-cable', author: '深海鱼炸弹', time: '5 天前',
     title: '编织数据线 1.5m · USB-C to USB-C。240W 快充，10Gbps 传输，兼容 PD / PPS。颜色随机发货。',
     kind: 'image', imageCount: 3, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Cb9wZ4',
     rating: 4, replies: 14, links: 4, shares: 8, saves: 43, likes: 119,
-    shop: { price: 150, rebatePercent: 40, stock: 500 },
+    shop: { price: 150, rebatePercent: 40, partnerRebatePercent: 10, stock: 500 },
   },
   {
     id: 'shop-candle', author: '拾光杂货铺', time: '6 天前',
     title: '大豆蜡香薰蜡烛 200g。香调：白茶 + 雪松，燃烧时长约 45 小时。附赠礼盒包装。',
     kind: 'image', imageCount: 4, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Cn3vR7',
     rating: 5, replies: 29, links: 7, shares: 22, saves: 94, likes: 271,
-    shop: { price: 680, rebatePercent: 35, stock: 60 },
+    shop: { price: 680, rebatePercent: 35, partnerRebatePercent: 10, stock: 60 },
   },
   {
     id: 'shop-prompt-book', author: 'AI 效率研究所', time: '7 天前',
     title: '《Prompt 工程师手册》实体版 · 精装。128 页，涵盖 Claude / GPT / Gemini 三大平台，每章附可撕便利贴索引。',
     kind: 'image', imageCount: 6, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Pb6mN2',
     rating: 5, replies: 45, links: 16, shares: 31, saves: 138, likes: 392,
-    shop: { price: 980, rebatePercent: 30, stock: 100 },
+    shop: { price: 980, rebatePercent: 30, partnerRebatePercent: 10, stock: 100 },
   },
   {
     id: 'shop-wallpaper', author: '设计师刘然', time: '8 天前',
     title: '知识宇宙主题壁纸包 · 50 张。4K 分辨率，含手机横版 / 竖版 / 桌面三套，zip 下载码随订单发送。',
     kind: 'image', imageCount: 9, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Wp1cK8',
     rating: 4, replies: 18, links: 5, shares: 13, saves: 67, likes: 182,
-    shop: { price: 200, rebatePercent: 50, stock: 999 },
+    shop: { price: 200, rebatePercent: 50, partnerRebatePercent: 10, stock: 999 },
   },
   {
     id: 'p7', author: '产品大叔严磊', time: '3 天前',

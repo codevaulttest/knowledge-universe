@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Bookmark, Check, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, Phone, Plus, Sparkles, Store, Trash2, X } from 'lucide-react';
+import { Bookmark, Check, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, Phone, Plus, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
 import type { ProfileContacts, ShippingAddress, ShopOrder } from '../types';
 import { MediaPlaceholder, PageHeader } from '../components/shared';
 import { shopCoverUsesPlaceholder, shopCoverVisibleImgCount } from './ShopPage';
 import { formatTokenAmount } from '../stakeConfig';
-import { computeShopFee, computeUnitMerit, formatShopFee, MERIT_PER_ADN } from '../shopConfig';
+import { computeShopFee, computeDisplayMerit, computeUnitMerit, formatMeritAmount, formatShopFee, MERIT_PER_ADN } from '../shopConfig';
 import { getShopMinPrice, getShopTotalStock, getShopVariant, getShopVariants, isMultiVariantShop } from '../shopUtils';
 import { Ios26Alert } from '../components/Overlays';
 import { RegionPicker } from '../components/RegionPicker';
@@ -22,7 +22,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     posts, navigate, t, requireWallet,
     shippingAddresses, defaultAddress, addShippingAddress, removeShippingAddress, setDefaultAddress,
     placeShopOrder, showToast, openImageLightbox,
-    savedPostIds, togglePostAction, userProfile,
+    savedPostIds, togglePostAction, userProfile, requestPostInteraction,
   } = useApp();
 
   const post = posts.find(p => p.id === postId);
@@ -60,7 +60,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     );
   }
 
-  const { rebatePercent } = post.shop;
+  const { rebatePercent, partnerRebatePercent = 0 } = post.shop;
   const activeVariant = getShopVariant(post.shop, multiVariant ? selectedVariantId ?? undefined : undefined);
   const price = activeVariant?.price ?? getShopMinPrice(post.shop);
   const stock = activeVariant?.stock ?? 0;
@@ -72,6 +72,10 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const totalPb = price * qty;
   const totalSup = Math.round(unitFee * qty * 10000) / 10000;
   const estMerit = computeUnitMerit(price, rebatePercent) * qty;
+  const displayMerit = computeDisplayMerit(totalPb, rebatePercent);
+  const displayPartnerMerit = partnerRebatePercent > 0
+    ? computeDisplayMerit(totalPb, partnerRebatePercent)
+    : 0;
   const selectedAddress = shippingAddresses.find(a => a.id === selectedAddressId) ?? defaultAddress ?? null;
   const soldOut = getShopTotalStock(post.shop) <= 0;
   const variantSoldOut = multiVariant && activeVariant && activeVariant.stock <= 0;
@@ -104,7 +108,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   };
 
   const buy = () => {
-    if (!canBuy || isOwn) return;
+    if (!canBuy) return;
     if (!selectedAddress) { setPickerOpen(true); return; }
     requireWallet(() => {
       const order = placeShopOrder(post.id, qty, selectedAddress, multiVariant ? selectedVariantId ?? undefined : undefined);
@@ -112,6 +116,17 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
       // 弹出「已提交」确认弹窗；链上确认在后台异步完成（成功/失败均由 App toast 通知）。
       setSubmittedOrder(order);
     });
+  };
+
+  const joinPartner = () => {
+    requireWallet(() => {
+      requestPostInteraction(post.id, 'partner', { onSkip: () => {}, onPaid: () => {} });
+    });
+  };
+
+  const linkToPartner = () => {
+    onClose();
+    navigate({ page: 'P2', postId: post.id, scrollToComments: true });
   };
 
   const fullAddr = (a: ShippingAddress) => [a.region, a.detail].filter(Boolean).join(' ');
@@ -155,7 +170,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
         <div className="shop-item-body">
           <div className="shop-item-intro">
             <h2 className="shop-item-title">{post.title}</h2>
-            <div className="shop-item-seller-row">
+            <div className="shop-item-seller-block">
               <button
                 type="button"
                 className="shop-item-seller"
@@ -163,10 +178,20 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                 aria-label={t('卖家：{name}', { name: post.author })}
               >
                 <Store size={14} strokeWidth={2} aria-hidden="true" />
-                {post.author}
+                <span className="shop-item-seller-name">{post.author}</span>
                 <ChevronRight size={15} strokeWidth={2} aria-hidden="true" />
               </button>
               <div className="shop-item-seller-actions">
+                {!isOwn && (
+                  <button
+                    type="button"
+                    className="shop-item-join-partner"
+                    onClick={joinPartner}
+                  >
+                    <Users size={16} strokeWidth={2} aria-hidden="true" />
+                    {t('加入合伙人')}
+                  </button>
+                )}
                 {contactEntries.length > 0 && !contactsExpanded && (
                   <button
                     type="button"
@@ -296,14 +321,32 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             <ChevronRight size={16} strokeWidth={2} />
           </button>
 
-          {/* 优点返还 */}
-          <div className="shop-item-merit">
-            <Sparkles size={15} strokeWidth={2} />
-            {t('本单预计返 {merit} 优点（满 {per} 优点兑 1 张 ADN 抽奖券）', { merit: estMerit, per: MERIT_PER_ADN })}
+          <div className="shop-item-info-cards">
+            <div className="shop-item-merit-card">
+              <Sparkles size={15} strokeWidth={2} aria-hidden="true" />
+              <div className="shop-item-merit-card-text">
+                <p>{t('本单预计返还 {merit} 优点 (根据 PB 价值实时计算，可能略有误差)', { merit: formatMeritAmount(displayMerit) })}</p>
+                <p>{t('满 {per} 优点兑 1 张 ADN 抽奖券', { per: MERIT_PER_ADN })}</p>
+              </div>
+            </div>
+
+            {partnerRebatePercent > 0 && (
+              <button type="button" className="shop-item-partner-card" onClick={linkToPartner}>
+                <div className="shop-item-partner-card-main">
+                  <Users size={16} strokeWidth={2} aria-hidden="true" />
+                  <p className="shop-item-partner-card-info">
+                    {t('合伙人共享 {merit} 优点(链接该贴自动成为合伙人)', { merit: formatMeritAmount(displayPartnerMerit) })}
+                  </p>
+                </div>
+                <span className="shop-item-partner-card-action">
+                  {t('立即链接')}
+                  <ChevronRight size={15} strokeWidth={2.4} aria-hidden="true" />
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* 合计 + 下单按钮 */}
         <div className="shop-item-buybar shop-item-buybar--sheet">
           <div className="shop-item-total">
             <span className="shop-item-total-label">{t('合计')}</span>
@@ -314,9 +357,9 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             type="button"
             className="shop-buy-btn"
             onClick={buy}
-            disabled={!canBuy || isOwn}
+            disabled={!canBuy}
           >
-            {isOwn ? t('这是你的商品') : soldOut ? t('已售罄') : variantSoldOut ? t('该规格已售罄') : t('立即购买')}
+            {soldOut ? t('已售罄') : variantSoldOut ? t('该规格已售罄') : t('立即购买')}
           </button>
         </div>
       </div>

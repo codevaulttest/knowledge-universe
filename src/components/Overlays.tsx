@@ -199,6 +199,7 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
     dislike: [t('踩2'), t('踩并创建子节点')],
     save: [t('收藏2'), t('收藏并创建子节点')],
     unlock: [t('解锁'), t('解锁并创建子节点')],
+    partner: [t('加入合伙人'), t('加入合伙人并创建子节点')],
   };
 
   const sheetTitle = payCtx.ctx === 'interaction' && payCtx.action
@@ -306,36 +307,43 @@ const INTERACTION_ACTION_LABEL: Record<InteractionAction, [string, string]> = {
   dislike: ['踩', 'Dislike'],
   save: ['收藏', 'Save'],
   unlock: ['解锁', 'Unlock'],
+  partner: ['加入合伙人', 'Join as partner'],
 };
 
 export function GeminiStakeModal({
   post,
+  mode = 'default',
   onParticipate,
   onSkip,
   onClose,
 }: {
   post: Post;
-  onParticipate: (tier: Exclude<StakeTier, 0>) => void;
+  mode?: 'default' | 'partner';
+  onParticipate: (tier: Exclude<StakeTier, 0>, commentText?: string) => void;
   onSkip: () => void;
   onClose: () => void;
 }) {
-  const { t, language } = useApp();
-  const zh = isChinese(language);
+  const { t } = useApp();
+  const isPartner = mode === 'partner';
   const [selected, setSelected] = useState<Exclude<StakeTier, 0>>(10);
+  const [commentText, setCommentText] = useState('');
   const tiers: Exclude<StakeTier, 0>[] = [10, 100, 1000];
+  const canConfirm = !isPartner || commentText.trim().length > 0;
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="gemini-stake-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
-          <span className="sheet-title">{t('同步创建子节点')}</span>
+          <span className="sheet-title">{isPartner ? t('加入合伙人') : t('同步创建子节点')}</span>
           <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
 
         <p className="gemini-stake-lead">
-          {t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点')}
+          {isPartner
+            ? t('选择面额并评论，链接该帖成为合伙人')
+            : t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点')}
         </p>
 
         <div className="stake-tier-list stake-tier-list--row" style={{ marginBottom: 8 }}>
@@ -358,12 +366,34 @@ export function GeminiStakeModal({
           <span className="compose-stake-gas-value">{SUP_COST_BY_TIER[selected]} SUP</span>
         </div>
 
-        <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" onClick={() => onParticipate(selected)}>
-          {t('创建子节点 · {selected} PB', { selected })}
+        {isPartner && (
+          <label className="gemini-stake-comment">
+            <span className="gemini-stake-comment-label">{t('写评论加入合伙人')}</span>
+            <textarea
+              className="gemini-stake-comment-input"
+              rows={3}
+              value={commentText}
+              onChange={e => setCommentText(e.target.value)}
+              placeholder={t('回复 {author}…', { author: post.author })}
+            />
+          </label>
+        )}
+
+        <button
+          type="button"
+          className="gemini-stake-btn gemini-stake-btn--primary"
+          disabled={!canConfirm}
+          onClick={() => onParticipate(selected, isPartner ? commentText.trim() : undefined)}
+        >
+          {isPartner
+            ? t('加入合伙人 · {selected} PB', { selected })
+            : t('创建子节点 · {selected} PB', { selected })}
         </button>
-        <button type="button" className="gemini-stake-btn gemini-stake-btn--secondary" onClick={onSkip}>
-          {t('不参与')}
-        </button>
+        {!isPartner && (
+          <button type="button" className="gemini-stake-btn gemini-stake-btn--secondary" onClick={onSkip}>
+            {t('不参与')}
+          </button>
+        )}
       </div>
     </div>
   );
