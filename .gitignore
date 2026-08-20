@@ -12,7 +12,6 @@ AGENTS.md
 .agents/
 raw_context/
 design-qa.md
-docs/
 design/
 
 # Firebase (config, cache, emulator/debug logs — never commit)
@@ -30,3 +29,4 @@ storage-debug.log
 
 # Nested standalone project (own git repo, not a submodule)
 genesis-node-diamond/
+docs/
