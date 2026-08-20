@@ -12,7 +12,7 @@ import { DevPanel } from '../components/DevPanel';
 import { PageHeader, PullToRefresh } from '../components/shared';
 import { CURRENT_USER, MOCK_WALLET_ADDRESS } from '../mockData';
 import { SUP_COST_BY_TIER, formatSupAmount, formatTokenAmount } from '../stakeConfig';
-import { bspPbCost, bspSupCost, bspEffectivePeriod, type BspInvestment } from '../bspConfig';
+import { buildInitialBspInvestments, type BspInvestment } from '../bspConfig';
 import { isChinese } from '../i18n';
 
 // 面额（PB）：仅 1000 档支持五星升级；100 / 10 档不支持升级
@@ -160,57 +160,6 @@ function isTransferable(node: KnowledgeNode): boolean {
 // AGENTS.md 红线（费用类文案须有明确出处）在此处经用户明确豁免：真实转让价格尚未公布
 // （bobo 会另行在群里公布），这里按星级示意性递增，仅用于截图/演示，不代表最终定价
 const TRANSFER_PRICE_BY_STAR: Record<number, number> = { 1: 100, 2: 300, 3: 600, 4: 1000, 5: 2000 };
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** BSP 巨星投流种子数据：展示多笔投流的交易历史。 */
-function buildInitialBspInvestments(myAddress: string): BspInvestment[] {
-  const now = new Date();
-  const period1 = bspEffectivePeriod(new Date(now.getTime() - 30 * DAY_MS));
-  const period2 = bspEffectivePeriod(new Date(now.getTime() - 5 * DAY_MS));
-  const period3 = bspEffectivePeriod(new Date(now.getTime() - 350 * DAY_MS));
-  return [
-    {
-      id: 'bsp1',
-      investorAddress: myAddress,
-      beneficiaryAddress: '0x9c1a2b3d4e5f60718293a4b5c6d7e8f9a0b1c2d',
-      beneficiaryKind: 'address',
-      units: 10000,
-      paidPb: bspPbCost(10000),
-      paidSup: bspSupCost(10000),
-      createdAt: '2026-07-04 09:00',
-      startDate: period1.startDate,
-      endDate: period1.endDate,
-      status: 'paid',
-    },
-    {
-      id: 'bsp2',
-      investorAddress: myAddress,
-      beneficiaryAddress: myAddress,
-      beneficiaryKind: 'self',
-      units: 10000,
-      paidPb: bspPbCost(10000),
-      paidSup: bspSupCost(10000),
-      createdAt: '2026-07-29 09:00',
-      startDate: period2.startDate,
-      endDate: period2.endDate,
-      status: 'paid',
-    },
-    {
-      id: 'bsp3',
-      investorAddress: myAddress,
-      beneficiaryAddress: myAddress,
-      beneficiaryKind: 'self',
-      units: 100,
-      paidPb: bspPbCost(100),
-      paidSup: bspSupCost(100),
-      createdAt: '2025-08-19 09:00',
-      startDate: period3.startDate,
-      endDate: period3.endDate,
-      status: 'paid',
-    },
-  ];
-}
 
 // 演示用「有效节点码」名单：创建频道时输入的节点码需命中此集合才能校验通过
 const VALID_INVITE_CODES = new Set(INITIAL_NODES.map(n => n.nodeCode));

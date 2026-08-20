@@ -2394,6 +2394,17 @@ button {
   font: var(--ku-text-meta);
   color: var(--ku-color-text-meta);
 }
+.compose-schedule-input {
+  margin-top: 4px;
+}
+.profile-scheduled-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 10px 12px -4px;
+  color: var(--ku-color-text-meta);
+  font: var(--ku-text-meta);
+}
 /* Toggle switch */
 .toggle-switch {
   position: relative;
@@ -8176,6 +8187,7 @@ button {
   flex-shrink: 0;
   white-space: nowrap;
   font-size: 14px;
+  font-weight: 600;
   color: var(--ku-color-text-secondary);
 }
 
@@ -8328,17 +8340,11 @@ button {
   border-top: 1px solid var(--ku-color-border-card);
 }
 
-.asset-overview-tomorrow-head-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ku-planet2-space-md);
-}
-
 .asset-overview-tomorrow-head {
   display: flex;
   align-items: center;
-  gap: var(--ku-planet2-space-sm);
+  gap: 6px;
+  width: 100%;
   min-width: 0;
   padding: 0;
   border: none;
@@ -8347,31 +8353,30 @@ button {
   text-align: left;
 }
 
-.asset-overview-tomorrow-icon {
-  width: 40px;
-  height: 40px;
+.asset-overview-tomorrow-head-icon {
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--ku-planet2-radius-full);
-  background: var(--ku-color-primary-alpha-14);
-  color: var(--ku-color-primary-dark);
-}
-
-.asset-overview-tomorrow-icon svg {
-  width: 20px;
-  height: 20px;
+  color: var(--ku-color-text-secondary);
 }
 
 .asset-overview-tomorrow-title {
   flex-shrink: 0;
   min-width: 0;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   line-height: 1.3;
   color: var(--ku-color-text-secondary);
   padding-top: 0;
   padding-bottom: 0;
+}
+
+.asset-overview-tomorrow-head-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  margin-left: auto;
 }
 
 .asset-overview-tomorrow-head .asset-overview-toggle-chevron {
@@ -8379,89 +8384,14 @@ button {
   margin-top: 0;
 }
 
-.asset-overview-tomorrow-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ku-planet2-space-xxs);
-  padding-left: 0;
-  margin-top: var(--ku-planet2-space-xxs);
-}
-
-.asset-overview-tomorrow-stats {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ku-planet2-space-xxs);
-  min-width: 0;
-  margin-top: var(--ku-planet2-space-xxs);
-}
-
-.asset-overview-tomorrow-stats-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--ku-planet2-space-md);
-  min-width: 0;
-}
-
-.asset-overview-tomorrow-stats-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.asset-overview-tomorrow-amount {
-  display: flex;
-  align-items: baseline;
-  gap: var(--ku-planet2-space-xxs);
-  flex-shrink: 0;
-  margin-top: 0;
-}
-
-.asset-overview-tomorrow-amount-value {
-  font-family: var(--ku-font-mono);
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--ku-color-primary);
-}
-
-.asset-overview-tomorrow-max {
+.asset-overview-post-status-sep {
+  color: var(--ku-color-text-meta);
   font-size: 14px;
-  font-weight: 500;
-  color: var(--ku-color-text-secondary);
-}
-
-.asset-overview-tomorrow-progress {
-  display: flex;
-  align-items: center;
-  gap: var(--ku-planet2-space-md);
-  min-width: 0;
-  margin-top: var(--ku-planet2-space-xxs);
-}
-
-.asset-overview-tomorrow-track {
-  position: relative;
-  display: block;
-  flex: 1;
-  min-width: 0;
-  height: 6px;
-  border-radius: var(--ku-radius-pill);
-  background: var(--ku-color-primary-alpha-06);
-  overflow: visible;
-}
-
-.asset-overview-tomorrow-fill {
-  display: block;
-  height: 100%;
-  border-radius: var(--ku-radius-pill);
-  background: var(--ku-gradient-primary);
-  transition: width var(--ku-motion-fast);
 }
 
 .asset-overview-tomorrow-caption-count {
   font-family: var(--ku-font-mono);
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--ku-color-primary);
   font-variant-numeric: tabular-nums;
@@ -8490,23 +8420,6 @@ button {
   color: var(--ku-color-primary);
 }
 
-
-.asset-overview-go-btn {
-  flex-shrink: 0;
-  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-base);
-  border: none;
-  border-radius: var(--ku-planet2-radius-pill);
-  background: var(--ku-color-primary);
-  color: var(--ku-color-on-primary);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: var(--ku-planet2-shadow-card);
-}
-
-.asset-overview-go-btn:active {
-  background: var(--ku-color-primary-dark);
-}
 
 /* ── 巨星投流统一入口：主 CTA + 保底门槛 + 投流记录 ── */
 .bsp-hub {

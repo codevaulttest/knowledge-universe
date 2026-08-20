@@ -58,6 +58,56 @@ export type BspInvestment = {
   lastSettlement?: BspSettlement;
 };
 
+/** BSP 巨星投流种子数据：展示多笔投流的交易历史。共用于「知识宇宙」页与全局常驻入口，
+ * 保证两处打开的「每日任务」面板对「是否有巨星投流保底」的判断一致。 */
+export function buildInitialBspInvestments(myAddress: string): BspInvestment[] {
+  const now = new Date();
+  const period1 = bspEffectivePeriod(new Date(now.getTime() - 30 * DAY_MS));
+  const period2 = bspEffectivePeriod(new Date(now.getTime() - 5 * DAY_MS));
+  const period3 = bspEffectivePeriod(new Date(now.getTime() - 350 * DAY_MS));
+  return [
+    {
+      id: 'bsp1',
+      investorAddress: myAddress,
+      beneficiaryAddress: '0x9c1a2b3d4e5f60718293a4b5c6d7e8f9a0b1c2d',
+      beneficiaryKind: 'address',
+      units: 10000,
+      paidPb: bspPbCost(10000),
+      paidSup: bspSupCost(10000),
+      createdAt: '2026-07-04 09:00',
+      startDate: period1.startDate,
+      endDate: period1.endDate,
+      status: 'paid',
+    },
+    {
+      id: 'bsp2',
+      investorAddress: myAddress,
+      beneficiaryAddress: myAddress,
+      beneficiaryKind: 'self',
+      units: 10000,
+      paidPb: bspPbCost(10000),
+      paidSup: bspSupCost(10000),
+      createdAt: '2026-07-29 09:00',
+      startDate: period2.startDate,
+      endDate: period2.endDate,
+      status: 'paid',
+    },
+    {
+      id: 'bsp3',
+      investorAddress: myAddress,
+      beneficiaryAddress: myAddress,
+      beneficiaryKind: 'self',
+      units: 100,
+      paidPb: bspPbCost(100),
+      paidSup: bspSupCost(100),
+      createdAt: '2025-08-19 09:00',
+      startDate: period3.startDate,
+      endDate: period3.endDate,
+      status: 'paid',
+    },
+  ];
+}
+
 export function bspPbCost(units: number): number {
   return units * BSP_UNIT_PB;
 }

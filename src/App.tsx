@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import { buildInitialBspInvestments } from './bspConfig';
 import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import { computeUnitMerit } from './shopConfig';
 import { postHasStake, formatTokenAmount } from './stakeConfig';
@@ -807,6 +808,7 @@ export default function App() {
       channelId: data.channelId,
       minTierIndex: data.minTierIndex,
       shop: data.shop,
+      scheduledAt: data.scheduledAt,
       rating: 0,
       replies: 0,
       links: 0,
@@ -818,10 +820,14 @@ export default function App() {
     setComposeOpen(false);
     setComposeDraftId(null);
     recordTaskPosted();
-    showToast(data.isNode
-      ? t('发布成功！知识宇宙节点已生成')
-      : t('发布成功！帖子已公开')
-    );
+    if (data.scheduledAt) {
+      showToast(t('定时发布已设置，{time} 后自动展示', { time: new Date(data.scheduledAt).toLocaleString() }));
+    } else {
+      showToast(data.isNode
+        ? t('发布成功！知识宇宙节点已生成')
+        : t('发布成功！帖子已公开')
+      );
+    }
   };
 
   const ctx: AppContextValue = {
@@ -1039,7 +1045,12 @@ export default function App() {
         )}
 
         {/* 覆盖层：每日任务（发帖 + 互动帖里程碑 + 空投领取 + BSP 保底） */}
-        {dailyTaskOpen && <DailyTaskSheet onClose={() => setDailyTaskOpen(false)} />}
+        {dailyTaskOpen && (
+          <DailyTaskSheet
+            onClose={() => setDailyTaskOpen(false)}
+            hasBspRecords={buildInitialBspInvestments(MOCK_WALLET_ADDRESS).length > 0}
+          />
+        )}
 
         {/* 覆盖层：搜索（居中弹窗） */}
         {searchOpen && <SearchPage onClose={closeSearch} />}

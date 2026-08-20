@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -10,6 +10,7 @@ import { ConfirmDeleteDraftModal, TipModal } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelCard, ChannelMemberBadge, GenesisBadge, PageHeader } from '../components/shared';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 import { useChannelListSearch } from '../components/channelSearch';
+import { isPostVisible } from '../dateUtils';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
@@ -21,9 +22,10 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const ownerChannels = channels.filter(c => c.ownerName === authorName);
   const genesisTier = getGenesisTier(authorName);
   // 我的主页隐藏长文（article）类型的 mock 帖子；下架的原帖不出现在任何"帖子/收藏/赞过"列表里
-  const myPosts = allPosts.filter(p => p.author === authorName && !p.deleted && !(isOwn && p.kind === 'article'));
-  const savedPosts = allPosts.filter(p => savedPostIds.has(p.id) && !p.deleted);
-  const likedPosts = allPosts.filter(p => likedPostIds.has(p.id) && !p.deleted);
+  // 自己主页仍展示定时发布中的帖子（带待发布状态），他人主页在设定时间前完全不可见
+  const myPosts = allPosts.filter(p => p.author === authorName && !p.deleted && !(isOwn && p.kind === 'article') && (isOwn || isPostVisible(p)));
+  const savedPosts = allPosts.filter(p => savedPostIds.has(p.id) && !p.deleted && isPostVisible(p));
+  const likedPosts = allPosts.filter(p => likedPostIds.has(p.id) && !p.deleted && isPostVisible(p));
   // 转发列表不过滤 deleted：下架的原帖仍需保留在转发者本人的「转发」列表里，改为占位展示
   const repostedPosts = allPosts.filter(p => repostedPostIds.has(p.id));
   const firstPost = allPosts.find(p => p.author === authorName);
@@ -36,7 +38,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const theirAvatarIdx = ALL_USERS_MOCK.find(u => u.name === authorName)?.avatarIdx ?? 0;
   const theirRepostEntries: { post: (typeof allPosts)[number]; repostedBy: RepostedBy }[] = (AUTHOR_REPOSTS[authorName] ?? [])
     .map(id => allPosts.find(p => p.id === id))
-    .filter((p): p is (typeof allPosts)[number] => !!p && !p.deleted && p.author !== authorName)
+    .filter((p): p is (typeof allPosts)[number] => !!p && !p.deleted && p.author !== authorName && isPostVisible(p))
     .map(post => ({ post, repostedBy: { name: authorName, avatarIdx: theirAvatarIdx } }));
 
   // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 打赏，4 = 收藏，5 = 赞过
@@ -415,14 +417,21 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         ) : (
           <section className="feed">
             {displayedEntries.map((entry, i) => (
-              <PostCard
-                key={`${entry.post.id}-${entry.repostedBy?.name ?? 'orig'}`}
-                post={entry.post}
-                index={i % 3}
-                hideFollow={!isOwn}
-                repostedBy={entry.repostedBy}
-                chainOutline={isOwn}
-              />
+              <React.Fragment key={`${entry.post.id}-${entry.repostedBy?.name ?? 'orig'}`}>
+                {isOwn && !isPostVisible(entry.post) && entry.post.scheduledAt && (
+                  <p className="profile-scheduled-badge">
+                    <Clock size={12} strokeWidth={2} aria-hidden />
+                    {t('定时发布 · {time}', { time: new Date(entry.post.scheduledAt).toLocaleString() })}
+                  </p>
+                )}
+                <PostCard
+                  post={entry.post}
+                  index={i % 3}
+                  hideFollow={!isOwn}
+                  repostedBy={entry.repostedBy}
+                  chainOutline={isOwn}
+                />
+              </React.Fragment>
             ))}
             {displayedPosts.length === 0 && (
               <div className="profile-empty-state">

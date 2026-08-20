@@ -6,6 +6,7 @@ import { PostCard } from '../components/PostCard';
 import { Avatar, PageHeader } from '../components/shared';
 import { DevPanel } from '../components/DevPanel';
 import { SubscriberListModal } from './ProfilePage';
+import { isPostVisible } from '../dateUtils';
 
 export function ChannelPage({ channelId }: { channelId: string }) {
   const {
@@ -34,7 +35,7 @@ export function ChannelPage({ channelId }: { channelId: string }) {
   const isOwn = channel.ownerName === CURRENT_USER;
   const isSubExpired = expiredChannelIds.has(channel.id);
   const mySubscribedTierIndex = subscribedChannelTiers[channel.id];
-  const channelPosts = posts.filter(p => p.channelId === channel.id && !p.deleted);
+  const channelPosts = posts.filter(p => p.channelId === channel.id && !p.deleted && (isOwn || isPostVisible(p)));
   const isExclusive = (p: (typeof channelPosts)[number]) => p.minTierIndex != null;
   const displayedPosts = contentFilter === 'sub'
     ? channelPosts.filter(isExclusive)

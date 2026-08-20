@@ -8,6 +8,7 @@ import { GenesisBanner } from '../components/GenesisBanner';
 import { ChannelCard } from '../components/shared';
 import { DevPanel } from '../components/DevPanel';
 import { ShopFeed } from './ShopPage';
+import { isPostVisible } from '../dateUtils';
 
 type FeedEntry = { post: Post; repostedBy?: RepostedBy };
 
@@ -24,9 +25,9 @@ function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElemen
   const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // 下架的原帖不出现在公共 feed 里
+  // 下架的原帖 / 定时发布未到时间的帖子不出现在公共 feed 里
   const entries: FeedEntry[] = posts
-    .filter(post => !post.deleted)
+    .filter(post => !post.deleted && isPostVisible(post))
     .map((post, i) => (i === DEMO_REPOST_INDEX ? { post, repostedBy: DEMO_REPOSTER } : { post }));
   const hasMore = shownCount < entries.length;
 
@@ -75,7 +76,7 @@ function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElemen
 
 function FollowFeed({ followedAuthors }: { followedAuthors: Set<string> }) {
   const { posts, t } = useApp();
-  const followedPosts = posts.filter(p => followedAuthors.has(p.author) && !p.deleted);
+  const followedPosts = posts.filter(p => followedAuthors.has(p.author) && !p.deleted && isPostVisible(p));
   if (followedPosts.length === 0) {
     return (
       <div className="empty-state">

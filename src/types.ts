@@ -80,6 +80,8 @@ export type Post = {
   deleted?: boolean;
   // 小黄车配置；未设置=该帖未挂载小黄车（仅 1000 PB 节点帖可挂载）
   shop?: ShopInfo;
+  // 定时发布：设置该时间戳之前，帖子对除作者外的所有人不可见；未设置=立即发帖
+  scheduledAt?: number;
 };
 
 
@@ -283,6 +285,7 @@ export type NewPostData = {
   channelId?: string;
   minTierIndex?: number;
   shop?: ShopInfo;
+  scheduledAt?: number;
 };
 
 export type StakeModalRequest = {

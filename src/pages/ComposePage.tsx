@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type ChangeEvent, type CSSProperties } from 'react';
-import { Camera, Check, ChevronRight, Eye, FileText, Info, Plus, Radio, Save, Search, Send, ShoppingCart, Trash2, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
+import { Camera, Check, ChevronRight, Clock, Eye, FileText, Info, Plus, Radio, Save, Search, Send, ShoppingCart, Trash2, X, Bold, Italic, Underline, List, ListOrdered, Quote } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { ImageWithFallback } from '../components/ImageWithFallback';
@@ -11,6 +11,12 @@ import { SHOP_MAX_REBATE_PERCENT, MERIT_PB_PER_POINT, MERIT_PER_ADN, computeShop
 import { isChinese } from '../i18n';
 
 const MAX_POST_CHARS = 500;
+
+/** Date → <input type="datetime-local"> 本地时区取值，格式 YYYY-MM-DDTHH:mm */
+function toLocalDateTimeInput(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 export function ComposePage({
   onClose,
@@ -63,6 +69,9 @@ export function ComposePage({
   const [imgUrls, setImgUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [hasVideo, setHasVideo] = useState(draft?.hasVideo ?? false);
+  // 定时发布：设定时间前，帖子仅作者本人可见
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledAtLocal, setScheduledAtLocal] = useState('');
   const [articleMode, setArticleMode] = useState(draft?.kind === 'article');
   const [articleTitle, setArticleTitle] = useState(draft?.articleTitle ?? '');
   const [hasCover, setHasCover] = useState(draft?.articleHasCover ?? editPost?.articleHasCover !== false);
@@ -104,9 +113,12 @@ export function ComposePage({
     && shopRebate <= SHOP_MAX_REBATE_PERCENT
   );
 
+  const scheduledAtMs = scheduledAtLocal ? new Date(scheduledAtLocal).getTime() : undefined;
+  const scheduleValid = !scheduleEnabled || (scheduledAtMs !== undefined && !Number.isNaN(scheduledAtMs) && scheduledAtMs > Date.now());
+
   const canPublish = (articleMode
     ? articleTitle.trim().length > 0 && articleBodyHasContent
-    : (text.trim().length > 0 || imgCount > 0 || hasVideo) && !isOverLimit) && shopValid;
+    : (text.trim().length > 0 || imgCount > 0 || hasVideo) && !isOverLimit) && shopValid && scheduleValid;
 
   const publishBlockReason = (): string | null => {
     if (articleMode) {
@@ -121,6 +133,10 @@ export function ComposePage({
       if (!(shopPriceNum > 0 && Number.isFinite(shopPriceNum))) return t('请填写商品单价');
       if (!(shopStockNum >= 1 && Number.isInteger(shopStockNum))) return t('请填写库存');
       if (!(shopRebate >= 0 && shopRebate <= SHOP_MAX_REBATE_PERCENT)) return t('优点返还比例超出范围');
+    }
+    if (scheduleEnabled) {
+      if (scheduledAtMs === undefined || Number.isNaN(scheduledAtMs)) return t('请设置定时发布时间');
+      if (scheduledAtMs <= Date.now()) return t('定时发布时间需晚于当前时间');
     }
     return null;
   };
@@ -226,6 +242,7 @@ export function ComposePage({
       channelId: selectedChannel ? selectedChannel.id : undefined,
       minTierIndex: selectedChannel ? minTierIndex : undefined,
       shop,
+      scheduledAt: scheduleEnabled ? scheduledAtMs : undefined,
     };
     if (joinNode) {
       stagePendingPost(postData);
@@ -603,6 +620,40 @@ export function ComposePage({
               </div>
             )}
           </>
+        )}
+
+        {/* 定时发布：设定时间前，帖子仅作者本人可见 */}
+        {!isEditMode && (
+          <div className="compose-section compose-section--divider">
+            <button
+              type="button"
+              className="compose-toggle-row"
+              role="switch"
+              aria-checked={scheduleEnabled}
+              onClick={() => setScheduleEnabled(v => !v)}
+            >
+              <span>
+                <span className="compose-toggle-label">
+                  <Clock size={16} strokeWidth={2} />
+                  {t('定时发布')}
+                </span>
+                <p className="compose-toggle-sub">{t('到设定时间后，帖子才会对其他人可见')}</p>
+              </span>
+              <span className={`toggle-switch${scheduleEnabled ? ' toggle-switch--on' : ''}`} aria-hidden="true">
+                <span className="toggle-thumb" />
+              </span>
+            </button>
+            {scheduleEnabled && (
+              <input
+                type="datetime-local"
+                className="compose-shop-input compose-schedule-input"
+                min={toLocalDateTimeInput(new Date(Date.now() + 60_000))}
+                value={scheduledAtLocal}
+                onChange={e => setScheduledAtLocal(e.target.value)}
+                aria-label={t('定时发布')}
+              />
+            )}
+          </div>
         )}
 
         {/* 同步至频道（仅拥有频道时可见）—— 频道门槛优先于知识宇宙单条付费生效，所以放在前面。
