@@ -149,7 +149,6 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
 
   const sessionExtraReplies = extraRepliesByPostId[postId] ?? [];
   const displayReplies = [...newReplies, ...sessionExtraReplies, ...snapshotReplies].filter(r => !deletedReplyIds.has(r.id));
-  const showPartnerHint = !isOwn && !!post.shop;
 
   return (
     <div className="page">
@@ -388,39 +387,34 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
 
       {/* 固定在详情页底部的回复输入 */}
       <div className="detail-reply-compose">
-        {showPartnerHint && (
-          <p className="detail-reply-partner-hint">{t('发表评论并链接，即可成为合伙人')}</p>
+        {walletConnected ? (
+          <Avatar index={0} seed={userProfile.avatarSeed} />
+        ) : (
+          <span className="avatar avatar--guest" aria-hidden="true">
+            <User size={16} strokeWidth={2} />
+          </span>
         )}
-        <div className="detail-reply-compose-row">
-          {walletConnected ? (
-            <Avatar index={0} seed={userProfile.avatarSeed} />
-          ) : (
-            <span className="avatar avatar--guest" aria-hidden="true">
-              <User size={16} strokeWidth={2} />
-            </span>
-          )}
-          <input
-            className="reply-input"
-            placeholder={t('回复 {author}…', { author: post.author })}
-            value={replyText}
-            onChange={e => setReplyText(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleSendReply(); }}
-            onMouseDown={(e) => {
-              // 游客态：输入前先引导连接钱包，避免打完一段字才被打断、造成内容丢失的挫败感
-              if (walletConnected) return;
-              e.preventDefault();
-              requireWallet(() => {});
-            }}
-            onFocus={(e) => {
-              if (walletConnected) return;
-              e.currentTarget.blur();
-              requireWallet(() => {});
-            }}
-          />
-          <button className="reply-send" type="button" onClick={handleSendReply} disabled={!replyText.trim()}>
-            {t('发送')}
-          </button>
-        </div>
+        <input
+          className="reply-input"
+          placeholder={t('回复 {author}…', { author: post.author })}
+          value={replyText}
+          onChange={e => setReplyText(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleSendReply(); }}
+          onMouseDown={(e) => {
+            // 游客态：输入前先引导连接钱包，避免打完一段字才被打断、造成内容丢失的挫败感
+            if (walletConnected) return;
+            e.preventDefault();
+            requireWallet(() => {});
+          }}
+          onFocus={(e) => {
+            if (walletConnected) return;
+            e.currentTarget.blur();
+            requireWallet(() => {});
+          }}
+        />
+        <button className="reply-send" type="button" onClick={handleSendReply} disabled={!replyText.trim()}>
+          {t('发送')}
+        </button>
       </div>
 
       {actorsTab && (

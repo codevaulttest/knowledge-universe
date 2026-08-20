@@ -124,11 +124,6 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     });
   };
 
-  const linkToPartner = () => {
-    onClose();
-    navigate({ page: 'P2', postId: post.id, scrollToComments: true });
-  };
-
   const fullAddr = (a: ShippingAddress) => [a.region, a.detail].filter(Boolean).join(' ');
 
   const deleteAddress = (addrId: string) => {
@@ -331,7 +326,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             </div>
 
             {partnerRebatePercent > 0 && (
-              <button type="button" className="shop-item-partner-card" onClick={linkToPartner}>
+              <button type="button" className="shop-item-partner-card" onClick={joinPartner}>
                 <div className="shop-item-partner-card-main">
                   <Users size={16} strokeWidth={2} aria-hidden="true" />
                   <p className="shop-item-partner-card-info">

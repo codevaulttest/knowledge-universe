@@ -3297,26 +3297,12 @@ button {
 .detail-reply-compose {
   flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
+  align-items: center;
+  gap: var(--ku-detail-composer-gap);
   padding: var(--ku-feed-padding-top) var(--ku-feed-padding-x)
     max(var(--ku-detail-composer-padding-bottom), env(safe-area-inset-bottom));
   border-top: 1px solid var(--ku-color-border);
   background: var(--ku-color-bg-phone);
-}
-.detail-reply-compose-row {
-  display: flex;
-  align-items: center;
-  gap: var(--ku-detail-composer-gap);
-}
-.detail-reply-partner-hint {
-  margin: 0;
-  padding: 8px 10px;
-  border-radius: var(--ku-radius-card);
-  background: var(--ku-color-nav-active-bg);
-  color: var(--ku-color-primary);
-  font: var(--ku-text-body-sm);
 }
 .detail-scroll-area {
   padding-bottom: var(--ku-post-gap);

@@ -816,7 +816,6 @@ export const en: Record<string, string> = {
   '满 {per} 优点兑 1 张 ADN 抽奖券': '{per} merit = 1 ADN raffle ticket',
   '合伙人共享 {merit} 优点(链接该贴自动成为合伙人)': 'Partners share {merit} merit (link this post to become a partner)',
   '立即链接': 'Link now',
-  '发表评论并链接，即可成为合伙人': 'Post a comment and link to become a partner',
   '加入合伙人': 'Join as partner',
   '加入合伙人并创建子节点': 'Join as partner and create child node',
   '已加入合伙人': 'Joined as partner',
