@@ -182,7 +182,7 @@ export type DmConversation = {
   messages: DmMessage[];
 };
 
-export type ActivityType = 'like' | 'share' | 'save' | 'comment' | 'link' | 'tip' | 'subscribe' | 'new_product';
+export type ActivityType = 'like' | 'share' | 'save' | 'comment' | 'link' | 'tip' | 'subscribe';
 
 export type ActivityActor = {
   user: string;
@@ -201,7 +201,6 @@ export type ActivityGroup = {
   tipMessage?: string; // type === 'tip' 时，对方助力时附带的留言
   channelName?: string; // type === 'subscribe' 时，被订阅的频道名
   tierName?: string;    // type === 'subscribe' 时，订阅档位（如 Lv.2）
-  sourcePostId?: string; // type === 'new_product' 时，你曾加入合伙人的那件旧商品（合伙人关系绑商品不绑人，新品需重新加入）
 };
 
 export type PostActorEntry = {
