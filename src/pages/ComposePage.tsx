@@ -175,7 +175,7 @@ export function ComposePage({
         if (!(shopPriceNum > 0 && Number.isFinite(shopPriceNum))) return t('请填写商品单价');
         if (!(shopStockNum >= 1 && Number.isInteger(shopStockNum))) return t('请填写库存');
       }
-      if (!isRebateSplitValid(shopRebate, shopPartnerRebate)) return t('返还比例合计超出范围');
+      if (!isRebateSplitValid(shopRebate, shopPartnerRebate)) return t('赠送比例合计超出范围');
     }
     if (scheduleEnabled) {
       if (scheduledAtMs === undefined || Number.isNaN(scheduledAtMs)) return t('请设置定时发布时间');
@@ -969,12 +969,12 @@ export function ComposePage({
                     <div className="compose-shop-field">
                       <span className="compose-shop-field__label compose-shop-field__label--row">
                         <span className="compose-shop-field__label-main">
-                          <span>{t('兑换方返还比例')}</span>
+                          <span>{t('兑换方赠送比例')}</span>
                           <button
                             type="button"
                             className="compose-shop-info-btn"
                             onClick={() => setRebateInfoOpen(true)}
-                            aria-label={t('什么是优点返还')}
+                            aria-label={t('什么是优点赠送')}
                           >
                             <Info size={13} strokeWidth={2} />
                           </button>
@@ -995,13 +995,13 @@ export function ComposePage({
                         }}
                       />
                       <span className="compose-shop-field__hint">
-                        {t('买家按此比例获得优点返还')}
+                        {t('兑换方按此比例获赠优点')}
                       </span>
                     </div>
 
                     <div className="compose-shop-field">
                       <span className="compose-shop-field__label compose-shop-field__label--row">
-                        <span className="compose-shop-field__label-main">{t('合伙人返还比例')}</span>
+                        <span className="compose-shop-field__label-main">{t('合伙人赠送比例')}</span>
                         <span className="compose-shop-field__label-value">{shopPartnerRebate}%</span>
                       </span>
                       <input
@@ -1018,7 +1018,7 @@ export function ComposePage({
                         }}
                       />
                       <span className="compose-shop-field__hint">
-                        {t('合伙人按此比例获得优点返还')}
+                        {t('合伙人按此比例获赠优点')}
                       </span>
                     </div>
                   </div>
@@ -1111,7 +1111,7 @@ export function ComposePage({
         <div className="sheet-backdrop" onClick={() => setRebateInfoOpen(false)}>
           <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
             <div className="sheet-header">
-              <span className="sheet-title">{t('兑换方返还比例')}</span>
+              <span className="sheet-title">{t('兑换方赠送比例')}</span>
               <button type="button" className="modal-close" onClick={() => setRebateInfoOpen(false)} aria-label={t('关闭')}>
                 <X size={18} strokeWidth={2} />
               </button>
@@ -1121,7 +1121,7 @@ export function ComposePage({
                 {t('买家下单后，按成交额乘以这个比例获得「优点」积分奖励。')}
               </p>
               <p className="pb-info-sheet-para">
-                {t('每 {pb} PB 成交额可返 1 优点，买家满 {per} 优点兑 1 张 ADN 抽奖券。', { pb: MERIT_PB_PER_POINT, per: MERIT_PER_ADN })}
+                {t('每 {pb} PB 成交额可赠 1 优点，买家满 {per} 优点兑 1 张 ADN 抽奖券。', { pb: MERIT_PB_PER_POINT, per: MERIT_PER_ADN })}
               </p>
               <p className="pb-info-sheet-para">
                 {t('比例可设 0–{max}%，设得越高，商品对买家越有吸引力。', { max: SHOP_MAX_REBATE_PERCENT })}

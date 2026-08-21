@@ -4606,9 +4606,21 @@ button {
 /* 标题与数值左右分列一行（如「优点 · 0」不用分隔符，直接两端对齐） */
 .channel-summary-entry-text--split {
   flex-direction: row;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 6px;
+}
+/* 数值区上下两行：优点余额 + 可兑 ADN 张数，靠右对齐 */
+.channel-summary-merit-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+.channel-summary-merit-adn {
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-meta);
+  white-space: nowrap;
 }
 
 /* ── 频道目录（频道目录弹层 / 频道选择器共用的搜索 + 分页列表）── */
@@ -11881,7 +11893,7 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 .shop-item-addr-empty { color: var(--ku-color-text-secondary); }
 
-/* 优点返还 + 合伙人提示（随内容滚动） */
+/* 优点赠送 + 合伙人提示（随内容滚动） */
 .shop-item-info-cards {
   display: flex;
   flex-direction: column;

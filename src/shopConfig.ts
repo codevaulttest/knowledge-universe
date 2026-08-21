@@ -3,10 +3,10 @@ import type { ShopOrderStatus } from './types';
 /** 平台固定损耗/服务费比例：10%，卖家实收 90% */
 export const SHOP_PLATFORM_FEE_RATE = 0.1;
 
-/** 兑换方 + 合伙人返还比例合计上限（因平台收 10%，卖家最多让出 90%）*/
+/** 兑换方 + 合伙人赠送比例合计上限（因平台收 10%，卖家最多让出 90%）*/
 export const SHOP_MAX_REBATE_PERCENT = 90;
 
-/** 兑换方与合伙人返还比例之和是否在允许范围内 */
+/** 兑换方与合伙人赠送比例之和是否在允许范围内 */
 export function isRebateSplitValid(redeemerPercent: number, partnerPercent: number): boolean {
   return redeemerPercent >= 0
     && partnerPercent >= 0
@@ -34,7 +34,7 @@ export function computeShopFee(price: number): number {
   return Math.round(price * SHOP_SUP_FEE_RATE * 10000) / 10000;
 }
 
-/** 单件返给买家的优点（按返还比例折算，占位）*/
+/** 单件赠给买家的优点（按赠送比例折算，占位）*/
 export function computeUnitMerit(price: number, rebatePercent: number): number {
   const rebatePb = price * (rebatePercent / 100);
   return Math.round(rebatePb / MERIT_PB_PER_POINT);

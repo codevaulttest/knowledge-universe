@@ -11,8 +11,8 @@ export type ShopVariant = {
 
 /** 卖家在发帖时为帖子挂载的小黄车配置（仅 1000 PB 节点帖可挂载） */
 export type ShopInfo = {
-  rebatePercent: number; // 兑换方优点返还比例，0–90（平台固定收 10% 损耗，故上限 90）
-  partnerRebatePercent?: number; // 合伙人优点返还比例；与 rebatePercent 之和 ≤ 90
+  rebatePercent: number; // 兑换方优点赠送比例，0–90（平台固定收 10% 损耗，故上限 90）
+  partnerRebatePercent?: number; // 合伙人优点赠送比例；与 rebatePercent 之和 ≤ 90
   price?: number;        // 单规格：商品单价（PB），必须 > 0
   stock?: number;        // 单规格：库存
   variants?: ShopVariant[]; // 多规格：非空时忽略 price/stock
@@ -49,7 +49,7 @@ export type ShopOrder = {
   createdAt: number;
   carrier?: string;    // 物流公司
   trackingNo?: string; // 快递单号
-  estMerit: number;    // 本单预计返给买家的优点（占位）
+  estMerit: number;    // 本单预计赠给买家的优点（占位）
   variantId?: string;
   variantLabel?: string;
 };

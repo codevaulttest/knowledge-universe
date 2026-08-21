@@ -117,7 +117,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const handleSendReply = () => {
     if (!replyText.trim()) return;
     const text = replyText.trim();
-    // 小黄车帖且卖家设了合伙人返还比例：评论即成为合伙人——弹窗选档后发布评论，无需再写一遍
+    // 小黄车帖且卖家设了合伙人赠送比例：评论即成为合伙人——弹窗选档后发布评论，无需再写一遍
     if (!isOwn && post.shop && (post.shop.partnerRebatePercent ?? 0) > 0) {
       requireWallet(() => {
         requestPostInteraction(

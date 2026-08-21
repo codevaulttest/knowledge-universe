@@ -320,7 +320,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             <div className="shop-item-merit-card">
               <Sparkles size={15} strokeWidth={2} aria-hidden="true" />
               <div className="shop-item-merit-card-text">
-                <p>{t('本单预计返还 {merit} 优点 (根据 PB 价值实时计算，可能略有误差)', { merit: formatMeritAmount(displayMerit) })}</p>
+                <p>{t('本单预计赠送 {merit} 优点 (根据 PB 价值实时计算，可能略有误差)', { merit: formatMeritAmount(displayMerit) })}</p>
                 <p>{t('满 {per} 优点兑 1 张 ADN 抽奖券', { per: MERIT_PER_ADN })}</p>
               </div>
             </div>
@@ -486,7 +486,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             </p>
             <div className="shop-success-merit">
               <Sparkles size={14} strokeWidth={2} />
-              {t('预计返 {merit} 优点', { merit: submittedOrder.estMerit })}
+              {t('预计赠 {merit} 优点', { merit: submittedOrder.estMerit })}
             </div>
             <div className="shop-success-actions">
               <button type="button" className="shop-success-btn shop-success-btn--ghost" onClick={() => { setSubmittedOrder(null); onClose(); }}>
