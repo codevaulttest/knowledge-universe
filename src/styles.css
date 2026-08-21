@@ -4603,6 +4603,13 @@ button {
   align-items: flex-start;
   gap: 2px;
 }
+/* 标题与数值左右分列一行（如「优点 · 0」不用分隔符，直接两端对齐） */
+.channel-summary-entry-text--split {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
 
 /* ── 频道目录（频道目录弹层 / 频道选择器共用的搜索 + 分页列表）── */
 .channel-directory-search-wrap {

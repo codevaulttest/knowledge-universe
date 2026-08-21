@@ -128,12 +128,14 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const orderSection = isOwn ? (
     <button type="button" className="channel-summary-entry channel-summary-entry--half" onClick={() => navigate({ page: 'P_ORDERS' })}>
       <ClipboardList size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-shop)' }} />
-      <span className="channel-summary-entry-text channel-summary-entry-text--inline">
+      <span className="channel-summary-entry-text">
         <span className="channel-summary-entry-label">{t('我的订单')}</span>
-        {pendingOrderCount > 0 && (
-          <span className="channel-summary-entry-sub">· {t('{count} 笔待处理', { count: pendingOrderCount })}</span>
-        )}
       </span>
+      {pendingOrderCount > 0 && (
+        <span className="shop-orders-link-badge" aria-label={t('{count} 笔待处理', { count: pendingOrderCount })}>
+          {pendingOrderCount}
+        </span>
+      )}
       <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
     </button>
   ) : null;
@@ -147,9 +149,9 @@ export function ProfilePage({ authorName }: { authorName: string }) {
       onClick={() => showToast(t('该功能暂未开放，敬请期待'))}
     >
       <Award size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-shop)' }} />
-      <span className="channel-summary-entry-text channel-summary-entry-text--inline">
+      <span className="channel-summary-entry-text channel-summary-entry-text--split">
         <span className="channel-summary-entry-label">{t('优点')}</span>
-        <span className="channel-summary-entry-sub">· {meritBalance}</span>
+        <span className="channel-summary-entry-sub">{meritBalance}</span>
       </span>
       <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
     </button>
