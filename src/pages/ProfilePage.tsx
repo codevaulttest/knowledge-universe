@@ -130,12 +130,10 @@ export function ProfilePage({ authorName }: { authorName: string }) {
       <ClipboardList size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-shop)' }} />
       <span className="channel-summary-entry-text">
         <span className="channel-summary-entry-label">{t('我的订单')}</span>
+        {pendingOrderCount > 0 && (
+          <span className="channel-summary-entry-sub">{t('{count} 笔待处理', { count: pendingOrderCount })}</span>
+        )}
       </span>
-      {pendingOrderCount > 0 && (
-        <span className="shop-orders-link-badge" aria-label={t('{count} 笔待处理', { count: pendingOrderCount })}>
-          {pendingOrderCount}
-        </span>
-      )}
       <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
     </button>
   ) : null;
