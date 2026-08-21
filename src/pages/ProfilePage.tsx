@@ -138,6 +138,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     </button>
   ) : null;
 
+  // 优点结算尚未开始（首次结算 9 月 15 日），当前统一显示 0
+  const meritBalance = 0;
   const meritSection = isOwn ? (
     <button
       type="button"
@@ -147,6 +149,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
       <Sparkles size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-shop)' }} />
       <span className="channel-summary-entry-text channel-summary-entry-text--inline">
         <span className="channel-summary-entry-label">{t('优点')}</span>
+        <span className="channel-summary-entry-sub">· {meritBalance}</span>
       </span>
       <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
     </button>
