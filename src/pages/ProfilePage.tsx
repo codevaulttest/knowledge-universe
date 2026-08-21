@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, Sparkles, ThumbsUp, Trash2, X } from 'lucide-react';
+import { Award, Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -146,7 +146,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
       className="channel-summary-entry channel-summary-entry--half"
       onClick={() => showToast(t('该功能暂未开放，敬请期待'))}
     >
-      <Sparkles size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-shop)' }} />
+      <Award size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-shop)' }} />
       <span className="channel-summary-entry-text channel-summary-entry-text--inline">
         <span className="channel-summary-entry-label">{t('优点')}</span>
         <span className="channel-summary-entry-sub">· {meritBalance}</span>
