@@ -149,12 +149,9 @@ export function ProfilePage({ authorName }: { authorName: string }) {
       onClick={() => showToast(t('该功能暂未开放，敬请期待'))}
     >
       <Award size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-shop)' }} />
-      <span className="channel-summary-entry-text channel-summary-entry-text--split">
-        <span className="channel-summary-entry-label">{t('优点')}</span>
-        <span className="channel-summary-merit-value">
-          <span className="channel-summary-entry-sub">{meritBalance}</span>
-          <span className="channel-summary-merit-adn">{t('我的 ADN')}</span>
-        </span>
+      <span className="channel-summary-entry-text">
+        <span className="channel-summary-entry-label">{t('我的 ADN')}</span>
+        <span className="channel-summary-entry-sub">{t('{count} 优点', { count: meritBalance })}</span>
       </span>
       <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
     </button>
