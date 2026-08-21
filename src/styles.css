@@ -4568,6 +4568,7 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .channel-summary-entry-sub {
   font: var(--ku-text-caption);

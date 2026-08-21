@@ -802,7 +802,7 @@ export const en: Record<string, string> = {
   '我的订单': 'My Orders',
   '{count} 笔待处理': '{count} to handle',
   '优点': 'Merit',
-  '= {count} 张 ADN': '= {count} ADN ticket(s)',
+  '我的 ADN': 'My ADN',
   '该功能暂未开放，敬请期待': 'This feature isn\'t open yet — stay tuned',
   '这里是全部上架商品，点商品即可下单购买': 'All listed products — tap one to order.',
   '暂无上架商品': 'No products yet',

@@ -11,7 +11,6 @@ import { Avatar, AuthorName, ChannelCard, ChannelMemberBadge, GenesisBadge, Page
 import { ImageWithFallback } from '../components/ImageWithFallback';
 import { useChannelListSearch } from '../components/channelSearch';
 import { isPostVisible, formatScheduledAt } from '../dateUtils';
-import { MERIT_PER_ADN } from '../shopConfig';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
@@ -143,7 +142,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
   // 优点结算尚未开始（首次结算 9 月 15 日），当前统一显示 0
   const meritBalance = 0;
-  const adnCount = Math.floor(meritBalance / MERIT_PER_ADN);
   const meritSection = isOwn ? (
     <button
       type="button"
@@ -155,7 +153,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         <span className="channel-summary-entry-label">{t('优点')}</span>
         <span className="channel-summary-merit-value">
           <span className="channel-summary-entry-sub">{meritBalance}</span>
-          <span className="channel-summary-merit-adn">{t('= {count} 张 ADN', { count: adnCount })}</span>
+          <span className="channel-summary-merit-adn">{t('我的 ADN')}</span>
         </span>
       </span>
       <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
