@@ -4582,6 +4582,28 @@ button {
   flex-shrink: 0;
 }
 
+/* 两个入口并列一行（如「我的订单」+「优点」），共享一张卡片行的高度 */
+.channel-summary-row {
+  display: flex;
+  gap: 10px;
+  margin: 12px var(--ku-feed-padding-x) 26px;
+}
+.channel-summary-entry + .channel-summary-row {
+  margin-top: -12px;
+}
+.channel-summary-row .channel-summary-entry--half {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+/* 卡片变窄后，标题与副标题挤在一行会把标题压成省略号，改回上下堆叠 */
+.channel-summary-row .channel-summary-entry-text--inline {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
 /* ── 频道目录（频道目录弹层 / 频道选择器共用的搜索 + 分页列表）── */
 .channel-directory-search-wrap {
   position: relative;

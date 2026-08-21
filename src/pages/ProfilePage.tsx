@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, Sparkles, ThumbsUp, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -15,7 +15,7 @@ import { isPostVisible, formatScheduledAt } from '../dateUtils';
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, editProfileAutoOpen, setEditProfileAutoOpen } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, editProfileAutoOpen, setEditProfileAutoOpen, showToast } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
@@ -126,13 +126,27 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         .length
     : 0;
   const orderSection = isOwn ? (
-    <button type="button" className="channel-summary-entry" onClick={() => navigate({ page: 'P_ORDERS' })}>
+    <button type="button" className="channel-summary-entry channel-summary-entry--half" onClick={() => navigate({ page: 'P_ORDERS' })}>
       <ClipboardList size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-shop)' }} />
       <span className="channel-summary-entry-text channel-summary-entry-text--inline">
         <span className="channel-summary-entry-label">{t('我的订单')}</span>
         {pendingOrderCount > 0 && (
           <span className="channel-summary-entry-sub">· {t('{count} 笔待处理', { count: pendingOrderCount })}</span>
         )}
+      </span>
+      <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
+    </button>
+  ) : null;
+
+  const meritSection = isOwn ? (
+    <button
+      type="button"
+      className="channel-summary-entry channel-summary-entry--half"
+      onClick={() => showToast(t('该功能暂未开放，敬请期待'))}
+    >
+      <Sparkles size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-shop)' }} />
+      <span className="channel-summary-entry-text channel-summary-entry-text--inline">
+        <span className="channel-summary-entry-label">{t('优点')}</span>
       </span>
       <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
     </button>
@@ -239,7 +253,12 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         </div>
 
         {channelSection}
-        {orderSection}
+        {isOwn && (
+          <div className="channel-summary-row">
+            {orderSection}
+            {meritSection}
+          </div>
+        )}
 
         {/* 关注/打赏/私信操作行延伸进头部视觉区块，与背景插画同属一体 */}
         {!isOwn && (
