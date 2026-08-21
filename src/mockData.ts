@@ -908,6 +908,12 @@ export const MOCK_OUTGOING_TIPS: OutgoingTip[] = [
 
 // ── 互动通知（针对当前用户帖子 p9）──────────────────────────────
 export const ACTIVITY_GROUPS: ActivityGroup[] = [
+  // 合伙人绑商品不绑人：曾是 shop-notebook 合伙人，卖家上新 shop-mug 只触达、不自动续上分成
+  {
+    id: 'agn1', type: 'new_product', postId: 'shop-mug', time: '20 分钟前', isRead: false,
+    actors: [{ user: '拾光杂货铺', avatarIdx: 1 }],
+    sourcePostId: 'shop-notebook',
+  },
   {
     id: 'ags1', type: 'subscribe', time: '30 分钟前', isRead: false,
     actors: [{ user: '游牧开发者', avatarIdx: 2 }],

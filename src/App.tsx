@@ -34,7 +34,8 @@ export default function App() {
   const [composeOpen, setComposeOpen] = useState(false);
   const composeCloseHandler = useRef<() => void>(() => {});
   const editComposeCloseHandler = useRef<() => void>(() => {});
-  const [linkedPostIds, setLinkedPostIds] = useState<Set<string>>(new Set());
+  // shop-notebook 预置为已加入合伙人，演示「合伙人绑商品不绑人」：同一卖家的新品 shop-mug 需重新加入才享分成
+  const [linkedPostIds, setLinkedPostIds] = useState<Set<string>>(new Set(['shop-notebook']));
   const [followedAuthors, setFollowedAuthors] = useState<Set<string>>(new Set(['阿May的研究笔记']));
   const [repostedPostIds, setRepostedPostIds] = useState<Set<string>>(new Set(['p1', 'p4', 'p6']));
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
@@ -774,12 +775,11 @@ export default function App() {
       showToast(t('转发成功！子节点已创建'));
     } else if (ctx === 'interaction') {
       if (paySheet.action === 'partner' && postId) {
-        if (!linkedPostIds.has(postId)) {
-          setLinkedPostIds(s => new Set(s).add(postId));
-          setPosts(prev => prev.map(p =>
-            p.id === postId ? { ...p, links: p.links + 1, visiblePercent: 100 } : p
-          ));
-        }
+        // 合伙人不设次数上限：每次质押都单独计一次链接，可反复质押、反复计分成权重
+        setLinkedPostIds(s => new Set(s).add(postId));
+        setPosts(prev => prev.map(p =>
+          p.id === postId ? { ...p, links: p.links + 1, visiblePercent: 100 } : p
+        ));
         if (pendingPartnerCommentRef.current?.postId === postId) {
           appendPostReply(postId, pendingPartnerCommentRef.current.text);
           pendingPartnerCommentRef.current = null;

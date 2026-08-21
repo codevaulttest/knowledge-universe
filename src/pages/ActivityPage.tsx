@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bookmark, HandCoins, Link, MessageCircle, Radio, Repeat2, ThumbsUp } from 'lucide-react';
+import { Bookmark, HandCoins, Link, MessageCircle, Package, Radio, Repeat2, ThumbsUp } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS } from '../mockData';
 import { Avatar, PageHeader } from '../components/shared';
@@ -16,6 +16,7 @@ const ACTION_LABEL: Record<ActivityType, { zh: string; en: string }> = {
   link:    { zh: '链接', en: 'linked' },
   tip:     { zh: '助力', en: 'sponsored' },
   subscribe: { zh: '订阅', en: 'subscribed to' },
+  new_product: { zh: '新品', en: 'new product' },
 };
 
 const ACTION_ICON: Record<ActivityType, React.ReactNode> = {
@@ -26,6 +27,7 @@ const ACTION_ICON: Record<ActivityType, React.ReactNode> = {
   link:    <Link size={13} strokeWidth={2.2} />,
   tip:     <HandCoins size={13} strokeWidth={2.2} />,
   subscribe: <Radio size={13} strokeWidth={2.2} />,
+  new_product: <Package size={13} strokeWidth={2.2} />,
 };
 
 function groupText(group: ActivityGroup, zh: boolean): string {
@@ -46,6 +48,11 @@ function groupText(group: ActivityGroup, zh: boolean): string {
     return zh
       ? `${actors[0].user}、${actors[1].user} 等 ${actors.length} 人订阅了你的频道「${channel}」${tier}`
       : `${actors[0].user}, ${actors[1].user} and ${actors.length - 2} others subscribed to your channel "${channel}"${tier}`;
+  }
+  if (group.type === 'new_product') {
+    return zh
+      ? `${actors[0].user} 发布了新品，你是 TA 上一件商品的合伙人，需重新加入才能享有本品分成`
+      : `${actors[0].user} released a new item — you were a partner on their last one, but this one needs a fresh join to earn a share`;
   }
   const label = zh ? ACTION_LABEL[group.type].zh : ACTION_LABEL[group.type].en;
   if (group.type === 'comment') {
@@ -175,6 +182,7 @@ export function ActivityPage() {
     { key: 'save',    zh: '收藏',   en: 'Saves' },
     { key: 'tip',     zh: '助力',   en: 'Sponsorships' },
     { key: 'subscribe', zh: '订阅', en: 'Subscriptions' },
+    { key: 'new_product', zh: '新品', en: 'New items' },
   ];
 
   return (
