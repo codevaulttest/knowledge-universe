@@ -128,10 +128,14 @@ export type Route =
 // ── 频道 / 会员档位 ──────────────────────────────────────────────
 export type ChannelTier = {
   id: string;
-  name: string; // 固定编号「铜牌 / 银牌 / 金牌」（按档位顺序自动生成，不可自定义）
-  price: number; // PB/月，须 > 0，且高于上一档
+  name: string; // 固定编号「免费 / 铜牌 / 银牌 / 金牌」（按档位顺序自动生成，不可自定义）
+  price: number; // PB/月，须 > 0 且高于上一档；免费档固定为 0，不受此约束
+  // 每个频道固定存在的免费档位（price 恒为 0），由 withFreeTier() 保证始终位于 tiers[0]；
+  // 不计入 archived 也不可下架/删除，是频道免费内容的加入入口，与帖子级 minTierIndex 的
+  // 「不限档位」是两套独立机制（后者控制单帖是否需要订阅，前者是可加入的会员身份）
+  free?: boolean;
   // 已下架：不再接受新订阅、不出现在发帖门槛/新用户订阅选择器里；但已订阅用户保留原价与权限，
-  // 且该档位不能真删除（避免 minTierIndex / 订阅记录的数组下标错位），只能下架
+  // 且该档位不能真删除（避免 minTierIndex / 订阅记录的数组下标错位），只能下架。免费档位不适用此状态。
   archived?: boolean;
 };
 
@@ -142,7 +146,7 @@ export type Channel = {
   description: string;
   avatarSeed: string;
   category: string;
-  tiers: ChannelTier[]; // 最多 3 档；空数组=不开启订阅（纯免费频道）
+  tiers: ChannelTier[]; // 固定含 1 个免费档（tiers[0]）+ 最多 3 个付费档
   subscriberCount: number;
   createdAt: string;
   // 会员档位设置（涨价/降价/新增/下架档位）30 天内只能改一次；记录上次改动时间（ms 时间戳）

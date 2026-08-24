@@ -1,4 +1,5 @@
 import type { ActivityGroup, Channel, ChannelSubscriber, DmConversation, OutgoingTip, Post, PostActors, ProfileContacts, Reply, ShippingAddress, ShopOrder } from './types';
+import { withFreeTier } from './channelTiers';
 
 export type UserListItem = {
   name: string;
@@ -329,7 +330,7 @@ export const ALL_CHANNELS: Channel[] = [
     subscriberCount: 124, createdAt: '2026-03-15',
   },
   ...MY_DEMO_CHANNELS,
-];
+].map(c => ({ ...c, tiers: withFreeTier(c.tiers) }));
 
 /** 频道订阅者名单（频道主从个人页「X 人已订阅」进入查看；UI demo 用局部名单，数量可不等于 subscriberCount） */
 export const CHANNEL_SUBSCRIBERS: Record<string, ChannelSubscriber[]> = {
@@ -606,7 +607,7 @@ export const ALL_POSTS: Post[] = [
     kind: 'video', visiblePercent: 30, isNode: true, stakeTier: 100, nodeId: 'nM4gJs',
     rating: 1, replies: 58, links: 21, shares: 44, saves: 117, likes: 100000000000000,
     videoUrl: '/mock-video-2.mp4',
-    channelId: 'channel-yanlei', minTierIndex: 0,
+    channelId: 'channel-yanlei', minTierIndex: 1,
   },
   {
     id: 'p2', author: '阿May的研究笔记', time: '5 小时前',
@@ -621,7 +622,7 @@ export const ALL_POSTS: Post[] = [
     title: '2025 年最值得精读的 10 本技术书单（完整版）\n涵盖系统设计、AI 工程、产品思维三大方向，附每本核心摘要。',
     kind: 'image', imageCount: 4, visiblePercent: 0, isNode: true, stakeTier: 1000, nodeId: 'Rk3mP9',
     rating: 3, replies: 31, links: 24, shares: 19, saves: 88, likes: 245,
-    channelId: 'channel-jike', minTierIndex: 2,
+    channelId: 'channel-jike', minTierIndex: 3,
   },
   {
     id: 'lock-i25', author: '深海鱼炸弹', time: '2 小时前',
@@ -634,7 +635,7 @@ export const ALL_POSTS: Post[] = [
     title: 'Prompt 工程师成长路径：从入门到精通的完整地图\n附 50 个实战场景模板与评测方法论。',
     kind: 'image', imageCount: 4, visiblePercent: 50, isNode: true, stakeTier: 10, nodeId: 'Jn8vQ4',
     rating: 4, replies: 56, links: 31, shares: 27, saves: 136, likes: 402,
-    channelId: 'channel-amay', minTierIndex: 0,
+    channelId: 'channel-amay', minTierIndex: 1,
   },
   {
     id: 'lock-i75', author: '游牧开发者', time: '8 小时前',
@@ -726,7 +727,7 @@ export const ALL_POSTS: Post[] = [
     kind: 'video', visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 24, links: 0, shares: 31, saves: 74, likes: 209,
     videoUrl: '/mock-video.mp4',
-    channelId: 'channel-jike', minTierIndex: 1,
+    channelId: 'channel-jike', minTierIndex: 2,
   },
   {
     id: 'p8', author: '阿May的研究笔记', time: '3 天前',
@@ -795,14 +796,14 @@ export const ALL_POSTS: Post[] = [
     title: '【会员专属】周报模板完整版 + 填写示例\n含可复制大纲、常见踩坑，以及我自己用过的两份真实样例。',
     kind: 'image', imageCount: 3, visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 14, links: 0, shares: 6, saves: 48, likes: 126,
-    channelId: 'channel-me-2', minTierIndex: 0,
+    channelId: 'channel-me-2', minTierIndex: 1,
   },
   {
     id: 'me2-sub-2', author: CURRENT_USER, time: '4 天前',
     title: '【会员专属】幕后笔记：这条选题是怎么筛出来的\n从 12 个备选缩到 1 个的判断标准，公开帖不会写这么细。',
     kind: 'text', visiblePercent: 100, isNode: false, stakeTier: 0,
     rating: 0, replies: 8, links: 0, shares: 2, saves: 29, likes: 67,
-    channelId: 'channel-me-2', minTierIndex: 0,
+    channelId: 'channel-me-2', minTierIndex: 1,
   },
 ];
 

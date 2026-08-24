@@ -694,7 +694,7 @@ export function ComposePage({
               </span>
               <ChevronRight size={16} strokeWidth={2} aria-hidden />
             </button>
-            {selectedChannel && selectedChannel.tiers.length > 0 && (
+            {selectedChannel && selectedChannel.tiers.some(tr => !tr.free) && (
               <>
                 <p className="compose-stake-hint">
                   {t('选择可见的最低会员档位')}
@@ -711,6 +711,8 @@ export function ComposePage({
                     <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子')}</span>
                   </button>
                   {selectedChannel.tiers.map((tier, idx) => {
+                    // 免费档不作为门槛可选项——它与「不限档位」是同一种含义，避免重复选项
+                    if (tier.free) return null;
                     // 已下架档位不再作为新内容的门槛可选项——新访客买不到这一档，
                     // 拿它做门槛会导致内容永远没人能解锁
                     if (tier.archived) return null;
@@ -759,6 +761,7 @@ export function ComposePage({
                 <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子')}</span>
               </button>
               {editPostChannel.tiers.map((tier, idx) => {
+                if (tier.free) return null;
                 if (tier.archived && editMinTierIndex !== idx) return null;
                 return (
                   <button

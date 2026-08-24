@@ -3,6 +3,7 @@ import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volu
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
+import { withFreeTier } from '../channelTiers';
 import { ChannelTierName } from './ChannelTierMedal';
 import { Avatar, AuthorName, Rating, GeminiNodeBadge } from './shared';
 import { Actions } from './PostCard';
@@ -1796,17 +1797,21 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
               >
                 <span className="stake-tier-option__amount">
                   <ChannelTierName name={tier.name} tierIndex={idx} />
-                  {' · '}{tier.price} PB/{t('月')}
-                  <span className="stake-tier-option__fee">
-                    {t('+ {fee} SUP/月', { fee: formatSupAmount(tier.price / 10000) })}
-                  </span>
+                  {!tier.free && (
+                    <>
+                      {' · '}{tier.price} PB/{t('月')}
+                      <span className="stake-tier-option__fee">
+                        {t('+ {fee} SUP/月', { fee: formatSupAmount(tier.price / 10000) })}
+                      </span>
+                    </>
+                  )}
                 </span>
                 <span className="stake-tier-option__desc">
                   {isCurrent
                     ? (isExpired
                       ? t('已过期档位，续费恢复访问权限')
                       : tier.archived ? t('当前档位（已下架，不影响你的权限）') : t('当前档位'))
-                    : t('可看全部 {name} 及以下档位专属内容', { name: tier.name })}
+                    : tier.free ? t('无需付费，随时可加入') : t('可看全部 {name} 及以下档位专属内容', { name: tier.name })}
                 </span>
               </button>
             );
@@ -1817,14 +1822,21 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
           type="button"
           className="planet-confirm-btn"
           disabled={selected === null || (selected === currentTierIndex && !isExpired)}
-          onClick={() => selected !== null && setStep('confirm')}
+          onClick={() => {
+            if (selected === null) return;
+            // 免费档不产生付费，跳过支付确认流程直接加入
+            if (selectedTier?.free) { subscribeToChannelTier(channelId, selected); onClose(); return; }
+            setStep('confirm');
+          }}
         >
           {selected !== null
             ? (isExpired && selected === currentTierIndex
               ? t('续费')
-              : currentTierIndex != null && selected > currentTierIndex
-                ? t('升级订阅')
-                : t('订阅'))
+              : selectedTier?.free
+                ? t('免费加入')
+                : currentTierIndex != null && selected > currentTierIndex
+                  ? t('升级订阅')
+                  : t('订阅'))
             : t('请选择档位')}
         </button>
       </div>
@@ -1842,11 +1854,11 @@ const DEFAULT_TIER_PRICES = [100, 500, 2000] as const;
 // 档位名不可自定义，按档位顺序固定分配
 const DEFAULT_TIER_NAMES = ['铜牌', '银牌', '金牌'] as const;
 
-// 仅对预设范围内、未下架的档位重新赋名；已下架档位保留原名不动
+// 仅对预设范围内、未下架的付费档位重新赋名；免费档（恒为 tiers[0]）与已下架档位保留原名不动
 function normalizeTierNames(tiers: ChannelTier[]): ChannelTier[] {
   return tiers.map((tier, index) => {
-    if (tier.archived) return tier;
-    const preset = DEFAULT_TIER_NAMES[index];
+    if (tier.free || tier.archived) return tier;
+    const preset = DEFAULT_TIER_NAMES[index - 1];
     return preset ? { ...tier, name: preset } : tier;
   });
 }
@@ -1862,9 +1874,9 @@ function defaultTierPrice(index: number, tiers: ChannelTier[]): number {
 }
 
 function sanitizeTierPrices(tiers: ChannelTier[]): ChannelTier[] {
-  return tiers.map((tier, index) => ({
+  return tiers.map((tier, index) => tier.free ? tier : ({
     ...tier,
-    price: tier.price > 0 ? tier.price : defaultTierPreset(index),
+    price: tier.price > 0 ? tier.price : defaultTierPreset(index - 1),
   }));
 }
 
@@ -1877,7 +1889,7 @@ function lastActivePrice(tiers: ChannelTier[], beforeIdx: number): number | null
 }
 
 function isChannelTierPriceInvalid(tiers: ChannelTier[], idx: number): boolean {
-  if (tiers[idx].archived) return false;
+  if (tiers[idx].free || tiers[idx].archived) return false;
   const price = tiers[idx].price;
   if (price <= 0) return true;
   const prevPrice = lastActivePrice(tiers, idx);
@@ -1889,7 +1901,7 @@ function channelTierPriceError(
   idx: number,
   t: (key: string, params?: Record<string, string | number>) => string,
 ): string | null {
-  if (tiers[idx].archived) return null;
+  if (tiers[idx].free || tiers[idx].archived) return null;
   const price = tiers[idx].price;
   if (price <= 0) {
     return t('月费不可为 0');
@@ -1923,7 +1935,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   // 开通频道（未 isEdit）只收集基本信息，不设会员档位——开通与定价拆成两步，
   // 避免用户在"要不要付钱开通"和"怎么设计收费档位"两件事上同时纠结
   const [tiers, setTiers] = useState<ChannelTier[]>(() =>
-    isEdit ? normalizeTierNames(sanitizeTierPrices(existingChannel?.tiers ?? [])) : [],
+    isEdit ? withFreeTier(normalizeTierNames(sanitizeTierPrices(existingChannel?.tiers ?? []))) : [],
   );
 
   // 档位设置（涨价/降价/新增/下架）30 天内只能改一次；单纯改名称/简介不受此限制
@@ -1938,29 +1950,34 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
     showToast(t('档位设置 30 天内只能修改一次，请稍后再试'));
   };
 
-  const activeTierCount = tiers.filter(tr => !tr.archived).length;
+  // 免费档不计入档位数量上限，也不参与新增/下架
+  const activeTierCount = tiers.filter(tr => !tr.free && !tr.archived).length;
 
   const addTier = () => {
     if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
     if (activeTierCount >= MAX_CHANNEL_TIERS) return;
-    setTiers(prev => normalizeTierNames([
-      ...prev,
-      {
-        id: `tier-${Date.now()}`,
-        name: '',
-        price: defaultTierPrice(prev.length, prev),
-      },
-    ]));
+    setTiers(prev => {
+      const paidTiers = prev.filter(tr => !tr.free);
+      return normalizeTierNames([
+        ...prev,
+        {
+          id: `tier-${Date.now()}`,
+          name: '',
+          price: defaultTierPrice(paidTiers.length, paidTiers),
+        },
+      ]);
+    });
   };
   const updateTierPrice = (idx: number, price: number) => {
     if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
-    setTiers(prev => prev.map((tr, i) => i === idx ? { ...tr, price } : tr));
+    setTiers(prev => prev.map((tr, i) => (i === idx && !tr.free) ? { ...tr, price } : tr));
   };
   // 下架而非删除：已保存过的档位一旦存在，就不能真的从数组里移除，
   // 否则会导致 minTierIndex / 订阅记录里存的下标错位、指向别的档位。
-  // 本次编辑中新增、还没保存过的档位（existingChannel 里没有）可以直接移除。
+  // 本次编辑中新增、还没保存过的档位（existingChannel 里没有）可以直接移除。免费档不可下架/移除。
   const removeTier = (idx: number) => {
     if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
+    if (tiers[idx]?.free) return;
     setTiers(prev => {
       const tier = prev[idx];
       const wasPersisted = existingChannel?.tiers.some(t => t.id === tier.id) ?? false;
@@ -2046,12 +2063,26 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
           {isEdit && (
           <div className="edit-profile-field">
             <span className="edit-profile-label">
-              {t('会员档位（最多 {MAX_CHANNEL_TIERS} 档）', { MAX_CHANNEL_TIERS })}
+              {t('会员档位（另可加最多 {MAX_CHANNEL_TIERS} 个付费档位）', { MAX_CHANNEL_TIERS })}
             </span>
             <p className="channel-tier-section-hint">
-              {t('不添加档位时，频道内容对所有人免费开放')}
+              {t('免费档所有人可加入；新增付费档位可为频道内容设置订阅门槛')}
             </p>
-            {tiers.length > 0 && (
+            {tiers.map((tier, idx) => {
+              if (tier.free) {
+                return (
+                  <div key={tier.id} className="channel-tier-block channel-tier-block--free">
+                    <div className="channel-tier-row">
+                      <ChannelTierName name={tier.name} tierIndex={idx} className="channel-tier-name-label" />
+                      <span className="channel-tier-archived-price">{t('所有人可免费加入')}</span>
+                      <span className="channel-tier-archived-badge">{t('固定档位')}</span>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })}
+            {activeTierCount > 0 && (
               <div className="channel-tier-row channel-tier-row--head" aria-hidden>
                 <span className="channel-tier-col-label">{t('档位')}</span>
                 <span className="channel-tier-col-label channel-tier-col-label--price">{t('月订阅费')}</span>
@@ -2059,6 +2090,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               </div>
             )}
             {tiers.map((tier, idx) => {
+              if (tier.free) return null;
               if (tier.archived) {
                 return (
                   <div key={tier.id} className="channel-tier-block channel-tier-block--archived">

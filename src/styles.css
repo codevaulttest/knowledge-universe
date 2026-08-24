@@ -7475,6 +7475,19 @@ button {
   font: var(--ku-text-meta);
   color: var(--ku-color-text-danger);
 }
+.channel-tier-block--free {
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--ku-color-border-card);
+  margin-bottom: 8px;
+}
+.channel-tier-block--free .channel-tier-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.channel-tier-block--free .channel-tier-name-label {
+  min-height: 0;
+}
 .channel-tier-block--archived {
   padding: 10px 0;
   border-top: 1px dashed var(--ku-color-border-card);

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
+import { withFreeTier } from './channelTiers';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { buildInitialBspInvestments } from './bspConfig';
 import { formatScheduledAt } from './dateUtils';
@@ -203,7 +204,8 @@ export default function App() {
   const toggleDemoHideOwnChannels = useCallback(() => {
     setDemoHideOwnChannels(prev => !prev);
   }, []);
-  const [subscribedChannelTiers, setSubscribedChannelTiers] = useState<Record<string, number>>({ 'channel-yanlei': 0 });
+  // channel-yanlei 只有 1 个付费档「铜牌」，tiers[0] 恒为免费档，故铜牌下标是 1
+  const [subscribedChannelTiers, setSubscribedChannelTiers] = useState<Record<string, number>>({ 'channel-yanlei': 1 });
   // 演示到期续费态：产品大叔的方法论频道保留铜牌订阅记录，但已到期失去权限
   const [expiredChannelIds, setExpiredChannelIds] = useState<Set<string>>(new Set(['channel-yanlei']));
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
@@ -546,7 +548,7 @@ export default function App() {
       description: data.description,
       avatarSeed: userProfile.avatarSeed,
       category: data.category,
-      tiers: data.tiers,
+      tiers: withFreeTier(data.tiers),
       subscriberCount: 0,
       createdAt: new Date().toISOString().slice(0, 10),
     };
@@ -567,7 +569,7 @@ export default function App() {
         name: data.name,
         description: data.description,
         category: data.category,
-        tiers: data.tiers,
+        tiers: withFreeTier(data.tiers),
         tiersChangedAt: tiersChanged ? Date.now() : c.tiersChangedAt,
       };
     }));
