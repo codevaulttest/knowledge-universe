@@ -337,11 +337,6 @@ button {
   color: var(--ku-color-text-secondary);
   font-variant-numeric: tabular-nums;
 }
-.channel-discover-access--free {
-  padding: 1px 6px;
-  border-radius: var(--ku-radius-badge);
-  background: var(--ku-color-bg-page);
-}
 .channel-discover-access--subscribed {
   color: var(--ku-color-primary-dark);
   font-weight: 600;

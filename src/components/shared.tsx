@@ -126,23 +126,10 @@ export function ChannelCard({
   const isExpired = expiredChannelIds.has(channel.id);
   const isSubscribed = subscribedTierIndex != null && !isExpired;
   const canSubscribe = isSubscribed || isExpired || channel.tiers.some(tr => !tr.archived);
-  // 价格徽章只看付费档位——免费档恒存在，不该把「起价」拉到 0
-  const paidActiveTiers = channel.tiers.filter(tr => !tr.archived && !tr.free);
   const subscribedTier = subscribedTierIndex != null ? channel.tiers[subscribedTierIndex] : undefined;
-  const accessLabel = (() => {
-    if (subscribedTier && isExpired) {
-      return t('已过期 · {name}', { name: subscribedTier.name });
-    }
-    if (subscribedTier) {
-      return t('已订阅 · {name}', { name: subscribedTier.name });
-    }
-    if (paidActiveTiers.length === 0) return t('免费');
-    if (paidActiveTiers.length === 1) {
-      return t('{price} PB/月', { price: paidActiveTiers[0].price });
-    }
-    const fromPrice = Math.min(...paidActiveTiers.map(tr => tr.price));
-    return t('{price} PB/月起', { price: fromPrice });
-  })();
+  const subscriptionStatus = subscribedTier
+    ? (isExpired ? t('已过期 · {name}', { name: subscribedTier.name }) : t('已订阅 · {name}', { name: subscribedTier.name }))
+    : undefined;
   // 注：外层不能用 <button> 包 <button>（管理/订阅按钮）——嵌套交互元素是无效 HTML，
   // 部分浏览器（尤其 WebKit）会导致内层点击拿不到事件。改用 div+role="button" 承载整卡点击，
   // 右侧操作保留原生 <button>，两者是兄弟节点而非嵌套。
@@ -163,10 +150,12 @@ export function ChannelCard({
         <span className="channel-discover-desc">{channel.description}</span>
         <div className="channel-discover-meta">
           <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
-          <span className="channel-discover-meta-dot" aria-hidden="true">·</span>
-          <span className={`channel-discover-access${paidActiveTiers.length === 0 && !subscribedTier ? ' channel-discover-access--free' : ''}${subscribedTier && !isExpired ? ' channel-discover-access--subscribed' : ''}${isExpired ? ' channel-discover-access--expired' : ''}`}>
-            {accessLabel}
-          </span>
+          {subscriptionStatus && <>
+            <span className="channel-discover-meta-dot" aria-hidden="true">·</span>
+            <span className={`channel-discover-access${!isExpired ? ' channel-discover-access--subscribed' : ' channel-discover-access--expired'}`}>
+              {subscriptionStatus}
+            </span>
+          </>}
         </div>
       </div>
       {onManage && (

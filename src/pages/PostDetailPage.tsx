@@ -78,12 +78,13 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const isLinked = linkedPostIds.has(post.id);
   // 频道会员门槛：与 PostCard 一致，未达标时强制锁定，优先于按比例解锁
   const channel = post.channelId ? channels.find(c => c.id === post.channelId) : undefined;
-  const requiredTier = channel && post.minTierIndex != null ? channel.tiers[post.minTierIndex] : undefined;
+  // 频道帖子至少需要加入免费档；旧帖子未存门槛时同样按免费档处理。
+  const requiredTier = channel ? channel.tiers[post.minTierIndex ?? 0] : undefined;
   const channelSubExpired = channel ? expiredChannelIds.has(channel.id) : false;
   const mySubTierIdx = channel && !channelSubExpired ? subscribedChannelTiers[channel.id] : undefined;
-  const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= post.minTierIndex!);
+  const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= (post.minTierIndex ?? 0));
   const channelLocked = !!requiredTier && !meetsChannelGate && !isOwn;
-  const openChannelGate = () => channel && openChannelSubscribe(channel.id, post.minTierIndex);
+  const openChannelGate = () => channel && openChannelSubscribe(channel.id, post.minTierIndex ?? 0);
   const channelLockLabel = channelLocked
     ? (channelSubExpired
       ? t('续费『{name}』解锁', { name: requiredTier!.name })

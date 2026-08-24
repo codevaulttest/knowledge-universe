@@ -34,17 +34,14 @@ export function ComposePage({
   const { openPay, showToast, updatePost, saveDraft, updateDraft, stagePendingPost, publishPost, t, language, channels, userProfile, openEditProfileContacts } = useApp();
   const isEditMode = !!editPost;
   const myChannels = channels.filter(c => c.ownerName === CURRENT_USER);
-  // 编辑已发布的频道帖子时，可见档位允许调整，但只能单向放宽（降低门槛/改成不限档位），
+  // 编辑已发布的频道帖子时，可见档位允许调整，但只能单向放宽（降低门槛/改成免费档），
   // 不能收紧（提高门槛）——已经被看过的内容不能再收回去锁上，参考 YouTube 只支持
-  // "会员专属 → 公开"、不支持反向操作的惯例
+  // "付费档 → 免费档"、不支持反向操作的惯例
   const editPostChannel = isEditMode && editPost?.channelId ? myChannels.find(c => c.id === editPost.channelId) : undefined;
-  const originalMinTierIndex = editPost?.minTierIndex;
-  const canLoosenTierTo = (candidateIdx: number | undefined) => {
-    if (candidateIdx === undefined) return true;
-    if (originalMinTierIndex === undefined) return false;
-    return candidateIdx <= originalMinTierIndex;
-  };
-  const [editMinTierIndex, setEditMinTierIndex] = useState<number | undefined>(editPost?.minTierIndex);
+  // 频道帖子最低从免费档（tiers[0]）开始；旧帖子缺少值时也按免费档处理。
+  const originalMinTierIndex = editPost?.minTierIndex ?? 0;
+  const canLoosenTierTo = (candidateIdx: number) => candidateIdx <= originalMinTierIndex;
+  const [editMinTierIndex, setEditMinTierIndex] = useState<number>(editPost?.minTierIndex ?? 0);
 
   const initialStakeTier = (): StakeTier => {
     if (draft?.stakeTier !== undefined) return draft.stakeTier;
@@ -59,7 +56,7 @@ export function ComposePage({
   const [channelPickerOpen, setChannelPickerOpen] = useState(false);
   const channelPicker = useChannelListSearch(myChannels);
   const selectedChannel = myChannels.find(c => c.id === selectedChannelId);
-  const [minTierIndex, setMinTierIndex] = useState<number | undefined>(undefined);
+  const [minTierIndex, setMinTierIndex] = useState(0);
   // 小黄车（仅 1000 PB 节点帖可挂载）
   const [shopEnabled, setShopEnabled] = useState(false);
   const [shopPrice, setShopPrice] = useState('');
@@ -236,7 +233,7 @@ export function ComposePage({
 
   const hasEditChanges = isEditMode && (
     text.trim() !== (editPost?.title ?? '')
-    || (!!editPostChannel && editMinTierIndex !== editPost?.minTierIndex)
+    || (!!editPostChannel && editMinTierIndex !== (editPost?.minTierIndex ?? 0))
   );
 
   const handleCloseAttempt = useCallback(() => {
@@ -265,7 +262,7 @@ export function ComposePage({
       return;
     }
     if (isEditMode) {
-      const tierChanged = editPostChannel && editMinTierIndex !== editPost.minTierIndex;
+      const tierChanged = editPostChannel && editMinTierIndex !== (editPost.minTierIndex ?? 0);
       updatePost(editPost.id, text.trim(), tierChanged ? { minTierIndex: editMinTierIndex } : undefined);
       return;
     }
@@ -694,25 +691,13 @@ export function ComposePage({
               </span>
               <ChevronRight size={16} strokeWidth={2} aria-hidden />
             </button>
-            {selectedChannel && selectedChannel.tiers.some(tr => !tr.free) && (
+            {selectedChannel && (
               <>
                 <p className="compose-stake-hint">
-                  {t('选择可见的最低会员档位')}
+                  {t('选择可见的最低档位')}
                 </p>
                 <div className="stake-tier-list" role="radiogroup" aria-label={t('可见档位')}>
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={minTierIndex === undefined}
-                    className={`stake-tier-option stake-tier-option--channel${minTierIndex === undefined ? ' stake-tier-option--active' : ''}`}
-                    onClick={() => setMinTierIndex(undefined)}
-                  >
-                    <span className="stake-tier-option__amount">{t('不限档位')}</span>
-                    <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子')}</span>
-                  </button>
                   {selectedChannel.tiers.map((tier, idx) => {
-                    // 免费档不作为门槛可选项——它与「不限档位」是同一种含义，避免重复选项
-                    if (tier.free) return null;
                     // 已下架档位不再作为新内容的门槛可选项——新访客买不到这一档，
                     // 拿它做门槛会导致内容永远没人能解锁
                     if (tier.archived) return null;
@@ -725,8 +710,8 @@ export function ComposePage({
                         className={`stake-tier-option stake-tier-option--channel${minTierIndex === idx ? ' stake-tier-option--active' : ''}`}
                         onClick={() => setMinTierIndex(idx)}
                       >
-                        <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月')}</span>
-                        <span className="stake-tier-option__desc">{t('需订阅达到 {name} 及以上2', { name: tier.name })}</span>
+                        <span className="stake-tier-option__amount">{tier.free ? t('免费') : `${tier.name} · ${tier.price} PB/${t('月')}`}</span>
+                        <span className="stake-tier-option__desc">{tier.free ? t('加入频道免费档后可查看该帖子') : t('需订阅达到 {name} 及以上2', { name: tier.name })}</span>
                       </button>
                     );
                   })}
@@ -736,7 +721,7 @@ export function ComposePage({
           </div>
         )}
 
-        {/* 编辑已发布的频道帖子：可调整可见档位，但只能单向放宽（降低门槛/改成不限档位），
+        {/* 编辑已发布的频道帖子：可调整可见档位，但只能单向放宽（降低门槛/改成免费档），
             不能收紧（提高门槛）——已经被看过的内容不能再收回去锁上 */}
         {isEditMode && editPostChannel && (
           <div className="compose-section compose-stake-section compose-stake-section--channel">
@@ -745,23 +730,12 @@ export function ComposePage({
               <span>{t('可见档位《{name}》', { name: editPostChannel.name })}</span>
             </div>
             <p className="compose-stake-hint">
-              {originalMinTierIndex === undefined
-                ? t('该帖已不限档位，无需订阅即可查看')
+              {originalMinTierIndex === 0
+                ? t('该帖对免费档及以上用户可见')
                 : t('只能调整为更宽松的档位，不能提高门槛')}
             </p>
             <div className="stake-tier-list" role="radiogroup" aria-label={t('可见档位')}>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={editMinTierIndex === undefined}
-                className={`stake-tier-option stake-tier-option--channel${editMinTierIndex === undefined ? ' stake-tier-option--active' : ''}`}
-                onClick={() => setEditMinTierIndex(undefined)}
-              >
-                <span className="stake-tier-option__amount">{t('不限档位')}</span>
-                <span className="stake-tier-option__desc">{t('无需订阅频道即可看到该帖子')}</span>
-              </button>
               {editPostChannel.tiers.map((tier, idx) => {
-                if (tier.free) return null;
                 if (tier.archived && editMinTierIndex !== idx) return null;
                 return (
                   <button
@@ -773,8 +747,8 @@ export function ComposePage({
                     className={`stake-tier-option stake-tier-option--channel${editMinTierIndex === idx ? ' stake-tier-option--active' : ''}`}
                     onClick={() => setEditMinTierIndex(idx)}
                   >
-                    <span className="stake-tier-option__amount">{tier.name} · {tier.price} PB/{t('月')}</span>
-                    <span className="stake-tier-option__desc">{t('需订阅达到 {name} 及以上2', { name: tier.name })}</span>
+                    <span className="stake-tier-option__amount">{tier.free ? t('免费') : `${tier.name} · ${tier.price} PB/${t('月')}`}</span>
+                    <span className="stake-tier-option__desc">{tier.free ? t('加入频道免费档后可查看该帖子') : t('需订阅达到 {name} 及以上2', { name: tier.name })}</span>
                   </button>
                 );
               })}
@@ -1176,7 +1150,7 @@ export function ComposePage({
                   className={`channel-picker-item${selectedChannelId === c.id ? ' channel-picker-item--active' : ''}`}
                   onClick={() => {
                     setSelectedChannelId(c.id);
-                    setMinTierIndex(undefined);
+                    setMinTierIndex(0);
                     setChannelPickerOpen(false);
                   }}
                 >

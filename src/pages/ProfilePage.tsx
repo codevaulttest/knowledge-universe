@@ -74,8 +74,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     return () => window.removeEventListener('resize', updateTabsScrollState);
   }, [isOwn, language]);
 
-  // 频道订阅门槛：不限档位（无 minTierIndex，无需订阅即可看到）/ 会员专属（设了 minTierIndex，需订阅达标才可见；是否收费另由知识宇宙单条付费决定）
-  const isChannelExclusive = (p: (typeof allPosts)[number]) => !!p.channelId && ownerChannels.some(c => c.id === p.channelId) && p.minTierIndex != null;
+  // 频道帖子从免费档起可见；付费内容需要达到对应的付费档位。
+  const isChannelExclusive = (p: (typeof allPosts)[number]) => !!p.channelId && ownerChannels.some(c => c.id === p.channelId) && (p.minTierIndex ?? 0) > 0;
   const filteredOtherPosts = (() => {
     if (contentFilter === 'free') return myPosts.filter(p => !isChannelExclusive(p));
     if (contentFilter === 'sub') return myPosts.filter(isChannelExclusive);

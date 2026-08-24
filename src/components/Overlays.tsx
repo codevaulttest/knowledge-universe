@@ -600,10 +600,10 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
 
   // 频道会员门槛：未达标时链接不会解锁内容，不展示「解锁」相关文案（与 PostCard 一致）
   const channel = post.channelId ? channels.find(c => c.id === post.channelId) : undefined;
-  const requiredTier = channel && post.minTierIndex != null ? channel.tiers[post.minTierIndex] : undefined;
+  const requiredTier = channel ? channel.tiers[post.minTierIndex ?? 0] : undefined;
   const isOwn = post.author === CURRENT_USER;
   const mySubTierIdx = channel && !expiredChannelIds.has(channel.id) ? subscribedChannelTiers[channel.id] : undefined;
-  const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= post.minTierIndex!);
+  const meetsChannelGate = !requiredTier || (mySubTierIdx != null && mySubTierIdx >= (post.minTierIndex ?? 0));
   const channelLocked = !!requiredTier && !meetsChannelGate && !isOwn;
   const showUnlockCopy = hasHiddenContent && !channelLocked;
 

@@ -84,7 +84,7 @@ export type Post = {
   heat?: number; // 热力值（综合热度，用于打赏入口的引导展示）；未设置=按 id 派生一个稳定的演示值
   views?: number; // 浏览量；未设置=按 id 派生一个稳定的演示值
   channelId?: string; // 归属频道；未设置=不属于任何频道
-  // 该频道下需订阅达到 channel.tiers[minTierIndex] 及以上档位才可见；未设置=频道内全员免费公开
+  // 该频道下需订阅达到 channel.tiers[minTierIndex] 及以上档位才可见；频道帖子未设置时按免费档（tiers[0]）处理
   // "会员专属再付费"场景：已满足 minTierIndex 后，仍复用现有 stakeTier/visiblePercent 付费解锁机制，无需额外字段
   minTierIndex?: number;
   // 原帖已下架（作者删除/违规下架/账号注销等，UI 不区分具体原因）。
@@ -131,8 +131,7 @@ export type ChannelTier = {
   name: string; // 固定编号「免费 / 铜牌 / 银牌 / 金牌」（按档位顺序自动生成，不可自定义）
   price: number; // PB/月，须 > 0 且高于上一档；免费档固定为 0，不受此约束
   // 每个频道固定存在的免费档位（price 恒为 0），由 withFreeTier() 保证始终位于 tiers[0]；
-  // 不计入 archived 也不可下架/删除，是频道免费内容的加入入口，与帖子级 minTierIndex 的
-  // 「不限档位」是两套独立机制（后者控制单帖是否需要订阅，前者是可加入的会员身份）
+  // 不计入 archived 也不可下架/删除，是频道免费内容的加入入口；帖子级 minTierIndex 为 0 时要求加入免费档
   free?: boolean;
   // 已下架：不再接受新订阅、不出现在发帖门槛/新用户订阅选择器里；但已订阅用户保留原价与权限，
   // 且该档位不能真删除（避免 minTierIndex / 订阅记录的数组下标错位），只能下架。免费档位不适用此状态。
