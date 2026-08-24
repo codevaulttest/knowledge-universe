@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import type { TaskCalendarDay, TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
@@ -75,6 +75,9 @@ export type AppContextValue = {
   /** 跳转自己主页时是否自动展开「编辑资料」（用于小黄车联系方式发现引导，消费后需自行置回 false） */
   editProfileAutoOpen: boolean;
   setEditProfileAutoOpen: Dispatch<SetStateAction<boolean>>;
+  /** 节点详情页回退到列表后自动打开转让弹层的单次标记。 */
+  nodeTransferAutoOpenId: string | null;
+  setNodeTransferAutoOpenId: Dispatch<SetStateAction<string | null>>;
   /** 跳转到自己的主页并自动展开「编辑资料」 */
   openEditProfileContacts: () => void;
   channels: Channel[];
@@ -110,10 +113,15 @@ export type AppContextValue = {
   walletAddress: string | null;
   walletConnecting: boolean;
   disconnectWallet: () => void;
-  // 知识宇宙页：账户级 PB 余额（与 supBalance 平行的另一种代币余额）
+  /** 四种 PB 的独立余额；pbBalance 仅用于总资产展示。 */
+  pbWallets: Record<PbWalletId, number>;
   pbBalance: number;
-  // 与 deductSup 平行；暂不落流水，站内无 PB 历史视图
-  deductPb: (amount: number, reason: PbTransactionReason) => void;
+  getPbWalletOptions: (use: PbUse, amount: number) => Array<{ wallet: PbWalletId; allowed: boolean; sufficient: boolean }>;
+  pickDefaultPbWallet: (use: PbUse, amount: number) => PbWalletId | null;
+  /** 单一钱包支付；余额或用途不符合时返回 false，绝不混用。 */
+  payPb: (payment: { amount: number; use: PbUse; wallet: PbWalletId; supCost?: number; supReason?: SupTransactionReason }) => boolean;
+  /** 开发工具：切换可用与受限钱包的演示余额。 */
+  setDemoPbWallets: (preset: 'normal' | 'limited') => void;
   // 知识宇宙页：邀请码绑定
   myInviteCode: string;
   /** 已绑定邀请人的钱包地址；未绑定为 null */
@@ -127,6 +135,8 @@ export type AppContextValue = {
   taskSnapshotYesterday: TaskDaySnapshot;
   /** 每完成 5 篇互动帖 +1，供任务面板监听触发一次性庆祝动效 */
   taskCelebrateSignal: number;
+  /** 成功完成一次帖子互动后计入每日任务；同一帖子只计一次。 */
+  recordTaskInteraction: (postId: string) => void;
   /** 当前自然月的日历格子（含首尾灰显的相邻月填充天），供历史日历以常见日历样式展示 */
   getDailyTaskCalendar: () => TaskCalendarDay[];
   // 开发工具：重置/模拟今日任务，便于演示
@@ -141,7 +151,7 @@ export type AppContextValue = {
   setDefaultAddress: (addressId: string) => void;
   removeShippingAddress: (addressId: string) => void;
   /** 买家下单：创建「确认中」订单并立即返回，链上确认在后台异步完成（成功扣款转「待发货」，失败撤单，均 toast 通知） */
-  placeShopOrder: (postId: string, quantity: number, address: ShippingAddress, variantId?: string) => ShopOrder | undefined;
+  placeShopOrder: (postId: string, quantity: number, address: ShippingAddress, variantId?: string, payWallet?: PbWalletId) => ShopOrder | undefined;
   /** 卖家发货：填物流公司 + 快递单号 */
   shipShopOrder: (orderId: string, carrier: string, trackingNo: string) => void;
   /** 买家确认收货 → 待结算（次月 15 日） */

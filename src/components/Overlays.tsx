@@ -9,9 +9,11 @@ import { Avatar, AuthorName, Rating, GeminiNodeBadge } from './shared';
 import { Actions } from './PostCard';
 import { isChinese, localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
-import type { Channel, ChannelTier, InteractionAction, PayCtx, Post, PostAction, SupTransactionReason } from '../types';
+import type { Channel, ChannelTier, InteractionAction, PayCtx, PbUse, PbWalletId, Post, PostAction, SupTransactionReason } from '../types';
 import { formatSuperAmount, formatSupAmount, stakeTierDescription, SUPER_BY_TIER, SUP_COST_BY_TIER } from '../stakeConfig';
 import type { StakeTier } from '../types';
+import { PbWalletPicker } from './PbWalletPicker';
+import { CHANNEL_OPEN_PB_COST, PB_WALLETS } from '../walletConfig';
 
 
 // Lightbox photo backgrounds — local SVG illustrations, same order as img-grid-cell nth-child
@@ -36,6 +38,13 @@ function payCtxToSupReason(payCtx: PayCtx): SupTransactionReason {
   if (payCtx.ctx === 'interaction' && payCtx.action) return payCtx.action;
   if (payCtx.ctx === 'chain') return 'chain_unlock';
   if (payCtx.ctx === 'repost') return 'repost';
+  return 'post';
+}
+
+function payCtxToPbUse(payCtx: PayCtx): PbUse {
+  if (payCtx.ctx === 'interaction' && payCtx.action) return payCtx.action;
+  if (payCtx.ctx === 'chain') return 'unlock';
+  if (payCtx.ctx === 'repost') return 'share';
   return 'post';
 }
 
@@ -178,13 +187,15 @@ export function ImageLightbox({ post, initialIndex, visibleImgCount, onClose }: 
 export function PaymentSheet({ payCtx, onSuccess, onClose }: {
   payCtx: PayCtx; onSuccess: () => void; onClose: () => void;
 }) {
-  const { t, posts, deductSup } = useApp();
+  const { t, posts, payPb } = useApp();
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'failed'>('idle');
   const [failReason, setFailReason] = useState('');
   const tier = payCtx.stakeTier;
   const relatedPost = payCtx.postId ? posts.find(p => p.id === payCtx.postId) : null;
   // 产生节点时同步扣除 SUP（SUP 链原生代币，千分之一比例）
   const supCost = tier > 0 ? SUP_COST_BY_TIER[tier as Exclude<StakeTier, 0>] : 0;
+  const pbUse = payCtxToPbUse(payCtx);
+  const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
 
   const titles: Record<PayCtx['ctx'], string> = {
     post:   t('发布知识宇宙节点'),
@@ -208,17 +219,15 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
     : titles[payCtx.ctx];
 
   const pay = () => {
+    if (tier > 0 && (!payWallet || !payPb({ amount: tier, use: pbUse, wallet: payWallet, supCost, supReason: payCtxToSupReason(payCtx) }))) {
+      setFailReason(t('所选钱包余额不足或不适用于此操作'));
+      setStatus('failed');
+      return;
+    }
     setStatus('loading');
     setTimeout(() => {
-      const shouldFail = Math.random() < 0.12;
-      if (shouldFail) {
-        setFailReason(t('余额不足，请充值后重试'));
-        setStatus('failed');
-      } else {
-        if (supCost > 0) deductSup(supCost, payCtxToSupReason(payCtx));
-        setStatus('done');
-        setTimeout(onSuccess, 700);
-      }
+      setStatus('done');
+      setTimeout(onSuccess, 700);
     }, 1300);
   };
 
@@ -243,6 +252,10 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
               <span className="gemini-id">{relatedPost.nodeId}</span>
             </div>
           </div>
+        )}
+
+        {tier > 0 && (
+          <PbWalletPicker use={pbUse} amount={tier} value={payWallet} onChange={setPayWallet} />
         )}
 
         {tier > 0 && (
@@ -414,7 +427,6 @@ export function GeminiStakeModal({
 // ═══════════════════════════════════════════════════════════════
 
 const MOCK_WALLET_ADDR = '0xB6E546209F774f5F0307cF68b8c1998B1E2d0C85';
-const MOCK_PB_BALANCE  = '7,152';
 const MOCK_NETWORK     = 'BSC';
 
 function FeeLabelTooltip({ label, tip }: { label: string; tip: string }) {
@@ -440,6 +452,7 @@ function PaymentConfirmPage({
   networkFee,
   tokenFee,
   gasFee,
+  walletId,
   failReason,
   onConfirm,
   onRetry,
@@ -453,12 +466,13 @@ function PaymentConfirmPage({
   networkFee: string;
   tokenFee: string;
   gasFee?: string;
+  walletId?: PbWalletId | null;
   failReason?: string;
   onConfirm: () => void;
   onRetry: () => void;
   onBack: () => void;
 }) {
-  const { t } = useApp();
+  const { t, pbWallets } = useApp();
   const isPaying = pageStep === 'paying';
   const isDone   = pageStep === 'done';
   const isFailed = pageStep === 'failed';
@@ -501,7 +515,7 @@ function PaymentConfirmPage({
             </div>
             <div className="pay-page-row">
               <span className="pay-page-row-label">{t('余额')}</span>
-              <span className="pay-page-row-value">{MOCK_PB_BALANCE} PB</span>
+              <span className="pay-page-row-value">{walletId ? `${formatSuperAmount(pbWallets[walletId])} PB` : '—'}</span>
             </div>
             <div className="pay-page-row">
               <span className="pay-page-row-label">{t('网络')}</span>
@@ -588,11 +602,12 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
   onSuccess: (tier: Exclude<StakeTier, 0>) => void;
   onClose: () => void;
 }) {
-  const { t, language, channels, subscribedChannelTiers, expiredChannelIds } = useApp();
+  const { t, language, channels, subscribedChannelTiers, expiredChannelIds, payPb, recordTaskInteraction } = useApp();
   const zh = isChinese(language);
   const [selected, setSelected] = useState<Exclude<StakeTier, 0>>(10);
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done' | 'failed'>('select');
   const [failReason, setFailReason] = useState('');
+  const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
 
   const tiers: Exclude<StakeTier, 0>[] = [10, 100, 1000];
   const superAmount = SUPER_BY_TIER[selected];
@@ -608,15 +623,18 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
   const showUnlockCopy = hasHiddenContent && !channelLocked;
 
   const pay = () => {
+    if (!payWallet || !payPb({ amount: selected, use: 'unlock', wallet: payWallet, supCost: SUP_COST_BY_TIER[selected] })) {
+      setFailReason(t('所选钱包余额不足或不适用于此操作'));
+      setStep('failed');
+      return;
+    }
     setStep('paying');
     setTimeout(() => {
-      if (Math.random() < 0.12) {
-        setFailReason(t('余额不足，请充值后重试'));
-        setStep('failed');
-      } else {
-        setStep('done');
-        setTimeout(() => onSuccess(selected), 800);
-      }
+      setStep('done');
+      setTimeout(() => {
+        if (mode === 'unlock') recordTaskInteraction(post.id);
+        onSuccess(selected);
+      }, 800);
     }, 1300);
   };
 
@@ -631,6 +649,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
         amountText={`${selected} PB`}
         networkFee={`${formatSuperAmount(superAmount)} PB`}
         tokenFee={`${selected} PB`}
+        walletId={payWallet}
         failReason={failReason}
         onConfirm={pay}
         onRetry={() => setStep('confirm')}
@@ -694,6 +713,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
           <span className="compose-stake-gas-label">{t('Gas 费')}</span>
           <span className="compose-stake-gas-value">{SUP_COST_BY_TIER[selected]} SUP</span>
         </div>
+        <PbWalletPicker use="unlock" amount={selected} value={payWallet} onChange={setPayWallet} />
         <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" onClick={() => setStep('confirm')}>
           {mode === 'unlock'
             ? t('解锁并创建子节点 · {selected} PB', { selected })
@@ -1567,11 +1587,12 @@ export function TipModal({
   postId?: string;
   onClose: () => void;
 }) {
-  const { t, showToast, recordOutgoingTip } = useApp();
+  const { t, showToast, recordOutgoingTip, payPb, recordTaskInteraction } = useApp();
   const [selected, setSelected] = useState<number | null>(null);
   const [custom, setCustom] = useState('');
   const [message, setMessage] = useState('');
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done'>('select');
+  const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
 
   // 自定义金额优先：填了自定义就以自定义为准，否则取选中的档位
   const customAmount = custom.trim() === '' ? null : Math.floor(Number(custom));
@@ -1589,6 +1610,7 @@ export function TipModal({
 
   const handlePay = () => {
     if (!amountValid || amount == null) return;
+    if (!payWallet || !payPb({ amount, use: 'tip', wallet: payWallet, supCost: amount / 10000 })) return;
     setStep('paying');
     setTimeout(() => {
       setStep('done');
@@ -1600,6 +1622,7 @@ export function TipModal({
         postTitle: context === 'post' ? postTitle : undefined,
         message: message.trim() || undefined,
       });
+      if (context === 'post' && postId) recordTaskInteraction(postId);
       setTimeout(() => {
         showToast(t('打赏成功！感谢你的支持'));
         onClose();
@@ -1627,6 +1650,7 @@ export function TipModal({
         networkFee="1 PB"
         tokenFee={`${amount} PB`}
         gasFee={`${formatSupAmount((amount ?? 0) / 10000)} SUP`}
+        walletId={payWallet}
         onConfirm={handlePay}
         onRetry={() => setStep('confirm')}
         onBack={() => setStep('select')}
@@ -1709,11 +1733,15 @@ export function TipModal({
           </div>
         </div>
 
+        {amountValid && amount != null && (
+          <PbWalletPicker use="tip" amount={amount} value={payWallet} onChange={setPayWallet} />
+        )}
+
         <button
           type="button"
           className="planet-confirm-btn"
-          disabled={!amountValid}
-          onClick={() => amountValid && setStep('confirm')}
+          disabled={!amountValid || !payWallet}
+          onClick={() => amountValid && payWallet && setStep('confirm')}
         >
           {amountValid && amount != null
             ? t('确认打赏 {selected} PB', { selected: amount })
@@ -1729,7 +1757,7 @@ export function TipModal({
 // ═══════════════════════════════════════════════════════════════
 
 export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }: { channelId: string; requiredTierIndex?: number; onClose: () => void }) {
-  const { t, channels, subscribedChannelTiers, expiredChannelIds, subscribeToChannelTier } = useApp();
+  const { t, channels, subscribedChannelTiers, expiredChannelIds, subscribeToChannelTier, payPb } = useApp();
   const channel = channels.find(c => c.id === channelId);
   const currentTierIndex = subscribedChannelTiers[channelId];
   const isExpired = expiredChannelIds.has(channelId);
@@ -1737,11 +1765,18 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
   // 已订阅档位优先（此时 requiredTierIndex 通常已满足，不会走到这个入口）
   const [selected, setSelected] = useState<number | null>(currentTierIndex ?? requiredTierIndex ?? null);
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done'>('select');
+  const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
 
   if (!channel) return null;
   const selectedTier = selected !== null ? channel.tiers[selected] : null;
 
   const handlePay = () => {
+    if (!selectedTier || !payWallet || !payPb({
+      amount: selectedTier.price,
+      use: 'channel_subscribe',
+      wallet: payWallet,
+      supCost: selectedTier.price / 10000,
+    })) return;
     setStep('paying');
     setTimeout(() => {
       setStep('done');
@@ -1764,6 +1799,7 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
         amountText={`${selectedTier.price} PB`}
         networkFee="1 PB"
         tokenFee={`${formatSupAmount(selectedTier.price / 10000)} SUP/${t('月')}`}
+        walletId={payWallet}
         onConfirm={handlePay}
         onRetry={() => setStep('confirm')}
         onBack={() => setStep('select')}
@@ -1818,10 +1854,14 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
           })}
         </div>
 
+        {selectedTier && !selectedTier.free && (
+          <PbWalletPicker use="channel_subscribe" amount={selectedTier.price} value={payWallet} onChange={setPayWallet} />
+        )}
+
         <button
           type="button"
           className="planet-confirm-btn"
-          disabled={selected === null || (selected === currentTierIndex && !isExpired)}
+          disabled={selected === null || (selected === currentTierIndex && !isExpired) || (!selectedTier?.free && !payWallet)}
           onClick={() => {
             if (selected === null) return;
             // 免费档不产生付费，跳过支付确认流程直接加入
@@ -1914,7 +1954,7 @@ function channelTierPriceError(
 }
 
 export function CreateChannelModal({ existingChannel, onClose }: { existingChannel?: Channel; onClose: () => void }) {
-  const { t, createChannel, updateChannel, userProfile, deductSup, showToast, channels } = useApp();
+  const { t, createChannel, updateChannel, userProfile, payPb, showToast, channels } = useApp();
   // 一个人可以开多个频道，默认名称如果都叫「{nickname}的频道」会难以区分——
   // 撞名时依次追加编号（2/3/4…），直到不与本人现有频道重名
   const baseChannelName = t('{nickname}的频道', { nickname: userProfile.nickname });
@@ -1927,7 +1967,9 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   })();
   const [paying, setPaying] = useState<'idle' | 'loading' | 'failed'>('idle');
   const [failReason, setFailReason] = useState('');
+  const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
   const channelSupCost = SUP_COST_BY_TIER[1000];
+  const channelWalletNeedsSup = !payWallet || PB_WALLETS[payWallet].consumesSup;
   const [name, setName] = useState(existingChannel?.name ?? defaultChannelName);
   const [description, setDescription] = useState(existingChannel?.description ?? '');
   const category = existingChannel?.category ?? DEFAULT_CHANNEL_CATEGORY;
@@ -1950,12 +1992,14 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
     showToast(t('档位设置 30 天内只能修改一次，请稍后再试'));
   };
 
-  // 免费档不计入档位数量上限，也不参与新增/下架
+  // 免费档不计入档位数量上限。铜／银／金三个付费档始终占用各自名额，
+  // 下架仅暂停订阅，不会释放新增名额。
   const activeTierCount = tiers.filter(tr => !tr.free && !tr.archived).length;
+  const paidTierCount = tiers.filter(tr => !tr.free).length;
 
   const addTier = () => {
     if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
-    if (activeTierCount >= MAX_CHANNEL_TIERS) return;
+    if (paidTierCount >= MAX_CHANNEL_TIERS) return;
     setTiers(prev => {
       const paidTiers = prev.filter(tr => !tr.free);
       return normalizeTierNames([
@@ -2004,16 +2048,14 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
       onClose();
       return;
     }
+    if (!payWallet || !payPb({ amount: CHANNEL_OPEN_PB_COST, use: 'channel_open', wallet: payWallet, supCost: channelSupCost })) {
+      setFailReason(t('所选钱包余额不足或不适用于此操作'));
+      setPaying('failed');
+      return;
+    }
     // 一步完成：同一屏内直接跑支付动画，成功后立即建号，不再跳到独立的支付弹窗
     setPaying('loading');
     setTimeout(() => {
-      const shouldFail = Math.random() < 0.12;
-      if (shouldFail) {
-        setFailReason(t('余额不足，请充值后重试'));
-        setPaying('failed');
-        return;
-      }
-      deductSup(channelSupCost, 'channel_open');
       createChannel({ name: name.trim(), description: description.trim(), category, tiers });
       onClose();
     }, 1300);
@@ -2155,7 +2197,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                 </div>
               );
             })}
-            {activeTierCount < MAX_CHANNEL_TIERS && (
+            {paidTierCount < MAX_CHANNEL_TIERS && (
               <button
                 type="button"
                 className={`channel-tier-add-btn${!canEditTierSettings ? ' channel-tier-add-btn--locked' : ''}`}
@@ -2174,16 +2216,19 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               <div className="pay-combo-breakdown">
                 <div className="pay-combo-row">
                   <span className="pay-combo-label">{t('PB 消耗')}</span>
-                  <span className="pay-combo-value">{formatSuperAmount(1000)} PB</span>
+                  <span className="pay-combo-value">{formatSuperAmount(CHANNEL_OPEN_PB_COST)} PB</span>
                 </div>
-                <div className="pay-combo-row">
-                  <span className="pay-combo-label">{t('SUP 消耗')}</span>
-                  <span className="pay-combo-value">{formatSupAmount(channelSupCost)} SUP</span>
-                </div>
+                {channelWalletNeedsSup && (
+                  <div className="pay-combo-row">
+                    <span className="pay-combo-label">{t('SUP 消耗')}</span>
+                    <span className="pay-combo-value">{formatSupAmount(channelSupCost)} SUP</span>
+                  </div>
+                )}
                 {paying === 'failed' && (
                   <p className="pay-fail-reason">{failReason}</p>
                 )}
               </div>
+              <PbWalletPicker use="channel_open" amount={CHANNEL_OPEN_PB_COST} value={payWallet} onChange={setPayWallet} />
             </div>
           )}
 
@@ -2194,7 +2239,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
           <button
             type="button"
             className="planet-confirm-btn"
-            disabled={!canSubmit || paying === 'loading'}
+            disabled={!canSubmit || !payWallet || paying === 'loading'}
             onClick={handleSubmit}
           >
             {paying === 'loading'

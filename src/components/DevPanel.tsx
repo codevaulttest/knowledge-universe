@@ -12,7 +12,7 @@ export function DevPanel({ children }: DevPanelProps) {
   const [visible, setVisible] = useState(true);
   const {
     walletConnected, connectWallet, disconnectWallet, demoHideOwnChannels, toggleDemoHideOwnChannels, t,
-    taskSnapshotToday, resetDemoTasks, simulateDemoTaskInteractions,
+    taskSnapshotToday, resetDemoTasks, simulateDemoTaskInteractions, setDemoPbWallets,
   } = useApp();
 
   if (!visible) return null;
@@ -78,6 +78,12 @@ export function DevPanel({ children }: DevPanelProps) {
             onClick={resetDemoTasks}
           >
             <span>{t('重置今日任务')}</span>
+          </button>
+          <button type="button" className="planet-dev-menu-item" onClick={() => setDemoPbWallets('normal')}>
+            <span>{t('恢复钱包余额')}</span>
+          </button>
+          <button type="button" className="planet-dev-menu-item" onClick={() => setDemoPbWallets('limited')}>
+            <span>{t('模拟通用 PB 余额不足')}</span>
           </button>
           {children}
         </div>

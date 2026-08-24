@@ -23,7 +23,12 @@ export const DEFAULT_WALLET_DISPLAY = MOCK_WALLET_ADDRESS.slice(-6);
 export const CURRENT_USER = DEFAULT_WALLET_DISPLAY;
 
 /** 演示钱包 PB 余额（连接后展示）—— 数值取到能演示 BSP 巨星投流 1 万单位（1000 万 PB）的量级 */
-export const MOCK_WALLET_PB_BALANCE = 12000000;
+export const MOCK_PB_WALLETS = {
+  onchain: 5600,
+  site: 3200,
+  honor: 800,
+  node: 2400,
+} as const;
 /** 演示钱包 SUP 余额（连接后展示） */
 export const MOCK_WALLET_SUP_BALANCE = 1050;
 /** 演示钱包对应的邀请码（固定随机六位数字） */

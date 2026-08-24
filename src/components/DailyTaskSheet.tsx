@@ -6,11 +6,15 @@ import {
   TASK_BONUS_PB,
   TASK_BONUS_THRESHOLD,
   TASK_INTERACTION_POOL_SIZE,
-  TASK_INTERACTION_TIERS,
+  TASK_RATIO_BASE,
+  TASK_RATIO_STEP1,
+  TASK_RATIO_STEP1_COUNT,
+  TASK_RATIO_STEP2,
+  TASK_RATIO_STEP2_COUNT,
   type TaskCalendarDay,
 } from '../taskConfig';
 
-/** 每日任务统一面板：发帖任务 + 互动帖里程碑（+10 PB / 空投比例）+ BSP 保底 + 历史日历。 */
+/** 每日任务统一面板：发帖任务 + 荣誉值里程碑 / 空投比例 + BSP 保底 + 历史日历。 */
 export function DailyTaskSheet({
   onClose,
   hasBspRecords = false,
@@ -26,6 +30,7 @@ export function DailyTaskSheet({
   const posted = taskSnapshotToday.posted;
   const interacted = taskSnapshotToday.interactedCount;
   const bonusEligible = taskSnapshotToday.bonusEligible;
+  const honorRewardStatus = taskSnapshotToday.honorRewardStatus;
   const bonusMarkerPercent = (TASK_BONUS_THRESHOLD / TASK_INTERACTION_POOL_SIZE) * 100;
   const progressPercent = Math.min(100, (interacted / TASK_INTERACTION_POOL_SIZE) * 100);
 
@@ -43,7 +48,7 @@ export function DailyTaskSheet({
           </div>
 
           <p className="task-panel-note">
-            {t('发帖且互动满 {threshold} 次，当日到账 +{bonus} PB；互动满 {total} 次，次日空投领满额', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB, total: TASK_INTERACTION_POOL_SIZE })}
+            {t('发帖且互动满 {threshold} 次，次日凌晨发放 +{bonus} 荣誉值；互动满 {total} 次，次日可领满额空投', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB, total: TASK_INTERACTION_POOL_SIZE })}
           </p>
 
           <button type="button" className="bsp-rules-entry task-panel-rules-entry" onClick={() => setRulesOpen(true)}>
@@ -52,7 +57,7 @@ export function DailyTaskSheet({
             <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
           </button>
 
-          {/* 合并进度条：10 赞里程碑（+10 PB）+ 35 赞阶梯（空投比例） */}
+          {/* 10 次 marker 只表示荣誉值里程碑；空投比例按每次互动实时累加。 */}
           <div className="task-card task-card--interaction">
             <div className="task-card-head">
               <span className="task-card-icon" aria-hidden="true">
@@ -80,10 +85,10 @@ export function DailyTaskSheet({
             <div className="task-milestone-row">
               <span className={`task-milestone-chip${bonusEligible ? ' task-milestone-chip--done' : ''}`}>
                 {bonusEligible ? <Check size={12} strokeWidth={2.6} /> : <Gift size={12} strokeWidth={1.9} />}
-                {t('发帖+满 {threshold} 次互动 · +{bonus} PB', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB })}
+                {t('发帖+满 {threshold} 次互动 · +{bonus} 荣誉值', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB })}
                 <span className="task-milestone-chip-state">
                   {bonusEligible
-                    ? t('已达成')
+                    ? honorRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')
                     : interacted >= TASK_BONUS_THRESHOLD
                       ? t('还需发帖')
                       : t('待完成')}
@@ -99,7 +104,7 @@ export function DailyTaskSheet({
             </div>
           </div>
 
-          {/* 发帖任务：10 PB 里程碑与 BSP 保底的共同前置条件 */}
+          {/* 发帖任务：荣誉值里程碑与 BSP 保底的共同前置条件 */}
           <div className={`task-card${posted ? ' task-card--done' : ''}`}>
             <span className="task-card-icon" aria-hidden="true">
               {posted ? <Check size={16} strokeWidth={2.6} /> : <Circle size={16} strokeWidth={1.9} />}
@@ -165,25 +170,22 @@ function DailyTaskRulesSheet({ onClose }: { onClose: () => void }) {
           </p>
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('互动帖任务：')}</strong>
-            {t('每天对任意 {total} 篇帖子完成点赞/评论/收藏/踩任一操作即视为完成 1 篇（同一帖子多次操作只算一次）。', { total: TASK_INTERACTION_POOL_SIZE })}
+            {t('每天对任意 {total} 篇帖子完成点赞/评论/转发/收藏/踩/解锁/打赏任一操作即视为完成 1 篇（同一帖子多次操作只算一次）。', { total: TASK_INTERACTION_POOL_SIZE })}
           </p>
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('次日空投额度：')}</strong>
-            {t('按互动帖数量分档换算，次日生效：{t1} 篇 {r1}%；{t2} 篇 {r2}%；{total} 篇 100%。', {
-              t1: TASK_INTERACTION_TIERS[0].count,
-              r1: TASK_INTERACTION_TIERS[0].ratio,
-              t2: TASK_INTERACTION_TIERS[1].count,
-              r2: TASK_INTERACTION_TIERS[1].ratio,
-              total: TASK_INTERACTION_POOL_SIZE,
+            {t('默认 {base}%；前 {count} 篇每完成 1 篇增加 {step}%，后 {count2} 篇每完成 1 篇增加 {step2}%，满 {total} 篇为 100%，次日生效。', {
+              base: TASK_RATIO_BASE, count: TASK_RATIO_STEP1_COUNT, step: TASK_RATIO_STEP1,
+              count2: TASK_RATIO_STEP2_COUNT, step2: TASK_RATIO_STEP2, total: TASK_INTERACTION_POOL_SIZE,
             })}
           </p>
           <p className="pb-info-sheet-para">
-            <strong className="pb-info-sheet-label">{t('当日 PB 里程碑：')}</strong>
-            {t('当天至少发布 1 篇内容，且互动帖满 {threshold} 篇，当日即到账 +{bonus} PB。', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB })}
+            <strong className="pb-info-sheet-label">{t('每日荣誉值奖励：')}</strong>
+            {t('当天至少发布 1 篇内容，且互动帖满 {threshold} 篇，次日凌晨发放 +{bonus} 荣誉值。', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB })}
           </p>
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('BSP 巨星投流保底：')}</strong>
-            {t('当天至少发布 1 篇内容即视为完成。它是 BSP 巨星投流每日打赏保底的唯一门槛：当天发帖，次日即享有打赏保底。')}
+            {t('当天至少发布 1 篇内容即视为完成。当天发帖，次日即享有打赏保底。')}
           </p>
           <div className="sup-deposit-warning">
             <AlertTriangle size={16} strokeWidth={2} aria-hidden="true" />
@@ -277,7 +279,9 @@ function DailyTaskHistorySheet({
             </span>
             {selectedDay.snapshot.bonusEligible && (
               <span className="task-calendar-detail-row">
-                {t('当日里程碑奖励')}<strong>+{TASK_BONUS_PB} PB</strong>
+                {t('当日荣誉值奖励')}<strong>
+                  +{TASK_BONUS_PB} {t('荣誉值')} · {selectedDay.snapshot.honorRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')}
+                </strong>
               </span>
             )}
           </div>

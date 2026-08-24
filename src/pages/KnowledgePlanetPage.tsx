@@ -9,20 +9,13 @@ import { BspInvestSheet } from '../components/BspInvestSheet';
 import { BspRecordList, BspRecordSummary } from '../components/BspRecordList';
 import { BspRulesSheet } from '../components/BspRulesSheet';
 import { DevPanel } from '../components/DevPanel';
+import { PbWalletPicker } from '../components/PbWalletPicker';
 import { PageHeader, PullToRefresh } from '../components/shared';
 import { CURRENT_USER, MOCK_WALLET_ADDRESS } from '../mockData';
 import { SUP_COST_BY_TIER, formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import { buildInitialBspInvestments, type BspInvestment } from '../bspConfig';
 import { isChinese } from '../i18n';
-
-// 面额（PB）：仅 1000 档支持五星升级；100 / 10 档不支持升级
-type NodeTier = 10 | 100 | 1000;
-
-/** 认购来源标识：节点只能通过认购创世 / 钻石节点产生，不存在无来源的普通节点 */
-type NodeOrigin = 'diamond' | 'genesis';
-
-/** 节点取得方式：现金购买 / 用内部 PB 兑换（质押开通频道、签到等）——仅现金购买的 1-5 星节点可转让 */
-type PurchaseSource = 'cash' | 'pb';
+import type { KnowledgeNode, NodeTier, PbWalletId } from '../types';
 
 // 创建频道：暂时固定质押 1000 PB 档位
 const CREATE_TIER: NodeTier = 1000;
@@ -64,13 +57,13 @@ function formatNow(): string {
 }
 
 /** 字符串取种子，供 mulberry32 使用（demo mock：让同一节点每次打开子节点列表看到同一组数据） */
-function seedFromString(str: string): number {
+export function seedFromString(str: string): number {
   let h = 0;
   for (let i = 0; i < str.length; i++) h = (Math.imul(h, 31) + str.charCodeAt(i)) | 0;
   return h;
 }
 
-function mulberry32(seed: number): () => number {
+export function mulberry32(seed: number): () => number {
   let a = seed;
   return () => {
     a |= 0;
@@ -81,10 +74,10 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-type ChildNodeEntry = { code: string; stars: number };
+export type ChildNodeEntry = { code: string; stars: number };
 
 /** 子节点具体名单（demo mock）：按节点 id 生成一份确定性的伪随机列表，条数等于该节点的 childCount */
-function generateChildNodes(node: KnowledgeNode): ChildNodeEntry[] {
+export function generateChildNodes(node: KnowledgeNode): ChildNodeEntry[] {
   const rand = mulberry32(seedFromString(node.id));
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   const list: ChildNodeEntry[] = [];
@@ -97,32 +90,6 @@ function generateChildNodes(node: KnowledgeNode): ChildNodeEntry[] {
   return list;
 }
 
-type KnowledgeNode = {
-  id: string;
-  nodeCode: string;
-  tier: NodeTier;
-  stars: number;
-  /** 下挂子节点数量（demo mock） */
-  childCount: number;
-  /** 二叉树直接子节点占用数（0/1/2）：链满 2 个时该节点开始产生收益，与 childCount（星级晋升用的累计子节点数）是两回事 */
-  boundChildren: 0 | 1 | 2;
-  /** 认购来源：只能是创世或钻石节点，节点必由认购产生 */
-  origin: NodeOrigin;
-  /** 认购序号（创世 / 钻石角标展示为 #N） */
-  serialNo: number;
-  /** 取得方式：仅 'cash' 且 1-5 星的节点可转让 */
-  purchaseSource: PurchaseSource;
-  /** 节点对应的频道名称；节点认购后即同步开通频道，因此必定存在 */
-  channelName: string;
-  /** 频道简介（开通时选填） */
-  channelDescription?: string;
-  /** 个人备注：仅在收藏弹窗中选填；有内容时展示在已收藏节点卡片上 */
-  remark?: string;
-  /** 刚开通尚未「落库」的演示态：列表可见但标同步中 */
-  syncing?: boolean;
-  createdAt: string;
-};
-
 /** 批量开通时的频道名：首个用原名，其余加 -2、-3… */
 function channelNameForIndex(base: string, index: number): string {
   return index === 0 ? base : `${base}-${index + 1}`;
@@ -130,17 +97,17 @@ function channelNameForIndex(base: string, index: number): string {
 
 const INITIAL_NODES: KnowledgeNode[] = [
   // 1000 PB —— 支持五星升级、红包无上限
-  { id: 'n1', nodeCode: 'A1B2C3', tier: 1000, stars: 5, childCount: 128, boundChildren: 2, origin: 'genesis', serialNo: 1, purchaseSource: 'cash', createdAt: '2025-12-10 09:32', channelName: '深度思考日记', remark: '主力收益节点' },
-  { id: 'n2', nodeCode: 'D4E5F6', tier: 1000, stars: 4, childCount: 64, boundChildren: 2, origin: 'diamond', serialNo: 3, purchaseSource: 'cash', createdAt: '2026-01-05 14:17', channelName: 'AI 效率手记' },
-  { id: 'n3', nodeCode: 'G7H8I9', tier: 1000, stars: 3, childCount: 31, boundChildren: 1, origin: 'diamond', serialNo: 5, purchaseSource: 'cash', createdAt: '2026-01-20 08:55', channelName: '增长黑客笔记', remark: '待观察升星' },
-  { id: 'n4', nodeCode: 'J0K1L2', tier: 1000, stars: 2, childCount: 12, boundChildren: 2, origin: 'genesis', serialNo: 8, purchaseSource: 'cash', createdAt: '2026-02-01 21:03', channelName: '投资复盘室' },
-  { id: 'n5', nodeCode: 'M3N4O5', tier: 1000, stars: 1, childCount: 3, boundChildren: 0, origin: 'diamond', serialNo: 7, purchaseSource: 'cash', createdAt: '2026-02-15 11:44', channelName: '产品体验测评' },
+  { id: 'n1', nodeCode: 'A1B2C3', tier: 1000, stars: 5, childCount: 128, boundChildren: 2, origin: 'genesis', serialNo: 1, purchaseSource: 'cash', createdAt: '2025-12-10 09:32', channelName: '深度思考日记', remark: '主力收益节点', level: 2, allowRecommend: true },
+  { id: 'n2', nodeCode: 'D4E5F6', tier: 1000, stars: 4, childCount: 64, boundChildren: 2, origin: 'diamond', serialNo: 3, purchaseSource: 'cash', createdAt: '2026-01-05 14:17', channelName: 'AI 效率手记', invitedByCode: 'A1B2C3', level: 1, allowRecommend: true },
+  { id: 'n3', nodeCode: 'G7H8I9', tier: 1000, stars: 3, childCount: 31, boundChildren: 1, origin: 'diamond', serialNo: 5, purchaseSource: 'cash', createdAt: '2026-01-20 08:55', channelName: '增长黑客笔记', remark: '待观察升星', invitedByCode: 'D4E5F6', level: 1, allowRecommend: true },
+  { id: 'n4', nodeCode: 'J0K1L2', tier: 1000, stars: 2, childCount: 12, boundChildren: 2, origin: 'genesis', serialNo: 8, purchaseSource: 'cash', createdAt: '2026-02-01 21:03', channelName: '投资复盘室', level: 0, allowRecommend: false },
+  { id: 'n5', nodeCode: 'M3N4O5', tier: 1000, stars: 1, childCount: 3, boundChildren: 0, origin: 'diamond', serialNo: 7, purchaseSource: 'cash', createdAt: '2026-02-15 11:44', channelName: '产品体验测评', invitedByCode: 'G7H8I9', level: 0, allowRecommend: true },
   // 100 PB —— 不支持升级，红包上限 500 PB（5 倍）
-  { id: 'n6', nodeCode: 'P6Q7R8', tier: 100, stars: 1, childCount: 7, boundChildren: 1, origin: 'genesis', serialNo: 12, purchaseSource: 'cash', createdAt: '2026-03-01 16:28', channelName: '读书会频道' },
-  { id: 'n7', nodeCode: 'S9T0U1', tier: 100, stars: 1, childCount: 2, boundChildren: 2, origin: 'diamond', serialNo: 9, purchaseSource: 'cash', createdAt: '2026-03-10 07:19', channelName: '摄影随笔' },
+  { id: 'n6', nodeCode: 'P6Q7R8', tier: 100, stars: 1, childCount: 7, boundChildren: 1, origin: 'genesis', serialNo: 12, purchaseSource: 'cash', createdAt: '2026-03-01 16:28', channelName: '读书会频道', level: 0, allowRecommend: true },
+  { id: 'n7', nodeCode: 'S9T0U1', tier: 100, stars: 1, childCount: 2, boundChildren: 2, origin: 'diamond', serialNo: 9, purchaseSource: 'cash', createdAt: '2026-03-10 07:19', channelName: '摄影随笔', invitedByCode: 'P6Q7R8', level: 0, allowRecommend: true },
   // 10 PB —— 不支持升级，红包上限 10 PB（1 倍）；用内部 PB 兑换取得，用于演示"不可转让"态
-  { id: 'n8', nodeCode: 'V2W3X4', tier: 10, stars: 1, childCount: 0, boundChildren: 0, origin: 'genesis', serialNo: 15, purchaseSource: 'pb', createdAt: '2026-04-01 13:50', channelName: '早期实验室' },
-  { id: 'n9', nodeCode: 'Y5Z6A7', tier: 100, stars: 1, childCount: 1, boundChildren: 1, origin: 'diamond', serialNo: 11, purchaseSource: 'cash', createdAt: '2026-04-12 09:15', channelName: '周报存档', remark: '周报专用' },
+  { id: 'n8', nodeCode: 'V2W3X4', tier: 10, stars: 1, childCount: 0, boundChildren: 0, origin: 'genesis', serialNo: 15, purchaseSource: 'pb', createdAt: '2026-04-01 13:50', channelName: '早期实验室', level: 0, allowRecommend: false },
+  { id: 'n9', nodeCode: 'Y5Z6A7', tier: 100, stars: 1, childCount: 1, boundChildren: 1, origin: 'diamond', serialNo: 11, purchaseSource: 'cash', createdAt: '2026-04-12 09:15', channelName: '周报存档', remark: '周报专用', invitedByCode: 'S9T0U1', level: 0, allowRecommend: true },
 ];
 
 /** demo：带备注的节点默认已收藏（备注仅在收藏流程中选填） */
@@ -153,7 +120,7 @@ export const REGISTERED_TRANSFER_ADDRESSES = new Set([
 ]);
 
 /** 仅现金购买的 1-5 星节点可转让（会议纪要 00:00-00:07：PB 兑换/签到取得的节点不可转让） */
-function isTransferable(node: KnowledgeNode): boolean {
+export function isTransferable(node: KnowledgeNode): boolean {
   return node.purchaseSource === 'cash' && node.stars >= 1 && node.stars <= 5;
 }
 
@@ -188,7 +155,7 @@ const STAR_COLORS: Record<number, string> = {
   5: '#f59e0b',
 };
 
-function StarDisplay({ level, size = 44 }: { level: number; size?: number }) {
+export function StarDisplay({ level, size = 44 }: { level: number; size?: number }) {
   const color = STAR_COLORS[level];
 
   return (
@@ -197,16 +164,6 @@ function StarDisplay({ level, size = 44 }: { level: number; size?: number }) {
       <span className="planet-node-star-level" style={{ fontSize: Math.max(13, Math.floor(size * 0.4)) }}>
         {level}
       </span>
-    </div>
-  );
-}
-
-/** 二叉树子节点槽位指示：0 个空心，1 个浅蓝填充，链满 2 个（该节点开始产生收益）两槽均实心加深为主色蓝 */
-function ChildSlotDots({ count }: { count: 0 | 1 | 2 }) {
-  return (
-    <div className={`planet-node-slot-dots${count === 2 ? ' planet-node-slot-dots--full' : ''}`}>
-      <span className={`planet-node-slot-dot${count >= 1 ? ' planet-node-slot-dot--filled' : ''}`} />
-      <span className={`planet-node-slot-dot${count >= 2 ? ' planet-node-slot-dot--filled' : ''}`} />
     </div>
   );
 }
@@ -234,7 +191,7 @@ function seedNodesWithChannel(channels: { ownerName: string; id: string; name: s
 }
 
 export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?: string; openBsp?: boolean } = {}) {
-  const { showToast, t, language, channels, walletAddress, walletConnecting, connectWallet, goBack, canGoBack } = useApp();
+  const { showToast, t, language, channels, walletAddress, walletConnecting, connectWallet, goBack, canGoBack, payPb, navigate, nodeTransferAutoOpenId, setNodeTransferAutoOpenId } = useApp();
   const zh = isChinese(language);
   const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
   const [bspRecords, setBspRecords] = useState<BspInvestment[]>(() => buildInitialBspInvestments(MOCK_WALLET_ADDRESS));
@@ -263,9 +220,9 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
   const [codeCheckStatus, setCodeCheckStatus] = useState<CodeCheckStatus>('1');
   const [verifying, setVerifying] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [createPayWallet, setCreatePayWallet] = useState<PbWalletId | null>(null);
   const [devForceEmptyNodes, setDevForceEmptyNodes] = useState(false);
   const [devBspInsufficient, setDevBspInsufficient] = useState(false);
-  const [childInfoOpen, setChildInfoOpen] = useState(false);
   const [childListNode, setChildListNode] = useState<KnowledgeNode | null>(null);
   const [childListVisibleCount, setChildListVisibleCount] = useState(TRANSFER_PICKER_PAGE_SIZE);
 
@@ -390,6 +347,10 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
 
   const handleConfirmCreate = () => {
     if (!createConfirmReady) return;
+    if (!createPayWallet || !payPb({ amount: pbCost, use: 'channel_open', wallet: createPayWallet, supCost })) {
+      showToast(t('所选钱包余额不足或不适用于此操作'));
+      return;
+    }
     const baseName = channelNameInput.trim();
     const description = channelDescInput.trim() || undefined;
     const stars = createStars;
@@ -445,6 +406,13 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
     setTransferVerifying(false);
     setTransferring(false);
   };
+
+  useEffect(() => {
+    if (!nodeTransferAutoOpenId) return;
+    const target = nodes.find(node => node.id === nodeTransferAutoOpenId);
+    if (target) openTransferSheet(target);
+    setNodeTransferAutoOpenId(null);
+  }, [nodeTransferAutoOpenId, nodes, setNodeTransferAutoOpenId]);
 
   const closeTransferSheet = () => {
     if (transferring) return;
@@ -920,6 +888,17 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
               <div
                 key={node.id}
                 className={`planet-node-card planet-node-card--tagged${node.boundChildren === 2 ? ' planet-node-card--earning' : ''}`}
+                role="link"
+                tabIndex={0}
+                aria-label={t('查看节点详情 {nodeCode}', { nodeCode: node.nodeCode })}
+                onClick={() => navigate({ page: 'P_NODE', node })}
+                onKeyDown={event => {
+                  if (event.target !== event.currentTarget) return;
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    navigate({ page: 'P_NODE', node });
+                  }
+                }}
               >
                 {node.origin === 'diamond' ? (
                   <span className="planet-node-origin-tag planet-node-origin-tag--diamond">
@@ -937,7 +916,10 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
                 <button
                   type="button"
                   className={`planet-node-favorite-btn${favoriteNodeIds.has(node.id) ? ' planet-node-favorite-btn--active' : ''}`}
-                  onClick={() => handleFavoriteClick(node)}
+                  onClick={event => {
+                    event.stopPropagation();
+                    handleFavoriteClick(node);
+                  }}
                   aria-pressed={favoriteNodeIds.has(node.id)}
                   aria-label={favoriteNodeIds.has(node.id)
                     ? t('取消收藏 {nodeCode}', { nodeCode: node.nodeCode })
@@ -947,7 +929,6 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
                 </button>
                 <div className="planet-node-star-col">
                   <StarDisplay level={node.stars} />
-                  <ChildSlotDots count={node.boundChildren} />
                 </div>
                 <div className="planet-node-info">
                   <div className="planet-node-code-row">
@@ -960,15 +941,15 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
                     )}
                     <button
                       className={`planet-node-copy-btn${copiedId === node.id ? ' planet-node-copy-btn--done' : ''}`}
-                      onClick={() => copyNodeCode(node)}
+                      onClick={event => {
+                        event.stopPropagation();
+                        copyNodeCode(node);
+                      }}
                       aria-label={t('复制节点编号')}
                     >
                       {copiedId === node.id ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} strokeWidth={2} />}
                     </button>
                   </div>
-                  {favoriteNodeIds.has(node.id) && node.remark && (
-                    <span className="planet-node-remark">{node.remark}</span>
-                  )}
                   <div className="planet-node-meta-row">
                     <span className="planet-node-meta">{node.createdAt}</span>
                   </div>
@@ -977,28 +958,14 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
                   <button
                     type="button"
                     className="planet-node-child-count planet-node-child-count--clickable"
-                    onClick={() => {
+                    onClick={event => {
+                      event.stopPropagation();
                       setChildListNode(node);
                       setChildListVisibleCount(TRANSFER_PICKER_PAGE_SIZE);
                     }}
+                    aria-label={t('查看 {count} 个子节点', { count: node.childCount })}
                   >
-                    <span className="planet-node-child-count-label">
-                      {t('子节点')}
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        className="asset-overview-info-btn"
-                        onClick={e => { e.stopPropagation(); setChildInfoOpen(true); }}
-                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); setChildInfoOpen(true); } }}
-                        aria-label={t('查看子节点说明')}
-                      >
-                        <Info size={12} strokeWidth={2} />
-                      </span>
-                    </span>
-                    <span className="planet-node-child-count-num">
-                      {node.childCount}
-                      <ChevronRight size={13} strokeWidth={2.5} className="planet-node-child-count-chevron" aria-hidden />
-                    </span>
+                    <span className="planet-node-child-count-num">{node.childCount}</span>
                   </button>
                 </div>
               </div>
@@ -1237,6 +1204,8 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
                 </div>
               </div>
 
+              <PbWalletPicker use="channel_open" amount={pbCost} value={createPayWallet} onChange={setCreatePayWallet} />
+
               <div className="create-delay-note">
                 <Info size={14} strokeWidth={2} aria-hidden />
                 <span>{t('节点生成时间有5分钟延迟，请耐心等待')}</span>
@@ -1246,7 +1215,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
                 type="button"
                 className="planet-confirm-btn"
                 onClick={handleConfirmCreate}
-                disabled={!createConfirmReady}
+                disabled={!createConfirmReady || !createPayWallet}
               >
                 {creating
                   ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />
@@ -1576,69 +1545,6 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
                 : t('确认转让')
               }
             </button>
-          </div>
-        </div>
-      )}
-
-      {childInfoOpen && (
-        <div className="sheet-backdrop" onClick={() => setChildInfoOpen(false)}>
-          <div
-            className="payment-sheet pb-info-sheet"
-            role="dialog"
-            aria-modal="true"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="sheet-header">
-              <span className="sheet-title">{t('子节点说明')}</span>
-              <button
-                className="back-btn"
-                style={{ marginLeft: 'auto' }}
-                onClick={() => setChildInfoOpen(false)}
-                aria-label={t('关闭')}
-              >
-                <X size={18} strokeWidth={2} />
-              </button>
-            </div>
-
-            <div className="pb-info-sheet-body">
-              <p className="pb-info-sheet-para pb-info-sheet-heading">
-                {t('关于知识宇宙"子节点"的定义与核算说明')}
-              </p>
-              <p className="pb-info-sheet-para">
-                {t('在知识宇宙（双子星节点生态）中，"子节点"是衡量一个频道核心强度与星级晋升的根本指标。其具体定义与核算规则如下：')}
-              </p>
-              <p className="pb-info-sheet-para">
-                <strong className="pb-info-sheet-label">{t('唯一核心定义：')}</strong>
-                {t('子节点仅指直接使用 PB（公信力积分）进行消耗，并完成直接订阅链接到该频道的节点数量。')}
-              </p>
-              <p className="pb-info-sheet-para">
-                <strong className="pb-info-sheet-label">{t('不计入范围：')}</strong>
-                {t('凡是由平台系统推流、公域引流或非消耗PB产生的常规链接节点，一律不计入该频道的子节点考核基数。')}
-              </p>
-              <p className="pb-info-sheet-para pb-info-sheet-subheading">{t('核心结论：')}</p>
-              <p className="pb-info-sheet-para">
-                {t('子节点是纯粹的"直推硬资产"。只有通过深耕频道内容，吸引用户付出实质性PB消耗进行订阅链接，才能沉淀为有效的子节点。当该直系消耗订阅的子节点数量达到 60多个（约63-64个） 时，频道将 100% 锁死并晋升为五星频道。')}
-              </p>
-
-              <p className="pb-info-sheet-para pb-info-sheet-heading">
-                {t('关于知识宇宙"定向广播"（Direction Broadcasting）机制说明')}
-              </p>
-              <p className="pb-info-sheet-para">
-                {t('在知识宇宙生态中，定向广播（Direction Broadcasting）是实现内容精准分发与流量价值放大的核心推流机制。其运作原理与激励规则如下：')}
-              </p>
-              <p className="pb-info-sheet-para">
-                <strong className="pb-info-sheet-label">{t('精准交叉推流：')}</strong>
-                {t('频道发布的新内容，系统将优先向纵向深度达 25级的链接受众群体 进行交叉推流。这一设计确保了内容能率先触达组织架构内最核心、黏性最高的协同网络。')}
-              </p>
-              <p className="pb-info-sheet-para">
-                <strong className="pb-info-sheet-label">{t('行为激励机制：')}</strong>
-                {t('平台通过 AI 算法，根据受众对该内容的浏览、点赞、转发、收藏等真实互动行为进行多维评估。互动的热度与质量将直接转化为 PB（公信力积分）奖励，从而提升创作者与参与者的生态公信力权重。')}
-              </p>
-              <p className="pb-info-sheet-para">
-                <strong className="pb-info-sheet-label">{t('BSP 权重放大：')}</strong>
-                {t('依托 BSP（Big Star Plan，巨星投流计划）功能，高活跃度的定向广播将显著提升该频道的后续推流权重。权重越高，频道所获得的全局流量空投收益就越丰厚，从而实现"内容升级—流量反哺—收益倍增"的稳健闭环。')}
-              </p>
-            </div>
           </div>
         </div>
       )}

@@ -52,6 +52,8 @@ export type ShopOrder = {
   estMerit: number;    // 本单预计赠给买家的优点（占位）
   variantId?: string;
   variantLabel?: string;
+  /** 下单时锁定的 PB 钱包；旧 mock 订单省略时按站内 PB 展示。 */
+  payWallet?: PbWalletId;
 };
 
 export type Post = {
@@ -117,6 +119,7 @@ export type Route =
   | { page: 'P2'; postId: string; scrollToComments?: boolean }
   | { page: 'P6'; authorName: string }
   | { page: 'P_CHANNEL'; channelId: string }
+  | { page: 'P_NODE'; node: KnowledgeNode }
   | { page: 'P7' }
   | { page: 'P_PLANET'; searchNodeCode?: string; openBsp?: boolean }
   | { page: 'P_DM' }
@@ -124,6 +127,34 @@ export type Route =
   | { page: 'P_SHOP' }
   | { page: 'P_SHOP_ITEM'; postId: string }
   | { page: 'P_ORDERS'; role?: 'buyer' | 'seller' };
+
+// ── 知识星球节点 ───────────────────────────────────────────────
+export type NodeTier = 10 | 100 | 1000;
+export type NodeOrigin = 'diamond' | 'genesis';
+export type PurchaseSource = 'cash' | 'pb';
+
+export type KnowledgeNode = {
+  id: string;
+  nodeCode: string;
+  tier: NodeTier;
+  stars: number;
+  childCount: number;
+  boundChildren: 0 | 1 | 2;
+  origin: NodeOrigin;
+  serialNo: number;
+  purchaseSource: PurchaseSource;
+  channelName: string;
+  channelDescription?: string;
+  remark?: string;
+  syncing?: boolean;
+  createdAt: string;
+  /** 邀请该节点的节点码；创世节点没有该字段。 */
+  invitedByCode?: string;
+  /** 节点详情页的本地演示初始等级。 */
+  level?: number;
+  /** 节点详情页的本地演示初始推荐设置。 */
+  allowRecommend?: boolean;
+};
 
 // ── 频道 / 会员档位 ──────────────────────────────────────────────
 export type ChannelTier = {
@@ -263,8 +294,26 @@ export type SupTransactionReason =
   | 'bsp_invest'
   | 'purchase';
 
-/** PB 支出原因（与 SupTransactionReason 平行；PB 侧暂无流水视图，仅用于标注扣款来源）。 */
-export type PbTransactionReason = 'bsp_invest' | 'channel_open' | 'transfer' | 'purchase';
+/** 四种 PB 钱包。余额彼此独立，一笔支付只使用其中一个钱包。 */
+export type PbWalletId = 'onchain' | 'site' | 'honor' | 'node';
+
+/** 需要消耗 PB 的业务用途，用于集中校验钱包可用范围。 */
+export type PbUse =
+  | 'channel_open'
+  | 'bsp_invest'
+  | 'post'
+  | 'like'
+  | 'dislike'
+  | 'share'
+  | 'comment'
+  | 'save'
+  | 'unlock'
+  | 'partner'
+  | 'channel_subscribe'
+  | 'purchase'
+  | 'tip'
+  | 'node_upgrade'
+  | 'node_transfer';
 
 export type SupTransaction = {
   id: string;

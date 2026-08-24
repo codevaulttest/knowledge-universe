@@ -13,6 +13,9 @@ import {
 import { shortenAddress } from '../formatAddress';
 import { REGISTERED_TRANSFER_ADDRESSES } from '../pages/KnowledgePlanetPage';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
+import { PbWalletPicker } from './PbWalletPicker';
+import type { PbWalletId } from '../types';
+import { PB_WALLETS } from '../walletConfig';
 
 type AddressCheckStatus = '1' | '2' | '3' | '4';
 type BeneficiaryMode = 'self' | 'other';
@@ -31,15 +34,14 @@ export function BspInvestSheet({
   onClose: () => void;
   onConfirmed: (record: BspInvestment) => void;
 }) {
-  const { t, pbBalance: realPbBalance, supBalance: realSupBalance, deductPb, deductSup, showToast } = useApp();
-  const pbBalance = forceInsufficient ? 0 : realPbBalance;
-  const supBalance = forceInsufficient ? 0 : realSupBalance;
+  const { t, supBalance, payPb, showToast } = useApp();
   const [mode, setMode] = useState<BeneficiaryMode>('self');
   const [addressInput, setAddressInput] = useState('');
   const [addressStatus, setAddressStatus] = useState<AddressCheckStatus>('1');
   const [verifying, setVerifying] = useState(false);
   const [unitsInput, setUnitsInput] = useState('1');
   const [paying, setPaying] = useState(false);
+  const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
 
   const units = Math.max(1, Math.min(BSP_QTY_MAX, parseInt(unitsInput, 10) || 0));
   const pbCost = bspPbCost(units);
@@ -47,8 +49,8 @@ export function BspInvestSheet({
   const dailyGuarantee = bspDailyGuarantee(units);
   const { startDate, endDate } = bspEffectivePeriod();
 
-  const pbInsufficient = pbBalance < pbCost;
-  const supInsufficient = supBalance < supCost;
+  const needsSup = payWallet ? PB_WALLETS[payWallet].consumesSup : true;
+  const supInsufficient = needsSup && supBalance < supCost;
 
   const handleUnitsChange = (value: string) => {
     setUnitsInput(value.replace(/\D/g, '').slice(0, BSP_QTY_MAX_DIGITS));
@@ -98,7 +100,8 @@ export function BspInvestSheet({
     units >= 1 &&
     units <= BSP_QTY_MAX &&
     (mode === 'self' || addressStatus === '3') &&
-    !pbInsufficient &&
+    !!payWallet &&
+    !forceInsufficient &&
     !supInsufficient &&
     !paying;
 
@@ -106,8 +109,10 @@ export function BspInvestSheet({
     if (!canPay) return;
     setPaying(true);
     setTimeout(() => {
-      deductPb(pbCost, 'bsp_invest');
-      deductSup(supCost, 'bsp_invest');
+      if (!payWallet || !payPb({ amount: pbCost, use: 'bsp_invest', wallet: payWallet, supCost })) {
+        setPaying(false);
+        return;
+      }
       const beneficiaryAddress = mode === 'self' ? myAddress : addressInput.trim();
       const record: BspInvestment = {
         id: `bsp${Date.now()}`,
@@ -116,7 +121,7 @@ export function BspInvestSheet({
         beneficiaryKind: mode === 'self' || beneficiaryAddress.toLowerCase() === myAddress.toLowerCase() ? 'self' : 'address',
         units,
         paidPb: pbCost,
-        paidSup: supCost,
+        paidSup: needsSup ? supCost : 0,
         createdAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
         startDate,
         endDate,
@@ -187,6 +192,8 @@ export function BspInvestSheet({
             </button>
           </div>
         </div>
+
+        <PbWalletPicker use="bsp_invest" amount={pbCost} value={payWallet} onChange={setPayWallet} />
 
         {mode === 'self' ? (
           <div className="planet-upgrade-row planet-upgrade-row--address">
@@ -278,22 +285,22 @@ export function BspInvestSheet({
             <span className="planet-upgrade-cost-unit"> PB</span>
           </div>
         </div>
-        <div className="planet-upgrade-row">
-          <span className="planet-upgrade-row-label">{t('Gas 费')}</span>
-          <div className="planet-upgrade-cost">
-            <span className="planet-upgrade-cost-num">{formatSupAmount(supCost)}</span>
-            <span className="planet-upgrade-cost-unit"> SUP</span>
-          </div>
-        </div>
-
-        {pbInsufficient && (
-          <div className="sup-deposit-warning">
-            <span>
-              {t('PB 余额不足，当前 {pbBalance} PB，本次需 {pbCost} PB', { pbBalance: formatTokenAmount(pbBalance), pbCost: formatTokenAmount(pbCost) })}
-            </span>
+        {needsSup && (
+          <div className="planet-upgrade-row">
+            <span className="planet-upgrade-row-label">{t('Gas 费')}</span>
+            <div className="planet-upgrade-cost">
+              <span className="planet-upgrade-cost-num">{formatSupAmount(supCost)}</span>
+              <span className="planet-upgrade-cost-unit"> SUP</span>
+            </div>
           </div>
         )}
-        {!pbInsufficient && supInsufficient && (
+
+        {!payWallet && (
+          <div className="sup-deposit-warning">
+            <span>{t('请选择余额充足的钱包')}</span>
+          </div>
+        )}
+        {payWallet && supInsufficient && (
           <div className="sup-deposit-warning">
             <span>
               {t('SUP 余额不足，当前 {supBalance} SUP，本次需 {supCost} SUP', { supBalance: formatSupAmount(supBalance), supCost: formatSupAmount(supCost) })}

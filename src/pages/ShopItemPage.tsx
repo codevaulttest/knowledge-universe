@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Bookmark, Check, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, Phone, Plus, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
-import type { ProfileContacts, ShippingAddress, ShopOrder } from '../types';
+import type { PbWalletId, ProfileContacts, ShippingAddress, ShopOrder } from '../types';
 import { MediaPlaceholder, PageHeader } from '../components/shared';
 import { shopCoverUsesPlaceholder, shopCoverVisibleImgCount } from './ShopPage';
 import { formatTokenAmount } from '../stakeConfig';
@@ -10,6 +10,7 @@ import { computeShopFee, computeDisplayMerit, computeUnitMerit, formatMeritAmoun
 import { getShopMinPrice, getShopTotalStock, getShopVariant, getShopVariants, isMultiVariantShop } from '../shopUtils';
 import { Ios26Alert } from '../components/Overlays';
 import { RegionPicker } from '../components/RegionPicker';
+import { PbWalletPicker } from '../components/PbWalletPicker';
 
 export const CONTACT_CHANNELS: { key: keyof ProfileContacts; label: string; icon: typeof MessageCircle }[] = [
   { key: 'wechat', label: '微信', icon: MessageCircle },
@@ -45,6 +46,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const [formSetDefault, setFormSetDefault] = useState(false);
   const [regionPickerOpen, setRegionPickerOpen] = useState(false);
   const [pendingDeleteAddrId, setPendingDeleteAddrId] = useState<string | null>(null);
+  const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
 
   if (!post || !post.shop) {
     return (
@@ -111,7 +113,8 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     if (!canBuy) return;
     if (!selectedAddress) { setPickerOpen(true); return; }
     requireWallet(() => {
-      const order = placeShopOrder(post.id, qty, selectedAddress, multiVariant ? selectedVariantId ?? undefined : undefined);
+      if (!payWallet) return;
+      const order = placeShopOrder(post.id, qty, selectedAddress, multiVariant ? selectedVariantId ?? undefined : undefined, payWallet);
       if (!order) { showToast(t('下单失败，请稍后重试')); return; }
       // 弹出「已提交」确认弹窗；链上确认在后台异步完成（成功/失败均由 App toast 通知）。
       setSubmittedOrder(order);
@@ -316,6 +319,8 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             <ChevronRight size={16} strokeWidth={2} />
           </button>
 
+          <PbWalletPicker use="purchase" amount={totalPb} value={payWallet} onChange={setPayWallet} />
+
           <div className="shop-item-info-cards">
             <div className="shop-item-merit-card">
               <Sparkles size={15} strokeWidth={2} aria-hidden="true" />
@@ -352,7 +357,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
             type="button"
             className="shop-buy-btn"
             onClick={buy}
-            disabled={!canBuy}
+            disabled={!canBuy || !payWallet}
           >
             {soldOut ? t('已售罄') : variantSoldOut ? t('该规格已售罄') : t('立即购买')}
           </button>

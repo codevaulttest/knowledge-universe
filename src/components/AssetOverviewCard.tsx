@@ -83,7 +83,7 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
           </div>
         </div>
 
-        {/* 每日任务：互动进度条同时决定 10 PB 里程碑与次日空投比例 */}
+        {/* 每日任务：互动进度条决定荣誉值里程碑与次日空投比例 */}
         <div className="asset-overview-tomorrow">
           <button
             type="button"

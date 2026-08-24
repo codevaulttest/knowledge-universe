@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { withFreeTier } from './channelTiers';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_WALLET_ADDRESS, MOCK_WALLET_PB_BALANCE, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_WALLET_ADDRESS, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { buildInitialBspInvestments } from './bspConfig';
 import { formatScheduledAt } from './dateUtils';
-import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbTransactionReason, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import { PB_WALLETS, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, supReasonForPbUse } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
 import { postHasStake, formatTokenAmount } from './stakeConfig';
@@ -13,7 +14,7 @@ import { translate } from './locales';
 import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { DailyTaskSheet } from './components/DailyTaskSheet';
-import { getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, markInteracted, markPosted, resetTasks, simulateInteractedCount, TASK_BONUS_PB, TASK_BONUS_THRESHOLD, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
+import { getIssuedHonorRewardTotal, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, markInteracted, markPosted, resetTasks, settleDueHonorRewards, simulateInteractedCount, taskDayKey, TASK_BONUS_PB, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
 import { Toast } from './components/shared';
 import { TaskCelebrationOverlay } from './components/TaskCelebrationOverlay';
 import { ComposePage } from './pages/ComposePage';
@@ -28,10 +29,12 @@ import { SearchPage } from './pages/SearchPage';
 import { ShopPage } from './pages/ShopPage';
 import { ShopItemPage } from './pages/ShopItemPage';
 import { OrdersPage } from './pages/OrdersPage';
+import { NodeDetailPage } from './pages/NodeDetailPage';
 
 
 export default function App() {
   const [stack, setStack] = useState<Route[]>([{ page: 'P0', tab: 0 }]);
+  const [nodeTransferAutoOpenId, setNodeTransferAutoOpenId] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
   const composeCloseHandler = useRef<() => void>(() => {});
   const editComposeCloseHandler = useRef<() => void>(() => {});
@@ -104,41 +107,35 @@ export default function App() {
   };
 
   // ── 知识宇宙页：PB 余额 / 邀请绑定 / 周期性空投 ──────────────────
-  const [pbBalance, setPbBalance] = useState(MOCK_WALLET_PB_BALANCE);
+  const getInitialPbWallets = (): Record<PbWalletId, number> => ({
+    ...MOCK_PB_WALLETS,
+    honor: MOCK_PB_WALLETS.honor + getIssuedHonorRewardTotal(),
+  });
+  const [pbWallets, setPbWallets] = useState<Record<PbWalletId, number>>(getInitialPbWallets);
+  /** 总额只用于资产总览，支付必须通过单钱包的 payPb。 */
+  const pbBalance = useMemo(() => Object.values(pbWallets).reduce((sum, balance) => sum + balance, 0), [pbWallets]);
   const [inviterAddress, setInviterAddress] = useState<string | null>(null);
   const [airdropClaimed, setAirdropClaimed] = useState(false);
 
   // 每日任务（发帖任务 + 互动帖任务）：今天的完成度决定明天可领取空投收益的比例
   const [taskSnapshotToday, setTaskSnapshotToday] = useState<TaskDaySnapshot>(() => getTaskSnapshot());
-  const [taskSnapshotYesterday] = useState<TaskDaySnapshot>(() => getYesterdaySnapshot());
+  const [taskSnapshotYesterday, setTaskSnapshotYesterday] = useState<TaskDaySnapshot>(() => getYesterdaySnapshot());
   // 每完成 N 篇互动帖 +1，供任务面板监听触发一次性庆祝动效
   const [taskCelebrateSignal, setTaskCelebrateSignal] = useState(0);
 
-  // 「一发十赞」里程碑刚达成时（发帖 + 互动帖满 10）当日直接到账 +10 PB，只触发一次
-  const applyBonusIfNewlyEligible = (before: TaskDaySnapshot, after: TaskDaySnapshot) => {
-    if (!before.bonusEligible && after.bonusEligible) {
-      setPbBalance(prev => prev + TASK_BONUS_PB);
-      showToast(t('已发帖 + 满 {threshold} 次互动，获得 +{bonus} PB', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB }));
-    }
-  };
-
   const recordTaskInteraction = (postId: string) => {
-    const before = getTaskSnapshot();
     const { state, added } = markInteracted(postId);
     const after = getTaskSnapshot();
     setTaskSnapshotToday(after);
-    applyBonusIfNewlyEligible(before, after);
     if (added && state.interactedPostIds.length > 0 && state.interactedPostIds.length % TASK_CELEBRATE_EVERY === 0) {
       setTaskCelebrateSignal(s => s + 1);
     }
   };
 
   const recordTaskPosted = () => {
-    const before = getTaskSnapshot();
     markPosted();
     const after = getTaskSnapshot();
     setTaskSnapshotToday(after);
-    applyBonusIfNewlyEligible(before, after);
   };
 
   // 开发工具：重置今日任务记录，便于重新体验任务面板
@@ -167,13 +164,42 @@ export default function App() {
     if (airdropClaimed || Date.now() > getAirdropDeadline()) return;
     // 可领取金额取决于昨日任务（发帖任务 + 互动帖任务）完成度对应的比例
     const claimedAmount = Math.round(MOCK_PB_AIRDROP_AMOUNT * taskSnapshotYesterday.claimRatio / 100);
-    setPbBalance(prev => prev + claimedAmount);
+    const onchainAmount = Math.ceil(claimedAmount / 2);
+    const siteAmount = claimedAmount - onchainAmount;
+    setPbWallets(prev => ({ ...prev, onchain: prev.onchain + onchainAmount, site: prev.site + siteAmount }));
+    const fee = pbOnchainFee(onchainAmount);
+    if (fee > 0) deductSup(fee, 'recharge');
     setAirdropClaimed(true);
     showToast(t('领取成功，+{MOCK_PB_AIRDROP_AMOUNT} PB', { MOCK_PB_AIRDROP_AMOUNT: claimedAmount }));
   };
 
-  const deductPb = (amount: number, _reason: PbTransactionReason) => {
-    setPbBalance(b => Math.max(0, b - amount));
+  const getPbWalletOptions = useCallback((use: PbUse, amount: number) => (
+    (Object.keys(PB_WALLETS) as PbWalletId[]).map(wallet => ({
+      wallet,
+      allowed: isWalletAllowedForUse(wallet, use),
+      sufficient: pbWallets[wallet] >= amount,
+    }))
+  ), [pbWallets]);
+
+  const pickDefaultPbWallet = useCallback((use: PbUse, amount: number): PbWalletId | null => (
+    PB_WALLET_PRIORITY.find(wallet => isWalletAllowedForUse(wallet, use) && pbWallets[wallet] >= amount)
+      ?? allowedWalletsForUse(use).find(wallet => pbWallets[wallet] >= amount)
+      ?? null
+  ), [pbWallets]);
+
+  const payPb = (payment: { amount: number; use: PbUse; wallet: PbWalletId; supCost?: number; supReason?: SupTransactionReason }) => {
+    const { amount, use, wallet, supCost = 0, supReason } = payment;
+    if (!isWalletAllowedForUse(wallet, use) || pbWallets[wallet] < amount) return false;
+    if (PB_WALLETS[wallet].consumesSup && supCost > 0 && supBalance < supCost) return false;
+    setPbWallets(prev => ({ ...prev, [wallet]: prev[wallet] - amount }));
+    if (PB_WALLETS[wallet].consumesSup && supCost > 0) deductSup(supCost, supReason ?? supReasonForPbUse(use));
+    return true;
+  };
+
+  const setDemoPbWallets = (preset: 'normal' | 'limited') => {
+    setPbWallets(preset === 'normal'
+      ? getInitialPbWallets()
+      : { onchain: 80, site: 40, honor: 800 + getIssuedHonorRewardTotal(), node: 2400 });
   };
 
   const [supBalance, setSupBalance] = useState(MOCK_WALLET_SUP_BALANCE);
@@ -329,6 +355,30 @@ export default function App() {
     setToastMsg({ msg, type });
     setTimeout(() => setToastMsg(null), 2500);
   };
+
+  // 奖励在北京时间跨日后结算；重新打开原型时也会补结算此前未发放的奖励。
+  useEffect(() => {
+    const refreshForNewTaskDay = () => {
+      const settledDates = settleDueHonorRewards();
+      if (settledDates.length > 0) {
+        const amount = settledDates.length * TASK_BONUS_PB;
+        setPbWallets(prev => ({ ...prev, honor: prev.honor + amount }));
+        showToast(t('已发放任务奖励 +{bonus} 荣誉值', { bonus: amount }));
+      }
+      setTaskSnapshotToday(getTaskSnapshot());
+      setTaskSnapshotYesterday(getYesterdaySnapshot());
+    };
+
+    refreshForNewTaskDay();
+    let previousDay = taskDayKey();
+    const timer = window.setInterval(() => {
+      const nextDay = taskDayKey();
+      if (nextDay === previousDay) return;
+      previousDay = nextDay;
+      refreshForNewTaskDay();
+    }, 60_000);
+    return () => window.clearInterval(timer);
+  }, [t]);
 
   const openLink = (postId: string, mode: 'link' | 'unlock' = 'link') => {
     requireWallet(() => {
@@ -646,8 +696,11 @@ export default function App() {
   const confirmShopOrder = (order: ShopOrder) => {
     const totalPb = order.unitPrice * order.quantity;
     const totalSup = Math.round(order.unitFee * order.quantity * 10000) / 10000;
-    deductPb(totalPb, 'purchase');
-    if (totalSup > 0) deductSup(totalSup, 'purchase');
+    const wallet = order.payWallet ?? 'site';
+    if (!payPb({ amount: totalPb, use: 'purchase', wallet, supCost: totalSup, supReason: 'purchase' })) {
+      failShopOrder(order.id);
+      return;
+    }
     setPosts(ps => ps.map(p => {
       if (p.id !== order.postId || !p.shop) return p;
       const shop = p.shop;
@@ -678,7 +731,7 @@ export default function App() {
 
   // 买家下单：先创建「确认中」订单（不扣款、不减库存）并立即返回，
   // 链上确认在后台异步完成——计时器挂在 App 层，用户关闭商品页/离开也不中断。
-  const placeShopOrder = (postId: string, quantity: number, address: ShippingAddress, variantId?: string) => {
+  const placeShopOrder = (postId: string, quantity: number, address: ShippingAddress, variantId?: string, payWallet?: PbWalletId) => {
     const post = posts.find(p => p.id === postId);
     if (!post?.shop) return;
     const variant = getShopVariant(post.shop, variantId);
@@ -703,6 +756,7 @@ export default function App() {
       estMerit: computeUnitMerit(price, rebatePercent) * quantity,
       variantId: isMultiVariantShop(post.shop) ? variant.id : undefined,
       variantLabel: isMultiVariantShop(post.shop) ? variant.label : undefined,
+      payWallet,
     };
     setShopOrders(prev => [order, ...prev]);
     // 后台模拟链上确认（演示用 ~6s；真实可能数分钟）：约 12% 概率失败
@@ -907,6 +961,7 @@ export default function App() {
     drafts, saveDraft, updateDraft, deleteDraft,
     userProfile, updateUserProfile,
     editProfileAutoOpen, setEditProfileAutoOpen, openEditProfileContacts,
+    nodeTransferAutoOpenId, setNodeTransferAutoOpenId,
     channels: visibleChannels, subscribedChannelTiers, expiredChannelIds,
     openChannelSubscribe, subscribeToChannelTier,
     createChannel, updateChannel, resetChannelTierCooldown,
@@ -916,9 +971,9 @@ export default function App() {
     supBalance, supHistory, deductSup,
     walletConnected, connectWallet, requireWallet,
     walletAddress, walletConnecting, disconnectWallet,
-    pbBalance, deductPb, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
+    pbWallets, pbBalance, getPbWalletOptions, pickDefaultPbWallet, payPb, setDemoPbWallets, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
     airdropClaimed, claimAirdrop,
-    taskSnapshotToday, taskSnapshotYesterday, taskCelebrateSignal, getDailyTaskCalendar: getTaskCalendarMonth,
+    taskSnapshotToday, taskSnapshotYesterday, taskCelebrateSignal, recordTaskInteraction, getDailyTaskCalendar: getTaskCalendarMonth,
     resetDemoTasks, simulateDemoTaskInteractions,
     shopOrders, shippingAddresses, defaultAddress,
     addShippingAddress, setDefaultAddress, removeShippingAddress,
@@ -935,6 +990,7 @@ export default function App() {
         {pageRoute.page === 'P2' && <PostDetailPage postId={pageRoute.postId} scrollToComments={pageRoute.scrollToComments} />}
         {pageRoute.page === 'P6' && <ProfilePage authorName={pageRoute.authorName} />}
         {pageRoute.page === 'P_CHANNEL' && <ChannelPage channelId={pageRoute.channelId} />}
+        {pageRoute.page === 'P_NODE' && <NodeDetailPage node={pageRoute.node} />}
         {pageRoute.page === 'P7' && <ActivityPage />}
         {pageRoute.page === 'P_PLANET' && <KnowledgePlanetPage initialSearch={pageRoute.searchNodeCode} openBsp={pageRoute.openBsp} />}
         {pageRoute.page === 'P_DM' && <DmListPage />}
