@@ -193,8 +193,6 @@ export function BspInvestSheet({
           </div>
         </div>
 
-        <PbWalletPicker use="bsp_invest" amount={pbCost} value={payWallet} onChange={setPayWallet} />
-
         {mode === 'self' ? (
           <div className="planet-upgrade-row planet-upgrade-row--address">
             <span className="planet-upgrade-row-label">{t('我的钱包地址')}</span>
@@ -275,6 +273,8 @@ export function BspInvestSheet({
             <span className="bsp-qty-unit">{t('× 1000 PB')}</span>
           </div>
         </div>
+
+        <PbWalletPicker use="bsp_invest" amount={pbCost} value={payWallet} onChange={setPayWallet} />
 
         <div className="planet-upgrade-sep" />
 

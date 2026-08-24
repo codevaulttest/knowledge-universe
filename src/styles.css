@@ -9265,6 +9265,63 @@ button {
   gap: var(--ku-planet2-space-xs);
 }
 
+/* PB 钱包下拉项：不可选时在名称/余额下方多一行说明原因，需要纵向排列 */
+.planet-node-dropdown-item--wallet {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+}
+
+/* PB 钱包选择触发行：是待决策的表单控件，用输入框边框样式而非「了解规则」链接样式，避免被当成纯说明文字 */
+.pb-wallet-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: var(--ku-planet2-height-button);
+  padding: 0 12px;
+  gap: 8px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-primary);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pb-wallet-trigger:active:not(:disabled) {
+  background: var(--ku-color-bg-page);
+}
+
+.pb-wallet-trigger[aria-expanded="true"] {
+  border-width: 2px;
+  border-color: var(--ku-color-primary);
+}
+
+.pb-wallet-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pb-wallet-trigger-icon {
+  flex-shrink: 0;
+  color: var(--ku-color-text-meta);
+}
+
+.pb-wallet-trigger-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pb-wallet-trigger-chevron {
+  flex-shrink: 0;
+  color: var(--ku-color-text-meta);
+}
+
 .planet-node-dropdown-item-count {
   font-family: var(--ku-font-mono);
   font-size: 14px;

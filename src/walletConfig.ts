@@ -6,23 +6,28 @@ export type PbWalletMeta = {
   sourceKey: string;
   useSummaryKey: string;
   consumesSup: boolean;
+  /** 余额展示单位；荣誉值不是 PB，不能沿用「PB」文案。 */
+  unitKey: string;
 };
 
 /** 受限资金优先，避免把荣誉值、节点 PB 长期闲置。 */
 export const PB_WALLET_PRIORITY: readonly PbWalletId[] = ['honor', 'node', 'site', 'onchain'];
 
+/** 本期支付入口暂缓开放站内 PB、节点 PB 两个钱包（先隐藏，余额仍正常累积，任务/节点发放不受影响）。 */
+export const PB_WALLET_PICKER_VISIBLE: readonly PbWalletId[] = ['onchain', 'honor'];
+
 export const PB_WALLETS: Record<PbWalletId, PbWalletMeta> = {
   onchain: {
-    id: 'onchain', labelKey: '链上 PB', sourceKey: '链上余额', useSummaryKey: '适用于全部 PB 用途', consumesSup: true,
+    id: 'onchain', labelKey: '链上 PB', sourceKey: '链上余额', useSummaryKey: '适用于全部 PB 用途', consumesSup: true, unitKey: 'PB',
   },
   site: {
-    id: 'site', labelKey: '站内 PB', sourceKey: '空投 50% 到账', useSummaryKey: '适用于全部 PB 用途', consumesSup: true,
+    id: 'site', labelKey: '站内 PB', sourceKey: '空投 50% 到账', useSummaryKey: '适用于全部 PB 用途', consumesSup: true, unitKey: 'PB',
   },
   honor: {
-    id: 'honor', labelKey: '荣誉值', sourceKey: '每日任务发放', useSummaryKey: '可用于开通频道、BSP 巨星投流', consumesSup: false,
+    id: 'honor', labelKey: '荣誉值', sourceKey: '每日任务发放', useSummaryKey: '可用于开通频道、BSP 巨星投流', consumesSup: false, unitKey: '荣誉值',
   },
   node: {
-    id: 'node', labelKey: '节点 PB', sourceKey: '创世、钻石节点每月发放', useSummaryKey: '可用于开通频道及节点内互动', consumesSup: true,
+    id: 'node', labelKey: '节点 PB', sourceKey: '创世、钻石节点每月发放', useSummaryKey: '可用于开通频道及节点内互动', consumesSup: true, unitKey: 'PB',
   },
 };
 

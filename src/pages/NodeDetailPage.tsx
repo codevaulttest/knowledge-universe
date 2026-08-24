@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowRightLeft, Check, ChevronRight, Copy, Gem, Gift, Sparkles, TrendingUp, X } from 'lucide-react';
+import { ArrowRightLeft, ArrowUp, Check, ChevronRight, Copy, Gem, Gift, Sparkles, TrendingUp, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader } from '../components/shared';
 import { formatTokenAmount } from '../stakeConfig';
@@ -125,6 +125,7 @@ export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
                   showToast(t('已升级到 {level}级', { level: nextLevel }), 'demo');
                 }}
               >
+                <ArrowUp size={16} strokeWidth={2.5} aria-hidden />
                 {t('升级')}
               </button>
             )}
@@ -218,7 +219,7 @@ export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
       {transferable && (
         <div className="node-detail-actionbar">
           <button type="button" className="node-detail-transfer-btn" onClick={handleTransfer}>
-            <Sparkles size={18} aria-hidden />
+            <ArrowRightLeft size={18} aria-hidden />
             {t('转让节点')}
           </button>
         </div>

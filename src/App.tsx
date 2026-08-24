@@ -6,7 +6,7 @@ import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_
 import { buildInitialBspInvestments } from './bspConfig';
 import { formatScheduledAt } from './dateUtils';
 import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
-import { PB_WALLETS, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, supReasonForPbUse } from './walletConfig';
+import { PB_WALLETS, PB_WALLET_PICKER_VISIBLE, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, supReasonForPbUse } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
 import { postHasStake, formatTokenAmount } from './stakeConfig';
@@ -174,7 +174,7 @@ export default function App() {
   };
 
   const getPbWalletOptions = useCallback((use: PbUse, amount: number) => (
-    (Object.keys(PB_WALLETS) as PbWalletId[]).map(wallet => ({
+    PB_WALLET_PICKER_VISIBLE.map(wallet => ({
       wallet,
       allowed: isWalletAllowedForUse(wallet, use),
       sufficient: pbWallets[wallet] >= amount,
@@ -182,8 +182,9 @@ export default function App() {
   ), [pbWallets]);
 
   const pickDefaultPbWallet = useCallback((use: PbUse, amount: number): PbWalletId | null => (
-    PB_WALLET_PRIORITY.find(wallet => isWalletAllowedForUse(wallet, use) && pbWallets[wallet] >= amount)
-      ?? allowedWalletsForUse(use).find(wallet => pbWallets[wallet] >= amount)
+    PB_WALLET_PRIORITY.filter(wallet => PB_WALLET_PICKER_VISIBLE.includes(wallet))
+      .find(wallet => isWalletAllowedForUse(wallet, use) && pbWallets[wallet] >= amount)
+      ?? allowedWalletsForUse(use).filter(wallet => PB_WALLET_PICKER_VISIBLE.includes(wallet)).find(wallet => pbWallets[wallet] >= amount)
       ?? null
   ), [pbWallets]);
 
