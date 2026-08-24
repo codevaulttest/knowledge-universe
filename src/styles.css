@@ -4277,6 +4277,9 @@ button {
 .profile-header--hero .profile-role {
   color: var(--ku-color-on-primary);
 }
+.profile-header--hero .profile-bio {
+  color: var(--ku-color-on-primary-muted);
+}
 .profile-header--hero .profile-edit-btn {
   border-color: var(--ku-genesis-overlay-chip-ring);
   background: var(--ku-genesis-overlay-chip);
@@ -4299,9 +4302,11 @@ button {
 .profile-mini-stats--hero {
   padding: 0 var(--ku-feed-padding-x) 18px;
 }
-.profile-mini-stats--hero .profile-mini-stat-num,
-.profile-mini-stats--hero .profile-mini-stat-label {
+.profile-mini-stats--hero .profile-mini-stat-num {
   color: var(--ku-color-on-primary);
+}
+.profile-mini-stats--hero .profile-mini-stat-label {
+  color: var(--ku-color-on-primary-muted);
 }
 .profile-hero .channel-create-entry--subtle {
   margin: 0 var(--ku-feed-padding-x) 30px;
@@ -4335,6 +4340,19 @@ button {
 .profile-role {
   font: var(--ku-text-meta);
   color: var(--ku-color-text-meta);
+}
+.profile-bio {
+  width: 100%;
+  min-width: 0;
+  margin: 2px 0 6px;
+  font: 400 13px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .profile-name-row { display: flex; align-items: center; gap: 6px; }
 .post-author-name-row { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
@@ -7240,6 +7258,19 @@ button {
   transition: border-color var(--ku-motion-fast);
 }
 .edit-profile-input:focus { border-color: var(--ku-color-primary); }
+.edit-profile-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--ku-radius-input, 10px);
+  border: 1.5px solid var(--ku-color-border-card);
+  background: var(--ku-color-bg-card);
+  color: var(--ku-color-text-primary);
+  font: 400 15px/1.4 var(--ku-font-family);
+  outline: none;
+  resize: none;
+  transition: border-color var(--ku-motion-fast);
+}
+.edit-profile-textarea:focus { border-color: var(--ku-color-primary); }
 .edit-profile-hint {
   margin: -4px 0 0;
   font: 400 12px/1.5 var(--ku-font-family);

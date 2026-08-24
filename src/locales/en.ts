@@ -378,6 +378,8 @@ export const en: Record<string, string> = {
   '发布第一篇帖子，开始记录你的知识': 'Publish your first post and start capturing your knowledge',
   '更换头像': 'Change avatar',
   '昵称': 'Nickname',
+  '个人简介': 'Bio',
+  '写一句话介绍自己': 'Write a one-line bio',
   '选择语言': 'Select Language',
   '我的关注': 'Following',
   '{authorName} 的关注': '{authorName} follows',

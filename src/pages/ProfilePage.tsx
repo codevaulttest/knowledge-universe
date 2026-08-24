@@ -21,6 +21,9 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
   const ownerChannels = channels.filter(c => c.ownerName === authorName);
   const genesisTier = getGenesisTier(authorName);
+  const displayBio = isOwn
+    ? userProfile.bio?.trim()
+    : ALL_USERS_MOCK.find(u => u.name === authorName)?.desc;
   // 我的主页隐藏长文（article）类型的 mock 帖子；下架的原帖不出现在任何"帖子/收藏/赞过"列表里
   // 自己主页仍展示定时发布中的帖子（带待发布状态），他人主页在设定时间前完全不可见
   const myPosts = allPosts.filter(p => p.author === authorName && !p.deleted && !(isOwn && p.kind === 'article') && (isOwn || isPostVisible(p)));
@@ -187,6 +190,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                   <span className="author-name-text">{userProfile.nickname || DEFAULT_WALLET_DISPLAY}</span>
                   {genesisTier && <GenesisBadge tier={genesisTier} />}
                 </span>
+                {displayBio && <p className="profile-bio">{displayBio}</p>}
                 <button
                   type="button"
                   className="profile-edit-btn"
@@ -202,6 +206,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 {genesisTier && <GenesisBadge tier={genesisTier} />}
               </span>
             )}
+            {!isOwn && displayBio && <p className="profile-bio">{displayBio}</p>}
           </div>
           {isOwn ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
@@ -564,6 +569,7 @@ function EditProfileModal({
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [nickname, setNickname] = useState(userProfile.nickname);
+  const [bio, setBio] = useState(userProfile.bio ?? '');
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(userProfile.avatarUrl);
   const [contacts, setContacts] = useState<ProfileContacts>(userProfile.contacts ?? {});
   const [moreContactsOpen, setMoreContactsOpen] = useState(
@@ -592,7 +598,7 @@ function EditProfileModal({
           <button
             type="button"
             className="edit-profile-save"
-            onClick={() => onSave({ nickname: trimmed, avatarSeed: userProfile.avatarSeed, avatarUrl, contacts })}
+            onClick={() => onSave({ nickname: trimmed, avatarSeed: userProfile.avatarSeed, avatarUrl, contacts, bio: bio.trim() || undefined })}
           >
             {t('保存')}
           </button>
@@ -649,6 +655,23 @@ function EditProfileModal({
               autoComplete="off"
             />
             <span className="edit-profile-charcount">{nickname.length}/24</span>
+          </div>
+
+          {/* 一句话简介：展示在主页昵称下方 */}
+          <div className="edit-profile-field">
+            <label className="edit-profile-label" htmlFor="ep-bio">
+              {t('个人简介')}
+            </label>
+            <textarea
+              id="ep-bio"
+              className="edit-profile-textarea"
+              value={bio}
+              maxLength={60}
+              rows={2}
+              placeholder={t('写一句话介绍自己')}
+              onChange={e => setBio(e.target.value)}
+            />
+            <span className="edit-profile-charcount">{bio.length}/60</span>
           </div>
 
           {/* 联系方式：小黄车卖家可选填，供买家在商品详情页联系 */}

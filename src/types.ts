@@ -328,4 +328,5 @@ export type UserProfile = {
   avatarSeed: string;
   avatarUrl?: string;
   contacts?: ProfileContacts;
+  bio?: string;
 };

@@ -18,6 +18,7 @@
   --ku-color-primary:          #00cdb8;
   --ku-color-primary-dark:     #02bba9;
   --ku-color-on-primary:       #ffffff;
+  --ku-color-on-primary-muted: #b9c0d6;  /* 深色 hero 背景上的次级文本，比纯白弱一档但仍达标 */
   --ku-color-compose-button-bg:#ffffff;
   --ku-color-compose-button-icon:#007c70;
   --ku-gradient-primary:       linear-gradient(135deg, #05d0b9 0%, #10b69b 100%);
