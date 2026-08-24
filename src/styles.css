@@ -7508,20 +7508,19 @@ button {
 }
 .channel-tier-block--free {
   padding: 10px 0;
-  border-bottom: 1px dashed var(--ku-color-border-card);
   margin-bottom: 8px;
 }
 .channel-tier-block--free .channel-tier-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  grid-template-columns: var(--channel-tier-name-col) minmax(0, 1fr) auto;
 }
 .channel-tier-block--free .channel-tier-name-label {
   min-height: 0;
 }
+.channel-tier-block--free .channel-tier-archived-price {
+  flex: none;
+}
 .channel-tier-block--archived {
   padding: 10px 0;
-  border-top: 1px dashed var(--ku-color-border-card);
 }
 .channel-tier-block--archived .channel-tier-row {
   display: flex;
@@ -7546,10 +7545,27 @@ button {
   color: var(--ku-color-text-secondary);
   font: var(--ku-text-caption);
 }
+.channel-tier-archived-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
 .channel-tier-archived-hint {
-  margin: 4px 0 0;
+  margin: 0;
   font: var(--ku-text-caption);
   color: var(--ku-color-text-meta);
+}
+.channel-tier-relist-btn {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ku-color-primary-dark);
+  font: var(--ku-text-action-cta);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .channel-tier-add-btn {
   width: 100%;

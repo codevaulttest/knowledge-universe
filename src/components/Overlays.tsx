@@ -1987,6 +1987,11 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
       return normalizeTierNames(prev.filter((_, i) => i !== idx));
     });
   };
+  const unarchiveTier = (idx: number) => {
+    if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
+    if (activeTierCount >= MAX_CHANNEL_TIERS) return;
+    setTiers(prev => prev.map((tr, i) => i === idx ? { ...tr, archived: false } : tr));
+  };
 
   const canSubmit = name.trim().length > 0
     && !tiers.some((_, idx) => isChannelTierPriceInvalid(tiers, idx));
@@ -2068,27 +2073,24 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
             <p className="channel-tier-section-hint">
               {t('免费档所有人可加入；新增付费档位可为频道内容设置订阅门槛')}
             </p>
+            <div className="channel-tier-row channel-tier-row--head" aria-hidden>
+              <span className="channel-tier-col-label">{t('档位')}</span>
+              <span className="channel-tier-col-label channel-tier-col-label--price">{t('月订阅费')}</span>
+              <span className="channel-tier-col-label channel-tier-col-label--action" />
+            </div>
             {tiers.map((tier, idx) => {
               if (tier.free) {
                 return (
                   <div key={tier.id} className="channel-tier-block channel-tier-block--free">
                     <div className="channel-tier-row">
                       <ChannelTierName name={tier.name} tierIndex={idx} className="channel-tier-name-label" />
-                      <span className="channel-tier-archived-price">{t('所有人可免费加入')}</span>
-                      <span className="channel-tier-archived-badge">{t('固定档位')}</span>
+                      <span className="channel-tier-archived-price">{t('免费')}</span>
                     </div>
                   </div>
                 );
               }
               return null;
             })}
-            {activeTierCount > 0 && (
-              <div className="channel-tier-row channel-tier-row--head" aria-hidden>
-                <span className="channel-tier-col-label">{t('档位')}</span>
-                <span className="channel-tier-col-label channel-tier-col-label--price">{t('月订阅费')}</span>
-                <span className="channel-tier-col-label channel-tier-col-label--action" />
-              </div>
-            )}
             {tiers.map((tier, idx) => {
               if (tier.free) return null;
               if (tier.archived) {
@@ -2099,9 +2101,20 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                       <span className="channel-tier-archived-price">{tier.price} PB/{t('月')}</span>
                       <span className="channel-tier-archived-badge">{t('已下架')}</span>
                     </div>
-                    <p className="channel-tier-archived-hint">
-                      {t('不再接受新订阅，已订阅用户保留原价与权限')}
-                    </p>
+                    <div className="channel-tier-archived-footer">
+                      <p className="channel-tier-archived-hint">
+                        {t('不再接受新订阅，已订阅用户保留原价与权限')}
+                      </p>
+                      {activeTierCount < MAX_CHANNEL_TIERS && (
+                        <button
+                          type="button"
+                          className="channel-tier-relist-btn"
+                          onClick={() => unarchiveTier(idx)}
+                        >
+                          {t('重新上架')}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               }
