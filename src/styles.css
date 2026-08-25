@@ -11566,6 +11566,15 @@ html[lang="zh-TW"] .planet-hero-title {
   background: var(--ku-color-lot-tint-strong);
 }
 
+.lot-task-panel-sheet .task-panel-rules-entry--neutral {
+  background: var(--ku-color-border-cell);
+  color: var(--ku-color-text-secondary);
+}
+
+.lot-task-panel-sheet .task-panel-rules-entry--neutral:active:not(:disabled) {
+  background: var(--ku-color-border);
+}
+
 .lot-task-panel-sheet .task-card--done {
   border-color: var(--ku-color-lot-border);
   background: var(--ku-color-lot-tint);
