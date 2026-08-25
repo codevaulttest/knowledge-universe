@@ -671,7 +671,7 @@ function EditProfileModal({
               {activeMigration
                 ? <Clock size={14} strokeWidth={2.2} aria-hidden="true" />
                 : <Repeat2 size={14} strokeWidth={2.2} aria-hidden="true" />}
-              {activeMigration ? t('迁移处理中') : t('迁移地址')}
+              {activeMigration ? t('迁移处理中') : t('迁移账户')}
             </button>
           </div>
           {/* 昵称输入 */}
@@ -875,9 +875,9 @@ function AddressMigrationSheet({
 
   return (
     <div className="sheet-backdrop address-migration-backdrop" onClick={onClose}>
-      <div className="payment-sheet address-migration-sheet" role="dialog" aria-modal="true" aria-label={t('地址迁移申请')} onClick={event => event.stopPropagation()}>
+      <div className="payment-sheet address-migration-sheet" role="dialog" aria-modal="true" aria-label={t('账户迁移申请')} onClick={event => event.stopPropagation()}>
         <div className="sheet-header">
-          <span className="sheet-title">{t('地址迁移申请')}</span>
+          <span className="sheet-title">{t('账户迁移申请')}</span>
           <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
@@ -928,7 +928,7 @@ function AddressMigrationSheet({
           <AlertTriangle size={16} strokeWidth={2.2} aria-hidden="true" />
           <p>{t('提交后，资料将在 24 小时撤销期结束时迁移至新地址。撤销期内可提交撤销申请；撤销期结束后，迁移将进入执行流程，并由新地址管理。请确认新地址可由你控制。')}</p>
         </div>
-        <button type="button" className="planet-confirm-btn address-migration-submit" onClick={handleSubmit}>
+        <button type="button" className="planet-confirm-btn address-migration-submit" onClick={handleSubmit} disabled={!formReady}>
           {t('提交迁移申请')}
         </button>
       </div>
