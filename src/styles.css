@@ -7032,10 +7032,13 @@ button {
 }
 .task-calendar-day {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1px;
   aspect-ratio: 1;
-  padding: 0;
+  min-height: 44px;
+  padding: 4px 2px;
   border-radius: var(--ku-radius-card);
   border: 1px solid transparent;
   background: transparent;
@@ -7044,12 +7047,20 @@ button {
 .task-calendar-day:disabled {
   cursor: default;
 }
+.task-calendar-day-blank {
+  aspect-ratio: 1;
+  min-height: 44px;
+}
 .task-calendar-day-num {
-  font: 600 13px/1 var(--ku-font-family);
+  font: 600 13px/1.1 var(--ku-font-family);
   color: var(--ku-color-text-primary);
 }
-.task-calendar-day.is-outside .task-calendar-day-num {
+.task-calendar-day-earn {
+  font: 500 12px/1.1 var(--ku-font-mono, var(--ku-font-family));
   color: var(--ku-color-text-meta);
+}
+.task-calendar-day-earn.is-earned {
+  color: var(--ku-color-badge-text);
 }
 .schedule-picker-sheet .task-calendar-day.is-past .task-calendar-day-num {
   color: var(--ku-color-text-meta);
@@ -7078,10 +7089,12 @@ button {
   background: var(--ku-color-primary-alpha-14);
 }
 .task-calendar-day.is-full {
-  background: var(--ku-color-primary);
+  background: var(--ku-color-primary-alpha-14);
+  box-shadow: inset 0 0 0 1.5px var(--ku-color-primary);
 }
 .task-calendar-day.is-full .task-calendar-day-num {
-  color: var(--ku-color-on-primary);
+  color: var(--ku-color-badge-text);
+  font-weight: 700;
 }
 .task-calendar-day.is-today {
   border-color: var(--ku-color-primary);
@@ -7229,6 +7242,280 @@ button {
   font: 600 13px/1 var(--ku-font-mono, monospace);
   color: var(--ku-color-primary-dark);
   letter-spacing: 0.02em;
+}
+.edit-profile-wallet-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--ku-space-1);
+}
+.address-migration-entry {
+  display: inline-flex;
+  min-height: var(--ku-control-height-sm);
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--ku-space-1);
+  padding: 0 var(--ku-space-2);
+  border: 1px solid var(--ku-color-border-control);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-primary-dark);
+  font: var(--ku-text-action-cta);
+  cursor: pointer;
+}
+.address-migration-entry:hover,
+.address-migration-entry:focus-visible {
+  background: var(--ku-color-primary-alpha-06);
+  outline: none;
+}
+.address-migration-history-entry {
+  display: flex;
+  min-height: var(--ku-control-height-sm);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ku-space-2);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta-lg);
+  cursor: pointer;
+}
+.address-migration-history-entry:focus-visible,
+.address-migration-record-cancel:focus-visible,
+.address-migration-cancel-btn:focus-visible {
+  outline: 2px solid var(--ku-color-primary);
+  outline-offset: var(--ku-space-1);
+}
+.address-migration-history-main,
+.address-migration-history-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ku-space-1);
+}
+.address-migration-history-status {
+  color: var(--ku-color-text-meta);
+}
+.address-migration-history-status.is-pending {
+  color: var(--ku-color-warning-text);
+  font: var(--ku-text-caption-strong);
+}
+
+/* ── 地址迁移 ── */
+.address-migration-backdrop {
+  z-index: 210;
+}
+.address-migration-sheet,
+.address-migration-history-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-4);
+}
+.address-migration-address-block,
+.address-migration-fee-card,
+.address-migration-risk,
+.address-migration-record {
+  border-radius: var(--ku-radius-card);
+}
+.address-migration-address-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-1);
+  padding: var(--ku-space-3);
+  background: var(--ku-color-primary-alpha-06);
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta);
+}
+.address-migration-address-block strong {
+  overflow: hidden;
+  color: var(--ku-color-primary-dark);
+  font: var(--ku-text-node-value);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.address-migration-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-2);
+}
+.address-migration-field label,
+.address-migration-fee-title {
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-caption-strong);
+}
+.address-migration-error {
+  margin: calc(var(--ku-space-2) * -1) 0 0;
+  color: var(--ku-color-text-danger);
+  font: var(--ku-text-meta);
+}
+.address-migration-fee-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-2);
+  padding: var(--ku-space-3);
+  background: var(--ku-color-bg-page);
+}
+.address-migration-fee-card > div {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta-lg);
+}
+.address-migration-fee-card strong {
+  color: var(--ku-color-text-primary);
+  font: var(--ku-text-caption-strong);
+}
+.address-migration-fee-card p {
+  margin: 0;
+  color: var(--ku-color-text-meta);
+  font: var(--ku-text-meta);
+}
+.address-migration-risk {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ku-space-2);
+  padding: var(--ku-space-3);
+  background: var(--ku-color-warning-bg);
+  color: var(--ku-color-warning-text);
+}
+.address-migration-risk svg {
+  flex-shrink: 0;
+  color: var(--ku-color-warning-icon);
+}
+.address-migration-risk p {
+  margin: 0;
+  font: var(--ku-text-meta);
+}
+.address-migration-submit {
+  width: 100%;
+}
+.address-migration-reminder,
+.address-migration-cancel-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ku-space-3);
+  text-align: center;
+}
+.address-migration-reminder-icon {
+  display: grid;
+  width: calc(var(--ku-space-6) * 2);
+  height: calc(var(--ku-space-6) * 2);
+  place-items: center;
+  border-radius: var(--ku-radius-circle);
+  background: var(--ku-color-primary-alpha-14);
+  color: var(--ku-color-primary-dark);
+}
+.address-migration-reminder-title {
+  color: var(--ku-color-text-primary);
+  font: var(--ku-text-author-name);
+}
+.address-migration-reminder > strong {
+  color: var(--ku-color-text-primary);
+  font: var(--ku-text-node-value);
+}
+.address-migration-countdown {
+  padding: var(--ku-space-2) var(--ku-space-3);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-warning-bg);
+  color: var(--ku-color-warning-text);
+  font: var(--ku-text-caption-strong);
+}
+.address-migration-reminder-actions {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ku-space-2);
+}
+.address-migration-cancel-btn,
+.address-migration-record-cancel {
+  min-height: var(--ku-control-height-sm);
+  border: 1px solid var(--ku-color-text-danger);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-danger);
+  font: var(--ku-text-action-cta);
+  cursor: pointer;
+}
+.address-migration-cancel-btn:hover,
+.address-migration-record-cancel:hover {
+  background: var(--ku-color-danger-bg);
+}
+.address-migration-history-sheet {
+  max-height: var(--ku-modal-max-height);
+}
+.address-migration-empty {
+  margin: var(--ku-space-6) 0;
+  color: var(--ku-color-text-meta);
+  font: var(--ku-text-body-sm);
+  text-align: center;
+}
+.address-migration-record-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-2);
+  overflow-y: auto;
+}
+.address-migration-record {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-2);
+  padding: var(--ku-space-3);
+  border: 1px solid var(--ku-color-border-card);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-meta);
+  font: var(--ku-text-meta);
+}
+.address-migration-record-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--ku-space-1);
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta-lg);
+}
+.address-migration-record-head > span:first-child,
+.address-migration-record-head strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.address-migration-record-head strong {
+  color: var(--ku-color-text-primary);
+  font: var(--ku-text-caption-strong);
+}
+.address-migration-record-status {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: var(--ku-space-1) var(--ku-space-2);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-caption-strong);
+}
+.address-migration-record-status.is-pending {
+  background: var(--ku-color-warning-bg);
+  color: var(--ku-color-warning-text);
+}
+.address-migration-record-status.is-cancelled {
+  background: var(--ku-color-danger-bg);
+  color: var(--ku-color-text-danger);
+}
+.address-migration-record-status.is-completed {
+  background: var(--ku-color-success-bg);
+  color: var(--ku-color-success-text);
+}
+.address-migration-record-cancel {
+  align-self: flex-start;
+  padding: 0 var(--ku-space-3);
+}
+.address-migration-confirm-backdrop {
+  z-index: 220;
+}
+.address-migration-cancel-confirm p {
+  margin: 0;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-body-sm);
 }
 .edit-profile-field {
   display: flex;
@@ -8411,6 +8698,13 @@ button {
   font-size: 14px;
   font-weight: 600;
   color: var(--ku-color-text-secondary);
+}
+
+.asset-overview-airdrop-ratio {
+  display: block;
+  margin: 0 0 4px;
+  font: 400 12px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-meta);
 }
 
 .asset-overview-airdrop-amount {
@@ -11091,7 +11385,8 @@ html[lang="zh-TW"] .planet-hero-title {
   background: var(--ku-color-primary-alpha-04);
 }
 
-.task-card--interaction {
+.task-card--interaction,
+.task-card--lot {
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
@@ -11187,16 +11482,6 @@ html[lang="zh-TW"] .planet-hero-title {
   border-radius: var(--ku-radius-pill);
   background: var(--ku-gradient-primary);
   transition: width var(--ku-motion-fast);
-}
-
-.task-progress-marker {
-  position: absolute;
-  top: -2px;
-  width: 3px;
-  height: 12px;
-  border-radius: var(--ku-radius-pill);
-  background: var(--ku-color-primary-dark);
-  transform: translateX(-1.5px);
 }
 
 .task-milestone-row {
@@ -11306,6 +11591,15 @@ html[lang="zh-TW"] .planet-hero-title {
   margin: 0;
   font: 400 12px/1.6 var(--ku-font-family);
   color: var(--ku-color-text-meta);
+  text-align: left;
+}
+
+.task-calendar-lot-note {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--ku-color-border-card);
+  font: 400 13px/1.5 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
   text-align: left;
 }
 

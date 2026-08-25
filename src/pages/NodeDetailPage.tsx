@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowRightLeft, ArrowUp, Check, ChevronRight, Copy, Gem, Gift, Sparkles, TrendingUp, X } from 'lucide-react';
+import { ArrowRightLeft, ArrowUp, Bookmark, Check, ChevronRight, Copy, Gem, Gift, Sparkles, TrendingUp, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader } from '../components/shared';
 import { formatTokenAmount } from '../stakeConfig';
@@ -13,9 +13,13 @@ const SUBSIDY_TIERS = [
 ] as const;
 const INVITED_PREVIEW_COUNT = 2;
 const INVITED_MODAL_PAGE_SIZE = 20;
+/** 零星升 1 级 1000 PB，升 2 级 2000…升 5 级 5000；每升 1 级面额 +1000、荣誉值 +1000。 */
+const LEVEL_UPGRADE_COST_PB = [1000, 2000, 3000, 4000, 5000] as const;
+const LEVEL_UPGRADE_VALUE_GAIN = 1000;
+const LEVEL_MAX = LEVEL_UPGRADE_COST_PB.length;
 
 export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
-  const { canGoBack, goBack, setNodeTransferAutoOpenId, showToast, t } = useApp();
+  const { canGoBack, goBack, setNodeTransferAutoOpenId, showToast, t, favoriteNodeIds, toggleFavoriteNode } = useApp();
   const [currentLevel, setCurrentLevel] = useState(node.level ?? 0);
   const [allowRecommend, setAllowRecommend] = useState(node.allowRecommend ?? true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -27,11 +31,14 @@ export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
     const airdropCap = node.tier === 1000 ? Number.POSITIVE_INFINITY : node.tier === 100 ? 500 : 10;
     return {
       airdrop: Math.min(Math.round(random() * 5000 + 500), airdropCap),
-      totalLoss: Math.round(random() * 800),
+      centennialSubsidy: Math.round(random() * 800),
     };
   }, [node.id, node.tier]);
   const transferable = isTransferable(node);
   const canUpgrade = node.tier === 1000;
+  const isFavorite = favoriteNodeIds.has(node.id);
+  const isMaxLevel = currentLevel >= LEVEL_MAX;
+  const upgradeCost = LEVEL_UPGRADE_COST_PB[Math.min(currentLevel, LEVEL_MAX - 1)];
 
   const copy = (value: string, key: string) => {
     navigator.clipboard.writeText(value).then(() => {

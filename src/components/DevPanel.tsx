@@ -13,6 +13,8 @@ export function DevPanel({ children }: DevPanelProps) {
   const {
     walletConnected, connectWallet, disconnectWallet, demoHideOwnChannels, toggleDemoHideOwnChannels, t,
     taskSnapshotToday, resetDemoTasks, simulateDemoTaskInteractions, setDemoPbWallets,
+    demoForceLadder, toggleDemoForceLadder, demoForceNewUser, toggleDemoForceNewUser,
+    demoLinkedNodeCount, cycleDemoLinkedNodeCount,
   } = useApp();
 
   if (!visible) return null;
@@ -78,6 +80,38 @@ export function DevPanel({ children }: DevPanelProps) {
             onClick={resetDemoTasks}
           >
             <span>{t('重置今日任务')}</span>
+          </button>
+          <button
+            type="button"
+            className="planet-dev-menu-item"
+            role="menuitemcheckbox"
+            aria-checked={demoForceLadder}
+            onClick={toggleDemoForceLadder}
+          >
+            <span>{t('模拟 9/1 后阶梯规则')}</span>
+            <span className={`planet-dev-menu-toggle${demoForceLadder ? ' planet-dev-menu-toggle--on' : ''}`}>
+              {demoForceLadder ? t('开') : t('关')}
+            </span>
+          </button>
+          <button
+            type="button"
+            className="planet-dev-menu-item"
+            role="menuitemcheckbox"
+            aria-checked={demoForceNewUser}
+            onClick={toggleDemoForceNewUser}
+          >
+            <span>{t('模拟新用户（无昨日记录）')}</span>
+            <span className={`planet-dev-menu-toggle${demoForceNewUser ? ' planet-dev-menu-toggle--on' : ''}`}>
+              {demoForceNewUser ? t('开') : t('关')}
+            </span>
+          </button>
+          <button
+            type="button"
+            className="planet-dev-menu-item"
+            onClick={cycleDemoLinkedNodeCount}
+          >
+            <span>{t('切换已链接节点数')}</span>
+            <span className="planet-dev-menu-toggle">{demoLinkedNodeCount}</span>
           </button>
           <button type="button" className="planet-dev-menu-item" onClick={() => setDemoPbWallets('normal')}>
             <span>{t('恢复钱包余额')}</span>

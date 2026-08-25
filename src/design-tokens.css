@@ -154,6 +154,15 @@
   --ku-text-caption-strong:    700 12px/1.4 var(--ku-font-family);   /* 强调辅助文字 */
   --ku-text-locked-media:      600 12px/1 var(--ku-font-family);     /* 锁定图片提示 */
 
+  /* ── 间距与控件尺寸 ── */
+  --ku-space-1:                4px;
+  --ku-space-2:                8px;
+  --ku-space-3:                12px;
+  --ku-space-4:                16px;
+  --ku-space-5:                20px;
+  --ku-space-6:                24px;
+  --ku-control-height-sm:      36px;
+
   /* ═══════════════════════════════════════════════════
      圆角 (Border Radius)
      ═══════════════════════════════════════════════════ */

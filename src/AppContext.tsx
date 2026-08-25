@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
-import type { TaskCalendarDay, TaskDaySnapshot } from './taskConfig';
+import type { ActivityGroup, AddressMigration, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import type { LotQuota, TaskCalendarMonth, TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
   navigate: (route: Route) => void;
@@ -72,13 +72,13 @@ export type AppContextValue = {
   deleteDraft: (draftId: string) => void;
   userProfile: UserProfile;
   updateUserProfile: (profile: UserProfile) => void;
-  /** 跳转自己主页时是否自动展开「编辑资料」（用于小黄车联系方式发现引导，消费后需自行置回 false） */
+  /** 跳转自己主页时是否自动展开「账户与资料」（用于小黄车联系方式发现引导，消费后需自行置回 false） */
   editProfileAutoOpen: boolean;
   setEditProfileAutoOpen: Dispatch<SetStateAction<boolean>>;
   /** 节点详情页回退到列表后自动打开转让弹层的单次标记。 */
   nodeTransferAutoOpenId: string | null;
   setNodeTransferAutoOpenId: Dispatch<SetStateAction<string | null>>;
-  /** 跳转到自己的主页并自动展开「编辑资料」 */
+  /** 跳转到自己的主页并自动展开「账户与资料」 */
   openEditProfileContacts: () => void;
   channels: Channel[];
   // 频道 id → 当前订阅的档位下标（未订阅则不在此 map 中；到期后仍保留，用于「续费」时回显原档位）
@@ -122,6 +122,10 @@ export type AppContextValue = {
   payPb: (payment: { amount: number; use: PbUse; wallet: PbWalletId; supCost?: number; supReason?: SupTransactionReason }) => boolean;
   /** 开发工具：切换可用与受限钱包的演示余额。 */
   setDemoPbWallets: (preset: 'normal' | 'limited') => void;
+  /** 地址迁移申请：费用在申请期冻结，实际资料迁移由后续服务执行。 */
+  addressMigrations: AddressMigration[];
+  requestAddressMigration: (targetAddress: string) => { ok: boolean; message?: string };
+  cancelAddressMigration: (migrationId: string) => boolean;
   // 知识宇宙页：邀请码绑定
   myInviteCode: string;
   /** 已绑定邀请人的钱包地址；未绑定为 null */
@@ -130,18 +134,35 @@ export type AppContextValue = {
   // 知识宇宙页：周期性 PB 空投
   airdropClaimed: boolean;
   claimAirdrop: () => void;
-  // 每日任务（发帖任务 + 互动帖任务）：今天的完成度决定明天可领取空投收益的比例
+  // 每日任务：互动帖任务决定明天空投领取比例，一发十赞决定今天荣誉值签到奖，两者互不相关
   taskSnapshotToday: TaskDaySnapshot;
-  taskSnapshotYesterday: TaskDaySnapshot;
+  /** 无记录（新用户）为 null；见 effectiveClaimRatio 的 D4 分支 */
+  taskSnapshotYesterday: TaskDaySnapshot | null;
+  /** 今天实际可领取的空投比例：已统一处理 9/1 阶梯生效与新用户默认值，UI 不应再自行换算。 */
+  airdropClaimRatio: number;
   /** 每完成 5 篇互动帖 +1，供任务面板监听触发一次性庆祝动效 */
   taskCelebrateSignal: number;
   /** 成功完成一次帖子互动后计入每日任务；同一帖子只计一次。 */
   recordTaskInteraction: (postId: string) => void;
-  /** 当前自然月的日历格子（含首尾灰显的相邻月填充天），供历史日历以常见日历样式展示 */
-  getDailyTaskCalendar: () => TaskCalendarDay[];
+  /** 当前自然月的日历（只含 1–31 号），供历史日历以常见日历样式展示 */
+  getDailyTaskCalendar: () => TaskCalendarMonth;
+  /** 「一发十赞」当日配额，由已链接节点数派生 */
+  lotQuota: LotQuota;
   // 开发工具：重置/模拟今日任务，便于演示
   resetDemoTasks: () => void;
   simulateDemoTaskInteractions: (count: number) => void;
+  // 开发工具：模拟 9/1 后阶梯规则生效
+  demoForceLadder: boolean;
+  toggleDemoForceLadder: () => void;
+  // 开发工具：模拟新用户（无昨日记录）
+  demoForceNewUser: boolean;
+  toggleDemoForceNewUser: () => void;
+  // 开发工具：切换已链接节点数，驱动一发十赞配额
+  demoLinkedNodeCount: number;
+  cycleDemoLinkedNodeCount: () => void;
+  // 知识宇宙节点：收藏（详情页与列表页共享同一份状态）
+  favoriteNodeIds: Set<string>;
+  toggleFavoriteNode: (nodeId: string) => void;
   // ── 小黄车（帖子即商品）──────────────────────────────────────────
   shopOrders: ShopOrder[];
   shippingAddresses: ShippingAddress[];

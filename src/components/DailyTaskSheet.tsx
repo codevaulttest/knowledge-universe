@@ -1,20 +1,19 @@
 import { useState } from 'react';
-import { AlertTriangle, Check, ChevronRight, Circle, Gift, History, Info, MousePointerClick, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Circle, Gift, History, Info, MousePointerClick, ThumbsUp, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { calendarIntlLocale } from '../dateUtils';
+import { formatTokenAmount } from '../stakeConfig';
 import {
-  TASK_BONUS_PB,
-  TASK_BONUS_THRESHOLD,
+  TASK_EARNINGS_UNSETTLED,
   TASK_INTERACTION_POOL_SIZE,
-  TASK_RATIO_BASE,
-  TASK_RATIO_STEP1,
-  TASK_RATIO_STEP1_COUNT,
-  TASK_RATIO_STEP2,
-  TASK_RATIO_STEP2_COUNT,
-  type TaskCalendarDay,
+  TASK_LOT_HONOR_PER_UNIT,
+  TASK_LOT_LIKES_PER_UNIT,
+  TASK_LOT_UNITS_PER_NODE,
+  type LotQuota,
+  type TaskCalendarMonth,
 } from '../taskConfig';
 
-/** 每日任务统一面板：发帖任务 + 荣誉值里程碑 / 空投比例 + BSP 保底 + 历史日历。 */
+/** 每日任务统一面板：互动帖任务 + 一发十赞 + 发帖任务 + BSP 保底 + 历史日历。 */
 export function DailyTaskSheet({
   onClose,
   hasBspRecords = false,
@@ -23,7 +22,7 @@ export function DailyTaskSheet({
   /** 仅当用户存在 BSP 投流记录时才展示保底状态行 */
   hasBspRecords?: boolean;
 }) {
-  const { t, taskSnapshotToday, getDailyTaskCalendar } = useApp();
+  const { t, taskSnapshotToday, getDailyTaskCalendar, lotQuota } = useApp();
   const [rulesOpen, setRulesOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -31,7 +30,6 @@ export function DailyTaskSheet({
   const interacted = taskSnapshotToday.interactedCount;
   const bonusEligible = taskSnapshotToday.bonusEligible;
   const honorRewardStatus = taskSnapshotToday.honorRewardStatus;
-  const bonusMarkerPercent = (TASK_BONUS_THRESHOLD / TASK_INTERACTION_POOL_SIZE) * 100;
   const progressPercent = Math.min(100, (interacted / TASK_INTERACTION_POOL_SIZE) * 100);
 
   const bspReady = posted;
@@ -48,7 +46,7 @@ export function DailyTaskSheet({
           </div>
 
           <p className="task-panel-note">
-            {t('发帖且互动满 {threshold} 次，次日凌晨发放 +{bonus} 荣誉值；互动满 {total} 次，次日可领满额空投', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB, total: TASK_INTERACTION_POOL_SIZE })}
+            {t('互动帖任务决定明天的领取上限；一发十赞决定今天的荣誉值奖励')}
           </p>
 
           <button type="button" className="bsp-rules-entry task-panel-rules-entry" onClick={() => setRulesOpen(true)}>
@@ -57,7 +55,6 @@ export function DailyTaskSheet({
             <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
           </button>
 
-          {/* 10 次 marker 只表示荣誉值里程碑；空投比例按每次互动实时累加。 */}
           <div className="task-card task-card--interaction">
             <div className="task-card-head">
               <span className="task-card-icon" aria-hidden="true">
@@ -72,37 +69,19 @@ export function DailyTaskSheet({
                 </span>
               </span>
               <span className="task-card-ratio-col">
-                <span className="task-card-ratio">{taskSnapshotToday.claimRatio}%</span>
-                <span className="task-card-ratio-label">{t('空投额度')}</span>
+                <span className="task-card-ratio">{interacted}</span>
+                <span className="task-card-ratio-label">/ {TASK_INTERACTION_POOL_SIZE} {t('次')}</span>
               </span>
             </div>
 
             <div className="task-progress-track">
               <div className="task-progress-fill" style={{ width: `${progressPercent}%` }} />
-              <span className="task-progress-marker" style={{ left: `${bonusMarkerPercent}%` }} aria-hidden="true" />
             </div>
 
-            <div className="task-milestone-row">
-              <span className={`task-milestone-chip${bonusEligible ? ' task-milestone-chip--done' : ''}`}>
-                {bonusEligible ? <Check size={12} strokeWidth={2.6} /> : <Gift size={12} strokeWidth={1.9} />}
-                {t('发帖+满 {threshold} 次互动 · +{bonus} 荣誉值', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB })}
-                <span className="task-milestone-chip-state">
-                  {bonusEligible
-                    ? honorRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')
-                    : interacted >= TASK_BONUS_THRESHOLD
-                      ? t('还需发帖')
-                      : t('待完成')}
-                </span>
-              </span>
-              <span className={`task-milestone-chip${interacted >= TASK_INTERACTION_POOL_SIZE ? ' task-milestone-chip--done' : ''}`}>
-                {interacted >= TASK_INTERACTION_POOL_SIZE ? <Check size={12} strokeWidth={2.6} /> : <Sparkles size={12} strokeWidth={1.9} />}
-                {t('满 {total} 次互动 · 100% 空投', { total: TASK_INTERACTION_POOL_SIZE })}
-                <span className="task-milestone-chip-state">
-                  {interacted >= TASK_INTERACTION_POOL_SIZE ? t('已达成') : t('待完成')}
-                </span>
-              </span>
-            </div>
+            <p className="task-group-note">{t('今天的互动次数决定明天的空投领取上限')}</p>
           </div>
+
+          <LotTaskCard lotQuota={lotQuota} bonusEligible={bonusEligible} honorRewardStatus={honorRewardStatus} posted={posted} interacted={interacted} />
 
           {/* 发帖任务：荣誉值里程碑与 BSP 保底的共同前置条件 */}
           <div className={`task-card${posted ? ' task-card--done' : ''}`}>
@@ -146,8 +125,65 @@ export function DailyTaskSheet({
       </div>
 
       {rulesOpen && <DailyTaskRulesSheet onClose={() => setRulesOpen(false)} />}
-      {historyOpen && <DailyTaskHistorySheet onClose={() => setHistoryOpen(false)} days={getDailyTaskCalendar()} />}
+      {historyOpen && <DailyTaskHistorySheet onClose={() => setHistoryOpen(false)} month={getDailyTaskCalendar()} lotQuota={lotQuota} />}
     </>
+  );
+}
+
+function LotTaskCard({
+  lotQuota,
+  bonusEligible,
+  honorRewardStatus,
+  posted,
+  interacted,
+}: {
+  lotQuota: LotQuota;
+  bonusEligible: boolean;
+  honorRewardStatus: 'none' | 'pending' | 'issued';
+  posted: boolean;
+  interacted: number;
+}) {
+  const { t } = useApp();
+  return (
+    <div className={`task-card task-card--lot${bonusEligible ? ' task-card--done' : ''}`}>
+      <div className="task-card-head">
+        <span className="task-card-icon" aria-hidden="true">
+          {bonusEligible ? <Check size={16} strokeWidth={2.6} /> : <ThumbsUp size={16} strokeWidth={1.9} />}
+        </span>
+        <span className="task-card-body">
+          <span className="task-card-title">{t('一发十赞')}</span>
+          <span className="task-card-desc">
+            {t('当天发帖，每 {likes} 个赞为 1 组，每组 +{honor} 荣誉值', { likes: TASK_LOT_LIKES_PER_UNIT, honor: TASK_LOT_HONOR_PER_UNIT })}
+          </span>
+        </span>
+        <span className="task-card-ratio-col">
+          <span className="task-card-ratio">{lotQuota.honor}</span>
+          <span className="task-card-ratio-label">{t('荣誉值上限')}</span>
+        </span>
+      </div>
+
+      <p className="task-group-note">
+        {lotQuota.units > 0
+          ? t('已链接 {nodes} 个节点，今日可完成 {units} 组「一发十赞」，共 {likes} 个赞', {
+              nodes: lotQuota.nodeCount, units: lotQuota.units, likes: lotQuota.likes,
+            })
+          : t('链接节点后即可解锁「一发十赞」配额')}
+      </p>
+
+      <div className="task-milestone-row">
+        <span className={`task-milestone-chip${bonusEligible ? ' task-milestone-chip--done' : ''}`}>
+          {bonusEligible ? <Check size={12} strokeWidth={2.6} /> : <Gift size={12} strokeWidth={1.9} />}
+          {t('发帖 + 满 {likes} 赞 · +{honor} 荣誉值', { likes: TASK_LOT_LIKES_PER_UNIT, honor: TASK_LOT_HONOR_PER_UNIT })}
+          <span className="task-milestone-chip-state">
+            {bonusEligible
+              ? honorRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')
+              : interacted >= TASK_LOT_LIKES_PER_UNIT
+                ? posted ? t('待完成') : t('还需发帖')
+                : t('待完成')}
+          </span>
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -173,15 +209,10 @@ function DailyTaskRulesSheet({ onClose }: { onClose: () => void }) {
             {t('每天对任意 {total} 篇帖子完成点赞/评论/转发/收藏/踩/解锁/打赏任一操作即视为完成 1 篇（同一帖子多次操作只算一次）。', { total: TASK_INTERACTION_POOL_SIZE })}
           </p>
           <p className="pb-info-sheet-para">
-            <strong className="pb-info-sheet-label">{t('次日空投额度：')}</strong>
-            {t('默认 {base}%；前 {count} 篇每完成 1 篇增加 {step}%，后 {count2} 篇每完成 1 篇增加 {step2}%，满 {total} 篇为 100%，次日生效。', {
-              base: TASK_RATIO_BASE, count: TASK_RATIO_STEP1_COUNT, step: TASK_RATIO_STEP1,
-              count2: TASK_RATIO_STEP2_COUNT, step2: TASK_RATIO_STEP2, total: TASK_INTERACTION_POOL_SIZE,
+            <strong className="pb-info-sheet-label">{t('一发十赞：')}</strong>
+            {t('每个已链接节点每天可完成 {perNode} 组「一发十赞」，每组为当天发帖 + 满 {likes} 个赞，发放 +{honor} 荣誉值，次日凌晨结算。', {
+              perNode: TASK_LOT_UNITS_PER_NODE, likes: TASK_LOT_LIKES_PER_UNIT, honor: TASK_LOT_HONOR_PER_UNIT,
             })}
-          </p>
-          <p className="pb-info-sheet-para">
-            <strong className="pb-info-sheet-label">{t('每日荣誉值奖励：')}</strong>
-            {t('当天至少发布 1 篇内容，且互动帖满 {threshold} 篇，次日凌晨发放 +{bonus} 荣誉值。', { threshold: TASK_BONUS_THRESHOLD, bonus: TASK_BONUS_PB })}
           </p>
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('BSP 巨星投流保底：')}</strong>
@@ -199,23 +230,24 @@ function DailyTaskRulesSheet({ onClose }: { onClose: () => void }) {
 
 function DailyTaskHistorySheet({
   onClose,
-  days,
+  month,
+  lotQuota,
 }: {
   onClose: () => void;
-  days: TaskCalendarDay[];
+  month: TaskCalendarMonth;
+  lotQuota: LotQuota;
 }) {
   const { t, language } = useApp();
   const intlLocale = calendarIntlLocale(language);
-  const anchor = days.find(d => d.inCurrentMonth)?.date ?? days[0].date;
-  const monthLabel = new Intl.DateTimeFormat(intlLocale, { month: 'long' }).format(new Date(`${anchor}T00:00:00`));
+  const monthLabel = new Intl.DateTimeFormat(intlLocale, { month: 'long' }).format(new Date(`${month.anchorDate}T00:00:00`));
   // 2023-01-01 是周日，用它取各语言"周几"的极简单字符标签，对齐 getDay() 的 0=周日 顺序
   const weekdayLabels = Array.from({ length: 7 }, (_, i) =>
     new Intl.DateTimeFormat(intlLocale, { weekday: 'narrow' }).format(new Date(2023, 0, 1 + i))
   );
   const [selectedDate, setSelectedDate] = useState<string | null>(
-    days.find(d => d.isToday && d.snapshot)?.date ?? null
+    month.days.find(d => d.isToday && d.snapshot)?.date ?? null
   );
-  const selectedDay = days.find(d => d.date === selectedDate);
+  const selectedDay = month.days.find(d => d.date === selectedDate);
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -229,7 +261,7 @@ function DailyTaskHistorySheet({
 
         <div className="task-calendar-month">{monthLabel}</div>
 
-        <p className="task-calendar-caption">{t('浅色代表已发帖或已互动，深色代表发帖且互动满 {total} 次，点开日期查看当天详情', { total: TASK_INTERACTION_POOL_SIZE })}</p>
+        <p className="task-calendar-caption">{t('格内数字是当天到账的收益，点开日期查看当天详情')}</p>
 
         <div className="task-calendar-weekdays">
           {weekdayLabels.map((label, i) => (
@@ -238,7 +270,10 @@ function DailyTaskHistorySheet({
         </div>
 
         <div className="task-calendar-grid">
-          {days.map(day => {
+          {Array.from({ length: month.leadingBlanks }, (_, i) => (
+            <span key={`blank-${i}`} className="task-calendar-day-blank" aria-hidden="true" />
+          ))}
+          {month.days.map(day => {
             const snapshot = day.snapshot;
             return (
               <button
@@ -248,7 +283,6 @@ function DailyTaskHistorySheet({
                 onClick={() => setSelectedDate(day.date)}
                 className={[
                   'task-calendar-day',
-                  !day.inCurrentMonth && 'is-outside',
                   day.isToday && 'is-today',
                   snapshot && (snapshot.posted && snapshot.interactedCount >= TASK_INTERACTION_POOL_SIZE
                     ? 'is-full'
@@ -257,6 +291,11 @@ function DailyTaskHistorySheet({
                 ].filter(Boolean).join(' ')}
               >
                 <span className="task-calendar-day-num">{day.day}</span>
+                {snapshot && snapshot.earningsPb !== TASK_EARNINGS_UNSETTLED && (
+                  <span className={`task-calendar-day-earn${snapshot.earningsPb > 0 ? ' is-earned' : ''}`}>
+                    {snapshot.earningsPb > 0 ? `+${formatTokenAmount(snapshot.earningsPb)}` : '0'}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -274,18 +313,30 @@ function DailyTaskHistorySheet({
             <span className="task-calendar-detail-row">
               {t('当日互动')}<strong>{selectedDay.snapshot.interactedCount} / {TASK_INTERACTION_POOL_SIZE}</strong>
             </span>
-            <span className="task-calendar-detail-row">
-              {t('次日空投额度')}<strong>{selectedDay.snapshot.claimRatio}%</strong>
-            </span>
+            {selectedDay.snapshot.earningsPb !== TASK_EARNINGS_UNSETTLED && (
+              <span className="task-calendar-detail-row">
+                {t('当日收益')}<strong>
+                  {selectedDay.snapshot.earningsPb > 0 ? `+${formatTokenAmount(selectedDay.snapshot.earningsPb)} PB` : t('0（未达成/已错过）')}
+                </strong>
+              </span>
+            )}
             {selectedDay.snapshot.bonusEligible && (
               <span className="task-calendar-detail-row">
                 {t('当日荣誉值奖励')}<strong>
-                  +{TASK_BONUS_PB} {t('荣誉值')} · {selectedDay.snapshot.honorRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')}
+                  +{TASK_LOT_HONOR_PER_UNIT} {t('荣誉值')} · {selectedDay.snapshot.honorRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')}
                 </strong>
               </span>
             )}
           </div>
         )}
+
+        <p className="task-calendar-lot-note">
+          {lotQuota.units > 0
+            ? t('你已链接 {nodes} 个节点，每天可完成 {units} 组「一发十赞」，共 {likes} 个赞，最多 +{honor} 荣誉值', {
+                nodes: lotQuota.nodeCount, units: lotQuota.units, likes: lotQuota.likes, honor: lotQuota.honor,
+              })
+            : t('你名下还没有挂节点，暂时拿不到「一发十赞」配额；链接节点后这里会显示你每天可完成的组数')}
+        </p>
       </div>
     </div>
   );

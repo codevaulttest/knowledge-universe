@@ -55,6 +55,9 @@ export function resolveInviterAddress(code: string): string {
 /** 周期性 PB 空投单次发放数量 */
 export const MOCK_PB_AIRDROP_AMOUNT = 100;
 
+/** 演示用户已链接的节点数，驱动「一发十赞」每日配额（每节点 9 组）。 */
+export const MOCK_LINKED_NODE_COUNT = 3;
+
 const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
 
 /** 正式逻辑：北京时间当天 22:00 截止 */

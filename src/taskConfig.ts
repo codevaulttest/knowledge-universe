@@ -1,14 +1,20 @@
+import { MOCK_PB_AIRDROP_AMOUNT } from './mockData';
+
 // ════════════════════════════════════════════════════════════════
-// 每日任务（发帖任务 + 互动帖任务）— 配置与结算逻辑（纯前端 Mock，无后端）
+// 每日任务 — 两个互不相关的业务（纯前端 Mock，无后端）
 // ----------------------------------------------------------------
-// 「空投领取比例」只由互动帖任务决定，与发帖任务无关：
-// - 互动帖任务：每天对任意帖子做互动（点赞/评论/收藏/踩，任选其一，
-//   同一帖子多次操作只算一次）即完成 1 篇，累计达到 TASK_INTERACTION_POOL_SIZE
-//   篇即封顶，按阶梯换算成次日领取比例，全部完成对应 100%。
-// - 发帖任务：当天是否至少发布过一篇帖子。不影响空投领取比例，
-//   而是 BSP 巨星投流每日打赏保底的唯一门槛：昨日发帖，今日才有保底。
-// 具体保底比例 / 阶梯步长为产品口径确认值，已做成下方可调常量。
+// 业务 A：互动帖任务 → 次日空投领取比例。
+//   每天对任意帖子做互动（点赞/评论/收藏/踩，任选其一，同一帖子多次
+//   操作只算一次）即完成 1 篇，累计达到 TASK_INTERACTION_POOL_SIZE 篇即
+//   封顶，按阶梯换算成次日领取比例，全部完成对应 100%。
+// 业务 B：一发十赞 → 当日荣誉值签到奖。
+//   当天发帖 + 每 TASK_LOT_LIKES_PER_UNIT 个赞为 1 组，每组发放
+//   TASK_LOT_HONOR_PER_UNIT 荣誉值；每日可完成组数由已链接节点数决定
+//   （每节点 TASK_LOT_UNITS_PER_NODE 组）。与空投领取比例无关。
+// 具体比例 / 阶梯步长为产品口径确认值，已做成下方可调常量。
 // ════════════════════════════════════════════════════════════════
+
+// ── 业务 A：互动帖任务 → 次日空投领取比例 ──
 /** 每日互动帖推荐池大小。 */
 export const TASK_INTERACTION_POOL_SIZE = 35;
 /** 每日默认领取比例；前 25 次互动每次 +3%，后 10 次每次 +2%。 */
@@ -19,10 +25,26 @@ export const TASK_RATIO_STEP2_COUNT = 10;
 export const TASK_RATIO_STEP2 = 2;
 /** 每完成 N 篇触发一次庆祝动效。 */
 export const TASK_CELEBRATE_EVERY = 5;
-/** 「一发十赞」里程碑：当天发帖 + 互动帖达到该数量，次日凌晨发放奖励。 */
-export const TASK_BONUS_THRESHOLD = 10;
-/** 「一发十赞」里程碑奖励（荣誉值）。 */
-export const TASK_BONUS_PB = 10;
+/** 阶梯规则生效日（北京时间日键）；此日之前所有用户按 100% 发放。 */
+export const TASK_RATIO_LADDER_START = '2026-09-01';
+/** 无昨日记录（今日/昨日注册的新用户）的默认领取比例。 */
+export const TASK_NEW_USER_CLAIM_RATIO = 100;
+
+// ── 业务 B：一发十赞 → 荣誉值签到奖 ──
+/** 1 组「一发十赞」= 当天发帖 + 该数量个赞。 */
+export const TASK_LOT_LIKES_PER_UNIT = 10;
+/** 每完成 1 组发放的荣誉值。 */
+export const TASK_LOT_HONOR_PER_UNIT = 10;
+/** 每个已链接节点每日可完成的组数。 */
+export const TASK_LOT_UNITS_PER_NODE = 9;
+/** @deprecated 改用 TASK_LOT_LIKES_PER_UNIT */
+export const TASK_BONUS_THRESHOLD = TASK_LOT_LIKES_PER_UNIT;
+/** @deprecated 改用 TASK_LOT_HONOR_PER_UNIT */
+export const TASK_BONUS_PB = TASK_LOT_HONOR_PER_UNIT;
+
+// ── 日历 / 收益 ──
+/** 收益哨兵：-1 未结算（不渲染）；0 当天无红包；>0 实际到账 PB。 */
+export const TASK_EARNINGS_UNSETTLED = -1;
 
 const STORAGE_PREFIX = 'ku-tasks-';
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -35,6 +57,8 @@ export type DailyTaskState = {
   interactedPostIds: string[];
   /** 达成的一发十赞奖励已在次日凌晨结算的时间。 */
   honorRewardIssuedAt?: string;
+  /** 当天实际领取的空投 PB；未领取/未结算时缺省。 */
+  airdropClaimedPb?: number;
 };
 
 export type HonorRewardStatus = 'none' | 'pending' | 'issued';
@@ -43,13 +67,48 @@ export type TaskDaySnapshot = {
   date: string;
   posted: boolean;
   interactedCount: number;
-  /** 互动帖任务对应的领取比例（%，0-100）。 */
+  /** 互动帖任务对应的领取比例（%，0-100），按当天互动数换算的「赚到的」值。 */
   claimRatio: number;
-  /** 「一发十赞」里程碑是否达成：当天发帖 + 互动帖数达到 TASK_BONUS_THRESHOLD。 */
+  /** 当天实际到账的空投收益（PB）。TASK_EARNINGS_UNSETTLED 未结算 / 0 无红包 / >0 金额。 */
+  earningsPb: number;
+  /** 「一发十赞」里程碑是否达成：当天发帖 + 互动帖数达到 TASK_LOT_LIKES_PER_UNIT。 */
   bonusEligible: boolean;
   /** 荣誉值奖励的结算状态。 */
   honorRewardStatus: HonorRewardStatus;
 };
+
+export type LotQuota = {
+  /** 已链接的节点数。 */
+  nodeCount: number;
+  /** 每日可完成的「一发十赞」组数 = nodeCount × TASK_LOT_UNITS_PER_NODE。 */
+  units: number;
+  /** 组数 × TASK_LOT_LIKES_PER_UNIT。 */
+  likes: number;
+  /** 组数 × TASK_LOT_HONOR_PER_UNIT。 */
+  honor: number;
+};
+
+/** 纯函数：已链接节点数 → 当日「一发十赞」配额。 */
+export function getLotQuota(nodeCount: number): LotQuota {
+  const n = Math.max(0, Math.floor(nodeCount));
+  const units = n * TASK_LOT_UNITS_PER_NODE;
+  return { nodeCount: n, units, likes: units * TASK_LOT_LIKES_PER_UNIT, honor: units * TASK_LOT_HONOR_PER_UNIT };
+}
+
+/** 阶梯规则是否已生效（北京时间 >= TASK_RATIO_LADDER_START）。 */
+export function isRatioLadderActive(now: Date = new Date()): boolean {
+  return taskDayKey(now) >= TASK_RATIO_LADDER_START;
+}
+
+/**
+ * 实际可领取比例。
+ * 规则优先级：阶梯未生效 → 100%；无昨日记录（新用户）→ 100%；否则用昨日阶梯值。
+ */
+export function effectiveClaimRatio(yesterday: TaskDaySnapshot | null, now: Date = new Date()): number {
+  if (!isRatioLadderActive(now)) return 100;
+  if (!yesterday) return TASK_NEW_USER_CLAIM_RATIO;
+  return yesterday.claimRatio;
+}
 
 /** 每日任务按北京时间结算，避免用户设备所在地影响凌晨发放日。 */
 export function taskDayKey(date: Date = new Date()): string {
@@ -82,6 +141,7 @@ export function loadTaskState(date: string): DailyTaskState {
       posted: !!parsed.posted,
       interactedPostIds: Array.isArray(parsed.interactedPostIds) ? parsed.interactedPostIds : [],
       honorRewardIssuedAt: typeof parsed.honorRewardIssuedAt === 'string' ? parsed.honorRewardIssuedAt : undefined,
+      airdropClaimedPb: typeof parsed.airdropClaimedPb === 'number' ? parsed.airdropClaimedPb : undefined,
     };
   } catch {
     return emptyState(date);
@@ -120,15 +180,24 @@ export function markInteracted(postId: string, date: string = taskDayKey()): { s
 export function getTaskSnapshot(date: string = taskDayKey()): TaskDaySnapshot {
   const state = loadTaskState(date);
   const interactedCount = state.interactedPostIds.length;
-  const bonusEligible = state.posted && interactedCount >= TASK_BONUS_THRESHOLD;
+  const bonusEligible = state.posted && interactedCount >= TASK_LOT_LIKES_PER_UNIT;
   return {
     date,
     posted: state.posted,
     interactedCount,
     claimRatio: interactionRatio(interactedCount),
+    earningsPb: typeof state.airdropClaimedPb === 'number' ? state.airdropClaimedPb : TASK_EARNINGS_UNSETTLED,
     bonusEligible,
     honorRewardStatus: !bonusEligible ? 'none' : state.honorRewardIssuedAt ? 'issued' : 'pending',
   };
+}
+
+/** 领取空投时写入当天记录，供日历渲染「当日收益」。 */
+export function recordAirdropClaim(amountPb: number, date: string = taskDayKey()): DailyTaskState {
+  const state = loadTaskState(date);
+  const next: DailyTaskState = { ...state, airdropClaimedPb: amountPb };
+  saveTaskState(next);
+  return next;
 }
 
 /** 补结算所有已跨过北京时间零点、但尚未发放的一发十赞奖励。 */
@@ -168,20 +237,27 @@ export function getIssuedHonorRewardTotal(): number {
   return total;
 }
 
-/** 「昨天」快照：demo 环境无真实历史数据，若本地无记录则给出一份 seed 快照，保证面板可展示。 */
-export function getYesterdaySnapshot(now: Date = new Date()): TaskDaySnapshot {
+/**
+ * 「昨天」快照：demo 环境无真实历史数据，若本地无记录则给出一份 seed 快照，保证面板可展示。
+ * 返回 null 表示昨日确实无任何记录（新注册用户），供 effectiveClaimRatio 走 D4 新用户分支。
+ * opts.forceNewUser 供 DevPanel 演示该分支，跳过 seed。
+ */
+export function getYesterdaySnapshot(now: Date = new Date(), opts?: { forceNewUser?: boolean }): TaskDaySnapshot | null {
+  if (opts?.forceNewUser) return null;
   const yesterday = taskDayKey(new Date(now.getTime() - DAY_MS));
   const state = loadTaskState(yesterday);
   if (state.posted || state.interactedPostIds.length > 0) {
     return getTaskSnapshot(yesterday);
   }
-  // seed：demo 首次打开时展示一份「昨天已发帖 + 完成了大半互动帖」的示例快照，而非全零
+  // seed：demo 首次打开时展示一份「昨天已发帖 + 完成了大半互动帖 + 已领取空投」的示例快照，而非全零
   const seedCount = 20;
+  const seedRatio = interactionRatio(seedCount);
   return {
     date: yesterday,
     posted: true,
     interactedCount: seedCount,
-    claimRatio: interactionRatio(seedCount),
+    claimRatio: seedRatio,
+    earningsPb: Math.round(MOCK_PB_AIRDROP_AMOUNT * seedRatio / 100),
     bonusEligible: true,
     honorRewardStatus: 'issued',
   };
@@ -189,13 +265,21 @@ export function getYesterdaySnapshot(now: Date = new Date()): TaskDaySnapshot {
 
 export type TaskCalendarDay = {
   date: string;
+  /** 1..31，恒属当前展示的自然月。 */
   day: number;
-  /** 是否属于当前展示的自然月（用于灰显上/下月的填充格）。 */
-  inCurrentMonth: boolean;
   isToday: boolean;
   /** 未来日期：任务尚未发生，不展示任何数据。 */
   isFuture: boolean;
   snapshot: TaskDaySnapshot | null;
+};
+
+export type TaskCalendarMonth = {
+  /** 当月 1 号所在的星期列（0=周日），供视图补前置空位保持周几对齐。 */
+  leadingBlanks: number;
+  /** 月份标题格式化锚点（当月 1 号）。 */
+  anchorDate: string;
+  /** 长度恒等于当月天数，不含相邻月填充。 */
+  days: TaskCalendarDay[];
 };
 
 /** 日历格使用其格子对应的自然日期，避免新加坡与北京时间的时区换日影响月视图。 */
@@ -204,6 +288,12 @@ function calendarDayKey(date: Date): string {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+/** seed 天的当日收益：按每 6 天 1 次「已错过」的节奏兜底，保证 0 状态有样本可看。 */
+function seedEarnings(seedIndex: number, ratio: number): number {
+  if (seedIndex % 6 === 5) return 0;
+  return Math.round(MOCK_PB_AIRDROP_AMOUNT * ratio / 100);
 }
 
 function seedOrRealSnapshot(date: string, todayKey: string): TaskDaySnapshot {
@@ -216,57 +306,48 @@ function seedOrRealSnapshot(date: string, todayKey: string): TaskDaySnapshot {
   const daysAgo = Math.round((new Date(todayKey).getTime() - new Date(date).getTime()) / DAY_MS);
   if (daysAgo % 2 === 1) {
     const seedPattern = [18, 25, 33, TASK_INTERACTION_POOL_SIZE, 20, 28, 15];
-    const seedCount = seedPattern[((daysAgo - 1) / 2) % seedPattern.length];
+    const seedIndex = (daysAgo - 1) / 2;
+    const seedCount = seedPattern[seedIndex % seedPattern.length];
+    const ratio = interactionRatio(seedCount);
     return {
       date,
       posted: true,
       interactedCount: seedCount,
-      claimRatio: interactionRatio(seedCount),
-      bonusEligible: seedCount >= TASK_BONUS_THRESHOLD,
-      honorRewardStatus: seedCount >= TASK_BONUS_THRESHOLD ? 'issued' : 'none',
+      claimRatio: ratio,
+      earningsPb: seedEarnings(seedIndex, ratio),
+      bonusEligible: seedCount >= TASK_LOT_LIKES_PER_UNIT,
+      honorRewardStatus: seedCount >= TASK_LOT_LIKES_PER_UNIT ? 'issued' : 'none',
     };
   }
-  return { date, posted: false, interactedCount: 0, claimRatio: TASK_RATIO_BASE, bonusEligible: false, honorRewardStatus: 'none' };
+  return {
+    date, posted: false, interactedCount: 0, claimRatio: TASK_RATIO_BASE,
+    earningsPb: TASK_EARNINGS_UNSETTLED, bonusEligible: false, honorRewardStatus: 'none',
+  };
 }
 
-/** 按自然月生成日历格子（含首尾灰显的相邻月填充天），用于历史日历以常见日历样式展示。 */
-export function getTaskCalendarMonth(now: Date = new Date()): TaskCalendarDay[] {
+/** 按自然月生成日历格子，只含当月 1–31 号；leadingBlanks 供视图补前置空位保持周几对齐。 */
+export function getTaskCalendarMonth(now: Date = new Date()): TaskCalendarMonth {
   const year = now.getFullYear();
   const month = now.getMonth();
   const todayKey = taskDayKey(now);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const startWeekday = new Date(year, month, 1).getDay();
+  const leadingBlanks = new Date(year, month, 1).getDay();
 
-  const result: TaskCalendarDay[] = [];
-
-  for (let i = 0; i < startWeekday; i++) {
-    const d = new Date(year, month, 1 - (startWeekday - i));
-    result.push({ date: calendarDayKey(d), day: d.getDate(), inCurrentMonth: false, isToday: false, isFuture: false, snapshot: null });
-  }
-
+  const days: TaskCalendarDay[] = [];
   for (let day = 1; day <= daysInMonth; day++) {
     const d = new Date(year, month, day);
     const date = calendarDayKey(d);
     const isFuture = date > todayKey;
-    result.push({
+    days.push({
       date,
       day,
-      inCurrentMonth: true,
       isToday: date === todayKey,
       isFuture,
       snapshot: isFuture ? null : seedOrRealSnapshot(date, todayKey),
     });
   }
 
-  const remainder = result.length % 7;
-  if (remainder !== 0) {
-    for (let i = 1; i <= 7 - remainder; i++) {
-      const d = new Date(year, month + 1, i);
-      result.push({ date: calendarDayKey(d), day: d.getDate(), inCurrentMonth: false, isToday: false, isFuture: false, snapshot: null });
-    }
-  }
-
-  return result;
+  return { leadingBlanks, anchorDate: calendarDayKey(new Date(year, month, 1)), days };
 }
 
 /** 仅供演示：清除今天的任务记录以便重新体验任务面板。 */

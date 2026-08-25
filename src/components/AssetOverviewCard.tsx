@@ -4,10 +4,22 @@ import { useApp } from '../AppContext';
 import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT } from '../mockData';
 import { formatTokenAmount } from '../stakeConfig';
 import { DailyTaskSheet } from './DailyTaskSheet';
-import { TASK_INTERACTION_POOL_SIZE } from '../taskConfig';
+import {
+  isRatioLadderActive,
+  TASK_INTERACTION_POOL_SIZE,
+  TASK_RATIO_BASE,
+  TASK_RATIO_LADDER_START,
+  TASK_RATIO_STEP1,
+  TASK_RATIO_STEP1_COUNT,
+  TASK_RATIO_STEP2,
+  TASK_RATIO_STEP2_COUNT,
+} from '../taskConfig';
 
 export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: boolean }) {
-  const { t, walletConnected, airdropClaimed, claimAirdrop, taskSnapshotToday, taskSnapshotYesterday } = useApp();
+  const {
+    t, walletConnected, airdropClaimed, claimAirdrop, taskSnapshotToday, taskSnapshotYesterday,
+    airdropClaimRatio, demoForceLadder,
+  } = useApp();
   const [airdropRuleOpen, setAirdropRuleOpen] = useState(false);
   const [dailyTaskOpen, setDailyTaskOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -19,8 +31,9 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
 
   const airdropMissed = !airdropClaimed && getAirdropDeadline(now) - now <= 0;
 
-  // 今天可领：昨日比例 × 今日空投池（已知）。明天可领：只知比例，池量未知，不换算 PB。
-  const todayPb = Math.round(MOCK_PB_AIRDROP_AMOUNT * taskSnapshotYesterday.claimRatio / 100);
+  // 今天可领：context 统一算出的有效比例（已处理 9/1 阶梯生效与新用户默认值）× 今日空投池
+  const todayPb = Math.round(MOCK_PB_AIRDROP_AMOUNT * airdropClaimRatio / 100);
+  const ladderActive = demoForceLadder || isRatioLadderActive();
   const interacted = taskSnapshotToday.interactedCount;
   const isFull = interacted >= TASK_INTERACTION_POOL_SIZE;
   const posted = taskSnapshotToday.posted;
@@ -52,6 +65,15 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
                   <Info size={13} strokeWidth={2} />
                 </button>
               </div>
+              <span className="asset-overview-airdrop-ratio">
+                {!ladderActive
+                  ? t('{date} 起按昨日互动次数计算，当前按 100% 发放', { date: TASK_RATIO_LADDER_START })
+                  : !taskSnapshotYesterday
+                    ? t('新用户首日按 100% 发放')
+                    : t('按昨天互动 {count} / {total} 次，可领 {ratio}%', {
+                        count: taskSnapshotYesterday.interactedCount, total: TASK_INTERACTION_POOL_SIZE, ratio: airdropClaimRatio,
+                      })}
+              </span>
               <div className="asset-overview-airdrop-amount-row">
                 {airdropClaimed ? (
                   <span className="asset-overview-airdrop-badge">{t('今日已领取')}</span>
@@ -143,6 +165,21 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
               </p>
               <p className="pb-info-sheet-para">
                 {t('可领取额度取决于昨日互动帖任务完成度，完成度越高可领取额度越高。')}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('阶梯规则：')}</strong>
+                {t('默认 {base}%；前 {count} 次每次 +{step}%，后 {count2} 次每次 +{step2}%，满 {total} 次为 100%。', {
+                  base: TASK_RATIO_BASE, count: TASK_RATIO_STEP1_COUNT, step: TASK_RATIO_STEP1,
+                  count2: TASK_RATIO_STEP2_COUNT, step2: TASK_RATIO_STEP2, total: TASK_INTERACTION_POOL_SIZE,
+                })}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('生效时间：')}</strong>
+                {t('{date} 起按昨日互动次数计算，此前所有用户按 100% 发放。', { date: TASK_RATIO_LADDER_START })}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('新用户：')}</strong>
+                {t('新用户首日按 100% 发放')}
               </p>
               <button
                 type="button"

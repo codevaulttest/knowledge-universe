@@ -292,7 +292,8 @@ export type SupTransactionReason =
   | 'unlock'
   | 'partner'
   | 'bsp_invest'
-  | 'purchase';
+  | 'purchase'
+  | 'address_migration';
 
 /** 四种 PB 钱包。余额彼此独立，一笔支付只使用其中一个钱包。 */
 export type PbWalletId = 'onchain' | 'site' | 'honor' | 'node';
@@ -314,6 +315,22 @@ export type PbUse =
   | 'tip'
   | 'node_upgrade'
   | 'node_transfer';
+
+/** 地址迁移由后续服务执行；前端只维护申请、撤销与展示状态。 */
+export type AddressMigrationStatus = 'pending' | 'cancelled' | 'awaiting_execution' | 'completed';
+
+export type AddressMigration = {
+  id: string;
+  sourceAddress: string;
+  targetAddress: string;
+  pbFee: number;
+  supFee: number;
+  createdAt: number;
+  expiresAt: number;
+  status: AddressMigrationStatus;
+  cancelledAt?: number;
+  completedAt?: number;
+};
 
 export type SupTransaction = {
   id: string;

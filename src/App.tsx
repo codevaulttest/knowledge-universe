@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { withFreeTier } from './channelTiers';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_WALLET_ADDRESS, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_LINKED_NODE_COUNT, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_WALLET_ADDRESS, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { buildInitialBspInvestments } from './bspConfig';
 import { formatScheduledAt } from './dateUtils';
-import type { Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import type { AddressMigration, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
 import { PB_WALLETS, PB_WALLET_PICKER_VISIBLE, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, supReasonForPbUse } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
@@ -14,7 +14,7 @@ import { translate } from './locales';
 import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { DailyTaskSheet } from './components/DailyTaskSheet';
-import { getIssuedHonorRewardTotal, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, markInteracted, markPosted, resetTasks, settleDueHonorRewards, simulateInteractedCount, taskDayKey, TASK_BONUS_PB, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
+import { effectiveClaimRatio, getIssuedHonorRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueHonorRewards, simulateInteractedCount, taskDayKey, TASK_BONUS_PB, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
 import { Toast } from './components/shared';
 import { TaskCelebrationOverlay } from './components/TaskCelebrationOverlay';
 import { ComposePage } from './pages/ComposePage';
@@ -117,11 +117,44 @@ export default function App() {
   const [inviterAddress, setInviterAddress] = useState<string | null>(null);
   const [airdropClaimed, setAirdropClaimed] = useState(false);
 
-  // 每日任务（发帖任务 + 互动帖任务）：今天的完成度决定明天可领取空投收益的比例
+  // 每日任务：互动帖任务决定明天空投领取比例，一发十赞决定今天荣誉值签到奖，两者互不相关
   const [taskSnapshotToday, setTaskSnapshotToday] = useState<TaskDaySnapshot>(() => getTaskSnapshot());
-  const [taskSnapshotYesterday, setTaskSnapshotYesterday] = useState<TaskDaySnapshot>(() => getYesterdaySnapshot());
+  // 开发工具：模拟 9/1 后阶梯规则生效 / 模拟新用户（无昨日记录）/ 切换已链接节点数
+  const [demoForceLadder, setDemoForceLadder] = useState(false);
+  const [demoForceNewUser, setDemoForceNewUser] = useState(false);
+  const [demoLinkedNodeCount, setDemoLinkedNodeCount] = useState(MOCK_LINKED_NODE_COUNT);
+  const [taskSnapshotYesterday, setTaskSnapshotYesterday] = useState<TaskDaySnapshot | null>(
+    () => getYesterdaySnapshot(new Date(), { forceNewUser: demoForceNewUser }),
+  );
+  useEffect(() => {
+    setTaskSnapshotYesterday(getYesterdaySnapshot(new Date(), { forceNewUser: demoForceNewUser }));
+  }, [demoForceNewUser]);
+  const airdropClaimRatio = useMemo(() => {
+    // demoForceLadder 只需让 isRatioLadderActive 判定为真，用生效日当天即可，无需模拟精确日期
+    const now = demoForceLadder ? new Date('2026-09-02T00:00:00+08:00') : new Date();
+    return effectiveClaimRatio(taskSnapshotYesterday, now);
+  }, [taskSnapshotYesterday, demoForceLadder]);
+  const lotQuota = useMemo(() => getLotQuota(demoLinkedNodeCount), [demoLinkedNodeCount]);
+  const toggleDemoForceLadder = useCallback(() => setDemoForceLadder(prev => !prev), []);
+  const toggleDemoForceNewUser = useCallback(() => setDemoForceNewUser(prev => !prev), []);
+  const LINKED_NODE_COUNT_CYCLE = [0, 1, 3, 5];
+  const cycleDemoLinkedNodeCount = useCallback(() => {
+    setDemoLinkedNodeCount(prev => {
+      const idx = LINKED_NODE_COUNT_CYCLE.indexOf(prev);
+      return LINKED_NODE_COUNT_CYCLE[(idx + 1) % LINKED_NODE_COUNT_CYCLE.length];
+    });
+  }, []);
   // 每完成 N 篇互动帖 +1，供任务面板监听触发一次性庆祝动效
   const [taskCelebrateSignal, setTaskCelebrateSignal] = useState(0);
+  // 知识宇宙节点收藏：详情页与列表页共享，避免两处状态漂移
+  const [favoriteNodeIds, setFavoriteNodeIds] = useState<Set<string>>(new Set());
+  const toggleFavoriteNode = useCallback((nodeId: string) => {
+    setFavoriteNodeIds(prev => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) next.delete(nodeId); else next.add(nodeId);
+      return next;
+    });
+  }, []);
 
   const recordTaskInteraction = (postId: string) => {
     const { state, added } = markInteracted(postId);
@@ -162,14 +195,16 @@ export default function App() {
 
   const claimAirdrop = () => {
     if (airdropClaimed || Date.now() > getAirdropDeadline()) return;
-    // 可领取金额取决于昨日任务（发帖任务 + 互动帖任务）完成度对应的比例
-    const claimedAmount = Math.round(MOCK_PB_AIRDROP_AMOUNT * taskSnapshotYesterday.claimRatio / 100);
+    // 可领取金额取决于 airdropClaimRatio：已统一处理昨日互动帖完成度、9/1 阶梯生效与新用户默认值
+    const claimedAmount = Math.round(MOCK_PB_AIRDROP_AMOUNT * airdropClaimRatio / 100);
     const onchainAmount = Math.ceil(claimedAmount / 2);
     const siteAmount = claimedAmount - onchainAmount;
     setPbWallets(prev => ({ ...prev, onchain: prev.onchain + onchainAmount, site: prev.site + siteAmount }));
     const fee = pbOnchainFee(onchainAmount);
     if (fee > 0) deductSup(fee, 'recharge');
     setAirdropClaimed(true);
+    recordAirdropClaim(claimedAmount);
+    setTaskSnapshotToday(getTaskSnapshot());
     showToast(t('领取成功，+{MOCK_PB_AIRDROP_AMOUNT} PB', { MOCK_PB_AIRDROP_AMOUNT: claimedAmount }));
   };
 
@@ -219,6 +254,78 @@ export default function App() {
   const deductSup = (amount: number, reason: SupTransactionReason) => {
     setSupBalance(b => Math.max(0, b - amount));
     appendSupTransaction({ direction: 'out', amount, reason });
+  };
+
+  // ── 地址迁移：前端只模拟申请、冻结和撤销；实际资料迁移交由后续服务处理 ──
+  const ADDRESS_MIGRATION_PB_FEE = 100;
+  const ADDRESS_MIGRATION_SUP_FEE = 0.01;
+  const ADDRESS_MIGRATION_APPEAL_MS = 24 * 60 * 60 * 1000;
+  const [addressMigrations, setAddressMigrations] = useState<AddressMigration[]>([]);
+
+  const settleExpiredAddressMigrations = useCallback(() => {
+    const now = Date.now();
+    setAddressMigrations(prev => {
+      let changed = false;
+      const next = prev.map(migration => {
+        if (migration.status === 'pending' && migration.expiresAt <= now) {
+          changed = true;
+          return { ...migration, status: 'awaiting_execution' as const };
+        }
+        return migration;
+      });
+      return changed ? next : prev;
+    });
+  }, []);
+
+  useEffect(() => {
+    settleExpiredAddressMigrations();
+    const timer = window.setInterval(settleExpiredAddressMigrations, 60_000);
+    return () => window.clearInterval(timer);
+  }, [settleExpiredAddressMigrations]);
+
+  const requestAddressMigration = (targetAddress: string) => {
+    const sourceAddress = walletAddress;
+    const normalizedTarget = targetAddress.trim().toLowerCase();
+    const now = Date.now();
+    if (!sourceAddress) return { ok: false, message: t('请先连接钱包') };
+    if (addressMigrations.some(m => m.status === 'pending' && m.expiresAt > now)) {
+      return { ok: false, message: t('迁移申请进行中，暂不能发起新的申请') };
+    }
+    if (pbWallets.onchain < ADDRESS_MIGRATION_PB_FEE) return { ok: false, message: t('链上 PB 余额不足') };
+    if (supBalance < ADDRESS_MIGRATION_SUP_FEE) return { ok: false, message: t('SUP 余额不足') };
+
+    const migration: AddressMigration = {
+      id: `migration-${now}`,
+      sourceAddress,
+      targetAddress: normalizedTarget,
+      pbFee: ADDRESS_MIGRATION_PB_FEE,
+      supFee: ADDRESS_MIGRATION_SUP_FEE,
+      createdAt: now,
+      expiresAt: now + ADDRESS_MIGRATION_APPEAL_MS,
+      status: 'pending',
+    };
+    setPbWallets(prev => ({ ...prev, onchain: prev.onchain - ADDRESS_MIGRATION_PB_FEE }));
+    deductSup(ADDRESS_MIGRATION_SUP_FEE, 'address_migration');
+    setAddressMigrations(prev => [migration, ...prev]);
+    showToast(t('迁移申请已提交'));
+    return { ok: true };
+  };
+
+  const cancelAddressMigration = (migrationId: string) => {
+    const now = Date.now();
+    const migration = addressMigrations.find(item => item.id === migrationId);
+    if (!migration || migration.status !== 'pending' || migration.expiresAt <= now) {
+      settleExpiredAddressMigrations();
+      return false;
+    }
+    setAddressMigrations(prev => prev.map(item => (
+      item.id === migrationId ? { ...item, status: 'cancelled', cancelledAt: now } : item
+    )));
+    setPbWallets(prev => ({ ...prev, onchain: prev.onchain + migration.pbFee }));
+    setSupBalance(balance => balance + migration.supFee);
+    appendSupTransaction({ direction: 'in', amount: migration.supFee, reason: 'address_migration' });
+    showToast(t('已提交撤销申请，冻结费用已释放'));
+    return true;
   };
 
   const [channels, setChannels] = useState<Channel[]>(ALL_CHANNELS);
@@ -335,7 +442,7 @@ export default function App() {
   const tab = pageRoute.page === 'P0' ? pageRoute.tab : 0;
   const navigate = (r: Route) => { setSearchOpen(false); setStack(s => [...s, r]); };
   const navigateRoot = (r: Route) => setStack([r]);
-  // 跳转到自己的主页并自动展开「编辑资料」（用于小黄车联系方式发现引导）
+  // 跳转到自己的主页并自动展开「账户与资料」（用于小黄车联系方式发现引导）
   const [editProfileAutoOpen, setEditProfileAutoOpen] = useState(false);
   const openEditProfileContacts = () => {
     navigate({ page: 'P6', authorName: CURRENT_USER });
@@ -367,7 +474,7 @@ export default function App() {
         showToast(t('已发放任务奖励 +{bonus} 荣誉值', { bonus: amount }));
       }
       setTaskSnapshotToday(getTaskSnapshot());
-      setTaskSnapshotYesterday(getYesterdaySnapshot());
+      setTaskSnapshotYesterday(getYesterdaySnapshot(new Date(), { forceNewUser: demoForceNewUser }));
     };
 
     refreshForNewTaskDay();
@@ -379,7 +486,7 @@ export default function App() {
       refreshForNewTaskDay();
     }, 60_000);
     return () => window.clearInterval(timer);
-  }, [t]);
+  }, [t, demoForceNewUser]);
 
   const openLink = (postId: string, mode: 'link' | 'unlock' = 'link') => {
     requireWallet(() => {
@@ -973,9 +1080,14 @@ export default function App() {
     walletConnected, connectWallet, requireWallet,
     walletAddress, walletConnecting, disconnectWallet,
     pbWallets, pbBalance, getPbWalletOptions, pickDefaultPbWallet, payPb, setDemoPbWallets, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
+    addressMigrations, requestAddressMigration, cancelAddressMigration,
     airdropClaimed, claimAirdrop,
-    taskSnapshotToday, taskSnapshotYesterday, taskCelebrateSignal, recordTaskInteraction, getDailyTaskCalendar: getTaskCalendarMonth,
+    taskSnapshotToday, taskSnapshotYesterday, airdropClaimRatio, lotQuota,
+    taskCelebrateSignal, recordTaskInteraction, getDailyTaskCalendar: getTaskCalendarMonth,
     resetDemoTasks, simulateDemoTaskInteractions,
+    demoForceLadder, toggleDemoForceLadder, demoForceNewUser, toggleDemoForceNewUser,
+    demoLinkedNodeCount, cycleDemoLinkedNodeCount,
+    favoriteNodeIds, toggleFavoriteNode,
     shopOrders, shippingAddresses, defaultAddress,
     addShippingAddress, setDefaultAddress, removeShippingAddress,
     placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle,
