@@ -670,22 +670,9 @@ function EditProfileModal({
               {activeMigration
                 ? <Clock size={14} strokeWidth={2.2} aria-hidden="true" />
                 : <Repeat2 size={14} strokeWidth={2.2} aria-hidden="true" />}
-              {activeMigration ? t('迁移记录') : t('迁移地址')}
+              {activeMigration ? t('迁移处理中') : t('迁移地址')}
             </button>
           </div>
-          {!activeMigration && (
-            <button type="button" className="address-migration-history-entry" onClick={() => setMigrationHistoryOpen(true)}>
-              <span className="address-migration-history-main">
-                <Clock size={14} strokeWidth={2.1} aria-hidden="true" />
-                {t('迁移记录')}
-              </span>
-              <span className="address-migration-history-status">
-                {t('查看')}
-                <ChevronRight size={15} strokeWidth={2.1} aria-hidden="true" />
-              </span>
-            </button>
-          )}
-
           {/* 昵称输入 */}
           <div className="edit-profile-field">
             <label className="edit-profile-label" htmlFor="ep-nickname">
@@ -920,7 +907,7 @@ function AddressMigrationSheet({
 
         <div className="address-migration-fee-card">
           <span className="address-migration-fee-title">{t('迁移费用')}</span>
-          <div><span>{t('链上 PB')}</span><strong>{ADDRESS_MIGRATION_PB_FEE} PB</strong></div>
+          <div><span>{t('手续费')}</span><strong>{ADDRESS_MIGRATION_PB_FEE} PB</strong></div>
           <div><span>{t('Gas 费')}</span><strong>{ADDRESS_MIGRATION_SUP_FEE} SUP</strong></div>
         </div>
         <div className="address-migration-risk" role="note">
@@ -950,7 +937,10 @@ function AddressMigrationReminderModal({
         <div className="address-migration-reminder-icon"><CircleCheck size={24} strokeWidth={2.2} aria-hidden="true" /></div>
         <span className="address-migration-reminder-title">{t('迁移申请已提交')}</span>
         <strong>{t('迁移至 {address}', { address: migration.targetAddress })}</strong>
-        <p className="address-migration-reminder-note">{t('24 小时内可撤销，过期后无法撤销')}</p>
+        <div className="address-migration-reminder-note" role="note">
+          <AlertTriangle size={16} strokeWidth={2.2} aria-hidden="true" />
+          <p>{t('请注意：24 小时内可撤销，过期后无法撤销')}</p>
+        </div>
         <div className="address-migration-reminder-actions">
           <button type="button" className="planet-confirm-btn address-migration-reminder-primary" onClick={onClose}>{t('我知道了')}</button>
         </div>

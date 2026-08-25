@@ -7268,32 +7268,9 @@ button {
   background: var(--ku-color-primary-alpha-06);
   outline: none;
 }
-.address-migration-history-entry {
-  display: flex;
-  min-height: var(--ku-control-height-sm);
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ku-space-2);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ku-color-text-secondary);
-  font: var(--ku-text-meta-lg);
-  cursor: pointer;
-}
-.address-migration-history-entry:focus-visible,
 .address-migration-entry:focus-visible {
   outline: 2px solid var(--ku-color-primary);
   outline-offset: var(--ku-space-1);
-}
-.address-migration-history-main,
-.address-migration-history-status {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ku-space-1);
-}
-.address-migration-history-status {
-  color: var(--ku-color-text-meta);
 }
 /* ── 地址迁移 ── */
 .address-migration-backdrop {
@@ -7304,6 +7281,12 @@ button {
   display: flex;
   flex-direction: column;
   gap: var(--ku-space-4);
+}
+.address-migration-sheet {
+  gap: var(--ku-space-3);
+}
+.address-migration-sheet .sheet-header {
+  margin-bottom: 0;
 }
 .address-migration-address-block,
 .address-migration-fee-card,
@@ -7404,9 +7387,23 @@ button {
   text-align: center;
 }
 .address-migration-reminder-note {
-  margin: 0;
-  color: var(--ku-color-text-secondary);
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: var(--ku-space-2);
+  padding: var(--ku-space-2) var(--ku-space-3);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-warning-bg);
+  color: var(--ku-color-warning-text);
   font: var(--ku-text-meta);
+  text-align: left;
+}
+.address-migration-reminder-note svg {
+  flex-shrink: 0;
+  color: var(--ku-color-warning-icon);
+}
+.address-migration-reminder-note p {
+  margin: 0;
 }
 .address-migration-reminder-actions {
   display: grid;
