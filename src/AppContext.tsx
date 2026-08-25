@@ -126,6 +126,7 @@ export type AppContextValue = {
   addressMigrations: AddressMigration[];
   requestAddressMigration: (targetAddress: string) => { ok: boolean; message?: string };
   cancelAddressMigration: (migrationId: string) => boolean;
+  dismissMigrationReminder: (migrationId: string) => void;
   // 知识宇宙页：邀请码绑定
   myInviteCode: string;
   /** 已绑定邀请人的钱包地址；未绑定为 null */

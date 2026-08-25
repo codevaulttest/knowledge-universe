@@ -330,6 +330,8 @@ export type AddressMigration = {
   status: AddressMigrationStatus;
   cancelledAt?: number;
   completedAt?: number;
+  /** 迁移提交后的确认弹窗是否已被用户关闭，用于避免重复进入主页时反复弹出 */
+  reminderSeen?: boolean;
 };
 
 export type SupTransaction = {

@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Award, Bell, Bookmark, Camera, Check, ChevronRight, CircleCheck, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Award, Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
-import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
+import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
 import type { AddressMigration, Channel, ChannelSubscriber, Draft, Language, OutgoingTip, ProfileContacts, RepostedBy, UserProfile } from '../types';
 import { PostCard } from '../components/PostCard';
 import { DevPanel } from '../components/DevPanel';
@@ -15,7 +15,7 @@ import { isPostVisible, formatScheduledAt } from '../dateUtils';
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
@@ -60,7 +60,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     }
   }, [isOwn, editProfileAutoOpen, setEditProfileAutoOpen]);
   const pendingMigration = isOwn
-    ? addressMigrations.find(migration => migration.status === 'pending' && migration.expiresAt > Date.now())
+    ? addressMigrations.find(migration => migration.status === 'pending' && migration.expiresAt > Date.now() && !migration.reminderSeen)
     : undefined;
   useEffect(() => {
     if (pendingMigration) setMigrationReminderId(pendingMigration.id);
@@ -548,10 +548,11 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
       {migrationReminderId && (() => {
         const migration = addressMigrations.find(item => item.id === migrationReminderId);
-        return migration?.status === 'pending' ? (
-          <AddressMigrationReminderModal
+        return migration ? (
+          <AddressMigrationStatusModal
             migration={migration}
-            onClose={() => setMigrationReminderId(null)}
+            onCancel={cancelAddressMigration}
+            onClose={() => { dismissMigrationReminder(migration.id); setMigrationReminderId(null); }}
           />
         ) : null;
       })()}
@@ -594,7 +595,7 @@ function EditProfileModal({
     !!userProfile.contacts?.whatsapp?.trim()
   );
   const [migrationSheetOpen, setMigrationSheetOpen] = useState(false);
-  const [migrationHistoryOpen, setMigrationHistoryOpen] = useState(false);
+  const [migrationStatusOpen, setMigrationStatusOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const trimmed = nickname.trim();
   const sourceAddress = walletAddress ?? MOCK_WALLET_ADDRESS;
@@ -665,7 +666,7 @@ function EditProfileModal({
             <button
               type="button"
               className="address-migration-entry"
-              onClick={() => activeMigration ? setMigrationHistoryOpen(true) : setMigrationSheetOpen(true)}
+              onClick={() => activeMigration ? setMigrationStatusOpen(true) : setMigrationSheetOpen(true)}
             >
               {activeMigration
                 ? <Clock size={14} strokeWidth={2.2} aria-hidden="true" />
@@ -786,10 +787,10 @@ function EditProfileModal({
           }}
         />
       )}
-      {migrationHistoryOpen && (
-        <AddressMigrationHistoryModal
-          migrations={addressMigrations}
-          onClose={() => setMigrationHistoryOpen(false)}
+      {migrationStatusOpen && activeMigration && (
+        <AddressMigrationStatusModal
+          migration={activeMigration}
+          onClose={() => setMigrationStatusOpen(false)}
           onCancel={cancelAddressMigration}
         />
       )}
@@ -834,22 +835,22 @@ function AddressMigrationSheet({
 }) {
   const { t, pbWallets, supBalance } = useApp();
   const [targetAddress, setTargetAddress] = useState('');
-  const [confirmedAddress, setConfirmedAddress] = useState('');
   const [attempted, setAttempted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const normalizedTarget = targetAddress.trim().toLowerCase();
   const addressValid = /^0x[a-fA-F0-9]{40}$/.test(targetAddress.trim());
-  const addressesMatch = normalizedTarget.length > 0 && normalizedTarget === confirmedAddress.trim().toLowerCase();
   const isDifferentAddress = normalizedTarget !== sourceAddress.toLowerCase();
   const pbSufficient = pbWallets.onchain >= ADDRESS_MIGRATION_PB_FEE;
   const supSufficient = supBalance >= ADDRESS_MIGRATION_SUP_FEE;
-  const formReady = addressValid && addressesMatch && isDifferentAddress && pbSufficient && supSufficient;
+  const matchedUser = addressValid && isDifferentAddress ? findRegisteredUserByAddress(normalizedTarget) : undefined;
+  const unregisteredAddress = addressValid && isDifferentAddress && !matchedUser;
+  const formReady = addressValid && isDifferentAddress && !!matchedUser && pbSufficient && supSufficient;
 
   const validationMessage = (() => {
     if (!targetAddress.trim()) return t('请填写新地址');
     if (!addressValid) return t('请输入有效的 0x 地址');
     if (!isDifferentAddress) return t('新地址需与当前地址不同');
-    if (!addressesMatch) return t('两次输入的地址不一致');
+    if (unregisteredAddress) return t('迁移目标需关联知识宇宙账户');
     if (!pbSufficient) return t('链上 PB 余额不足');
     if (!supSufficient) return t('SUP 余额不足');
     return null;
@@ -861,6 +862,15 @@ function AddressMigrationSheet({
     if (!formReady) return;
     const result = onSubmit(normalizedTarget);
     if (!result.ok) setSubmitError(result.message ?? t('提交失败，请稍后重试'));
+  };
+
+  const handlePasteAddress = async () => {
+    try {
+      const text = (await navigator.clipboard.readText()).trim();
+      if (text) { setTargetAddress(text); setSubmitError(null); }
+    } catch {
+      // 剪贴板读取失败（权限被拒等）：静默忽略，用户仍可手动输入
+    }
   };
 
   return (
@@ -879,30 +889,34 @@ function AddressMigrationSheet({
         </div>
         <div className="address-migration-field">
           <label htmlFor="address-migration-target">{t('新地址')}</label>
-          <input
-            id="address-migration-target"
-            className={`edit-profile-input${attempted && validationMessage ? ' edit-profile-input--error' : ''}`}
-            value={targetAddress}
-            onChange={event => { setTargetAddress(event.target.value); setSubmitError(null); }}
-            placeholder={t('请填写新地址')}
-            autoComplete="off"
-            spellCheck={false}
-          />
+          <div className="stake-code-input-wrap">
+            <input
+              id="address-migration-target"
+              className={`edit-profile-input address-migration-target-input${(attempted && validationMessage) || unregisteredAddress ? ' edit-profile-input--error' : ''}`}
+              value={targetAddress}
+              onChange={event => { setTargetAddress(event.target.value); setSubmitError(null); }}
+              placeholder={t('请填写新地址')}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <button type="button" className="stake-code-paste-btn" onClick={handlePasteAddress}>
+              {t('粘贴')}
+            </button>
+          </div>
         </div>
-        <div className="address-migration-field">
-          <label htmlFor="address-migration-confirm">{t('再次确认新地址')}</label>
-          <input
-            id="address-migration-confirm"
-            className={`edit-profile-input${attempted && validationMessage ? ' edit-profile-input--error' : ''}`}
-            value={confirmedAddress}
-            onChange={event => { setConfirmedAddress(event.target.value); setSubmitError(null); }}
-            placeholder={t('再次确认新地址')}
-            autoComplete="off"
-            spellCheck={false}
-          />
-        </div>
-        {(attempted && validationMessage) || submitError ? (
-          <p className="address-migration-error" role="alert">{submitError ?? validationMessage}</p>
+        {matchedUser && (
+          <div className="address-migration-match-card">
+            <span className="address-migration-match-hint">{t('该地址关联的知识宇宙账户')}</span>
+            <div className="address-migration-match-user">
+              <Avatar index={matchedUser.avatarIdx} />
+              <AuthorName name={matchedUser.name} />
+            </div>
+          </div>
+        )}
+        {unregisteredAddress || (attempted && validationMessage) || submitError ? (
+          <p className="address-migration-error" role="alert">
+            {unregisteredAddress ? t('迁移目标需关联知识宇宙账户') : (submitError ?? validationMessage)}
+          </p>
         ) : null}
 
         <div className="address-migration-fee-card">
@@ -922,106 +936,63 @@ function AddressMigrationSheet({
   );
 }
 
-function AddressMigrationReminderModal({
+function AddressMigrationStatusModal({
   migration,
-  onClose,
-}: {
-  migration: AddressMigration;
-  onClose: () => void;
-}) {
-  const { t } = useApp();
-
-  return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className="payment-sheet address-migration-reminder" role="dialog" aria-modal="true" aria-label={t('迁移申请已提交')} onClick={event => event.stopPropagation()}>
-        <div className="address-migration-reminder-icon"><CircleCheck size={24} strokeWidth={2.2} aria-hidden="true" /></div>
-        <span className="address-migration-reminder-title">{t('迁移申请已提交')}</span>
-        <strong>{t('迁移至 {address}', { address: migration.targetAddress })}</strong>
-        <div className="address-migration-reminder-note" role="note">
-          <AlertTriangle size={16} strokeWidth={2.2} aria-hidden="true" />
-          <p>{t('请注意：24 小时内可撤销，过期后无法撤销')}</p>
-        </div>
-        <div className="address-migration-reminder-actions">
-          <button type="button" className="planet-confirm-btn address-migration-reminder-primary" onClick={onClose}>{t('我知道了')}</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AddressMigrationHistoryModal({
-  migrations,
   onClose,
   onCancel,
 }: {
-  migrations: AddressMigration[];
+  migration: AddressMigration;
   onClose: () => void;
   onCancel: (migrationId: string) => boolean;
 }) {
   const { t } = useApp();
   const now = useMigrationNow();
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  const statusLabel: Record<AddressMigration['status'], string> = {
-    pending: t('迁移中'),
-    cancelled: t('已撤销'),
-    awaiting_execution: t('等待执行'),
-    completed: t('已完成'),
-  };
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const canCancel = migration.status === 'pending' && migration.expiresAt > now;
 
   return (
-    <div className="sheet-backdrop address-migration-backdrop" onClick={onClose}>
-      <div className="payment-sheet address-migration-history-sheet" role="dialog" aria-modal="true" aria-label={t('迁移记录')} onClick={event => event.stopPropagation()}>
-        <div className="sheet-header">
-          <span className="sheet-title">{t('迁移记录')}</span>
-          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="payment-sheet address-migration-reminder" role="dialog" aria-modal="true" aria-label={t('账户迁移申请处理中')} onClick={event => event.stopPropagation()}>
+        <div className="address-migration-reminder-icon"><Clock size={24} strokeWidth={2.2} aria-hidden="true" /></div>
+        <span className="address-migration-reminder-title">{t('账户迁移申请处理中')}</span>
+        <div className="address-migration-reminder-addresses">
+          <div className="address-migration-reminder-address">
+            <span>{t('原地址')}</span>
+            <strong>{migration.sourceAddress}</strong>
+          </div>
+          <div className="address-migration-reminder-address">
+            <span>{t('新地址')}</span>
+            <strong>{migration.targetAddress}</strong>
+          </div>
+          <div className="address-migration-reminder-address">
+            <span>{t('撤销截止')}</span>
+            <strong>{formatMigrationDate(migration.expiresAt)}</strong>
+          </div>
         </div>
-        {migrations.length === 0 ? (
-          <p className="address-migration-empty">{t('暂无迁移记录')}</p>
-        ) : (
-          <div className="address-migration-record-list">
-            {migrations.map(migration => {
-              const canCancel = migration.status === 'pending' && migration.expiresAt > now;
-              return (
-                <article className="address-migration-record" key={migration.id}>
-                  <div className="address-migration-record-head">
-                    <span className={`address-migration-record-status is-${migration.status}`}>{statusLabel[migration.status]}</span>
-                  </div>
-                  <div className="address-migration-record-addresses">
-                    <div className="address-migration-record-address">
-                      <span>{t('原地址')}</span>
-                      <strong>{migration.sourceAddress}</strong>
-                    </div>
-                    <div className="address-migration-record-address">
-                      <span>{t('新地址')}</span>
-                      <strong>{migration.targetAddress}</strong>
-                    </div>
-                  </div>
-                  <div className="address-migration-record-timestamps">
-                    <div className="address-migration-record-timestamp">
-                      <span>{t('申请时间')}</span>
-                      <strong>{formatMigrationDate(migration.createdAt)}</strong>
-                    </div>
-                    <div className="address-migration-record-timestamp">
-                      <span>{t('撤销截止')}</span>
-                      <strong>{formatMigrationDate(migration.expiresAt)}</strong>
-                    </div>
-                  </div>
-                  {canCancel && <button type="button" className="gemini-stake-btn gemini-stake-btn--ghost" onClick={() => setConfirmingId(migration.id)}>{t('撤销迁移')}</button>}
-                </article>
-              );
-            })}
+        {canCancel && (
+          <div className="address-migration-reminder-note" role="note">
+            <AlertTriangle size={16} strokeWidth={2.2} aria-hidden="true" />
+            <p>{t('过期后无法撤销；若非本人操作，请立即撤销')}</p>
           </div>
         )}
+        <div className="address-migration-reminder-actions">
+          {canCancel && (
+            <button type="button" className="gemini-stake-btn gemini-stake-btn--ghost address-migration-reminder-cancel" onClick={() => setConfirmCancel(true)}>
+              {t('撤销迁移')}
+            </button>
+          )}
+          <button type="button" className="planet-confirm-btn address-migration-reminder-primary" onClick={onClose}>{t('我知道了')}</button>
+        </div>
       </div>
-      {confirmingId && (
+      {confirmCancel && (
         <Ios26Alert
           title={t('确认撤销迁移')}
           message={t('撤销后将释放已冻结的迁移费用')}
           cancelLabel={t('继续等待')}
           confirmLabel={t('撤销迁移')}
-          onCancel={() => setConfirmingId(null)}
+          onCancel={() => setConfirmCancel(false)}
           onConfirm={() => {
-            if (onCancel(confirmingId)) setConfirmingId(null);
+            if (onCancel(migration.id)) { setConfirmCancel(false); onClose(); }
           }}
         />
       )}

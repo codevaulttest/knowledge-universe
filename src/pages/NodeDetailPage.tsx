@@ -151,7 +151,7 @@ export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
             <div className="node-detail-earning">
               <ArrowRightLeft size={18} aria-hidden />
               <span>{t('总损失收益')}</span>
-              <strong>{formatTokenAmount(earnings.totalLoss)} PB</strong>
+              <strong>{formatTokenAmount(earnings.centennialSubsidy)} PB</strong>
             </div>
           </div>
         </section>

@@ -41,6 +41,18 @@ export const MOCK_INVITE_CODE_TO_ADDRESS: Record<string, string> = {
   '202607': '0x3c5e7a91b2d4f6081c3e5a7b9d0f1234567890ab',
 };
 
+/** 已注册知识宇宙账户的钱包地址（demo：地址迁移时用于识别目标地址身份），key 为小写地址 */
+export const MOCK_REGISTERED_ADDRESSES: Record<string, string> = {
+  '0xab99f73f93c911d456ffaac9cb41a826bced3b44': '极客前沿',
+  '0x5f2a8c1e6d9b3074a5c6e8f0123456789abcdef0': '阿May的研究笔记',
+};
+
+/** 按钱包地址查找已注册的知识宇宙账户；未命中返回 undefined */
+export function findRegisteredUserByAddress(address: string): UserListItem | undefined {
+  const name = MOCK_REGISTERED_ADDRESSES[address.trim().toLowerCase()];
+  return name ? ALL_USERS_MOCK.find(u => u.name === name) : undefined;
+}
+
 /** 将 6 位邀请码解析为邀请人钱包地址；未知码用确定性 mock 地址，保证 demo 可绑任意码 */
 export function resolveInviterAddress(code: string): string {
   if (MOCK_INVITE_CODE_TO_ADDRESS[code]) return MOCK_INVITE_CODE_TO_ADDRESS[code];

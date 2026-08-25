@@ -328,6 +328,12 @@ export default function App() {
     return true;
   };
 
+  const dismissMigrationReminder = (migrationId: string) => {
+    setAddressMigrations(prev => prev.map(item => (
+      item.id === migrationId ? { ...item, reminderSeen: true } : item
+    )));
+  };
+
   const [channels, setChannels] = useState<Channel[]>(ALL_CHANNELS);
   // 开发工具：模拟「当前用户尚未创建任何频道」；默认关闭（原型自带 5 个自有频道）
   const [demoHideOwnChannels, setDemoHideOwnChannels] = useState(false);
@@ -1080,7 +1086,7 @@ export default function App() {
     walletConnected, connectWallet, requireWallet,
     walletAddress, walletConnecting, disconnectWallet,
     pbWallets, pbBalance, getPbWalletOptions, pickDefaultPbWallet, payPb, setDemoPbWallets, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
-    addressMigrations, requestAddressMigration, cancelAddressMigration,
+    addressMigrations, requestAddressMigration, cancelAddressMigration, dismissMigrationReminder,
     airdropClaimed, claimAirdrop,
     taskSnapshotToday, taskSnapshotYesterday, airdropClaimRatio, lotQuota,
     taskCelebrateSignal, recordTaskInteraction, getDailyTaskCalendar: getTaskCalendarMonth,

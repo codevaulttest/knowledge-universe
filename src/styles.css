@@ -7276,8 +7276,7 @@ button {
 .address-migration-backdrop {
   z-index: 210;
 }
-.address-migration-sheet,
-.address-migration-history-sheet {
+.address-migration-sheet {
   display: flex;
   flex-direction: column;
   gap: var(--ku-space-4);
@@ -7290,8 +7289,7 @@ button {
 }
 .address-migration-address-block,
 .address-migration-fee-card,
-.address-migration-risk,
-.address-migration-record {
+.address-migration-risk {
   border-radius: var(--ku-radius-card);
 }
 .address-migration-address-block {
@@ -7311,6 +7309,26 @@ button {
 .address-migration-field {
   display: flex;
   flex-direction: column;
+  gap: var(--ku-space-2);
+}
+.address-migration-target-input {
+  padding-right: 64px;
+}
+.address-migration-match-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-2);
+  padding: var(--ku-space-3);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-primary-alpha-06);
+}
+.address-migration-match-hint {
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta);
+}
+.address-migration-match-user {
+  display: flex;
+  align-items: center;
   gap: var(--ku-space-2);
 }
 .address-migration-field label,
@@ -7372,19 +7390,36 @@ button {
   height: calc(var(--ku-space-6) * 2);
   place-items: center;
   border-radius: var(--ku-radius-circle);
-  background: var(--ku-color-success-bg);
-  color: var(--ku-color-success-text);
+  background: var(--ku-color-warning-bg);
+  color: var(--ku-color-warning-text);
 }
 .address-migration-reminder-title {
   color: var(--ku-color-text-primary);
   font: var(--ku-text-author-name);
 }
-.address-migration-reminder > strong {
-  max-width: 100%;
+.address-migration-reminder-addresses {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--ku-space-2);
+  padding: var(--ku-space-3);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-page);
+  text-align: left;
+}
+.address-migration-reminder-address {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-1);
+}
+.address-migration-reminder-address > span {
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-meta);
+}
+.address-migration-reminder-address strong {
   color: var(--ku-color-text-primary);
   font: var(--ku-text-node-value);
   overflow-wrap: anywhere;
-  text-align: center;
 }
 .address-migration-reminder-note {
   display: flex;
@@ -7411,100 +7446,12 @@ button {
   grid-template-columns: 1fr;
   gap: var(--ku-space-2);
 }
-.address-migration-history-sheet {
-  max-height: var(--ku-modal-max-height);
-  gap: var(--ku-space-2);
+.address-migration-reminder-primary {
+  margin-top: 0;
 }
-.address-migration-history-sheet .sheet-header {
-  margin-bottom: 0;
-}
-.address-migration-empty {
-  margin: var(--ku-space-6) 0;
-  color: var(--ku-color-text-meta);
-  font: var(--ku-text-body-sm);
-  text-align: center;
-}
-.address-migration-record-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ku-space-2);
-  overflow-y: auto;
-}
-.address-migration-record {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ku-space-2);
-  padding: var(--ku-space-3);
-  border: 1px solid var(--ku-color-border-card);
-  background: var(--ku-color-bg-phone);
-  color: var(--ku-color-text-meta);
-  font: var(--ku-text-meta);
-}
-.address-migration-record .gemini-stake-btn--ghost {
+.address-migration-reminder-cancel {
+  border-color: var(--ku-color-text-danger);
   color: var(--ku-color-text-danger);
-}
-.address-migration-record-head {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-.address-migration-record-addresses {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ku-space-2);
-}
-.address-migration-record-address {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ku-space-1);
-}
-.address-migration-record-address > span {
-  color: var(--ku-color-text-secondary);
-  font: var(--ku-text-meta);
-}
-.address-migration-record-address strong {
-  color: var(--ku-color-text-primary);
-  font: var(--ku-text-node-value);
-  overflow-wrap: anywhere;
-}
-.address-migration-record-timestamps {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ku-space-2);
-}
-.address-migration-record-timestamp {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ku-space-1);
-}
-.address-migration-record-timestamp > span {
-  color: var(--ku-color-text-secondary);
-  font: var(--ku-text-meta);
-}
-.address-migration-record-timestamp strong {
-  color: var(--ku-color-text-primary);
-  font: var(--ku-text-node-value);
-}
-.address-migration-record-status {
-  margin-left: auto;
-  flex-shrink: 0;
-  padding: var(--ku-space-1) var(--ku-space-2);
-  border-radius: var(--ku-radius-pill);
-  background: var(--ku-color-bg-page);
-  color: var(--ku-color-text-secondary);
-  font: var(--ku-text-caption-strong);
-}
-.address-migration-record-status.is-pending {
-  background: var(--ku-color-warning-bg);
-  color: var(--ku-color-warning-text);
-}
-.address-migration-record-status.is-cancelled {
-  background: var(--ku-color-danger-bg);
-  color: var(--ku-color-text-danger);
-}
-.address-migration-record-status.is-completed {
-  background: var(--ku-color-success-bg);
-  color: var(--ku-color-success-text);
 }
 .edit-profile-field {
   display: flex;
