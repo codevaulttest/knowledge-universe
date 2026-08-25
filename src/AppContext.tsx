@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, AddressMigration, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
+import type { ActivityGroup, AddressMigration, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import type { LotQuota, TaskCalendarMonth, TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
@@ -56,9 +56,14 @@ export type AppContextValue = {
   activityGroups: ActivityGroup[];
   unreadActivityCount: number;
   markAllRead: () => void;
-  openDailyTask: () => void;
-  /** 今天是否还有可领取/待达成的每日任务奖励，供入口红点展示 */
-  dailyTaskAlert: boolean;
+  interactionTaskOpen: boolean;
+  openInteractionTask: () => void;
+  /** 今天是否还有可领取的空投奖励，供互动帖任务入口红点展示 */
+  interactionTaskAlert: boolean;
+  lotTaskOpen: boolean;
+  openLotTask: () => void;
+  /** 今天是否还有待达成的荣誉值奖励，供一发十赞入口红点展示 */
+  lotTaskAlert: boolean;
   recentSearches: string[];
   saveRecentSearch: (query: string) => void;
   removeRecentSearch: (query: string) => void;
@@ -100,10 +105,13 @@ export type AppContextValue = {
   // 开发工具：模拟当前用户「未创建频道」空态（默认关闭，原型自带 5 个自有频道）
   demoHideOwnChannels: boolean;
   toggleDemoHideOwnChannels: () => void;
-  // SUP（SUP 链原生代币）：站内余额，产生节点时与 PB 同步扣除
+  // SUP（SUP 链原生代币）：站内 / 链上两个独立池子；supBalance 仅用于总资产展示
+  supWallets: Record<SupWalletId, number>;
   supBalance: number;
   supHistory: SupTransaction[];
-  deductSup: (amount: number, reason: SupTransactionReason) => void;
+  deductSup: (amount: number, reason: SupTransactionReason, pool?: SupWalletId) => void;
+  /** 优点（182）：只读展示资产，不进任何支付选择器。 */
+  meritBalance: number;
   // 游客模式：未连接钱包时可浏览，涉及身份/资产/链上操作需先连接钱包
   walletConnected: boolean;
   connectWallet: () => void;
@@ -147,7 +155,7 @@ export type AppContextValue = {
   recordTaskInteraction: (postId: string) => void;
   /** 当前自然月的日历（只含 1–31 号），供历史日历以常见日历样式展示 */
   getDailyTaskCalendar: () => TaskCalendarMonth;
-  /** 「一发十赞」当日配额，由已链接节点数派生 */
+  /** 「一发十赞」当日配额，由直连五星节点数派生 */
   lotQuota: LotQuota;
   // 开发工具：重置/模拟今日任务，便于演示
   resetDemoTasks: () => void;
@@ -158,9 +166,9 @@ export type AppContextValue = {
   // 开发工具：模拟新用户（无昨日记录）
   demoForceNewUser: boolean;
   toggleDemoForceNewUser: () => void;
-  // 开发工具：切换已链接节点数，驱动一发十赞配额
-  demoLinkedNodeCount: number;
-  cycleDemoLinkedNodeCount: () => void;
+  // 开发工具：切换直连五星节点数，驱动一发十赞配额
+  demoFiveStarNodeCount: number;
+  cycleDemoFiveStarNodeCount: () => void;
   // 知识宇宙节点：收藏（详情页与列表页共享同一份状态）
   favoriteNodeIds: Set<string>;
   toggleFavoriteNode: (nodeId: string) => void;

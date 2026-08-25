@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import type { PbUse, PbWalletId } from '../types';
-import { PB_WALLETS } from '../walletConfig';
+import { PB_WALLETS, walletConsumesSup } from '../walletConfig';
 import { formatTokenAmount } from '../stakeConfig';
 
 /**
@@ -23,6 +23,23 @@ export function PbWalletPicker({
   const { t, pbWallets, getPbWalletOptions, pickDefaultPbWallet } = useApp();
   const options = getPbWalletOptions(use, amount);
   const [expanded, setExpanded] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+
+  useEffect(() => {
+    if (!expanded || !triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const margin = 12;
+    const spaceBelow = window.innerHeight - rect.bottom - margin;
+    setMenuStyle({
+      position: 'fixed',
+      top: rect.bottom + 8,
+      left: rect.left,
+      width: rect.width,
+      maxHeight: Math.max(spaceBelow, 120),
+      zIndex: 10,
+    });
+  }, [expanded]);
 
   useEffect(() => {
     const current = options.find(option => option.wallet === value);
@@ -37,6 +54,7 @@ export function PbWalletPicker({
         <span className="stake-code-label">{t('支付方式')}</span>
       </div>
       <button
+        ref={triggerRef}
         type="button"
         className="pb-wallet-trigger"
         aria-expanded={expanded}
@@ -72,7 +90,7 @@ export function PbWalletPicker({
           />
           <div
             className="planet-node-dropdown-menu"
-            style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, zIndex: 10 }}
+            style={menuStyle}
             role="listbox"
             aria-label={t('选择支付钱包')}
           >
@@ -98,7 +116,7 @@ export function PbWalletPicker({
                   <span className="planet-node-dropdown-item-leading">
                     {isSelected && <Check size={14} strokeWidth={2.6} aria-hidden="true" />}
                     <span>{t(meta.labelKey)} · {t('余额 {amount} {unit}', { amount: formatTokenAmount(pbWallets[wallet]), unit: t(meta.unitKey) })}</span>
-                    {!meta.consumesSup && <span className="stake-tier-option__fee">{t('免 Gas')}</span>}
+                    {!walletConsumesSup(wallet) && <span className="stake-tier-option__fee">{t('免 Gas')}</span>}
                   </span>
                   {description && <span className="stake-tier-option__desc">{description}</span>}
                 </button>

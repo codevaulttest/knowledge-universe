@@ -69,6 +69,12 @@
   --ku-color-genesis-gold:        #d69e2e;  /* 创世节点·金（10000 档持有者）*/
   --ku-color-genesis-gold-bg:     #fdf3d9;
   --ku-color-genesis-gold-text:   #8b6508;  /* 金色系文字专用（浅底深字场景），比 --ku-color-genesis-gold 更深以满足 4.5:1 对比度 */
+  --ku-color-lot-gold:            #d69e2e;  /* 一发十赞奖励图标主金 */
+  --ku-color-lot-gold-light:      #f6c453;  /* 一发十赞奖励图标亮金 */
+  --ku-color-lot-red:             #c62828;  /* 一发十赞文字/图标强调，白底对比度达标 */
+  --ku-color-lot-tint:            color-mix(in srgb, var(--ku-color-lot-gold) 12%, var(--ku-color-bg-phone));
+  --ku-color-lot-tint-strong:     color-mix(in srgb, var(--ku-color-lot-gold) 20%, var(--ku-color-bg-phone));
+  --ku-color-lot-border:          color-mix(in srgb, var(--ku-color-lot-gold) 55%, var(--ku-color-bg-phone));
   --ku-color-member-badge:        #7C3AED;  /* 频道会员身份小标——与创世节点金/银色系区分，避免混淆 */
   --ku-color-member-badge-bg:     #efe6ff;
 
@@ -215,6 +221,7 @@
   --ku-compose-fab-size:       52px;
   --ku-compose-fab-inset:      20px;
   --ku-compose-fab-icon-size:  24px;
+  --ku-lot-task-hero-image-width: 144px;
   --ku-post-button-width:      36px;
   --ku-post-button-height:     28px;
   --ku-avatar-size:            40px;

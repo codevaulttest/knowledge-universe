@@ -1,54 +1,59 @@
-import type { PbUse, PbWalletId, SupTransactionReason } from './types';
+import type { PbUse, PbWalletId, SupTransactionReason, SupWalletId } from './types';
 
 export type PbWalletMeta = {
   id: PbWalletId;
   labelKey: string;
   sourceKey: string;
   useSummaryKey: string;
-  consumesSup: boolean;
+  /** 该钱包支付时 Gas 费从哪个池子出；none = 荣誉值，完全不产生手续费。 */
+  supSource: 'none' | 'onchain' | 'site_first';
   /** 余额展示单位；荣誉值不是 PB，不能沿用「PB」文案。 */
   unitKey: string;
 };
 
-/** 受限资金优先，避免把荣誉值、节点 PB 长期闲置。 */
-export const PB_WALLET_PRIORITY: readonly PbWalletId[] = ['honor', 'node', 'site', 'onchain'];
+/** 受限资金优先，避免把荣誉值、站内 PB 长期闲置。 */
+export const PB_WALLET_PRIORITY: readonly PbWalletId[] = ['honor', 'onchain', 'station', 'airdrop'];
 
-/** 本期支付入口暂缓开放站内 PB、节点 PB 两个钱包（先隐藏，余额仍正常累积，任务/节点发放不受影响）。 */
-export const PB_WALLET_PICKER_VISIBLE: readonly PbWalletId[] = ['onchain', 'honor'];
+/** 支付选择器的展示顺序（依会议口述：荣誉值、链上PB、站内PB、空投PB）。 */
+export const PB_WALLET_DISPLAY_ORDER: readonly PbWalletId[] = ['honor', 'onchain', 'station', 'airdrop'];
 
 export const PB_WALLETS: Record<PbWalletId, PbWalletMeta> = {
   onchain: {
-    id: 'onchain', labelKey: '链上 PB', sourceKey: '链上钱包持有', useSummaryKey: '适用于全部 PB 用途', consumesSup: true, unitKey: 'PB',
+    id: 'onchain', labelKey: '链上 PB', sourceKey: '链上钱包持有', useSummaryKey: '适用于全部 PB 用途', supSource: 'onchain', unitKey: 'PB',
   },
-  site: {
-    id: 'site', labelKey: '站内 PB', sourceKey: '空投 50% 到账', useSummaryKey: '适用于全部 PB 用途', consumesSup: true, unitKey: 'PB',
+  station: {
+    id: 'station', labelKey: '站内 PB', sourceKey: '创世、钻石节点每月发放', useSummaryKey: '可用于开通频道及节点内互动', supSource: 'site_first', unitKey: 'PB',
   },
   honor: {
-    id: 'honor', labelKey: '荣誉值', sourceKey: '每日任务发放', useSummaryKey: '可用于开通频道、BSP 巨星投流', consumesSup: false, unitKey: '荣誉值',
+    id: 'honor', labelKey: '荣誉值', sourceKey: '每日任务发放', useSummaryKey: '可用于开通频道、BSP 巨星投流、节点升级、转让节点', supSource: 'none', unitKey: '荣誉值',
   },
-  node: {
-    id: 'node', labelKey: '节点 PB', sourceKey: '创世、钻石节点每月发放', useSummaryKey: '可用于开通频道及节点内互动', consumesSup: true, unitKey: 'PB',
+  airdrop: {
+    id: 'airdrop', labelKey: '空投 PB', sourceKey: '空投 50% 到账', useSummaryKey: '适用于全部 PB 用途', supSource: 'site_first', unitKey: 'PB',
   },
 };
 
+export function walletConsumesSup(wallet: PbWalletId): boolean {
+  return PB_WALLETS[wallet].supSource !== 'none';
+}
+
 /** 唯一的用途权限矩阵；新增用途会被 TypeScript 强制补齐。 */
 export const PB_USE_ALLOWED_WALLETS: Record<PbUse, readonly PbWalletId[]> = {
-  channel_open: ['honor', 'node', 'site', 'onchain'],
-  bsp_invest: ['honor', 'site', 'onchain'],
-  post: ['node', 'site', 'onchain'],
-  like: ['node', 'site', 'onchain'],
-  dislike: ['node', 'site', 'onchain'],
-  share: ['node', 'site', 'onchain'],
-  comment: ['node', 'site', 'onchain'],
-  save: ['node', 'site', 'onchain'],
-  unlock: ['node', 'site', 'onchain'],
-  partner: ['site', 'onchain'],
-  channel_subscribe: ['site', 'onchain'],
-  purchase: ['site', 'onchain'],
+  channel_open: ['honor', 'station', 'airdrop', 'onchain'],
+  bsp_invest: ['honor', 'airdrop', 'onchain'],
+  post: ['station', 'airdrop', 'onchain'],
+  like: ['station', 'airdrop', 'onchain'],
+  dislike: ['station', 'airdrop', 'onchain'],
+  share: ['station', 'airdrop', 'onchain'],
+  comment: ['station', 'airdrop', 'onchain'],
+  save: ['station', 'airdrop', 'onchain'],
+  unlock: ['station', 'airdrop', 'onchain'],
+  partner: ['airdrop', 'onchain'],
+  channel_subscribe: ['airdrop', 'onchain'],
+  purchase: ['airdrop', 'onchain'],
+  node_upgrade: ['honor', 'airdrop', 'onchain'],
+  node_transfer: ['honor', 'airdrop', 'onchain'],
   // 会议尚未覆盖以下用途，原型先保守仅开放通用 PB。
-  tip: ['site', 'onchain'],
-  node_upgrade: ['site', 'onchain'],
-  node_transfer: ['site', 'onchain'],
+  tip: ['airdrop', 'onchain'],
 };
 
 export function allowedWalletsForUse(use: PbUse): readonly PbWalletId[] {
@@ -65,7 +70,7 @@ export function supReasonForPbUse(use: PbUse): SupTransactionReason {
     like: 'like', dislike: 'dislike', share: 'share', comment: 'comment',
     save: 'save', unlock: 'unlock', partner: 'partner',
     channel_subscribe: 'chain_unlock', purchase: 'purchase', tip: 'chain_unlock',
-    node_upgrade: 'chain_unlock', node_transfer: 'chain_unlock',
+    node_upgrade: 'node_upgrade', node_transfer: 'node_transfer',
   };
   return map[use];
 }
@@ -76,3 +81,18 @@ export function pbOnchainFee(amount: number): number {
 }
 
 export const CHANNEL_OPEN_PB_COST = 1000;
+
+/**
+ * 一笔 Gas 费只从一个池子出，不跨池拼单。
+ * site_first：站内够就扣站内，不够回落链上；onchain：只走链上；none：不产生手续费。
+ */
+export function resolveSupPool(
+  supWallets: Record<SupWalletId, number>,
+  source: PbWalletMeta['supSource'],
+  amount: number,
+): SupWalletId | null {
+  if (source === 'none' || amount <= 0) return null;
+  if (source === 'onchain') return supWallets.onchain >= amount ? 'onchain' : null;
+  if (supWallets.site >= amount) return 'site';
+  return supWallets.onchain >= amount ? 'onchain' : null;
+}

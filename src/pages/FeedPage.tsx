@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, CalendarCheck, RefreshCw, Search, Wallet } from 'lucide-react';
+import { Bell, RefreshCw, Search, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
 import type { Channel, Post, RepostedBy } from '../types';
@@ -188,7 +188,7 @@ const NAV_HIDE_SCROLL_DELTA = 6;
 const NAV_HIDE_TOP_GUARD = 24;
 
 export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 1 | 2 | 3) => void }) {
-  const { followedAuthors, navigate, unreadActivityCount, openDailyTask, dailyTaskAlert, t, walletConnected, connectWallet, requireWallet, homeFeedRefreshNonce, showToast, navBarsHidden, setNavBarsHidden, openSearch } = useApp();
+  const { followedAuthors, navigate, unreadActivityCount, openLotTask, lotTaskAlert, t, walletConnected, connectWallet, requireWallet, homeFeedRefreshNonce, showToast, navBarsHidden, setNavBarsHidden, openSearch } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevTabRef = useRef(tab);
   const lastRefreshNonce = useRef(homeFeedRefreshNonce);
@@ -284,13 +284,12 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
         <div className="feed-header-left">
           <button
             type="button"
-            className="feed-bell-btn feed-checkin-btn"
-            onClick={openDailyTask}
-            aria-label={t('每日任务')}
+            className="feed-bell-btn feed-lot-bonus-btn"
+            onClick={openLotTask}
+            aria-label={t('一发十赞')}
           >
-            <CalendarCheck size={22} strokeWidth={2} />
-            <span className="feed-checkin-label">{t('任务')}</span>
-            {dailyTaskAlert && <span className="feed-bell-dot feed-bell-dot--plain" aria-hidden="true" />}
+            <img src="/img/lot-bonus-reward-icon-white-safe.png" alt="" aria-hidden="true" />
+            {lotTaskAlert && <span className="feed-bell-dot feed-bell-dot--plain" aria-hidden="true" />}
           </button>
         </div>
         <nav className="tabs" data-layer="top-tabs">

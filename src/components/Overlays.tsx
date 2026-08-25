@@ -13,7 +13,7 @@ import type { Channel, ChannelTier, InteractionAction, PayCtx, PbUse, PbWalletId
 import { formatSuperAmount, formatSupAmount, stakeTierDescription, SUPER_BY_TIER, SUP_COST_BY_TIER } from '../stakeConfig';
 import type { StakeTier } from '../types';
 import { PbWalletPicker } from './PbWalletPicker';
-import { CHANNEL_OPEN_PB_COST, PB_WALLETS } from '../walletConfig';
+import { CHANNEL_OPEN_PB_COST, walletConsumesSup } from '../walletConfig';
 
 
 // Lightbox photo backgrounds — local SVG illustrations, same order as img-grid-cell nth-child
@@ -1969,7 +1969,7 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   const [failReason, setFailReason] = useState('');
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
   const channelSupCost = SUP_COST_BY_TIER[1000];
-  const channelWalletNeedsSup = !payWallet || PB_WALLETS[payWallet].consumesSup;
+  const channelWalletNeedsSup = !payWallet || walletConsumesSup(payWallet);
   const [name, setName] = useState(existingChannel?.name ?? defaultChannelName);
   const [description, setDescription] = useState(existingChannel?.description ?? '');
   const category = existingChannel?.category ?? DEFAULT_CHANNEL_CATEGORY;

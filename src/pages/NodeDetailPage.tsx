@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
-import { ArrowRightLeft, ArrowUp, Bookmark, Check, ChevronRight, Copy, Gem, Gift, Sparkles, TrendingUp, X } from 'lucide-react';
+import { ArrowRightLeft, ArrowUp, Bookmark, Check, ChevronRight, Copy, Gem, Gift, Loader2, Sparkles, TrendingUp, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader } from '../components/shared';
-import { formatTokenAmount } from '../stakeConfig';
-import type { KnowledgeNode } from '../types';
+import { PbWalletPicker } from '../components/PbWalletPicker';
+import { formatSupAmount, formatTokenAmount, SUP_COST_BY_TIER } from '../stakeConfig';
+import type { KnowledgeNode, PbWalletId } from '../types';
 import { generateChildNodes, isTransferable, mulberry32, seedFromString, StarDisplay } from './KnowledgePlanetPage';
+import { walletConsumesSup } from '../walletConfig';
 
 const SUBSIDY_TIERS = [
   { star: 3, rewardPB: 100 },
@@ -13,18 +15,20 @@ const SUBSIDY_TIERS = [
 ] as const;
 const INVITED_PREVIEW_COUNT = 2;
 const INVITED_MODAL_PAGE_SIZE = 20;
-/** 零星升 1 级 1000 PB，升 2 级 2000…升 5 级 5000；每升 1 级面额 +1000、荣誉值 +1000。 */
+/** 零星升 1 级 1000 PB，升 2 级 2000…升 5 级 5000。 */
 const LEVEL_UPGRADE_COST_PB = [1000, 2000, 3000, 4000, 5000] as const;
-const LEVEL_UPGRADE_VALUE_GAIN = 1000;
 const LEVEL_MAX = LEVEL_UPGRADE_COST_PB.length;
 
 export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
-  const { canGoBack, goBack, setNodeTransferAutoOpenId, showToast, t, favoriteNodeIds, toggleFavoriteNode } = useApp();
+  const { canGoBack, goBack, setNodeTransferAutoOpenId, showToast, t, favoriteNodeIds, toggleFavoriteNode, payPb } = useApp();
   const [currentLevel, setCurrentLevel] = useState(node.level ?? 0);
   const [allowRecommend, setAllowRecommend] = useState(node.allowRecommend ?? true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [invitedListOpen, setInvitedListOpen] = useState(false);
   const [visibleInvitedCount, setVisibleInvitedCount] = useState(INVITED_MODAL_PAGE_SIZE);
+  const [upgradeSheetOpen, setUpgradeSheetOpen] = useState(false);
+  const [upgradePayWallet, setUpgradePayWallet] = useState<PbWalletId | null>(null);
+  const [upgrading, setUpgrading] = useState(false);
   const invitedNodes = useMemo(() => generateChildNodes(node), [node]);
   const earnings = useMemo(() => {
     const random = mulberry32(seedFromString(`${node.id}:earnings`));
@@ -50,6 +54,33 @@ export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
   const handleTransfer = () => {
     setNodeTransferAutoOpenId(node.id);
     goBack();
+  };
+
+  const openUpgradeSheet = () => {
+    setUpgradePayWallet(null);
+    setUpgradeSheetOpen(true);
+  };
+
+  const closeUpgradeSheet = () => {
+    if (upgrading) return;
+    setUpgradeSheetOpen(false);
+  };
+
+  const handleConfirmUpgrade = () => {
+    if (!upgradePayWallet || upgrading) return;
+    setUpgrading(true);
+    setTimeout(() => {
+      if (!payPb({ amount: upgradeCost, use: 'node_upgrade', wallet: upgradePayWallet, supCost: SUP_COST_BY_TIER[node.tier] })) {
+        showToast(t('所选钱包余额不足或不适用于此操作'));
+        setUpgrading(false);
+        return;
+      }
+      const nextLevel = currentLevel + 1;
+      setCurrentLevel(nextLevel);
+      showToast(t('已升级到 {level} 级', { level: nextLevel }));
+      setUpgrading(false);
+      setUpgradeSheetOpen(false);
+    }, 1400);
   };
 
   return (
@@ -131,11 +162,7 @@ export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
                 <button
                   type="button"
                   className="node-detail-upgrade-btn"
-                  onClick={() => {
-                    const nextLevel = currentLevel + 1;
-                    setCurrentLevel(nextLevel);
-                    showToast(t('已升级到 {level} 级 · 面额 +{gain} PB · 荣誉值 +{gain}', { level: nextLevel, gain: LEVEL_UPGRADE_VALUE_GAIN }), 'demo');
-                  }}
+                  onClick={openUpgradeSheet}
                 >
                   <ArrowUp size={16} strokeWidth={2.5} aria-hidden />
                   {t('升级')}
@@ -246,6 +273,44 @@ export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
                 <InvitedNodeRow key={`${child.code}-${index}`} child={child} copied={copiedKey === `modal-child-${index}`} onCopy={() => copy(child.code, `modal-child-${index}`)} copyLabel={t('复制节点编号')} />
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {upgradeSheetOpen && (
+        <div className="sheet-backdrop" onClick={closeUpgradeSheet}>
+          <div className="payment-sheet" role="dialog" aria-modal="true" onClick={event => event.stopPropagation()}>
+            <div className="sheet-header">
+              <span className="sheet-title">{t('升级到 {level} 级', { level: currentLevel + 1 })}</span>
+              <button type="button" className="back-btn" style={{ marginLeft: 'auto' }} onClick={closeUpgradeSheet} aria-label={t('关闭')} disabled={upgrading}>
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+
+            <PbWalletPicker use="node_upgrade" amount={upgradeCost} value={upgradePayWallet} onChange={setUpgradePayWallet} />
+
+            <div className="planet-upgrade-sep" />
+
+            <div className="planet-upgrade-row">
+              <span className="planet-upgrade-row-label">{t('升级费用')}</span>
+              <div className="planet-upgrade-cost">
+                <span className="planet-upgrade-cost-num">{formatTokenAmount(upgradeCost)}</span>
+                <span className="planet-upgrade-cost-unit"> PB</span>
+              </div>
+            </div>
+            {(!upgradePayWallet || walletConsumesSup(upgradePayWallet)) && (
+              <div className="planet-upgrade-row">
+                <span className="planet-upgrade-row-label">{t('Gas 费')}</span>
+                <div className="planet-upgrade-cost">
+                  <span className="planet-upgrade-cost-num">{formatSupAmount(SUP_COST_BY_TIER[node.tier])}</span>
+                  <span className="planet-upgrade-cost-unit"> SUP</span>
+                </div>
+              </div>
+            )}
+
+            <button type="button" className="planet-confirm-btn" onClick={handleConfirmUpgrade} disabled={!upgradePayWallet || upgrading}>
+              {upgrading ? <Loader2 size={16} strokeWidth={2} className="planet-spin" /> : t('确认升级')}
+            </button>
           </div>
         </div>
       )}

@@ -5440,16 +5440,15 @@ button {
 .feed-bell-btn:active {
   background: var(--ku-color-primary-alpha-06);
 }
-/* ─── 签到入口：图标 + 文案，宽度自适应，不再是纯圆形图标按钮 ─── */
-.feed-checkin-btn {
-  width: auto;
-  border-radius: var(--ku-radius-pill);
-  gap: 4px;
-  padding: 0 10px 0 8px;
+/* ─── 一发十赞入口：领取奖励的横向图标 ─── */
+.feed-lot-bonus-btn {
+  width: calc(var(--ku-feed-header-side-column) - var(--ku-space-2));
+  padding: var(--ku-space-1);
 }
-.feed-checkin-label {
-  font: 600 13px/1 var(--ku-font-family);
-  white-space: nowrap;
+.feed-lot-bonus-btn > img {
+  display: block;
+  width: calc(var(--ku-feed-header-side-column) - var(--ku-space-3));
+  height: auto;
 }
 /* ─── 未连接钱包时的顶部快捷连接入口 ─── */
 .wallet-connect-pill {
@@ -7003,7 +7002,7 @@ button {
 }
 
 /* ═══════════════════════════════════════════════════
-   每日任务历史日历 (DailyTaskSheet) —— 常见日历样式：月份标题 + 周几表头 + 7 列格子
+   每日任务历史日历 (InteractionTaskSheet/LotTaskSheet) —— 常见日历样式：月份标题 + 周几表头 + 7 列格子
    ═══════════════════════════════════════════════════ */
 .task-calendar-month {
   font: 700 16px/1.3 var(--ku-font-family);
@@ -8529,7 +8528,7 @@ button {
 }
 
 .pb-info-balance-label {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--ku-color-text-meta);
 }
 
@@ -8545,7 +8544,7 @@ button {
 
 .pb-info-balance-value {
   font-family: var(--ku-font-mono);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   line-height: 1.35;
   color: var(--ku-color-text-primary);
@@ -8681,13 +8680,6 @@ button {
   font-size: 14px;
   font-weight: 600;
   color: var(--ku-color-text-secondary);
-}
-
-.asset-overview-airdrop-ratio {
-  display: block;
-  margin: 0 0 4px;
-  font: 400 12px/1.4 var(--ku-font-family);
-  color: var(--ku-color-text-meta);
 }
 
 .asset-overview-airdrop-amount {
@@ -8881,11 +8873,6 @@ button {
 .asset-overview-tomorrow-head .asset-overview-toggle-chevron {
   flex-shrink: 0;
   margin-top: 0;
-}
-
-.asset-overview-post-status-sep {
-  color: var(--ku-color-text-meta);
-  font-size: 14px;
 }
 
 .asset-overview-tomorrow-caption-count {
@@ -11558,6 +11545,65 @@ html[lang="zh-TW"] .planet-hero-title {
   font: 400 12px/1.6 var(--ku-font-family);
   color: var(--ku-color-text-meta);
   text-align: left;
+}
+
+.lot-task-hero {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--ku-space-1);
+}
+
+.lot-task-panel-sheet > .sheet-header {
+  margin-bottom: var(--ku-space-1);
+}
+
+.lot-task-panel-sheet .bsp-rules-entry {
+  background: var(--ku-color-lot-tint);
+  color: var(--ku-color-lot-red);
+}
+
+.lot-task-panel-sheet .bsp-rules-entry:active:not(:disabled) {
+  background: var(--ku-color-lot-tint-strong);
+}
+
+.lot-task-panel-sheet .task-card--done {
+  border-color: var(--ku-color-lot-border);
+  background: var(--ku-color-lot-tint);
+}
+
+.lot-task-panel-sheet .task-card-icon {
+  background: var(--ku-color-lot-tint);
+  color: var(--ku-color-lot-red);
+}
+
+.lot-task-panel-sheet .task-card--done .task-card-icon {
+  background: var(--ku-color-lot-red);
+  color: var(--ku-color-on-primary);
+}
+
+.lot-task-panel-sheet .task-card-ratio {
+  color: var(--ku-color-lot-red);
+}
+
+.lot-task-panel-sheet .task-card-status--done {
+  background: var(--ku-color-lot-tint-strong);
+  color: var(--ku-color-lot-red);
+}
+
+.lot-task-panel-sheet .task-milestone-chip {
+  background: var(--ku-color-lot-tint);
+  color: var(--ku-color-lot-red);
+}
+
+.lot-task-panel-sheet .task-milestone-chip--done {
+  background: var(--ku-color-lot-red);
+  color: var(--ku-color-on-primary);
+}
+
+.lot-task-hero > img {
+  display: block;
+  width: var(--ku-lot-task-hero-image-width);
+  height: auto;
 }
 
 .task-panel-rules-entry {

@@ -16,7 +16,7 @@ import { isPostVisible, formatScheduledAt } from '../dateUtils';
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, meritBalance } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
@@ -149,8 +149,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     </button>
   ) : null;
 
-  // 优点结算尚未开始（首次结算 9 月 15 日），当前统一显示 0
-  const meritBalance = 0;
   const meritSection = isOwn ? (
     <button
       type="button"

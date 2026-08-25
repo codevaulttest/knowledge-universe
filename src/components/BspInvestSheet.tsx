@@ -15,7 +15,7 @@ import { REGISTERED_TRANSFER_ADDRESSES } from '../pages/KnowledgePlanetPage';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import { PbWalletPicker } from './PbWalletPicker';
 import type { PbWalletId } from '../types';
-import { PB_WALLETS } from '../walletConfig';
+import { walletConsumesSup } from '../walletConfig';
 
 type AddressCheckStatus = '1' | '2' | '3' | '4';
 type BeneficiaryMode = 'self' | 'other';
@@ -49,7 +49,7 @@ export function BspInvestSheet({
   const dailyGuarantee = bspDailyGuarantee(units);
   const { startDate, endDate } = bspEffectivePeriod();
 
-  const needsSup = payWallet ? PB_WALLETS[payWallet].consumesSup : true;
+  const needsSup = payWallet ? walletConsumesSup(payWallet) : true;
   const supInsufficient = needsSup && supBalance < supCost;
 
   const handleUnitsChange = (value: string) => {

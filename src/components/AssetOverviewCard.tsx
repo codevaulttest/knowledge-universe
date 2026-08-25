@@ -3,9 +3,7 @@ import { CalendarCheck, Check, ChevronRight, Circle, Gift, Info, X } from 'lucid
 import { useApp } from '../AppContext';
 import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT } from '../mockData';
 import { formatTokenAmount } from '../stakeConfig';
-import { DailyTaskSheet } from './DailyTaskSheet';
 import {
-  isRatioLadderActive,
   TASK_INTERACTION_POOL_SIZE,
   TASK_RATIO_BASE,
   TASK_RATIO_LADDER_START,
@@ -15,13 +13,12 @@ import {
   TASK_RATIO_STEP2_COUNT,
 } from '../taskConfig';
 
-export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: boolean }) {
+export function AssetOverviewCard() {
   const {
-    t, walletConnected, airdropClaimed, claimAirdrop, taskSnapshotToday, taskSnapshotYesterday,
-    airdropClaimRatio, demoForceLadder,
+    t, walletConnected, airdropClaimed, claimAirdrop, taskSnapshotToday,
+    airdropClaimRatio, openInteractionTask,
   } = useApp();
   const [airdropRuleOpen, setAirdropRuleOpen] = useState(false);
-  const [dailyTaskOpen, setDailyTaskOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -33,11 +30,8 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
 
   // 今天可领：context 统一算出的有效比例（已处理 9/1 阶梯生效与新用户默认值）× 今日空投池
   const todayPb = Math.round(MOCK_PB_AIRDROP_AMOUNT * airdropClaimRatio / 100);
-  const ladderActive = demoForceLadder || isRatioLadderActive();
   const interacted = taskSnapshotToday.interactedCount;
   const isFull = interacted >= TASK_INTERACTION_POOL_SIZE;
-  const posted = taskSnapshotToday.posted;
-
   if (!walletConnected) return null;
 
   return (
@@ -65,15 +59,6 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
                   <Info size={13} strokeWidth={2} />
                 </button>
               </div>
-              <span className="asset-overview-airdrop-ratio">
-                {!ladderActive
-                  ? t('{date} 起按昨日互动次数计算，当前按 100% 发放', { date: TASK_RATIO_LADDER_START })
-                  : !taskSnapshotYesterday
-                    ? t('新用户首日按 100% 发放')
-                    : t('按昨天互动 {count} / {total} 次，可领 {ratio}%', {
-                        count: taskSnapshotYesterday.interactedCount, total: TASK_INTERACTION_POOL_SIZE, ratio: airdropClaimRatio,
-                      })}
-              </span>
               <div className="asset-overview-airdrop-amount-row">
                 {airdropClaimed ? (
                   <span className="asset-overview-airdrop-badge">{t('今日已领取')}</span>
@@ -110,20 +95,13 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
           <button
             type="button"
             className="asset-overview-tomorrow-head"
-            onClick={() => setDailyTaskOpen(true)}
+            onClick={openInteractionTask}
             aria-label={t('查看每日任务')}
           >
             <CalendarCheck size={15} strokeWidth={1.9} className="asset-overview-tomorrow-head-icon" aria-hidden="true" />
             <span className="asset-overview-tomorrow-title">{t('今日任务')}</span>
 
             <span className="asset-overview-tomorrow-head-status">
-              <span className={`asset-overview-post-status${posted ? ' asset-overview-post-status--done' : ''}`}>
-                {posted ? <Check size={14} strokeWidth={2.6} /> : <Circle size={14} strokeWidth={1.9} />}
-                {posted ? t('今天已发帖') : t('尚未发帖')}
-              </span>
-
-              <span className="asset-overview-post-status-sep" aria-hidden="true">·</span>
-
               <span className={`asset-overview-post-status${isFull ? ' asset-overview-post-status--done' : ''}`}>
                 {isFull ? <Check size={14} strokeWidth={2.6} /> : <Circle size={14} strokeWidth={1.9} />}
                 {t('互动')}{' '}
@@ -184,7 +162,7 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
               <button
                 type="button"
                 className="bsp-rules-entry"
-                onClick={() => { setAirdropRuleOpen(false); setDailyTaskOpen(true); }}
+                onClick={() => { setAirdropRuleOpen(false); openInteractionTask(); }}
               >
                 <CalendarCheck size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
                 <span className="bsp-rules-entry-text">{t('查看每日任务')}</span>
@@ -194,8 +172,6 @@ export function AssetOverviewCard({ hasBspRecords = false }: { hasBspRecords?: b
           </div>
         </div>
       )}
-
-      {dailyTaskOpen && <DailyTaskSheet onClose={() => setDailyTaskOpen(false)} hasBspRecords={hasBspRecords} />}
     </>
   );
 }

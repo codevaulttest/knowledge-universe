@@ -8,9 +8,11 @@ import { MOCK_PB_AIRDROP_AMOUNT } from './mockData';
 //   操作只算一次）即完成 1 篇，累计达到 TASK_INTERACTION_POOL_SIZE 篇即
 //   封顶，按阶梯换算成次日领取比例，全部完成对应 100%。
 // 业务 B：一发十赞 → 当日荣誉值签到奖。
-//   当天发帖 + 每 TASK_LOT_LIKES_PER_UNIT 个赞为 1 组，每组发放
-//   TASK_LOT_HONOR_PER_UNIT 荣誉值；每日可完成组数由已链接节点数决定
-//   （每节点 TASK_LOT_UNITS_PER_NODE 组）。与空投领取比例无关。
+//   当天发帖 + 给其他帖子点赞（互动）每满 TASK_LOT_LIKES_PER_UNIT 次为 1 组，每组发放
+//   TASK_LOT_HONOR_PER_UNIT 荣誉值；每日可完成组数由账号名下直连的
+//   五星节点数决定（每个五星节点 TASK_LOT_UNITS_PER_NODE 组，未达五星
+//   不计入）；0 个五星节点时保底 TASK_LOT_BASELINE_UNITS 组。与空投
+//   领取比例无关。
 // 具体比例 / 阶梯步长为产品口径确认值，已做成下方可调常量。
 // ════════════════════════════════════════════════════════════════
 
@@ -31,12 +33,14 @@ export const TASK_RATIO_LADDER_START = '2026-09-01';
 export const TASK_NEW_USER_CLAIM_RATIO = 100;
 
 // ── 业务 B：一发十赞 → 荣誉值签到奖 ──
-/** 1 组「一发十赞」= 当天发帖 + 该数量个赞。 */
+/** 1 组「一发十赞」= 当天发帖 + 给其他帖子点赞（互动）满该数量次。 */
 export const TASK_LOT_LIKES_PER_UNIT = 10;
 /** 每完成 1 组发放的荣誉值。 */
 export const TASK_LOT_HONOR_PER_UNIT = 10;
-/** 每个已链接节点每日可完成的组数。 */
+/** 每个已直连的五星节点每日可完成的组数（未达五星不计入）。 */
 export const TASK_LOT_UNITS_PER_NODE = 9;
+/** 无五星节点时的保底组数（公司公告 9/1 生效）。 */
+export const TASK_LOT_BASELINE_UNITS = 1;
 /** @deprecated 改用 TASK_LOT_LIKES_PER_UNIT */
 export const TASK_BONUS_THRESHOLD = TASK_LOT_LIKES_PER_UNIT;
 /** @deprecated 改用 TASK_LOT_HONOR_PER_UNIT */
@@ -78,9 +82,9 @@ export type TaskDaySnapshot = {
 };
 
 export type LotQuota = {
-  /** 已链接的节点数。 */
-  nodeCount: number;
-  /** 每日可完成的「一发十赞」组数 = nodeCount × TASK_LOT_UNITS_PER_NODE。 */
+  /** 账号名下直连的五星节点数。 */
+  fiveStarNodeCount: number;
+  /** 每日可完成的「一发十赞」组数 = fiveStarNodeCount × TASK_LOT_UNITS_PER_NODE，0 个五星节点时保底 TASK_LOT_BASELINE_UNITS。 */
   units: number;
   /** 组数 × TASK_LOT_LIKES_PER_UNIT。 */
   likes: number;
@@ -88,11 +92,11 @@ export type LotQuota = {
   honor: number;
 };
 
-/** 纯函数：已链接节点数 → 当日「一发十赞」配额。 */
-export function getLotQuota(nodeCount: number): LotQuota {
-  const n = Math.max(0, Math.floor(nodeCount));
-  const units = n * TASK_LOT_UNITS_PER_NODE;
-  return { nodeCount: n, units, likes: units * TASK_LOT_LIKES_PER_UNIT, honor: units * TASK_LOT_HONOR_PER_UNIT };
+/** 纯函数：直连五星节点数 → 当日「一发十赞」配额。 */
+export function getLotQuota(fiveStarNodeCount: number): LotQuota {
+  const n = Math.max(0, Math.floor(fiveStarNodeCount));
+  const units = n === 0 ? TASK_LOT_BASELINE_UNITS : n * TASK_LOT_UNITS_PER_NODE;
+  return { fiveStarNodeCount: n, units, likes: units * TASK_LOT_LIKES_PER_UNIT, honor: units * TASK_LOT_HONOR_PER_UNIT };
 }
 
 /** 阶梯规则是否已生效（北京时间 >= TASK_RATIO_LADDER_START）。 */

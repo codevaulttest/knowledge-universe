@@ -14,7 +14,7 @@ export function DevPanel({ children }: DevPanelProps) {
     walletConnected, connectWallet, disconnectWallet, demoHideOwnChannels, toggleDemoHideOwnChannels, t,
     taskSnapshotToday, resetDemoTasks, simulateDemoTaskInteractions, setDemoPbWallets,
     demoForceLadder, toggleDemoForceLadder, demoForceNewUser, toggleDemoForceNewUser,
-    demoLinkedNodeCount, cycleDemoLinkedNodeCount,
+    demoFiveStarNodeCount, cycleDemoFiveStarNodeCount,
   } = useApp();
 
   if (!visible) return null;
@@ -108,10 +108,10 @@ export function DevPanel({ children }: DevPanelProps) {
           <button
             type="button"
             className="planet-dev-menu-item"
-            onClick={cycleDemoLinkedNodeCount}
+            onClick={cycleDemoFiveStarNodeCount}
           >
-            <span>{t('切换已链接节点数')}</span>
-            <span className="planet-dev-menu-toggle">{demoLinkedNodeCount}</span>
+            <span>{t('切换直连五星节点数')}</span>
+            <span className="planet-dev-menu-toggle">{demoFiveStarNodeCount}</span>
           </button>
           <button type="button" className="planet-dev-menu-item" onClick={() => setDemoPbWallets('normal')}>
             <span>{t('恢复钱包余额')}</span>

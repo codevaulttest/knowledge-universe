@@ -293,10 +293,16 @@ export type SupTransactionReason =
   | 'partner'
   | 'bsp_invest'
   | 'purchase'
-  | 'address_migration';
+  | 'address_migration'
+  | 'airdrop'
+  | 'node_upgrade'
+  | 'node_transfer';
 
 /** 四种 PB 钱包。余额彼此独立，一笔支付只使用其中一个钱包。 */
-export type PbWalletId = 'onchain' | 'site' | 'honor' | 'node';
+export type PbWalletId = 'onchain' | 'station' | 'honor' | 'airdrop';
+
+/** 站内 SUP(184) / 链上 SUP，手续费只从其中一个池子出，不跨池拼单。 */
+export type SupWalletId = 'site' | 'onchain';
 
 /** 需要消耗 PB 的业务用途，用于集中校验钱包可用范围。 */
 export type PbUse =
@@ -340,6 +346,7 @@ export type SupTransaction = {
   amount: number;
   time: string;
   reason: SupTransactionReason;
+  wallet: SupWalletId;
 };
 
 /** 当前用户发出的打赏记录（帖子打赏 / 主页打赏）。 */

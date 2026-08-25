@@ -25,12 +25,17 @@ export const CURRENT_USER = DEFAULT_WALLET_DISPLAY;
 /** 演示钱包 PB 余额（连接后展示）—— 数值取到能演示 BSP 巨星投流 1 万单位（1000 万 PB）的量级 */
 export const MOCK_PB_WALLETS = {
   onchain: 5600,
-  site: 3200,
+  station: 2400,
   honor: 800,
-  node: 2400,
+  airdrop: 3200,
 } as const;
-/** 演示钱包 SUP 余额（连接后展示） */
-export const MOCK_WALLET_SUP_BALANCE = 1050;
+/** 演示钱包 SUP 余额，站内/链上两池独立（连接后展示） */
+export const MOCK_SUP_WALLETS = {
+  site: 50,
+  onchain: 1000,
+} as const;
+/** 演示优点余额——首次结算 9 月 15 日前统一显示 0 */
+export const MOCK_MERIT_BALANCE = 0;
 /** 演示钱包对应的邀请码（固定随机六位数字） */
 export const MOCK_MY_INVITE_CODE = '482915';
 
@@ -67,8 +72,8 @@ export function resolveInviterAddress(code: string): string {
 /** 周期性 PB 空投单次发放数量 */
 export const MOCK_PB_AIRDROP_AMOUNT = 100;
 
-/** 演示用户已链接的节点数，驱动「一发十赞」每日配额（每节点 9 组）。 */
-export const MOCK_LINKED_NODE_COUNT = 3;
+/** 演示用户名下直连的五星节点数，驱动「一发十赞」每日配额（0 个仍保底 1 组，≥1 个按 ×9 递增）。 */
+export const MOCK_FIVE_STAR_NODE_COUNT = 3;
 
 const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
 

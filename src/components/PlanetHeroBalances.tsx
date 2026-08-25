@@ -4,15 +4,12 @@ import { AlertTriangle, ChevronRight, Info, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { formatCompactBalance } from '../formatCount';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
-import { PB_WALLETS } from '../walletConfig';
-import type { PbWalletId } from '../types';
-
-/** 资产余额只展示用户当前可直接辨识的资产；站内 PB、节点 PB 仍保留在支付选择器中。 */
-const ASSET_INFO_WALLETS: readonly PbWalletId[] = ['onchain', 'honor'];
+import { PB_WALLETS, PB_WALLET_DISPLAY_ORDER } from '../walletConfig';
+import { MERIT_PER_ADN } from '../shopConfig';
 
 /** 页顶 hero 资产摘要：最多展示三种高频资产；后续类型以 +N 保持入口高度不变。 */
 export function PlanetHeroBalances() {
-  const { t, language, walletConnected, pbWallets, supBalance } = useApp();
+  const { t, language, walletConnected, pbWallets, supWallets, supBalance, meritBalance } = useApp();
   const [pbInfoOpen, setPbInfoOpen] = useState(false);
   const [pbDetailOpen, setPbDetailOpen] = useState(false);
   const [honorInfoOpen, setHonorInfoOpen] = useState(false);
@@ -22,7 +19,7 @@ export function PlanetHeroBalances() {
 
   // 新资产只需追加到此列表；首页固定展示前三种，其余由 +N 种资产承接。
   const heroAssets = [
-    { id: 'pb', value: pbWallets.onchain + pbWallets.site + pbWallets.node, unit: 'PB', ariaLabel: 'PB' },
+    { id: 'pb', value: pbWallets.onchain + pbWallets.airdrop + pbWallets.station, unit: 'PB', ariaLabel: 'PB' },
     { id: 'honor', value: pbWallets.honor, unit: t('荣誉值'), ariaLabel: t('荣誉值') },
     { id: 'sup', value: supBalance, unit: 'SUP', ariaLabel: 'SUP' },
   ];
@@ -86,52 +83,34 @@ export function PlanetHeroBalances() {
 
             <div className="pb-info-sheet-body">
               <div className="pb-info-balances">
-                {ASSET_INFO_WALLETS.map(wallet => {
+                {PB_WALLET_DISPLAY_ORDER.map(wallet => {
                   const meta = PB_WALLETS[wallet];
+                  const isHonor = wallet === 'honor';
                   return (
                     <div className="pb-info-balance-row" key={wallet}>
-                      <span className={`pb-info-balance-label${wallet === 'onchain' || wallet === 'honor' ? ' pb-info-balance-label--with-action' : ''}`}>
-                        {wallet === 'onchain' ? (
-                          <>
-                            <span>{t('PB 余额')}</span>
-                            <button
-                              type="button"
-                              className="asset-overview-info-btn"
-                              onClick={() => {
-                                setPbInfoOpen(false);
-                                setPbDetailOpen(true);
-                              }}
-                              aria-label={t('查看 PB 说明')}
-                            >
-                              <Info size={13} strokeWidth={2} />
-                            </button>
-                          </>
-                        ) : wallet === 'honor' ? (
-                          <>
-                            <span>{`${t(meta.labelKey)} · ${t(meta.sourceKey)}`}</span>
-                            <button
-                              type="button"
-                              className="asset-overview-info-btn"
-                              onClick={() => {
-                                setPbInfoOpen(false);
-                                setHonorInfoOpen(true);
-                              }}
-                              aria-label={t('查看荣誉值说明')}
-                            >
-                              <Info size={13} strokeWidth={2} />
-                            </button>
-                          </>
-                        ) : `${t(meta.labelKey)} · ${t(meta.sourceKey)}`}
+                      <span className="pb-info-balance-label pb-info-balance-label--with-action">
+                        <span>{`${t(meta.labelKey)} · ${t(meta.sourceKey)}`}</span>
+                        <button
+                          type="button"
+                          className="asset-overview-info-btn"
+                          onClick={() => {
+                            setPbInfoOpen(false);
+                            if (isHonor) setHonorInfoOpen(true); else setPbDetailOpen(true);
+                          }}
+                          aria-label={isHonor ? t('查看荣誉值说明') : t('查看 PB 说明')}
+                        >
+                          <Info size={13} strokeWidth={2} />
+                        </button>
                       </span>
                       <span className="pb-info-balance-value">
-                        {formatTokenAmount(pbWallets[wallet])} {wallet === 'honor' ? t('荣誉值') : 'PB'}
+                        {formatTokenAmount(pbWallets[wallet])} {t(meta.unitKey)}
                       </span>
                     </div>
                   );
                 })}
                 <div className="pb-info-balance-row">
                   <span className="pb-info-balance-label pb-info-balance-label--with-action">
-                    <span>{t('SUP 余额')}</span>
+                    <span>{t('站内 SUP')}</span>
                     <button
                       type="button"
                       className="asset-overview-info-btn"
@@ -144,9 +123,18 @@ export function PlanetHeroBalances() {
                       <Info size={13} strokeWidth={2} />
                     </button>
                   </span>
-                  <span className="pb-info-balance-value">{formatSupAmount(supBalance)} SUP</span>
+                  <span className="pb-info-balance-value">{formatSupAmount(supWallets.site)} SUP</span>
+                </div>
+                <div className="pb-info-balance-row">
+                  <span className="pb-info-balance-label">{t('链上 SUP')}</span>
+                  <span className="pb-info-balance-value">{formatSupAmount(supWallets.onchain)} SUP</span>
+                </div>
+                <div className="pb-info-balance-row">
+                  <span className="pb-info-balance-label">{t('优点 · 小黄车购物赠送')}</span>
+                  <span className="pb-info-balance-value">{meritBalance} {t('优点')}</span>
                 </div>
               </div>
+              <p className="pb-info-sheet-para">{t('满 {count} 优点兑 1 张 ADN 抽奖券；优点结算将于 9 月 15 日首次发放', { count: MERIT_PER_ADN })}</p>
             </div>
           </div>
         </div>,
@@ -202,7 +190,7 @@ export function PlanetHeroBalances() {
               </p>
               <p className="pb-info-sheet-para">
                 <strong className="pb-info-sheet-label">{t('用途：')}</strong>
-                {t('荣誉值可用于开通频道与 BSP 巨星投流。')}
+                {t('荣誉值可用于开通频道、BSP 巨星投流、节点升级、转让节点。')}
               </p>
               <p className="pb-info-sheet-para">
                 <strong className="pb-info-sheet-label">{t('支付规则：')}</strong>

@@ -2,18 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { withFreeTier } from './channelTiers';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_LINKED_NODE_COUNT, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_WALLET_ADDRESS, MOCK_WALLET_SUP_BALANCE, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { buildInitialBspInvestments } from './bspConfig';
 import { formatScheduledAt } from './dateUtils';
-import type { AddressMigration, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, UserProfile } from './types';
-import { PB_WALLETS, PB_WALLET_PICKER_VISIBLE, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, supReasonForPbUse } from './walletConfig';
+import type { AddressMigration, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import { PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, supReasonForPbUse, walletConsumesSup } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
 import { postHasStake, formatTokenAmount } from './stakeConfig';
 import { translate } from './locales';
 import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
-import { DailyTaskSheet } from './components/DailyTaskSheet';
+import { InteractionTaskSheet } from './components/InteractionTaskSheet';
+import { LotTaskSheet } from './components/LotTaskSheet';
 import { effectiveClaimRatio, getIssuedHonorRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueHonorRewards, simulateInteractedCount, taskDayKey, TASK_BONUS_PB, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
 import { Toast } from './components/shared';
 import { TaskCelebrationOverlay } from './components/TaskCelebrationOverlay';
@@ -64,7 +65,8 @@ export default function App() {
   const [videoPlayerPost, setVideoPlayerPost] = useState<Post | null>(null);
   const [activityGroups, setActivityGroups] = useState(ACTIVITY_GROUPS);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [dailyTaskOpen, setDailyTaskOpen] = useState(false);
+  const [interactionTaskOpen, setInteractionTaskOpen] = useState(false);
+  const [lotTaskOpen, setLotTaskOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const openSearch = () => setSearchOpen(true);
   const closeSearch = () => setSearchOpen(false);
@@ -119,10 +121,10 @@ export default function App() {
 
   // 每日任务：互动帖任务决定明天空投领取比例，一发十赞决定今天荣誉值签到奖，两者互不相关
   const [taskSnapshotToday, setTaskSnapshotToday] = useState<TaskDaySnapshot>(() => getTaskSnapshot());
-  // 开发工具：模拟 9/1 后阶梯规则生效 / 模拟新用户（无昨日记录）/ 切换已链接节点数
+  // 开发工具：模拟 9/1 后阶梯规则生效 / 模拟新用户（无昨日记录）/ 切换直连五星节点数
   const [demoForceLadder, setDemoForceLadder] = useState(false);
   const [demoForceNewUser, setDemoForceNewUser] = useState(false);
-  const [demoLinkedNodeCount, setDemoLinkedNodeCount] = useState(MOCK_LINKED_NODE_COUNT);
+  const [demoFiveStarNodeCount, setDemoFiveStarNodeCount] = useState(MOCK_FIVE_STAR_NODE_COUNT);
   const [taskSnapshotYesterday, setTaskSnapshotYesterday] = useState<TaskDaySnapshot | null>(
     () => getYesterdaySnapshot(new Date(), { forceNewUser: demoForceNewUser }),
   );
@@ -134,14 +136,14 @@ export default function App() {
     const now = demoForceLadder ? new Date('2026-09-02T00:00:00+08:00') : new Date();
     return effectiveClaimRatio(taskSnapshotYesterday, now);
   }, [taskSnapshotYesterday, demoForceLadder]);
-  const lotQuota = useMemo(() => getLotQuota(demoLinkedNodeCount), [demoLinkedNodeCount]);
+  const lotQuota = useMemo(() => getLotQuota(demoFiveStarNodeCount), [demoFiveStarNodeCount]);
   const toggleDemoForceLadder = useCallback(() => setDemoForceLadder(prev => !prev), []);
   const toggleDemoForceNewUser = useCallback(() => setDemoForceNewUser(prev => !prev), []);
-  const LINKED_NODE_COUNT_CYCLE = [0, 1, 3, 5];
-  const cycleDemoLinkedNodeCount = useCallback(() => {
-    setDemoLinkedNodeCount(prev => {
-      const idx = LINKED_NODE_COUNT_CYCLE.indexOf(prev);
-      return LINKED_NODE_COUNT_CYCLE[(idx + 1) % LINKED_NODE_COUNT_CYCLE.length];
+  const FIVE_STAR_NODE_COUNT_CYCLE = [0, 1, 3, 5];
+  const cycleDemoFiveStarNodeCount = useCallback(() => {
+    setDemoFiveStarNodeCount(prev => {
+      const idx = FIVE_STAR_NODE_COUNT_CYCLE.indexOf(prev);
+      return FIVE_STAR_NODE_COUNT_CYCLE[(idx + 1) % FIVE_STAR_NODE_COUNT_CYCLE.length];
     });
   }, []);
   // 每完成 N 篇互动帖 +1，供任务面板监听触发一次性庆祝动效
@@ -198,10 +200,10 @@ export default function App() {
     // 可领取金额取决于 airdropClaimRatio：已统一处理昨日互动帖完成度、9/1 阶梯生效与新用户默认值
     const claimedAmount = Math.round(MOCK_PB_AIRDROP_AMOUNT * airdropClaimRatio / 100);
     const onchainAmount = Math.ceil(claimedAmount / 2);
-    const siteAmount = claimedAmount - onchainAmount;
-    setPbWallets(prev => ({ ...prev, onchain: prev.onchain + onchainAmount, site: prev.site + siteAmount }));
+    const airdropAmount = claimedAmount - onchainAmount;
+    setPbWallets(prev => ({ ...prev, onchain: prev.onchain + onchainAmount, airdrop: prev.airdrop + airdropAmount }));
     const fee = pbOnchainFee(onchainAmount);
-    if (fee > 0) deductSup(fee, 'recharge');
+    if (fee > 0) deductSup(fee, 'airdrop', resolveSupPool(supWallets, 'site_first', fee) ?? 'onchain');
     setAirdropClaimed(true);
     recordAirdropClaim(claimedAmount);
     setTaskSnapshotToday(getTaskSnapshot());
@@ -209,7 +211,7 @@ export default function App() {
   };
 
   const getPbWalletOptions = useCallback((use: PbUse, amount: number) => (
-    PB_WALLET_PICKER_VISIBLE.map(wallet => ({
+    PB_WALLET_DISPLAY_ORDER.map(wallet => ({
       wallet,
       allowed: isWalletAllowedForUse(wallet, use),
       sufficient: pbWallets[wallet] >= amount,
@@ -217,32 +219,33 @@ export default function App() {
   ), [pbWallets]);
 
   const pickDefaultPbWallet = useCallback((use: PbUse, amount: number): PbWalletId | null => (
-    PB_WALLET_PRIORITY.filter(wallet => PB_WALLET_PICKER_VISIBLE.includes(wallet))
-      .find(wallet => isWalletAllowedForUse(wallet, use) && pbWallets[wallet] >= amount)
-      ?? allowedWalletsForUse(use).filter(wallet => PB_WALLET_PICKER_VISIBLE.includes(wallet)).find(wallet => pbWallets[wallet] >= amount)
-      ?? null
+    PB_WALLET_PRIORITY.find(wallet => isWalletAllowedForUse(wallet, use) && pbWallets[wallet] >= amount) ?? null
   ), [pbWallets]);
 
   const payPb = (payment: { amount: number; use: PbUse; wallet: PbWalletId; supCost?: number; supReason?: SupTransactionReason }) => {
     const { amount, use, wallet, supCost = 0, supReason } = payment;
     if (!isWalletAllowedForUse(wallet, use) || pbWallets[wallet] < amount) return false;
-    if (PB_WALLETS[wallet].consumesSup && supCost > 0 && supBalance < supCost) return false;
+    const supSource = PB_WALLETS[wallet].supSource;
+    const supPool = supCost > 0 ? resolveSupPool(supWallets, supSource, supCost) : null;
+    if (walletConsumesSup(wallet) && supCost > 0 && !supPool) return false;
     setPbWallets(prev => ({ ...prev, [wallet]: prev[wallet] - amount }));
-    if (PB_WALLETS[wallet].consumesSup && supCost > 0) deductSup(supCost, supReason ?? supReasonForPbUse(use));
+    if (supPool) deductSup(supCost, supReason ?? supReasonForPbUse(use), supPool);
     return true;
   };
 
   const setDemoPbWallets = (preset: 'normal' | 'limited') => {
     setPbWallets(preset === 'normal'
       ? getInitialPbWallets()
-      : { onchain: 80, site: 40, honor: 800 + getIssuedHonorRewardTotal(), node: 2400 });
+      : { onchain: 80, station: 2400, honor: 800 + getIssuedHonorRewardTotal(), airdrop: 40 });
   };
 
-  const [supBalance, setSupBalance] = useState(MOCK_WALLET_SUP_BALANCE);
+  const [supWallets, setSupWallets] = useState<Record<SupWalletId, number>>(MOCK_SUP_WALLETS);
+  /** 总额只用于资产总览展示，扣减必须通过 resolveSupPool 选定单一池子。 */
+  const supBalance = useMemo(() => supWallets.site + supWallets.onchain, [supWallets]);
   const INITIAL_SUP_HISTORY: SupTransaction[] = [
-    { id: 's1', direction: 'in', amount: 10, time: '2026-06-01 09:00', reason: 'recharge' },
-    { id: 's2', direction: 'in', amount: 3.1, time: '2026-06-12 16:20', reason: 'recharge' },
-    { id: 's3', direction: 'out', amount: 0.1, time: '2026-06-20 10:15', reason: 'channel_open' },
+    { id: 's1', direction: 'in', amount: 10, time: '2026-06-01 09:00', reason: 'recharge', wallet: 'onchain' },
+    { id: 's2', direction: 'in', amount: 3.1, time: '2026-06-12 16:20', reason: 'recharge', wallet: 'onchain' },
+    { id: 's3', direction: 'out', amount: 0.1, time: '2026-06-20 10:15', reason: 'channel_open', wallet: 'site' },
   ];
   const [supHistory, setSupHistory] = useState<SupTransaction[]>(INITIAL_SUP_HISTORY);
 
@@ -251,9 +254,9 @@ export default function App() {
     setSupHistory(prev => [{ ...tx, id: `s${Date.now()}`, time }, ...prev]);
   };
 
-  const deductSup = (amount: number, reason: SupTransactionReason) => {
-    setSupBalance(b => Math.max(0, b - amount));
-    appendSupTransaction({ direction: 'out', amount, reason });
+  const deductSup = (amount: number, reason: SupTransactionReason, pool: SupWalletId = 'site') => {
+    setSupWallets(prev => ({ ...prev, [pool]: Math.max(0, prev[pool] - amount) }));
+    appendSupTransaction({ direction: 'out', amount, reason, wallet: pool });
   };
 
   // ── 地址迁移：前端只模拟申请、冻结和撤销；实际资料迁移交由后续服务处理 ──
@@ -305,7 +308,7 @@ export default function App() {
       status: 'pending',
     };
     setPbWallets(prev => ({ ...prev, onchain: prev.onchain - ADDRESS_MIGRATION_PB_FEE }));
-    deductSup(ADDRESS_MIGRATION_SUP_FEE, 'address_migration');
+    deductSup(ADDRESS_MIGRATION_SUP_FEE, 'address_migration', resolveSupPool(supWallets, 'site_first', ADDRESS_MIGRATION_SUP_FEE) ?? 'onchain');
     setAddressMigrations(prev => [migration, ...prev]);
     showToast(t('迁移申请已提交'));
     return { ok: true };
@@ -322,8 +325,8 @@ export default function App() {
       item.id === migrationId ? { ...item, status: 'cancelled', cancelledAt: now } : item
     )));
     setPbWallets(prev => ({ ...prev, onchain: prev.onchain + migration.pbFee }));
-    setSupBalance(balance => balance + migration.supFee);
-    appendSupTransaction({ direction: 'in', amount: migration.supFee, reason: 'address_migration' });
+    setSupWallets(prev => ({ ...prev, site: prev.site + migration.supFee }));
+    appendSupTransaction({ direction: 'in', amount: migration.supFee, reason: 'address_migration', wallet: 'site' });
     showToast(t('已提交撤销申请，冻结费用已释放'));
     return true;
   };
@@ -433,13 +436,20 @@ export default function App() {
     document.documentElement.lang = language;
   }, [language]);
 
-  // 常驻入口：随时打开「每日任务」面板；未连接钱包时先引导连接
-  const openDailyTask = () => {
-    requireWallet(() => setDailyTaskOpen(true));
+  // 常驻入口：随时打开「互动帖任务」面板；未连接钱包时先引导连接
+  const openInteractionTask = () => {
+    requireWallet(() => setInteractionTaskOpen(true));
   };
 
-  // 今天是否还有可领取/可达成的奖励，供入口红点展示
-  const dailyTaskAlert = (!airdropClaimed && Date.now() <= getAirdropDeadline()) || !taskSnapshotToday.bonusEligible;
+  // 常驻入口：随时打开「一发十赞」面板；未连接钱包时先引导连接
+  const openLotTask = () => {
+    requireWallet(() => setLotTaskOpen(true));
+  };
+
+  // 今天是否还有可领取的空投奖励，供互动帖任务入口红点展示
+  const interactionTaskAlert = !airdropClaimed && Date.now() <= getAirdropDeadline();
+  // 今天是否还有待达成的荣誉值奖励，供一发十赞入口红点展示
+  const lotTaskAlert = !taskSnapshotToday.bonusEligible;
 
 
   const route = stack[stack.length - 1];
@@ -810,7 +820,7 @@ export default function App() {
   const confirmShopOrder = (order: ShopOrder) => {
     const totalPb = order.unitPrice * order.quantity;
     const totalSup = Math.round(order.unitFee * order.quantity * 10000) / 10000;
-    const wallet = order.payWallet ?? 'site';
+    const wallet = order.payWallet ?? 'airdrop';
     if (!payPb({ amount: totalPb, use: 'purchase', wallet, supCost: totalSup, supReason: 'purchase' })) {
       failShopOrder(order.id);
       return;
@@ -1069,7 +1079,8 @@ export default function App() {
     stagePendingPost, publishPost,
     openArticleReader, openVideoPlayer,
     activityGroups, unreadActivityCount, markAllRead,
-    openDailyTask, dailyTaskAlert,
+    interactionTaskOpen, openInteractionTask, interactionTaskAlert,
+    lotTaskOpen, openLotTask, lotTaskAlert,
     recentSearches, saveRecentSearch, removeRecentSearch, clearRecentSearches,
     searchOpen, openSearch, closeSearch,
     drafts, saveDraft, updateDraft, deleteDraft,
@@ -1082,7 +1093,7 @@ export default function App() {
     openCreateChannel, createChannelOpen, closeCreateChannel,
     openManageChannel, closeManageChannel,
     demoHideOwnChannels, toggleDemoHideOwnChannels,
-    supBalance, supHistory, deductSup,
+    supWallets, supBalance, supHistory, deductSup, meritBalance: MOCK_MERIT_BALANCE,
     walletConnected, connectWallet, requireWallet,
     walletAddress, walletConnecting, disconnectWallet,
     pbWallets, pbBalance, getPbWalletOptions, pickDefaultPbWallet, payPb, setDemoPbWallets, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
@@ -1092,7 +1103,7 @@ export default function App() {
     taskCelebrateSignal, recordTaskInteraction, getDailyTaskCalendar: getTaskCalendarMonth,
     resetDemoTasks, simulateDemoTaskInteractions,
     demoForceLadder, toggleDemoForceLadder, demoForceNewUser, toggleDemoForceNewUser,
-    demoLinkedNodeCount, cycleDemoLinkedNodeCount,
+    demoFiveStarNodeCount, cycleDemoFiveStarNodeCount,
     favoriteNodeIds, toggleFavoriteNode,
     shopOrders, shippingAddresses, defaultAddress,
     addShippingAddress, setDefaultAddress, removeShippingAddress,
@@ -1284,10 +1295,13 @@ export default function App() {
           />
         )}
 
-        {/* 覆盖层：每日任务（发帖 + 互动帖里程碑 + 空投领取 + BSP 保底） */}
-        {dailyTaskOpen && (
-          <DailyTaskSheet
-            onClose={() => setDailyTaskOpen(false)}
+        {/* 覆盖层：互动帖任务（决定明天的空投领取比例） */}
+        {interactionTaskOpen && <InteractionTaskSheet onClose={() => setInteractionTaskOpen(false)} />}
+
+        {/* 覆盖层：一发十赞（发帖 + 一发十赞 + BSP 保底，决定今天的荣誉值奖励） */}
+        {lotTaskOpen && (
+          <LotTaskSheet
+            onClose={() => setLotTaskOpen(false)}
             hasBspRecords={buildInitialBspInvestments(MOCK_WALLET_ADDRESS).length > 0}
           />
         )}

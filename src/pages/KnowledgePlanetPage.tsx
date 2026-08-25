@@ -16,6 +16,7 @@ import { SUP_COST_BY_TIER, formatSupAmount, formatTokenAmount } from '../stakeCo
 import { buildInitialBspInvestments, type BspInvestment } from '../bspConfig';
 import { isChinese } from '../i18n';
 import type { KnowledgeNode, NodeTier, PbWalletId } from '../types';
+import { walletConsumesSup } from '../walletConfig';
 
 // 创建频道：暂时固定质押 1000 PB 档位
 const CREATE_TIER: NodeTier = 1000;
@@ -234,6 +235,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
   const [transferCheckStatus, setTransferCheckStatus] = useState<CodeCheckStatus>('1');
   const [transferVerifying, setTransferVerifying] = useState(false);
   const [transferring, setTransferring] = useState(false);
+  const [transferPayWallet, setTransferPayWallet] = useState<PbWalletId | null>(null);
   const [remarkSheetNode, setRemarkSheetNode] = useState<KnowledgeNode | null>(null);
   const [remarkInput, setRemarkInput] = useState('');
 
@@ -404,6 +406,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
     setTransferCheckStatus('1');
     setTransferVerifying(false);
     setTransferring(false);
+    setTransferPayWallet(null);
   };
 
   useEffect(() => {
@@ -446,10 +449,18 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
   };
 
   const handleConfirmTransfer = () => {
-    if (!transferSheetNode || transferCheckStatus !== '3' || transferring) return;
+    if (!transferSheetNode || transferCheckStatus !== '3' || transferring || !transferPayWallet) return;
     const node = transferSheetNode;
+    const wallet = transferPayWallet;
     setTransferring(true);
     setTimeout(() => {
+      const price = TRANSFER_PRICE_BY_STAR[node.stars] ?? 0;
+      const gas = SUP_COST_BY_TIER[node.tier];
+      if (!payPb({ amount: price, use: 'node_transfer', wallet, supCost: gas })) {
+        showToast(t('所选钱包余额不足或不适用于此操作'));
+        setTransferring(false);
+        return;
+      }
       setNodes(prev => prev.filter(n => n.id !== node.id));
       showToast(t('节点 {nodeCode} 转让成功', { nodeCode: node.nodeCode }));
       setTransferring(false);
@@ -576,7 +587,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
           </div>
 
           {/* ── 资产概览：空投主区 + 今日互动任务 ── */}
-          <AssetOverviewCard hasBspRecords={bspRecords.length > 0} />
+          <AssetOverviewCard />
 
           {/* ── Quick Actions: BSP 巨星投流 / 创建频道 ── */}
           <div className="planet-quick-actions">
@@ -1509,6 +1520,15 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
 
             <div className="planet-upgrade-sep" />
 
+            {transferCheckStatus === '3' && (
+              <PbWalletPicker
+                use="node_transfer"
+                amount={TRANSFER_PRICE_BY_STAR[transferSheetNode.stars] ?? 0}
+                value={transferPayWallet}
+                onChange={setTransferPayWallet}
+              />
+            )}
+
             <div className="planet-upgrade-row">
               <span className="planet-upgrade-row-label">
                 {t('转让价格')}
@@ -1520,20 +1540,22 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
                 <span className="planet-upgrade-cost-unit"> PB</span>
               </div>
             </div>
-            <div className="planet-upgrade-row">
-              <span className="planet-upgrade-row-label">{t('Gas 费')}</span>
-              <div className="planet-upgrade-cost">
-                <span className="planet-upgrade-cost-num">
-                  {formatSupAmount(SUP_COST_BY_TIER[transferSheetNode.tier])}
-                </span>
-                <span className="planet-upgrade-cost-unit"> SUP</span>
+            {(!transferPayWallet || walletConsumesSup(transferPayWallet)) && (
+              <div className="planet-upgrade-row">
+                <span className="planet-upgrade-row-label">{t('Gas 费')}</span>
+                <div className="planet-upgrade-cost">
+                  <span className="planet-upgrade-cost-num">
+                    {formatSupAmount(SUP_COST_BY_TIER[transferSheetNode.tier])}
+                  </span>
+                  <span className="planet-upgrade-cost-unit"> SUP</span>
+                </div>
               </div>
-            </div>
+            )}
 
             <button
               className="planet-confirm-btn"
               onClick={handleConfirmTransfer}
-              disabled={transferCheckStatus !== '3' || transferring}
+              disabled={transferCheckStatus !== '3' || transferring || !transferPayWallet}
             >
               {transferring
                 ? <Loader2 size={16} strokeWidth={2} className="planet-spin" />

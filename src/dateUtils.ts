@@ -6,7 +6,7 @@ export function dayKey(date: Date = new Date()): string {
   return `${y}-${m}-${d}`;
 }
 
-/** 与 DailyTaskSheet 日历标签一致的 Intl locale 映射。 */
+/** 与每日任务历史日历标签一致的 Intl locale 映射。 */
 const CALENDAR_INTL_LOCALE: Record<string, string> = {
   'zh-CN': 'zh-CN', en: 'en-US', 'zh-TW': 'zh-TW', ko: 'ko-KR', ja: 'ja-JP',
   ru: 'ru-RU', es: 'es-ES', fr: 'fr-FR', pt: 'pt-PT', th: 'th-TH', vi: 'vi-VN',
