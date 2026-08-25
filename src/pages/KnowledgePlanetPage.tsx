@@ -111,7 +111,7 @@ const INITIAL_NODES: KnowledgeNode[] = [
 ];
 
 /** demo：带备注的节点默认已收藏（备注仅在收藏流程中选填） */
-const INITIAL_FAVORITE_NODE_IDS = ['n1', 'n3', 'n9'];
+export const INITIAL_FAVORITE_NODE_IDS = ['n1', 'n3', 'n9'];
 
 // mock：模拟"注册表"里已存在的用户地址——转让校验通过分支用；demo 输入其中任意一个即可校验通过
 export const REGISTERED_TRANSFER_ADDRESSES = new Set([
@@ -191,7 +191,7 @@ function seedNodesWithChannel(channels: { ownerName: string; id: string; name: s
 }
 
 export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?: string; openBsp?: boolean } = {}) {
-  const { showToast, t, language, channels, walletAddress, walletConnecting, connectWallet, goBack, canGoBack, payPb, navigate, nodeTransferAutoOpenId, setNodeTransferAutoOpenId } = useApp();
+  const { showToast, t, language, channels, walletAddress, walletConnecting, connectWallet, goBack, canGoBack, payPb, navigate, nodeTransferAutoOpenId, setNodeTransferAutoOpenId, favoriteNodeIds, toggleFavoriteNode } = useApp();
   const zh = isChinese(language);
   const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
   const [bspRecords, setBspRecords] = useState<BspInvestment[]>(() => buildInitialBspInvestments(MOCK_WALLET_ADDRESS));
@@ -201,7 +201,6 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
   const [bspRecordsOpen, setBspRecordsOpen] = useState(false);
   const [nodeSearch, setNodeSearch] = useState(initialSearch ?? '');
   const [starFilter, setStarFilter] = useState<number | null>(null);
-  const [favoriteNodeIds, setFavoriteNodeIds] = useState<Set<string>>(() => new Set(INITIAL_FAVORITE_NODE_IDS));
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'star'>('newest');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -517,11 +516,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
   /** 未收藏 → 弹出选填备注；已收藏 → 取消收藏并清除备注 */
   const handleFavoriteClick = (node: KnowledgeNode) => {
     if (favoriteNodeIds.has(node.id)) {
-      setFavoriteNodeIds(previous => {
-        const next = new Set(previous);
-        next.delete(node.id);
-        return next;
-      });
+      toggleFavoriteNode(node.id);
       setNodes(prev => prev.map(n => (
         n.id === node.id ? { ...n, remark: undefined } : n
       )));
@@ -541,7 +536,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
     if (!remarkSheetNode) return;
     const remark = remarkInput.trim();
     const nodeId = remarkSheetNode.id;
-    setFavoriteNodeIds(previous => new Set(previous).add(nodeId));
+    toggleFavoriteNode(nodeId);
     setNodes(prev => prev.map(n => (
       n.id === nodeId ? { ...n, remark: remark || undefined } : n
     )));

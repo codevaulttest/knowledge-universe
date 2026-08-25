@@ -19,7 +19,7 @@ import { Toast } from './components/shared';
 import { TaskCelebrationOverlay } from './components/TaskCelebrationOverlay';
 import { ComposePage } from './pages/ComposePage';
 import { FeedPage } from './pages/FeedPage';
-import { KnowledgePlanetPage } from './pages/KnowledgePlanetPage';
+import { INITIAL_FAVORITE_NODE_IDS, KnowledgePlanetPage } from './pages/KnowledgePlanetPage';
 import { PostDetailPage } from './pages/PostDetailPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { ChannelPage } from './pages/ChannelPage';
@@ -147,7 +147,7 @@ export default function App() {
   // 每完成 N 篇互动帖 +1，供任务面板监听触发一次性庆祝动效
   const [taskCelebrateSignal, setTaskCelebrateSignal] = useState(0);
   // 知识宇宙节点收藏：详情页与列表页共享，避免两处状态漂移
-  const [favoriteNodeIds, setFavoriteNodeIds] = useState<Set<string>>(new Set());
+  const [favoriteNodeIds, setFavoriteNodeIds] = useState<Set<string>>(() => new Set(INITIAL_FAVORITE_NODE_IDS));
   const toggleFavoriteNode = useCallback((nodeId: string) => {
     setFavoriteNodeIds(prev => {
       const next = new Set(prev);

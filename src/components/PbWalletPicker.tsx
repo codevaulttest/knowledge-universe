@@ -32,7 +32,10 @@ export function PbWalletPicker({
   const selectedMeta = value ? PB_WALLETS[value] : null;
 
   return (
-    <div style={{ position: 'relative', marginBottom: 16 }}>
+    <div className="stake-code-block" style={{ position: 'relative', marginBottom: 16 }}>
+      <div className="stake-code-label-row">
+        <span className="stake-code-label">{t('支付方式')}</span>
+      </div>
       <button
         type="button"
         className="pb-wallet-trigger"

@@ -123,18 +123,25 @@ export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
           <div className="node-detail-row node-detail-level-row">
             <span className="node-detail-row-label">{t('当前等级 {level}级', { level: currentLevel })}</span>
             {canUpgrade && (
-              <button
-                type="button"
-                className="node-detail-upgrade-btn"
-                onClick={() => {
-                  const nextLevel = currentLevel + 1;
-                  setCurrentLevel(nextLevel);
-                  showToast(t('已升级到 {level}级', { level: nextLevel }), 'demo');
-                }}
-              >
-                <ArrowUp size={16} strokeWidth={2.5} aria-hidden />
-                {t('升级')}
-              </button>
+              isMaxLevel ? (
+                <span className="node-detail-upgrade-btn node-detail-upgrade-btn--disabled" aria-disabled="true">
+                  {t('已满级')}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="node-detail-upgrade-btn"
+                  onClick={() => {
+                    const nextLevel = currentLevel + 1;
+                    setCurrentLevel(nextLevel);
+                    showToast(t('已升级到 {level} 级 · 面额 +{gain} PB · 荣誉值 +{gain}', { level: nextLevel, gain: LEVEL_UPGRADE_VALUE_GAIN }), 'demo');
+                  }}
+                >
+                  <ArrowUp size={16} strokeWidth={2.5} aria-hidden />
+                  {t('升级')}
+                  <span className="node-detail-upgrade-cost">{formatTokenAmount(upgradeCost)} PB</span>
+                </button>
+              )
             )}
           </div>
         </section>
@@ -149,8 +156,8 @@ export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
               <small>{node.tier === 1000 ? t('无上限') : t('上限 {amount} PB', { amount: node.tier === 100 ? 500 : 10 })}</small>
             </div>
             <div className="node-detail-earning">
-              <ArrowRightLeft size={18} aria-hidden />
-              <span>{t('总损失收益')}</span>
+              <Gift size={18} aria-hidden />
+              <span>{t('总百日补贴')}</span>
               <strong>{formatTokenAmount(earnings.centennialSubsidy)} PB</strong>
             </div>
           </div>
@@ -186,6 +193,26 @@ export function NodeDetailPage({ node }: { node: KnowledgeNode }) {
             <span className="node-detail-toggle" role="group" aria-label={t('是否允许推荐')}>
               <button type="button" className={allowRecommend ? 'node-detail-toggle-btn node-detail-toggle-btn--active' : 'node-detail-toggle-btn'} onClick={() => setAllowRecommend(true)}>{t('允许')}</button>
               <button type="button" className={!allowRecommend ? 'node-detail-toggle-btn node-detail-toggle-btn--active' : 'node-detail-toggle-btn'} onClick={() => setAllowRecommend(false)}>{t('不允许')}</button>
+            </span>
+          </div>
+          <div className="node-detail-row node-detail-recommend-row">
+            <span className="node-detail-row-label">{t('是否收藏')}</span>
+            <span className="node-detail-toggle" role="group" aria-label={t('是否收藏')}>
+              <button
+                type="button"
+                className={isFavorite ? 'node-detail-toggle-btn node-detail-toggle-btn--active' : 'node-detail-toggle-btn'}
+                onClick={() => { if (!isFavorite) toggleFavoriteNode(node.id); }}
+              >
+                <Bookmark size={13} strokeWidth={2} aria-hidden style={{ marginRight: 4 }} />
+                {t('已收藏')}
+              </button>
+              <button
+                type="button"
+                className={!isFavorite ? 'node-detail-toggle-btn node-detail-toggle-btn--active' : 'node-detail-toggle-btn'}
+                onClick={() => { if (isFavorite) toggleFavoriteNode(node.id); }}
+              >
+                {t('未收藏')}
+              </button>
             </span>
           </div>
         </section>

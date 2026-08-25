@@ -18,7 +18,7 @@ export const PB_WALLET_PICKER_VISIBLE: readonly PbWalletId[] = ['onchain', 'hono
 
 export const PB_WALLETS: Record<PbWalletId, PbWalletMeta> = {
   onchain: {
-    id: 'onchain', labelKey: '链上 PB', sourceKey: '链上余额', useSummaryKey: '适用于全部 PB 用途', consumesSup: true, unitKey: 'PB',
+    id: 'onchain', labelKey: '链上 PB', sourceKey: '链上钱包持有', useSummaryKey: '适用于全部 PB 用途', consumesSup: true, unitKey: 'PB',
   },
   site: {
     id: 'site', labelKey: '站内 PB', sourceKey: '空投 50% 到账', useSummaryKey: '适用于全部 PB 用途', consumesSup: true, unitKey: 'PB',

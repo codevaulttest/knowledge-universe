@@ -3,6 +3,7 @@ import { AlertTriangle, Award, Bell, Bookmark, Camera, Check, ChevronRight, Clip
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
+import type { UserListItem } from '../mockData';
 import type { AddressMigration, Channel, ChannelSubscriber, Draft, Language, OutgoingTip, ProfileContacts, RepostedBy, UserProfile } from '../types';
 import { PostCard } from '../components/PostCard';
 import { DevPanel } from '../components/DevPanel';
@@ -837,6 +838,7 @@ function AddressMigrationSheet({
   const [targetAddress, setTargetAddress] = useState('');
   const [attempted, setAttempted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const normalizedTarget = targetAddress.trim().toLowerCase();
   const addressValid = /^0x[a-fA-F0-9]{40}$/.test(targetAddress.trim());
   const isDifferentAddress = normalizedTarget !== sourceAddress.toLowerCase();
@@ -860,8 +862,15 @@ function AddressMigrationSheet({
     setAttempted(true);
     setSubmitError(null);
     if (!formReady) return;
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmMigration = () => {
     const result = onSubmit(normalizedTarget);
-    if (!result.ok) setSubmitError(result.message ?? t('提交失败，请稍后重试'));
+    if (!result.ok) {
+      setSubmitError(result.message ?? t('提交失败，请稍后重试'));
+      setConfirmOpen(false);
+    }
   };
 
   const handlePasteAddress = async () => {
@@ -904,15 +913,6 @@ function AddressMigrationSheet({
             </button>
           </div>
         </div>
-        {matchedUser && (
-          <div className="address-migration-match-card">
-            <span className="address-migration-match-hint">{t('该地址关联的知识宇宙账户')}</span>
-            <div className="address-migration-match-user">
-              <Avatar index={matchedUser.avatarIdx} />
-              <AuthorName name={matchedUser.name} />
-            </div>
-          </div>
-        )}
         {unregisteredAddress || (attempted && validationMessage) || submitError ? (
           <p className="address-migration-error" role="alert">
             {unregisteredAddress ? t('迁移目标需关联知识宇宙账户') : (submitError ?? validationMessage)}
@@ -931,6 +931,68 @@ function AddressMigrationSheet({
         <button type="button" className="planet-confirm-btn address-migration-submit" onClick={handleSubmit} disabled={!formReady}>
           {t('提交迁移申请')}
         </button>
+      </div>
+      {confirmOpen && matchedUser && (
+        <AddressMigrationConfirmModal
+          targetAddress={normalizedTarget}
+          matchedUser={matchedUser}
+          onConfirm={handleConfirmMigration}
+          onCancel={() => setConfirmOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function AddressMigrationConfirmModal({
+  targetAddress,
+  matchedUser,
+  onConfirm,
+  onCancel,
+}: {
+  targetAddress: string;
+  matchedUser: UserListItem;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const { t } = useApp();
+  return (
+    <div className="sheet-backdrop" onClick={onCancel}>
+      <div className="payment-sheet address-migration-confirm" role="dialog" aria-modal="true" aria-label={t('确认迁移账户')} onClick={event => event.stopPropagation()}>
+        <span className="address-migration-confirm-title">{t('确认迁移账户')}</span>
+        <div className="address-migration-address-block">
+          <span>{t('新地址')}</span>
+          <strong>{targetAddress}</strong>
+        </div>
+        <div className="address-migration-match-card">
+          <span className="address-migration-match-hint">{t('该地址关联的知识宇宙账户')}</span>
+          <div className="address-migration-match-user">
+            <Avatar index={matchedUser.avatarIdx} />
+            <AuthorName name={matchedUser.name} />
+          </div>
+        </div>
+        <div className="address-migration-confirm-stats">
+          <div className="address-migration-confirm-stat">
+            <span className="address-migration-confirm-stat-num">15</span>
+            <span className="address-migration-confirm-stat-label">{t('关注2')}</span>
+          </div>
+          <div className="address-migration-confirm-stat">
+            <span className="address-migration-confirm-stat-num">124</span>
+            <span className="address-migration-confirm-stat-label">{t('粉丝')}</span>
+          </div>
+          <div className="address-migration-confirm-stat">
+            <span className="address-migration-confirm-stat-num">32</span>
+            <span className="address-migration-confirm-stat-label">{t('帖子')}</span>
+          </div>
+        </div>
+        <div className="address-migration-confirm-actions">
+          <button type="button" className="gemini-stake-btn gemini-stake-btn--ghost" onClick={onCancel}>
+            {t('返回修改')}
+          </button>
+          <button type="button" className="planet-confirm-btn" onClick={onConfirm}>
+            {t('确认迁移')}
+          </button>
+        </div>
       </div>
     </div>
   );
