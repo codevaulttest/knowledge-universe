@@ -156,7 +156,7 @@ function BspRecordCard({ investment: inv, direction }: { investment: BspInvestme
       ) : (
         <span className="planet-node-origin-tag planet-node-origin-tag--bsp-proxy">
           <Crown size={12} strokeWidth={2.5} aria-hidden />
-          {t('别人代投')}
+          {t('别人投给你')}
         </span>
       )}
 

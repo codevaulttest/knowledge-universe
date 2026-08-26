@@ -548,7 +548,7 @@ export const en: Record<string, string> = {
   '去投放': 'Invest now',
   '自投': 'Self',
   '代投': 'For others',
-  '别人代投': 'From others',
+  '别人投给你': 'Invested for you',
   '我的投放': 'Sent',
   '收到的投放': 'Received',
   '投放方': 'From',
