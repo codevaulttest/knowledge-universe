@@ -11262,8 +11262,8 @@ button {
   height: 18px;
   padding: 0 5px;
   border-radius: var(--ku-radius-pill);
-  background: var(--ku-color-badge-bg);
-  color: var(--ku-color-badge-text);
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-secondary);
   font: var(--ku-text-caption-strong);
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -11393,12 +11393,24 @@ html[lang="zh-TW"] .planet-hero-title {
   color: var(--ku-color-on-primary);
 }
 
+.planet-hero-balances-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-xxs);
+  min-width: 0;
+  width: 100%;
+}
+
 .planet-hero-balances-row {
   display: inline-flex;
   align-items: center;
   gap: var(--ku-planet2-space-sm);
   width: 100%;
   min-width: 0;
+}
+
+.planet-hero-balances-row--secondary {
+  gap: var(--ku-planet2-space-xs);
 }
 
 .planet-hero-balances-item {
@@ -11788,13 +11800,6 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 .task-calc-op {
   color: var(--ku-color-text-secondary);
-}
-.task-calc-row--sub {
-  padding-top: 6px;
-  border-top: 1px dashed var(--ku-color-border-card);
-}
-.task-calc-row--sub .task-calc-label {
-  color: var(--ku-color-text-primary);
 }
 .task-calc-row--result {
   margin-top: 2px;

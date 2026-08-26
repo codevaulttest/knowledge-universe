@@ -35,13 +35,17 @@ export function PlanetHeroBalances() {
         title={assetAriaLabel}
       >
         <Wallet className="planet-hero-balances-icon" strokeWidth={2} aria-hidden="true" />
-        <span className="planet-hero-balances-row">
-          <span className="planet-hero-balances-item planet-hero-balances-item--pb">
-            <span className="planet-hero-balances-value">{formatCompactBalance(pbAsset.value, language)}</span>
-            <span className="planet-hero-balances-unit">{pbAsset.unit}</span>
+        <span className="planet-hero-balances-stack">
+          <span className="planet-hero-balances-row">
+            <span className="planet-hero-balances-item planet-hero-balances-item--pb">
+              <span className="planet-hero-balances-value">{formatCompactBalance(pbAsset.value, language)}</span>
+              <span className="planet-hero-balances-unit">{pbAsset.unit}</span>
+            </span>
           </span>
-          <span className="planet-hero-balances-overflow">{t('+{count} 种资产', { count: HIDDEN_ASSET_COUNT })}</span>
-          <ChevronRight size={14} strokeWidth={2} className="planet-hero-balances-chevron" aria-hidden="true" />
+          <span className="planet-hero-balances-row planet-hero-balances-row--secondary">
+            <span className="planet-hero-balances-overflow">{t('+{count} 种资产', { count: HIDDEN_ASSET_COUNT })}</span>
+            <ChevronRight size={14} strokeWidth={2} className="planet-hero-balances-chevron" aria-hidden="true" />
+          </span>
         </span>
       </button>
 

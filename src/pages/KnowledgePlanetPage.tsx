@@ -1340,7 +1340,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
 
       {/* ── BSP 巨星投流：完整投流记录底部弹层 ── */}
       {bspRecordsOpen && (
-        <div className="sheet-backdrop sheet-backdrop--bottom" onClick={() => setBspRecordsOpen(false)}>
+        <div className="sheet-backdrop" onClick={() => setBspRecordsOpen(false)}>
           <div
             className="payment-sheet bsp-record-list-sheet"
             role="dialog"

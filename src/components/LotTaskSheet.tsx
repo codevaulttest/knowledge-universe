@@ -126,7 +126,7 @@ function LotTaskCard({
         <span className="task-card-body">
           <span className="task-card-title">{t('一发十赞')}</span>
           <span className="task-card-desc">
-            {t('当天发帖，并给其他帖子点赞满 {likes} 次为 1 组，每组 +{honor} 荣誉值', { likes: TASK_LOT_LIKES_PER_UNIT, honor: TASK_LOT_HONOR_PER_UNIT })}
+            {t('当天发帖，并给其他帖子点赞满 {likes} 次，可得 +{honor} 荣誉值', { likes: TASK_LOT_LIKES_PER_UNIT, honor: TASK_LOT_HONOR_PER_UNIT })}
           </span>
         </span>
         <span className="task-card-ratio-col">
@@ -137,23 +137,15 @@ function LotTaskCard({
 
       {lotQuota.fiveStarNodeCount > 0 ? (
         <>
-          {/* 竖排算式：直连节点 × 每节点组数 = 今日组数，再 × 每组点赞次数 = 今日共需点赞，每步都对应一个可见数字 */}
+          {/* 竖排算式：五星节点数 × 每节点点赞额度 = 今日点赞额度，隐藏内部配额单位。 */}
           <div className="task-calc">
             <div className="task-calc-row">
               <span className="task-calc-label">{t('直连五星节点')}</span>
               <span className="task-calc-value">{lotQuota.fiveStarNodeCount} {t('个')}</span>
             </div>
             <div className="task-calc-row">
-              <span className="task-calc-label">{t('每个节点可完成')}</span>
-              <span className="task-calc-value task-calc-op">× {TASK_LOT_UNITS_PER_NODE} {t('组')}</span>
-            </div>
-            <div className="task-calc-row task-calc-row--sub">
-              <span className="task-calc-label">{t('今日共可完成')}</span>
-              <span className="task-calc-value">{lotQuota.units} {t('组')}</span>
-            </div>
-            <div className="task-calc-row">
-              <span className="task-calc-label">{t('每组需点赞')}</span>
-              <span className="task-calc-value task-calc-op">× {TASK_LOT_LIKES_PER_UNIT} {t('次')}</span>
+              <span className="task-calc-label">{t('每个节点可点赞')}</span>
+              <span className="task-calc-value task-calc-op">× {TASK_LOT_UNITS_PER_NODE * TASK_LOT_LIKES_PER_UNIT} {t('次')}</span>
             </div>
             <div className="task-calc-row task-calc-row--result">
               <span className="task-calc-label">{t('今日点赞额度')}</span>
@@ -169,7 +161,11 @@ function LotTaskCard({
       ) : (
         <div className="task-card-foot">
           <p className="task-group-note">
-            {t('还没有直连五星节点，今天保底 1 组「一发十赞」；每直连 1 个五星节点，组数 ×9 递增')}
+            {t('还没有直连五星节点，今天可给他人点赞 {likes} 次，最多 +{honor} 荣誉值；每直连 1 个五星节点，点赞额度增加 {perNode} 次', {
+              likes: TASK_LOT_LIKES_PER_UNIT,
+              honor: TASK_LOT_HONOR_PER_UNIT,
+              perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_LIKES_PER_UNIT,
+            })}
           </p>
           <span className={`task-card-status${bonusEligible ? ' task-card-status--done' : ''}`}>
             {statusLabel}
@@ -199,8 +195,11 @@ function LotTaskRulesSheet({ onClose }: { onClose: () => void }) {
           </p>
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('一发十赞：')}</strong>
-            {t('每直连 1 个五星节点，每天可多完成 {perNode} 组「一发十赞」（未直连五星节点时保底 1 组）；每组为当天发帖 + 给其他帖子点赞满 {likes} 次，发放 +{honor} 荣誉值，次日凌晨结算。', {
-              perNode: TASK_LOT_UNITS_PER_NODE, likes: TASK_LOT_LIKES_PER_UNIT, honor: TASK_LOT_HONOR_PER_UNIT,
+            {t('当天发帖并给其他帖子点赞满 {likes} 次，可得 +{honor} 荣誉值；每直连 1 个五星节点，每天增加 {perNode} 次点赞额度。未直连五星节点时，今天可点赞 {baseline} 次。奖励次日凌晨结算。', {
+              likes: TASK_LOT_LIKES_PER_UNIT,
+              honor: TASK_LOT_HONOR_PER_UNIT,
+              perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_LIKES_PER_UNIT,
+              baseline: TASK_LOT_LIKES_PER_UNIT,
             })}
           </p>
           <p className="pb-info-sheet-para">
@@ -281,10 +280,14 @@ function LotTaskHistorySheet({
 
         <p className="task-calendar-lot-note">
           {lotQuota.fiveStarNodeCount > 0
-            ? t('你已直连 {nodes} 个五星节点，每天可完成 {units} 组「一发十赞」，共需给他人点赞 {likes} 次，最多 +{honor} 荣誉值', {
-                nodes: lotQuota.fiveStarNodeCount, units: lotQuota.units, likes: lotQuota.likes, honor: lotQuota.honor,
+            ? t('你已直连 {nodes} 个五星节点，今天可给他人点赞 {likes} 次，最多 +{honor} 荣誉值', {
+                nodes: lotQuota.fiveStarNodeCount, likes: lotQuota.likes, honor: lotQuota.honor,
               })
-            : t('你名下暂无直连的五星节点，今天保底 1 组「一发十赞」，最多 +10 荣誉值；每直连 1 个五星节点，组数按 ×9 递增')}
+            : t('你名下暂无直连的五星节点，今天可给他人点赞 {likes} 次，最多 +{honor} 荣誉值；每直连 1 个五星节点，点赞额度增加 {perNode} 次', {
+                likes: TASK_LOT_LIKES_PER_UNIT,
+                honor: TASK_LOT_HONOR_PER_UNIT,
+                perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_LIKES_PER_UNIT,
+              })}
         </p>
       </div>
     </div>

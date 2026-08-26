@@ -46,7 +46,7 @@ export function BspRecordSummary({
   );
 }
 
-type BspRecordDirection = 'given' | 'received';
+type BspRecordBeneficiary = 'others' | 'mine';
 
 export function BspRecordList({
   investments,
@@ -60,10 +60,12 @@ export function BspRecordList({
   onClose: () => void;
 }) {
   const { t } = useApp();
-  const given = investments.filter(inv => inv.investorAddress === myAddress);
-  const received = investments.filter(inv => inv.investorAddress !== myAddress && inv.beneficiaryAddress === myAddress);
-  const [direction, setDirection] = useState<BspRecordDirection>('given');
-  const activeList = direction === 'given' ? given : received;
+  const investedInOthers = investments.filter(
+    inv => inv.investorAddress === myAddress && inv.beneficiaryAddress !== myAddress,
+  );
+  const investedForMe = investments.filter(inv => inv.beneficiaryAddress === myAddress);
+  const [beneficiary, setBeneficiary] = useState<BspRecordBeneficiary>('mine');
+  const activeList = beneficiary === 'others' ? investedInOthers : investedForMe;
 
   return (
     <div className="planet-section">
@@ -78,22 +80,22 @@ export function BspRecordList({
         <button
           type="button"
           role="tab"
-          aria-selected={direction === 'given'}
-          className={`create-scale-tab${direction === 'given' ? ' create-scale-tab--active' : ''}`}
-          onClick={() => setDirection('given')}
+          aria-selected={beneficiary === 'mine'}
+          className={`create-scale-tab${beneficiary === 'mine' ? ' create-scale-tab--active' : ''}`}
+          onClick={() => setBeneficiary('mine')}
         >
-          {t('我的投放')}
-          <span className="bsp-record-tab-badge">{given.length}</span>
+          {t('投流给我')}
+          <span className="bsp-record-tab-badge">{investedForMe.length}</span>
         </button>
         <button
           type="button"
           role="tab"
-          aria-selected={direction === 'received'}
-          className={`create-scale-tab${direction === 'received' ? ' create-scale-tab--active' : ''}`}
-          onClick={() => setDirection('received')}
+          aria-selected={beneficiary === 'others'}
+          className={`create-scale-tab${beneficiary === 'others' ? ' create-scale-tab--active' : ''}`}
+          onClick={() => setBeneficiary('others')}
         >
-          {t('收到的投放')}
-          <span className="bsp-record-tab-badge">{received.length}</span>
+          {t('投流他人')}
+          <span className="bsp-record-tab-badge">{investedInOthers.length}</span>
         </button>
       </div>
 
@@ -101,9 +103,9 @@ export function BspRecordList({
         <div className="planet-nodes-empty" data-layer="bsp-empty">
           <Crown width={40} height={40} strokeWidth={1.5} className="planet-nodes-empty-icon" />
           <span className="planet-nodes-empty-title">
-            {direction === 'given' ? t('还没有投流记录') : t('还没有收到别人的投流')}
+            {beneficiary === 'others' ? t('还没有投流他人的记录') : t('还没有投流给你的记录')}
           </span>
-          {direction === 'given' && (
+          {beneficiary === 'others' && (
             <>
               <p className="planet-nodes-empty-text">
                 {t('点击「BSP 巨星投流」开始你的第一笔投放')}
@@ -117,7 +119,7 @@ export function BspRecordList({
       ) : (
         <div className="planet-node-list">
           {activeList.map(inv => (
-            <BspRecordCard key={inv.id} investment={inv} direction={direction} />
+            <BspRecordCard key={inv.id} investment={inv} beneficiary={beneficiary} />
           ))}
         </div>
       )}
@@ -133,32 +135,24 @@ function BspStatusBadge({ status }: { status: BspInvestmentStatus }) {
   );
 }
 
-function BspRecordCard({ investment: inv, direction }: { investment: BspInvestment; direction: BspRecordDirection }) {
+function BspRecordCard({ investment: inv, beneficiary }: { investment: BspInvestment; beneficiary: BspRecordBeneficiary }) {
   const { t } = useApp();
   const paidPb = inv.paidPb.toLocaleString();
-  const paidSup = inv.paidSup.toLocaleString();
   const status = bspInvestmentStatus(inv);
 
   return (
     <div className="planet-node-card planet-node-card--tagged bsp-record-card">
-      {direction === 'given' ? (
-        inv.beneficiaryKind === 'self' ? (
-          <span className="planet-node-origin-tag planet-node-origin-tag--bsp-self">
-            <Crown size={12} strokeWidth={2.5} aria-hidden />
-            {t('投给自己')}
-          </span>
-        ) : (
-          <span className="planet-node-origin-tag planet-node-origin-tag--bsp-proxy">
-            <Crown size={12} strokeWidth={2.5} aria-hidden />
-            {t('投给他人')}
-          </span>
-        )
+      {beneficiary === 'mine' && (inv.investorAddress === inv.beneficiaryAddress ? (
+        <span className="planet-node-origin-tag planet-node-origin-tag--bsp-self">
+          <Crown size={12} strokeWidth={2.5} aria-hidden />
+          {t('投给自己')}
+        </span>
       ) : (
         <span className="planet-node-origin-tag planet-node-origin-tag--bsp-proxy">
           <Crown size={12} strokeWidth={2.5} aria-hidden />
           {t('别人投给你')}
         </span>
-      )}
+      ))}
 
       <BspStatusBadge status={status} />
 
@@ -168,15 +162,10 @@ function BspRecordCard({ investment: inv, direction }: { investment: BspInvestme
       </div>
 
       <div className="bsp-record-detail-row bsp-record-detail-row--address">
-        <span className="bsp-record-label">{direction === 'given' ? t('投放对象') : t('投放方')}</span>
+        <span className="bsp-record-label">{beneficiary === 'others' ? t('投放对象') : t('投放方')}</span>
         <span className="bsp-record-value bsp-record-value--address">
-          {direction === 'given' ? inv.beneficiaryAddress : inv.investorAddress}
+          {beneficiary === 'others' ? inv.beneficiaryAddress : inv.investorAddress}
         </span>
-      </div>
-
-      <div className="bsp-record-detail-row">
-        <span className="bsp-record-label">{t('Gas 费')}</span>
-        <span className="bsp-record-value">{paidSup} SUP</span>
       </div>
 
       <div className="bsp-record-detail-row">
