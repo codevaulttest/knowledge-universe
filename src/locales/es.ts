@@ -204,7 +204,6 @@ export const es: Record<string, string> = {
   '查看保底规则': 'Ver reglas de garantía',
   '了解 BSP 巨星投流规则': 'Conocer las reglas del Impulso Big Star',
   '投放对象': 'Destinatario del impulso',
-  '投给自己': 'Para mí',
   '投给他人': 'Para otro usuario',
   '我的钱包地址': 'Mi dirección de billetera',
   '请输入对方钱包地址': 'Introduce la dirección de billetera del destinatario',

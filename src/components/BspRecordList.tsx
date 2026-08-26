@@ -145,12 +145,12 @@ function BspRecordCard({ investment: inv, beneficiary }: { investment: BspInvest
       {beneficiary === 'mine' && (inv.investorAddress === inv.beneficiaryAddress ? (
         <span className="planet-node-origin-tag planet-node-origin-tag--bsp-self">
           <Crown size={12} strokeWidth={2.5} aria-hidden />
-          {t('投给自己')}
+          {t('自投')}
         </span>
       ) : (
         <span className="planet-node-origin-tag planet-node-origin-tag--bsp-proxy">
           <Crown size={12} strokeWidth={2.5} aria-hidden />
-          {t('别人投给你')}
+          {t('别人投给我')}
         </span>
       ))}
 

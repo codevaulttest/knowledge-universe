@@ -180,7 +180,7 @@ export function BspInvestSheet({
               disabled={paying}
               onClick={() => handleSelectMode('self')}
             >
-              {t('投给自己')}
+              {t('自投')}
             </button>
             <button
               type="button"

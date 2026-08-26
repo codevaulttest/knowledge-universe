@@ -204,7 +204,6 @@ export const vi: Record<string, string> = {
   '查看保底规则': 'Xem quy tắc sàn',
   '了解 BSP 巨星投流规则': 'Tìm hiểu quy tắc Big Star Plan',
   '投放对象': 'Người thụ hưởng',
-  '投给自己': 'Bản thân',
   '投给他人': 'Người khác',
   '我的钱包地址': 'Địa chỉ ví của tôi',
   '请输入对方钱包地址': 'Nhập địa chỉ ví của người nhận',
