@@ -28,7 +28,7 @@ export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
 
           <p className="task-panel-note">{t('今天的互动次数决定明天的空投领取上限')}</p>
 
-          <button type="button" className="bsp-rules-entry task-panel-rules-entry" onClick={() => setRulesOpen(true)}>
+          <button type="button" className="bsp-rules-entry task-panel-rules-entry task-panel-rules-entry--neutral" onClick={() => setRulesOpen(true)}>
             <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
             <span className="bsp-rules-entry-text">{t('查看完整任务规则')}</span>
             <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
@@ -97,7 +97,7 @@ function InteractionTaskRulesSheet({ onClose }: { onClose: () => void }) {
           </p>
           <div className="sup-deposit-warning">
             <AlertTriangle size={16} strokeWidth={2} aria-hidden="true" />
-            <span>{t('具体保底比例与阶梯步长可能随运营策略调整，请以任务面板内实际展示为准。')}</span>
+            <span>{t('具体比例后续可能调整，请以任务面板内实际展示为准。')}</span>
           </div>
         </div>
       </div>

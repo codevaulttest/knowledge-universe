@@ -96,6 +96,7 @@
   --ku-color-bg-page:          #f0f2f5;  /* <body> / 页面底色 */
   --ku-color-bg-phone:         #ffffff;  /* 手机壳内容区 */
   --ku-color-bg-tabs:          rgba(255, 255, 255, 0.96);  /* 顶部 Tab 毛玻璃背景 */
+  --ku-color-bg-secondary:     #f4f6f9;  /* 白底卡片内的次级浅底（费用明细、表单分组等） */
   --ku-color-nav-glass:        rgba(248, 251, 252, 0.94);  /* iOS 26 Liquid Glass 导航材质 */
   --ku-color-nav-glass-border: rgba(255, 255, 255, 0.82);
   --ku-color-nav-glass-shine:  linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.08));
@@ -368,8 +369,9 @@
   --ku-planet-node-upgrade-bg:     rgba(0, 205, 184, 0.09);
   --ku-planet-node-upgrade-border: rgba(0, 205, 184, 0.35);
   --ku-planet-node-upgrade-text:   var(--ku-color-primary);
-  --ku-planet-hero-balances-bg:         rgba(255, 255, 255, 0.86);  /* hero 顶栏余额 chip，透出星云底图 */
-  --ku-planet-hero-balances-bg-active:   rgba(255, 255, 255, 0.94);
+  --ku-planet-hero-balances-bg:         rgba(8, 12, 22, 0.55);  /* 深色 chip，融入星云底图而非浮在其上 */
+  --ku-planet-hero-balances-bg-active:   rgba(8, 12, 22, 0.7);
+  --ku-planet-hero-balances-border:     rgba(255, 255, 255, 0.16);
   --ku-planet-hero-balances-icon-size:   14px;
   --ku-planet-hero-balances-icon-text-gap: 8px;
 

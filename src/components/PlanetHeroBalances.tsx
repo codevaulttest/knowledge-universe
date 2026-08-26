@@ -10,7 +10,7 @@ import { AssetDepositSheet } from './AssetDepositSheet';
 
 /** 页顶 hero 资产摘要：最多展示三种高频资产；后续类型以 +N 保持入口高度不变。 */
 export function PlanetHeroBalances() {
-  const { t, language, walletConnected, pbWallets, supWallets, supBalance, meritBalance } = useApp();
+  const { t, language, walletConnected, pbWallets, supWallets, meritBalance } = useApp();
   const [pbInfoOpen, setPbInfoOpen] = useState(false);
   const [pbDetailOpen, setPbDetailOpen] = useState(false);
   const [honorInfoOpen, setHonorInfoOpen] = useState(false);
@@ -19,16 +19,11 @@ export function PlanetHeroBalances() {
 
   if (!walletConnected) return null;
 
-  // 新资产只需追加到此列表；首页固定展示前三种，其余由 +N 种资产承接。
-  const heroAssets = [
-    { id: 'pb', value: pbWallets.onchain + pbWallets.airdrop + pbWallets.station, unit: 'PB', ariaLabel: 'PB' },
-    { id: 'honor', value: pbWallets.honor, unit: t('荣誉值'), ariaLabel: t('荣誉值') },
-    { id: 'sup', value: supBalance, unit: 'SUP', ariaLabel: 'SUP' },
-  ];
-  const visibleHeroAssets = heroAssets.slice(0, 3);
-  const hiddenAssetCount = heroAssets.length - visibleHeroAssets.length;
-  const [pbAsset, honorAsset, supAsset] = visibleHeroAssets;
-  const assetAriaLabel = `${visibleHeroAssets.map(asset => `${formatCompactBalance(asset.value, language)} ${asset.ariaLabel}`).join('，')}${hiddenAssetCount > 0 ? `，${t('+{count} 种资产', { count: hiddenAssetCount })}` : ''}，${t('查看资产余额')}`;
+  // 折叠徽章只保留"站内 PB"这一种主力展示（用户在充值/提取里主动管理、日常互动感最强的一层）；
+  // 荣誉值、链上 PB、空投 PB、站内 SUP、链上 SUP 五项不再参与求和，由"+5 种资产"提示承接，点开「我的资产」可看全部明细。
+  const HIDDEN_ASSET_COUNT = 5;
+  const pbAsset = { value: pbWallets.station, unit: t('站内 PB'), ariaLabel: t('站内 PB') };
+  const assetAriaLabel = `${formatCompactBalance(pbAsset.value, language)} ${pbAsset.ariaLabel}，${t('+{count} 种资产', { count: HIDDEN_ASSET_COUNT })}，${t('查看资产余额')}`;
 
   return (
     <>
@@ -40,27 +35,13 @@ export function PlanetHeroBalances() {
         title={assetAriaLabel}
       >
         <Wallet className="planet-hero-balances-icon" strokeWidth={2} aria-hidden="true" />
-        <span className="planet-hero-balances-stack">
-          <span className="planet-hero-balances-row">
-            <span className="planet-hero-balances-item planet-hero-balances-item--pb">
-              <span className="planet-hero-balances-value">{formatCompactBalance(pbAsset.value, language)}</span>
-              <span className="planet-hero-balances-unit">{pbAsset.unit}</span>
-            </span>
-            <span className="planet-hero-balances-item planet-hero-balances-item--honor">
-              <span className="planet-hero-balances-value">{formatCompactBalance(honorAsset.value, language)}</span>
-              <span className="planet-hero-balances-unit">{honorAsset.unit}</span>
-            </span>
+        <span className="planet-hero-balances-row">
+          <span className="planet-hero-balances-item planet-hero-balances-item--pb">
+            <span className="planet-hero-balances-value">{formatCompactBalance(pbAsset.value, language)}</span>
+            <span className="planet-hero-balances-unit">{pbAsset.unit}</span>
           </span>
-          <span className="planet-hero-balances-row planet-hero-balances-row--bottom">
-            <span className="planet-hero-balances-item">
-              <span className="planet-hero-balances-value">{formatCompactBalance(supAsset.value, language)}</span>
-              <span className="planet-hero-balances-unit">{supAsset.unit}</span>
-            </span>
-            {hiddenAssetCount > 0 && (
-              <span className="planet-hero-balances-overflow">{t('+{count} 种资产', { count: hiddenAssetCount })}</span>
-            )}
-            <ChevronRight size={14} strokeWidth={2} className="planet-hero-balances-chevron" aria-hidden="true" />
-          </span>
+          <span className="planet-hero-balances-overflow">{t('+{count} 种资产', { count: HIDDEN_ASSET_COUNT })}</span>
+          <ChevronRight size={14} strokeWidth={2} className="planet-hero-balances-chevron" aria-hidden="true" />
         </span>
       </button>
 

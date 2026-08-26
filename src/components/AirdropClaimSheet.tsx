@@ -10,7 +10,7 @@ const BREAKDOWN_LABEL_KEY: Record<AirdropBreakdownKey, string> = {
   llsy: '流量收益',
   dssy: '赞助收益',
   dysy: '订阅收益',
-  jqbt: '加权补贴',
+  jqbt: '生态补贴',
   oldnum: '历史未领取',
 };
 
@@ -36,7 +36,7 @@ export function AirdropClaimSheet({ amount, onClose }: { amount: number; onClose
 
   return (
     <div className="sheet-backdrop" onClick={status === 'loading' ? undefined : onClose}>
-      <div className="payment-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+      <div className="payment-sheet airdrop-claim-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">{t('空投收益')}</span>
           <button
@@ -91,16 +91,18 @@ export function AirdropClaimSheet({ amount, onClose }: { amount: number; onClose
                 <span className="pay-combo-value">{formatTokenAmount(row.value)} PB</span>
               </div>
             ))}
-            <div className="pay-combo-row airdrop-fee-row">
-              <span className="pay-combo-label">{t('Gas 费')}</span>
-              <span className="pay-combo-value">{formatSupAmount(fee)} SUP</span>
-            </div>
+          </div>
+
+          {/* Gas 费是领取动作本身的成本（单位 SUP），独立显示在收益构成卡下方 */}
+          <div className="pay-combo-row airdrop-fee-row">
+            <span className="pay-combo-label">{t('Gas 费')}</span>
+            <span className="pay-combo-value">{formatSupAmount(fee)} SUP</span>
           </div>
 
           <div className="airdrop-claim-tips">
             <div className="airdrop-claim-tips-title">{t('温馨提示')}</div>
             <p className="airdrop-claim-tips-item">
-              {t('1. 您当前收益上限：{cap} PB，可通过提升节点星级提升收益上限。', { cap: formatTokenAmount(MOCK_AIRDROP_REWARD_CAP) })}
+              {t('1. 你当前收益上限：{cap} PB，可通过提升节点星级提升。', { cap: formatTokenAmount(MOCK_AIRDROP_REWARD_CAP) })}
             </p>
             <p className="airdrop-claim-tips-item">
               {t('2. PB 是平台公信力指数，平台不予兑换现金，仅可用于平台内部解锁功能使用。')}

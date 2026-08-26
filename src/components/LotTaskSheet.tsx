@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Check, ChevronRight, Circle, Gift, History, Info, ThumbsUp, X } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Circle, History, Info, ThumbsUp, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { calendarIntlLocale } from '../dateUtils';
 import {
@@ -25,7 +25,6 @@ export function LotTaskSheet({
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const posted = taskSnapshotToday.posted;
-  const interacted = taskSnapshotToday.interactedCount;
   const bonusEligible = taskSnapshotToday.bonusEligible;
   const honorRewardStatus = taskSnapshotToday.honorRewardStatus;
 
@@ -56,7 +55,7 @@ export function LotTaskSheet({
             <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
           </button>
 
-          <LotTaskCard lotQuota={lotQuota} bonusEligible={bonusEligible} honorRewardStatus={honorRewardStatus} posted={posted} interacted={interacted} />
+          <LotTaskCard lotQuota={lotQuota} bonusEligible={bonusEligible} honorRewardStatus={honorRewardStatus} />
 
           {/* 发帖任务：荣誉值里程碑与 BSP 保底的共同前置条件 */}
           <div className={`task-card${posted ? ' task-card--done' : ''}`}>
@@ -109,16 +108,15 @@ function LotTaskCard({
   lotQuota,
   bonusEligible,
   honorRewardStatus,
-  posted,
-  interacted,
 }: {
   lotQuota: LotQuota;
   bonusEligible: boolean;
   honorRewardStatus: 'none' | 'pending' | 'issued';
-  posted: boolean;
-  interacted: number;
 }) {
   const { t } = useApp();
+  const statusLabel = bonusEligible
+    ? honorRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')
+    : t('待完成');
   return (
     <div className={`task-card task-card--lot${bonusEligible ? ' task-card--done' : ''}`}>
       <div className="task-card-head">
@@ -137,27 +135,47 @@ function LotTaskCard({
         </span>
       </div>
 
-      <p className="task-group-note">
-        {lotQuota.fiveStarNodeCount > 0
-          ? t('已直连 {nodes} 个五星节点，今日可完成 {units} 组「一发十赞」，共需给他人点赞 {likes} 次', {
-              nodes: lotQuota.fiveStarNodeCount, units: lotQuota.units, likes: lotQuota.likes,
-            })
-          : t('还没有直连五星节点，今天保底 1 组「一发十赞」；每直连 1 个五星节点，组数 ×9 递增')}
-      </p>
-
-      <div className="task-milestone-row">
-        <span className={`task-milestone-chip${bonusEligible ? ' task-milestone-chip--done' : ''}`}>
-          {bonusEligible ? <Check size={12} strokeWidth={2.6} /> : <Gift size={12} strokeWidth={1.9} />}
-          {t('发帖 + 给他人点赞满 {likes} 次 · +{honor} 荣誉值', { likes: TASK_LOT_LIKES_PER_UNIT, honor: TASK_LOT_HONOR_PER_UNIT })}
-          <span className="task-milestone-chip-state">
-            {bonusEligible
-              ? honorRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')
-              : interacted >= TASK_LOT_LIKES_PER_UNIT
-                ? posted ? t('待完成') : t('还需发帖')
-                : t('待完成')}
+      {lotQuota.fiveStarNodeCount > 0 ? (
+        <>
+          {/* 竖排算式：直连节点 × 每节点组数 = 今日组数，再 × 每组点赞次数 = 今日共需点赞，每步都对应一个可见数字 */}
+          <div className="task-calc">
+            <div className="task-calc-row">
+              <span className="task-calc-label">{t('直连五星节点')}</span>
+              <span className="task-calc-value">{lotQuota.fiveStarNodeCount} {t('个')}</span>
+            </div>
+            <div className="task-calc-row">
+              <span className="task-calc-label">{t('每个节点可完成')}</span>
+              <span className="task-calc-value task-calc-op">× {TASK_LOT_UNITS_PER_NODE} {t('组')}</span>
+            </div>
+            <div className="task-calc-row task-calc-row--sub">
+              <span className="task-calc-label">{t('今日共可完成')}</span>
+              <span className="task-calc-value">{lotQuota.units} {t('组')}</span>
+            </div>
+            <div className="task-calc-row">
+              <span className="task-calc-label">{t('每组需点赞')}</span>
+              <span className="task-calc-value task-calc-op">× {TASK_LOT_LIKES_PER_UNIT} {t('次')}</span>
+            </div>
+            <div className="task-calc-row task-calc-row--result">
+              <span className="task-calc-label">{t('今日点赞额度')}</span>
+              <span className="task-calc-value">{lotQuota.likes} {t('次')}</span>
+            </div>
+          </div>
+          <div className="task-card-status-row">
+            <span className={`task-card-status${bonusEligible ? ' task-card-status--done' : ''}`}>
+              {statusLabel}
+            </span>
+          </div>
+        </>
+      ) : (
+        <div className="task-card-foot">
+          <p className="task-group-note">
+            {t('还没有直连五星节点，今天保底 1 组「一发十赞」；每直连 1 个五星节点，组数 ×9 递增')}
+          </p>
+          <span className={`task-card-status${bonusEligible ? ' task-card-status--done' : ''}`}>
+            {statusLabel}
           </span>
-        </span>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -191,7 +209,7 @@ function LotTaskRulesSheet({ onClose }: { onClose: () => void }) {
           </p>
           <div className="sup-deposit-warning">
             <AlertTriangle size={16} strokeWidth={2} aria-hidden="true" />
-            <span>{t('具体保底比例与阶梯步长可能随运营策略调整，请以任务面板内实际展示为准。')}</span>
+            <span>{t('具体比例后续可能调整，请以任务面板内实际展示为准。')}</span>
           </div>
         </div>
       </div>

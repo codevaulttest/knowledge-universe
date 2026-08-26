@@ -2830,9 +2830,8 @@ button {
   color: var(--ku-color-text-secondary);
 }
 .airdrop-fee-row {
-  margin-top: var(--ku-space-1);
-  padding-top: var(--ku-space-3);
-  border-top: 1px solid var(--ku-color-border-card);
+  margin: calc(var(--ku-planet2-space-sm) * -1) 0 var(--ku-planet2-space-base);
+  padding: 0 var(--ku-planet2-space-base);
 }
 .airdrop-claim-body {
   display: flex;
@@ -2857,6 +2856,14 @@ button {
   font-size: 13px;
   line-height: 1.6;
   color: var(--ku-color-warning-text);
+}
+.airdrop-claim-sheet .pay-combo-label,
+.airdrop-claim-sheet .pay-combo-value,
+.airdrop-claim-sheet .pay-combo-hint,
+.airdrop-claim-sheet .airdrop-source-title,
+.airdrop-claim-sheet .airdrop-claim-tips-item,
+.airdrop-claim-sheet .pay-status {
+  font-size: 14px;
 }
 .pay-option-copy {
   display: flex;
@@ -11248,7 +11255,7 @@ button {
   z-index: 0;
   overflow: hidden;
   margin: 0 calc(-1 * var(--ku-planet2-space-base));
-  padding: var(--ku-planet2-space-lg) var(--ku-planet2-space-base) var(--ku-planet2-space-xxl);
+  padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base) var(--ku-planet2-space-xxl);
   border-radius: 0 0 var(--ku-planet2-radius-lg) var(--ku-planet2-radius-lg);
   color: var(--ku-color-on-primary);
 }
@@ -11288,6 +11295,9 @@ button {
   font: 700 32px/1.2 var(--ku-font-family);
   letter-spacing: 0.02em;
   color: var(--ku-color-on-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* 中文品牌名「知识宇宙」沿用隶书 */
 html[lang="zh-CN"] .planet-hero-title,
@@ -11296,7 +11306,7 @@ html[lang="zh-TW"] .planet-hero-title {
   letter-spacing: 0.08em;
 }
 
-/* 顶栏极简余额：半透明白底 + 中性色文字，边框保证边界 */
+/* 顶栏极简余额：深色半透明底 + 高对比浅色文字，融入星云 hero 底图 */
 .planet-hero-balances {
   position: relative;
   flex-shrink: 0;
@@ -11304,13 +11314,13 @@ html[lang="zh-TW"] .planet-hero-title {
   align-items: center;
   margin-top: var(--ku-planet2-space-xxs);
   padding: var(--ku-planet2-space-xxs) var(--ku-planet2-space-sm) var(--ku-planet2-space-xxs) calc(var(--ku-planet2-space-xs) + var(--ku-planet-hero-balances-icon-size) + var(--ku-planet-hero-balances-icon-text-gap));
-  border: 1px solid var(--ku-color-border-control);
+  border: 1px solid var(--ku-planet-hero-balances-border);
   border-radius: var(--ku-planet2-radius-lg);
   background: var(--ku-planet-hero-balances-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   cursor: pointer;
-  max-width: 46%;
+  max-width: 65%;
 }
 
 .planet-hero-balances:active {
@@ -11324,27 +11334,15 @@ html[lang="zh-TW"] .planet-hero-title {
   width: var(--ku-planet-hero-balances-icon-size);
   height: var(--ku-planet-hero-balances-icon-size);
   transform: translateY(-50%);
-  color: var(--ku-color-text-meta);
-}
-
-.planet-hero-balances-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0;
-  min-width: 0;
+  color: var(--ku-color-on-primary-muted);
 }
 
 .planet-hero-balances-row {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--ku-planet2-space-sm);
   width: 100%;
   min-width: 0;
-}
-
-.planet-hero-balances-row--bottom {
-  align-items: center;
 }
 
 .planet-hero-balances-item {
@@ -11359,44 +11357,37 @@ html[lang="zh-TW"] .planet-hero-title {
   align-items: center;
 }
 
-.planet-hero-balances-item--honor {
-  min-width: 0;
-}
-
 .planet-hero-balances-value {
   font-family: var(--ku-font-mono);
   font-size: 13px;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--ku-color-text-primary);
+  color: var(--ku-color-on-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.planet-hero-balances:active .planet-hero-balances-value {
-  color: var(--ku-color-text-strong);
 }
 
 .planet-hero-balances-unit {
   font-family: var(--ku-font-family);
   font-size: 12px;
   font-weight: 500;
-  color: var(--ku-color-text-meta);
+  color: var(--ku-color-on-primary-muted);
+  white-space: nowrap;
 }
 
 .planet-hero-balances-overflow {
   font-family: var(--ku-font-family);
   font-size: 12px;
   font-weight: 500;
-  color: var(--ku-color-text-meta);
+  color: var(--ku-color-on-primary-muted);
   white-space: nowrap;
 }
 
 .planet-hero-balances-chevron {
   flex-shrink: 0;
   margin-left: auto;
-  color: var(--ku-color-text-meta);
+  color: var(--ku-color-on-primary-muted);
 }
 
 /* 公告横幅叠压在 hero 底边（负 margin 需盖过 .planet-content 的 flex gap 才能真正压上插画）；
@@ -11532,34 +11523,6 @@ html[lang="zh-TW"] .planet-hero-title {
   transition: width var(--ku-motion-fast);
 }
 
-.task-milestone-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.task-milestone-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border-radius: var(--ku-radius-reward-chip);
-  background: var(--ku-color-primary-alpha-06);
-  color: var(--ku-color-primary-dark);
-  font: 600 12px/1.3 var(--ku-font-family);
-}
-
-.task-milestone-chip--done {
-  background: var(--ku-color-primary);
-  color: var(--ku-color-on-primary);
-}
-
-.task-milestone-chip-state {
-  margin-left: 2px;
-  font: 400 12px/1.3 var(--ku-font-family);
-}
-
 /* 信息流里的任务里程碑庆祝层（每 5 篇互动帖就地放烟花） */
 .task-celebrate-overlay {
   position: absolute;
@@ -11644,15 +11607,6 @@ html[lang="zh-TW"] .planet-hero-title {
   background: var(--ku-color-lot-tint-strong);
 }
 
-.lot-task-panel-sheet .task-panel-rules-entry--neutral {
-  background: var(--ku-color-border-cell);
-  color: var(--ku-color-text-secondary);
-}
-
-.lot-task-panel-sheet .task-panel-rules-entry--neutral:active:not(:disabled) {
-  background: var(--ku-color-border);
-}
-
 .lot-task-panel-sheet .task-card--done {
   border-color: var(--ku-color-lot-border);
   background: var(--ku-color-lot-tint);
@@ -11675,16 +11629,6 @@ html[lang="zh-TW"] .planet-hero-title {
 .lot-task-panel-sheet .task-card-status--done {
   background: var(--ku-color-lot-tint-strong);
   color: var(--ku-color-lot-red);
-}
-
-.lot-task-panel-sheet .task-milestone-chip {
-  background: var(--ku-color-lot-tint);
-  color: var(--ku-color-lot-red);
-}
-
-.lot-task-panel-sheet .task-milestone-chip--done {
-  background: var(--ku-color-lot-red);
-  color: var(--ku-color-on-primary);
 }
 
 .lot-task-history-sheet .task-calendar-month,
@@ -11725,6 +11669,15 @@ html[lang="zh-TW"] .planet-hero-title {
   margin-bottom: var(--ku-planet2-space-md);
 }
 
+.bsp-rules-entry.task-panel-rules-entry--neutral {
+  background: var(--ku-color-border-cell);
+  color: var(--ku-color-text-secondary);
+}
+
+.bsp-rules-entry.task-panel-rules-entry--neutral:active:not(:disabled) {
+  background: var(--ku-color-border);
+}
+
 .task-group-label {
   margin: 6px 0 8px;
   font: 600 12px/1.3 var(--ku-font-family);
@@ -11736,6 +11689,80 @@ html[lang="zh-TW"] .planet-hero-title {
   font: 400 12px/1.6 var(--ku-font-family);
   color: var(--ku-color-text-meta);
   text-align: left;
+}
+
+/* 一发十赞卡：配额说明 + 状态徽章同排，替代原来重复规则文案的 milestone chip */
+.task-card-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.task-card-foot .task-group-note {
+  flex: 1;
+}
+.task-card-foot .task-card-status {
+  margin-top: 1px;
+}
+
+/* 卡片内嵌算式：因子 → 因子 → 结果逐行竖排，同 .airdrop-calc 的版式语言，
+   用浅底 + 结果行分隔线替代一句话塞多个数字 */
+.task-calc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  margin-top: 2px;
+  border-radius: var(--ku-radius-media);
+  background: var(--ku-color-primary-alpha-06);
+}
+.task-calc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.task-calc-label {
+  font: 400 12px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+}
+.task-calc-value {
+  font: 600 12px/1 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
+.task-calc-op {
+  color: var(--ku-color-text-secondary);
+}
+.task-calc-row--sub {
+  padding-top: 6px;
+  border-top: 1px dashed var(--ku-color-border-card);
+}
+.task-calc-row--sub .task-calc-label {
+  color: var(--ku-color-text-primary);
+}
+.task-calc-row--result {
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ku-color-border-card);
+}
+.task-calc-row--result .task-calc-label {
+  font-weight: 600;
+  color: var(--ku-color-text-primary);
+}
+/* 品牌浅底上用 primary-on-tint：primary 在 alpha-06 底上不达 4.5:1 */
+.task-calc-row--result .task-calc-value {
+  font-size: 13px;
+  color: var(--ku-color-primary-on-tint);
+}
+.task-card-status-row {
+  display: flex;
+  justify-content: flex-end;
+}
+.lot-task-panel-sheet .task-calc {
+  background: var(--ku-color-lot-tint);
+}
+.lot-task-panel-sheet .task-calc-row--result .task-calc-value {
+  color: var(--ku-color-lot-red);
 }
 
 .task-calendar-lot-note {

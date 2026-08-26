@@ -122,7 +122,7 @@ export default function App() {
   // 每日任务：互动帖任务决定明天空投领取比例，一发十赞决定今天荣誉值签到奖，两者互不相关
   const [taskSnapshotToday, setTaskSnapshotToday] = useState<TaskDaySnapshot>(() => getTaskSnapshot());
   // 开发工具：模拟 9/1 后阶梯规则生效 / 模拟新用户（无昨日记录）/ 切换直连五星节点数
-  const [demoForceLadder, setDemoForceLadder] = useState(false);
+  const [demoForceLadder, setDemoForceLadder] = useState(true);
   const [demoForceNewUser, setDemoForceNewUser] = useState(false);
   const [demoFiveStarNodeCount, setDemoFiveStarNodeCount] = useState(MOCK_FIVE_STAR_NODE_COUNT);
   const [taskSnapshotYesterday, setTaskSnapshotYesterday] = useState<TaskDaySnapshot | null>(

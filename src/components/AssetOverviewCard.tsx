@@ -39,7 +39,7 @@ export function AssetOverviewCard() {
   return (
     <>
       <div className="asset-overview-card">
-        {/* 今天可以领 */}
+        {/* 今日可领 */}
         <div className="asset-overview-airdrop-top">
           <div className="asset-overview-airdrop-left">
             <span className="asset-overview-icon-col">
@@ -50,7 +50,7 @@ export function AssetOverviewCard() {
             <div className="asset-overview-airdrop-info">
               <div className="asset-overview-airdrop-label-row">
                 <span className="asset-overview-airdrop-label">
-                  {t('今天可以领')}
+                  {t('今日可领')}
                 </span>
                 <button
                   type="button"
