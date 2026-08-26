@@ -2744,7 +2744,7 @@ button {
   top: calc(var(--ku-modal-content-padding) * -1);
   z-index: 1;
   margin: calc(var(--ku-modal-content-padding) * -1);
-  margin-bottom: var(--ku-modal-content-padding);
+  margin-bottom: 0;
   padding: var(--ku-modal-content-padding);
   background: var(--ku-color-bg-phone);
 }
@@ -2794,6 +2794,69 @@ button {
   font: var(--ku-text-meta);
   color: var(--ku-color-text-meta);
   line-height: 1.45;
+}
+.pay-combo-row--total .pay-combo-label {
+  font: 600 14px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
+.pay-combo-row--total .pay-combo-value {
+  font: 700 16px/1 var(--ku-font-family);
+}
+/* 空投算式卡：满额 → 比例 → 结果逐行竖排，结果行用分隔线和主色与上方两行拉开层级；
+   整卡加品牌浅底，与下方纯列表的「收益构成」卡形成主次区分 */
+.airdrop-calc {
+  background: var(--ku-color-primary-alpha-06);
+}
+.airdrop-calc .airdrop-calc-ratio {
+  color: var(--ku-color-text-secondary);
+}
+/* 只有算式展开（上方有满额/比例两行）时才需要这条汇总分隔线 */
+.airdrop-calc-result:not(:first-child) {
+  margin-top: var(--ku-space-1);
+  padding-top: var(--ku-space-3);
+  border-top: 1px solid var(--ku-color-border-card);
+}
+/* 品牌浅底上用 primary-on-tint 而非 primary：后者在 alpha-06 底上只有 4.22:1，不达 AA */
+.airdrop-calc-result .pay-combo-value {
+  color: var(--ku-color-primary-on-tint);
+}
+.airdrop-calc .pay-combo-hint {
+  margin-top: var(--ku-space-1);
+  /* 卡内浅底上 text-meta 只剩 4.51:1，贴着 AA 下限；与卡内其它标签统一用 secondary */
+  color: var(--ku-color-text-secondary);
+}
+.airdrop-source-title {
+  font: var(--ku-text-caption-strong);
+  color: var(--ku-color-text-secondary);
+}
+.airdrop-fee-row {
+  margin-top: var(--ku-space-1);
+  padding-top: var(--ku-space-3);
+  border-top: 1px solid var(--ku-color-border-card);
+}
+.airdrop-claim-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-sm);
+  margin-bottom: var(--ku-planet2-space-base);
+}
+.airdrop-claim-tips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-sm);
+  padding: var(--ku-planet2-space-base);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: var(--ku-color-warning-bg);
+}
+.airdrop-claim-tips-title {
+  font: 600 14px/1 var(--ku-font-family);
+  color: var(--ku-color-warning-text);
+}
+.airdrop-claim-tips-item {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ku-color-warning-text);
 }
 .pay-option-copy {
   display: flex;
@@ -5446,9 +5509,7 @@ button {
   padding: var(--ku-space-1);
 }
 .feed-lot-bonus-btn > img {
-  display: block;
   width: calc(var(--ku-feed-header-side-column) - var(--ku-space-3));
-  height: auto;
 }
 /* ─── 未连接钱包时的顶部快捷连接入口 ─── */
 .wallet-connect-pill {
@@ -5542,6 +5603,11 @@ button {
   padding: 0;
   border-radius: var(--ku-radius-circle);
   background: var(--ku-color-primary);
+}
+
+.feed-lot-bonus-btn .feed-bell-dot--plain {
+  background: var(--ku-color-lot-red-bright);
+  border: 1px solid var(--ku-color-on-primary);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -8505,7 +8571,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: var(--ku-planet2-space-sm);
-  padding: var(--ku-planet2-space-base);
+  padding: 0 var(--ku-planet2-space-base) var(--ku-planet2-space-base);
 }
 
 .pb-info-balances {
@@ -8540,6 +8606,18 @@ button {
 
 .pb-info-balance-label--with-action .asset-overview-info-btn {
   flex: 0 0 auto;
+}
+
+.pb-info-balance-action-btn {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border: 1px solid var(--ku-color-primary-alpha-14);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-primary-alpha-06);
+  color: var(--ku-color-primary-dark);
+  font: var(--ku-text-action-cta-lg);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .pb-info-balance-value {
@@ -10365,16 +10443,6 @@ button {
 
 /* ── Create Channel Sheet (质押生成节点) ── */
 
-.planet-pregen-note {
-  margin: 0 0 var(--ku-planet2-space-base);
-  padding: 10px 12px;
-  border-radius: var(--ku-radius-card);
-  background: color-mix(in srgb, var(--ku-color-genesis-gold) 12%, var(--ku-color-bg-phone));
-  font-size: 14px;
-  line-height: 1.5;
-  color: color-mix(in srgb, var(--ku-color-genesis-gold) 65%, var(--ku-color-text-primary));
-}
-
 .stake-hint {
   padding: var(--ku-planet2-space-base) 0 var(--ku-planet2-space-sm);
   font-size: 14px;
@@ -11610,7 +11678,6 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 
 .lot-task-hero > img {
-  display: block;
   width: var(--ku-lot-task-hero-image-width);
   height: auto;
 }

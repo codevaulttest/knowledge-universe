@@ -505,7 +505,6 @@ export const es: Record<string, string> = {
   '复制节点编号': 'Copiar número de nodo',
   '子节点': 'Nodo secundario',
   '查看子节点说明': 'Ver información de nodos secundarios',
-  '知识星球系统尚未正式上线，当前生成的是预留频道，系统上线后自动转为正式频道': 'El sistema Planeta del conocimiento aún no se ha lanzado oficialmente; los canales generados ahora son reservados y pasarán a ser oficiales automáticamente tras el lanzamiento',
   '开通规模': 'Escala de creación',
   '按个数': 'Por cantidad',
   '按星级包': 'Por paquete de estrellas',

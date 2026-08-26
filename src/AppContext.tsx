@@ -110,6 +110,11 @@ export type AppContextValue = {
   supBalance: number;
   supHistory: SupTransaction[];
   deductSup: (amount: number, reason: SupTransactionReason, pool?: SupWalletId) => void;
+  /** 空投 PB / 站内 SUP 充值·提取：站内 PB 明确不可上链，不提供入口。提取失败（余额不足）返回 false。 */
+  depositAirdropPb: (amount: number) => void;
+  withdrawAirdropPb: (amount: number) => boolean;
+  depositSiteSup: (amount: number) => void;
+  withdrawSiteSup: (amount: number) => boolean;
   /** 优点（182）：只读展示资产，不进任何支付选择器。 */
   meritBalance: number;
   // 游客模式：未连接钱包时可浏览，涉及身份/资产/链上操作需先连接钱包
@@ -149,6 +154,8 @@ export type AppContextValue = {
   taskSnapshotYesterday: TaskDaySnapshot | null;
   /** 今天实际可领取的空投比例：已统一处理 9/1 阶梯生效与新用户默认值，UI 不应再自行换算。 */
   airdropClaimRatio: number;
+  /** 阶梯规则（9/1）今天是否已生效；生效前所有人一律 100%，跟互动次数无关。 */
+  airdropRatioLadderActive: boolean;
   /** 每完成 5 篇互动帖 +1，供任务面板监听触发一次性庆祝动效 */
   taskCelebrateSignal: number;
   /** 成功完成一次帖子互动后计入每日任务；同一帖子只计一次。 */

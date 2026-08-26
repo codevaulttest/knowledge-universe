@@ -80,6 +80,13 @@ export function pbOnchainFee(amount: number): number {
   return Math.round(amount * PB_ONCHAIN_FEE_RATE * 10000) / 10000;
 }
 
+/** 空投领取的链上/站内分账 + 手续费，供领取确认弹窗预览和实际领取共用同一份算法。 */
+export function splitAirdropClaim(claimedAmount: number): { onchainAmount: number; airdropAmount: number; fee: number } {
+  const onchainAmount = Math.ceil(claimedAmount / 2);
+  const airdropAmount = claimedAmount - onchainAmount;
+  return { onchainAmount, airdropAmount, fee: pbOnchainFee(onchainAmount) };
+}
+
 export const CHANNEL_OPEN_PB_COST = 1000;
 
 /**

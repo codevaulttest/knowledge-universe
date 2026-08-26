@@ -3,6 +3,7 @@ import { CalendarCheck, Check, ChevronRight, Circle, Gift, Info, X } from 'lucid
 import { useApp } from '../AppContext';
 import { getAirdropDeadline, MOCK_PB_AIRDROP_AMOUNT } from '../mockData';
 import { formatTokenAmount } from '../stakeConfig';
+import { AirdropClaimSheet } from './AirdropClaimSheet';
 import {
   TASK_INTERACTION_POOL_SIZE,
   TASK_RATIO_BASE,
@@ -15,10 +16,11 @@ import {
 
 export function AssetOverviewCard() {
   const {
-    t, walletConnected, airdropClaimed, claimAirdrop, taskSnapshotToday,
+    t, walletConnected, airdropClaimed, taskSnapshotToday,
     airdropClaimRatio, openInteractionTask,
   } = useApp();
   const [airdropRuleOpen, setAirdropRuleOpen] = useState(false);
+  const [claimSheetOpen, setClaimSheetOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -75,7 +77,7 @@ export function AssetOverviewCard() {
                 <button
                   type="button"
                   className={`asset-overview-claim-btn${airdropClaimed || airdropMissed ? ' asset-overview-claim-btn--done' : ''}`}
-                  onClick={claimAirdrop}
+                  onClick={() => setClaimSheetOpen(true)}
                   disabled={airdropClaimed || airdropMissed}
                 >
                   {airdropClaimed ? t('已领取') : airdropMissed ? t('已错过') : t('领取空投')}
@@ -171,6 +173,10 @@ export function AssetOverviewCard() {
             </div>
           </div>
         </div>
+      )}
+
+      {claimSheetOpen && (
+        <AirdropClaimSheet amount={todayPb} onClose={() => setClaimSheetOpen(false)} />
       )}
     </>
   );

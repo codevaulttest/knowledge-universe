@@ -11,7 +11,7 @@ import { BspRulesSheet } from '../components/BspRulesSheet';
 import { DevPanel } from '../components/DevPanel';
 import { PbWalletPicker } from '../components/PbWalletPicker';
 import { PageHeader, PullToRefresh } from '../components/shared';
-import { CURRENT_USER, MOCK_WALLET_ADDRESS } from '../mockData';
+import { CURRENT_USER, MOCK_WALLET_ADDRESS, findRegisteredUserByAddress } from '../mockData';
 import { SUP_COST_BY_TIER, formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import { buildInitialBspInvestments, type BspInvestment } from '../bspConfig';
 import { isChinese } from '../i18n';
@@ -221,6 +221,10 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
   const [verifying, setVerifying] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createPayWallet, setCreatePayWallet] = useState<PbWalletId | null>(null);
+  const [beneficiaryMode, setBeneficiaryMode] = useState<'self' | 'other'>('self');
+  const [beneficiaryAddressInput, setBeneficiaryAddressInput] = useState('');
+  const [beneficiaryAddressStatus, setBeneficiaryAddressStatus] = useState<CodeCheckStatus>('1');
+  const [beneficiaryVerifying, setBeneficiaryVerifying] = useState(false);
   const [devForceEmptyNodes, setDevForceEmptyNodes] = useState(false);
   const [devBspInsufficient, setDevBspInsufficient] = useState(false);
   const [childListNode, setChildListNode] = useState<KnowledgeNode | null>(null);
@@ -252,9 +256,35 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
 
   const step2Ready = channelNameInput.trim().length > 0
     && (codeCheckStatus === '1' || codeCheckStatus === '3')
-    && !verifying;
+    && !verifying
+    && (beneficiaryMode === 'self' || beneficiaryAddressStatus === '3');
 
   const createConfirmReady = step1Ready && step2Ready && !creating;
+
+  const beneficiary = beneficiaryAddressStatus === '3' ? findRegisteredUserByAddress(beneficiaryAddressInput.trim()) : undefined;
+
+  const handleSelectBeneficiaryMode = (next: 'self' | 'other') => {
+    setBeneficiaryMode(next);
+    if (next === 'self') {
+      setBeneficiaryAddressInput('');
+      setBeneficiaryAddressStatus('1');
+    }
+  };
+
+  const handleBeneficiaryAddressChange = (value: string) => {
+    setBeneficiaryAddressInput(value);
+    setBeneficiaryAddressStatus(value.trim() ? '2' : '1');
+  };
+
+  const handleVerifyBeneficiaryAddress = () => {
+    const address = beneficiaryAddressInput.trim();
+    if (!address || beneficiaryVerifying) return;
+    setBeneficiaryVerifying(true);
+    setTimeout(() => {
+      setBeneficiaryAddressStatus(findRegisteredUserByAddress(address) ? '3' : '4');
+      setBeneficiaryVerifying(false);
+    }, 500);
+  };
 
   const handleClaimDiamondNode = () => {
     showToast(t('跳转「钻石节点」'), 'demo');
@@ -290,6 +320,10 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
     setCodeCheckStatus('1');
     setVerifying(false);
     setCreating(false);
+    setBeneficiaryMode('self');
+    setBeneficiaryAddressInput('');
+    setBeneficiaryAddressStatus('1');
+    setBeneficiaryVerifying(false);
   };
 
   const handleCreateChannel = () => {
@@ -379,14 +413,17 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
         createdAt,
       }));
 
-      setNodes(prev => [...newNodes, ...prev]);
-
-      const newIds = newNodes.map(n => n.id);
-      window.setTimeout(() => {
-        setNodes(prev => prev.map(n => (newIds.includes(n.id) ? { ...n, syncing: false } : n)));
-      }, CREATE_SYNCING_MS);
-
-      showToast(t('已提交开通 {count} 个频道，列表同步中', { count }));
+      if (beneficiary) {
+        // 代开通：频道归属于受益人，不计入自己的节点列表
+        showToast(t('已为 {name} 开通频道', { name: beneficiary.name }));
+      } else {
+        setNodes(prev => [...newNodes, ...prev]);
+        const newIds = newNodes.map(n => n.id);
+        window.setTimeout(() => {
+          setNodes(prev => prev.map(n => (newIds.includes(n.id) ? { ...n, syncing: false } : n)));
+        }, CREATE_SYNCING_MS);
+        showToast(t('已提交开通 {count} 个频道，列表同步中', { count }));
+      }
       setCreating(false);
       setCreateSheetOpen(false);
     }, 900);
@@ -682,7 +719,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
                     点击「
                     <button type="button" className="planet-nodes-empty-link" onClick={handleClaimDiamondNode}>钻石节点</button>
                     」或「
-                    <button type="button" className="planet-nodes-empty-link" onClick={handleCreateChannel}>抢先开通频道</button>
+                    <button type="button" className="planet-nodes-empty-link" onClick={handleCreateChannel}>开通频道</button>
                     」获得节点
                   </>
                 ) : (
@@ -690,7 +727,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
                     Tap{' '}
                     <button type="button" className="planet-nodes-empty-link" onClick={handleClaimDiamondNode}>Diamond Node</button>
                     {' '}or{' '}
-                    <button type="button" className="planet-nodes-empty-link" onClick={handleCreateChannel}>Early Channel Access</button>
+                    <button type="button" className="planet-nodes-empty-link" onClick={handleCreateChannel}>Open Channel</button>
                     {' '}to get a node
                   </>
                 )}
@@ -1010,8 +1047,65 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
             </div>
 
             <div className="create-step-body">
-              <div className="planet-pregen-note">
-                {t('知识星球系统尚未正式上线，当前生成的是预留频道，系统上线后自动转为正式频道')}
+              <div className="stake-code-block">
+                <div className="stake-code-label-row">
+                  <span className="stake-code-label">{t('开通对象')}</span>
+                </div>
+                <div className="create-scale-toggle">
+                  <button
+                    type="button"
+                    className={`create-scale-tab${beneficiaryMode === 'self' ? ' create-scale-tab--active' : ''}`}
+                    disabled={creating}
+                    onClick={() => handleSelectBeneficiaryMode('self')}
+                  >
+                    {t('为自己开通')}
+                  </button>
+                  <button
+                    type="button"
+                    className={`create-scale-tab${beneficiaryMode === 'other' ? ' create-scale-tab--active' : ''}`}
+                    disabled={creating}
+                    onClick={() => handleSelectBeneficiaryMode('other')}
+                  >
+                    {t('为他人代开通')}
+                  </button>
+                </div>
+                {beneficiaryMode === 'other' && (
+                  <div className="stake-code-row">
+                    <div className="stake-code-input-wrap">
+                      <input
+                        className="stake-code-input"
+                        type="text"
+                        value={beneficiaryAddressInput}
+                        onChange={e => handleBeneficiaryAddressChange(e.target.value)}
+                        placeholder={t('请输入对方钱包地址')}
+                        disabled={creating}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="stake-code-verify-btn"
+                      onClick={handleVerifyBeneficiaryAddress}
+                      disabled={!beneficiaryAddressInput.trim() || beneficiaryVerifying || creating}
+                    >
+                      {beneficiaryVerifying
+                        ? <Loader2 size={14} strokeWidth={2} className="planet-spin" />
+                        : t('校验')
+                      }
+                    </button>
+                  </div>
+                )}
+                {beneficiaryMode === 'other' && beneficiaryAddressStatus === '3' && beneficiary && (
+                  <span className="stake-code-status stake-code-status--ok">
+                    <ShieldCheck size={13} strokeWidth={2} />
+                    {t('频道将归属于 {name}', { name: beneficiary.name })}
+                  </span>
+                )}
+                {beneficiaryMode === 'other' && beneficiaryAddressStatus === '4' && (
+                  <span className="stake-code-status stake-code-status--fail">
+                    <ShieldX size={13} strokeWidth={2} />
+                    {t('该地址未在知识宇宙注册，请确认地址是否正确')}
+                  </span>
+                )}
               </div>
 
               <div className="stake-code-block">

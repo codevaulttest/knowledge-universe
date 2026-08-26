@@ -182,6 +182,8 @@ export type Channel = {
   // 会员档位设置（涨价/降价/新增/下架档位）30 天内只能改一次；记录上次改动时间（ms 时间戳）
   // 未改动过则为 undefined（可立即修改）；仅频道名称/简介的编辑不受此限制、不刷新该时间戳
   tiersChangedAt?: number;
+  /** 代开通频道时的付款人；自己开通则不设置。 */
+  payerName?: string;
 };
 
 /** 频道订阅者（频道主从个人页查看） */
@@ -197,6 +199,8 @@ export type NewChannelData = {
   description: string;
   category: string;
   tiers: ChannelTier[];
+  /** 代开通频道：已校验通过的他人钱包地址；自己开通则不传。 */
+  beneficiaryAddress?: string;
 };
 
 export type DmMessage = {
@@ -296,7 +300,8 @@ export type SupTransactionReason =
   | 'address_migration'
   | 'airdrop'
   | 'node_upgrade'
-  | 'node_transfer';
+  | 'node_transfer'
+  | 'withdraw';
 
 /** 四种 PB 钱包。余额彼此独立，一笔支付只使用其中一个钱包。 */
 export type PbWalletId = 'onchain' | 'station' | 'honor' | 'airdrop';

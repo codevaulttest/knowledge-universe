@@ -1,7 +1,7 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
-import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, HandCoins, Gift, Plus, Save, Wallet } from 'lucide-react';
+import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, HandCoins, Gift, Plus, Save, Wallet, Loader2, ShieldCheck, ShieldX } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
+import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER, findRegisteredUserByAddress } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 import { withFreeTier } from '../channelTiers';
 import { ChannelTierName } from './ChannelTierMedal';
@@ -1527,11 +1527,14 @@ export function ConfirmDeleteDraftModal({ onConfirm, onCancel }: {
   );
 }
 
-export function ChannelCreatedSuccessModal({ onSetTiers, onDismiss }: {
+export function ChannelCreatedSuccessModal({ ownerName, onSetTiers, onDismiss }: {
+  /** 代开通场景下传入受益人名字；付款人不是频道主，不引导设置档位。自己开通时不传。 */
+  ownerName?: string;
   onSetTiers: () => void;
   onDismiss: () => void;
 }) {
   const { t } = useApp();
+  const isProxyCreated = !!ownerName;
   return (
     <div className="sheet-backdrop" onClick={onDismiss}>
       <div
@@ -1547,19 +1550,27 @@ export function ChannelCreatedSuccessModal({ onSetTiers, onDismiss }: {
             <Check size={28} strokeWidth={2.2} />
           </div>
           <h2 className="channel-success-title" id="channel-success-title">
-            {t('频道开通成功')}
+            {isProxyCreated ? t('已为 {name} 开通频道', { name: ownerName }) : t('频道开通成功')}
           </h2>
           <p className="channel-success-message" id="channel-success-message">
-            {t('设置会员档位后，用户订阅即可为你带来收益')}
+            {isProxyCreated ? t('对方登录后即可设置会员档位并开始收益') : t('设置会员档位后，用户订阅即可为你带来收益')}
           </p>
         </div>
         <div className="channel-success-actions">
-          <button type="button" className="planet-confirm-btn" onClick={onSetTiers}>
-            {t('设置会员档位')}
-          </button>
-          <button type="button" className="gemini-stake-btn gemini-stake-btn--ghost" onClick={onDismiss}>
-            {t('暂不设置')}
-          </button>
+          {isProxyCreated ? (
+            <button type="button" className="planet-confirm-btn" onClick={onDismiss}>
+              {t('知道了')}
+            </button>
+          ) : (
+            <>
+              <button type="button" className="planet-confirm-btn" onClick={onSetTiers}>
+                {t('设置会员档位')}
+              </button>
+              <button type="button" className="gemini-stake-btn gemini-stake-btn--ghost" onClick={onDismiss}>
+                {t('暂不设置')}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -1968,6 +1979,35 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   const [paying, setPaying] = useState<'idle' | 'loading' | 'failed'>('idle');
   const [failReason, setFailReason] = useState('');
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
+  // 代开通频道：输入他人地址校验通过后，频道归属受益人，用自己的钱包付款
+  const [beneficiaryMode, setBeneficiaryMode] = useState<'self' | 'other'>('self');
+  const [addressInput, setAddressInput] = useState('');
+  const [addressStatus, setAddressStatus] = useState<'1' | '2' | '3' | '4'>('1');
+  const [verifying, setVerifying] = useState(false);
+  const beneficiary = addressStatus === '3' ? findRegisteredUserByAddress(addressInput.trim()) : undefined;
+
+  const handleAddressChange = (value: string) => {
+    setAddressInput(value);
+    setAddressStatus(value.trim() ? '2' : '1');
+  };
+
+  const handleVerifyAddress = () => {
+    const address = addressInput.trim();
+    if (!address || verifying) return;
+    setVerifying(true);
+    setTimeout(() => {
+      setAddressStatus(findRegisteredUserByAddress(address) ? '3' : '4');
+      setVerifying(false);
+    }, 500);
+  };
+
+  const handleSelectBeneficiaryMode = (next: 'self' | 'other') => {
+    setBeneficiaryMode(next);
+    if (next === 'self') {
+      setAddressInput('');
+      setAddressStatus('1');
+    }
+  };
   const channelSupCost = SUP_COST_BY_TIER[1000];
   const channelWalletNeedsSup = !payWallet || walletConsumesSup(payWallet);
   const [name, setName] = useState(existingChannel?.name ?? defaultChannelName);
@@ -2038,7 +2078,8 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   };
 
   const canSubmit = name.trim().length > 0
-    && !tiers.some((_, idx) => isChannelTierPriceInvalid(tiers, idx));
+    && !tiers.some((_, idx) => isChannelTierPriceInvalid(tiers, idx))
+    && (beneficiaryMode === 'self' || addressStatus === '3');
 
   const handleSubmit = () => {
     if (!canSubmit || paying === 'loading') return;
@@ -2056,7 +2097,10 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
     // 一步完成：同一屏内直接跑支付动画，成功后立即建号，不再跳到独立的支付弹窗
     setPaying('loading');
     setTimeout(() => {
-      createChannel({ name: name.trim(), description: description.trim(), category, tiers });
+      createChannel({
+        name: name.trim(), description: description.trim(), category, tiers,
+        beneficiaryAddress: beneficiaryMode === 'other' ? addressInput.trim() : undefined,
+      });
       onClose();
     }, 1300);
   };
@@ -2208,6 +2252,63 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               </button>
             )}
           </div>
+          )}
+
+          {!isEdit && (
+            <div className="edit-profile-field">
+              <span className="edit-profile-label">{t('开通对象')}</span>
+              <div className="create-scale-toggle">
+                <button
+                  type="button"
+                  className={`create-scale-tab${beneficiaryMode === 'self' ? ' create-scale-tab--active' : ''}`}
+                  onClick={() => handleSelectBeneficiaryMode('self')}
+                >
+                  {t('为自己开通')}
+                </button>
+                <button
+                  type="button"
+                  className={`create-scale-tab${beneficiaryMode === 'other' ? ' create-scale-tab--active' : ''}`}
+                  onClick={() => handleSelectBeneficiaryMode('other')}
+                >
+                  {t('为他人代开通')}
+                </button>
+              </div>
+              {beneficiaryMode === 'other' && (
+                <div className="stake-code-block">
+                  <div className="stake-code-row">
+                    <div className="stake-code-input-wrap">
+                      <input
+                        className="stake-code-input"
+                        type="text"
+                        value={addressInput}
+                        onChange={e => handleAddressChange(e.target.value)}
+                        placeholder={t('请输入对方钱包地址')}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="stake-code-verify-btn"
+                      onClick={handleVerifyAddress}
+                      disabled={!addressInput.trim() || verifying}
+                    >
+                      {verifying ? <Loader2 size={14} strokeWidth={2} className="planet-spin" /> : t('校验')}
+                    </button>
+                  </div>
+                  {addressStatus === '3' && beneficiary && (
+                    <span className="stake-code-status stake-code-status--ok">
+                      <ShieldCheck size={13} strokeWidth={2} />
+                      {t('频道将归属于 {name}', { name: beneficiary.name })}
+                    </span>
+                  )}
+                  {addressStatus === '4' && (
+                    <span className="stake-code-status stake-code-status--fail">
+                      <ShieldX size={13} strokeWidth={2} />
+                      {t('该地址未在知识宇宙注册，请确认地址是否正确')}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
           {!isEdit && (

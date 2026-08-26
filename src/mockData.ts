@@ -72,6 +72,28 @@ export function resolveInviterAddress(code: string): string {
 /** 周期性 PB 空投单次发放数量 */
 export const MOCK_PB_AIRDROP_AMOUNT = 100;
 
+/** 空投收益上限展示值：可通过提升节点星级提升，仅用于领取弹窗温馨提示展示。 */
+export const MOCK_AIRDROP_REWARD_CAP = 99999;
+
+/** 空投领取弹窗里的 5 项金额构成占比：仅用于展示，照搬真实实现的分类，无实际业务含义。 */
+const AIRDROP_BREAKDOWN_ITEMS = [
+  { key: 'llsy', ratio: 0.4 },
+  { key: 'dssy', ratio: 0.25 },
+  { key: 'dysy', ratio: 0.2 },
+  { key: 'jqbt', ratio: 0.1 },
+  { key: 'oldnum', ratio: 0.05 },
+] as const;
+
+export type AirdropBreakdownKey = typeof AIRDROP_BREAKDOWN_ITEMS[number]['key'];
+
+/** 按固定占比把今日可领总额拆成 5 项，最后一项吸收舍入差额，保证求和等于总额。 */
+export function getAirdropBreakdown(totalPb: number): { key: AirdropBreakdownKey; value: number }[] {
+  const rows = AIRDROP_BREAKDOWN_ITEMS.map(item => ({ key: item.key, value: Math.round(totalPb * item.ratio) }));
+  const roundedSum = rows.reduce((sum, row) => sum + row.value, 0);
+  rows[rows.length - 1].value += totalPb - roundedSum;
+  return rows;
+}
+
 /** 演示用户名下直连的五星节点数，驱动「一发十赞」每日配额（0 个仍保底 1 组，≥1 个按 ×9 递增）。 */
 export const MOCK_FIVE_STAR_NODE_COUNT = 3;
 

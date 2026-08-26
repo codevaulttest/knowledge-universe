@@ -43,7 +43,7 @@ export function LotTaskSheet({
           </div>
 
           <div className="lot-task-hero" aria-hidden="true">
-            <img src="/img/lot-bonus-reward-icon-white-safe.png" alt="" />
+            <img src="/img/lot-bonus-reward-icon.webp" alt="" />
           </div>
 
           <p className="task-panel-note">

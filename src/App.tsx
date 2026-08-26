@@ -2,11 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { withFreeTier } from './channelTiers';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { buildInitialBspInvestments } from './bspConfig';
 import { formatScheduledAt } from './dateUtils';
 import type { AddressMigration, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
-import { PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, supReasonForPbUse, walletConsumesSup } from './walletConfig';
+import { PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
 import { postHasStake, formatTokenAmount } from './stakeConfig';
@@ -15,7 +15,7 @@ import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { InteractionTaskSheet } from './components/InteractionTaskSheet';
 import { LotTaskSheet } from './components/LotTaskSheet';
-import { effectiveClaimRatio, getIssuedHonorRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueHonorRewards, simulateInteractedCount, taskDayKey, TASK_BONUS_PB, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
+import { effectiveClaimRatio, getIssuedHonorRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, isRatioLadderActive, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueHonorRewards, simulateInteractedCount, taskDayKey, TASK_BONUS_PB, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
 import { Toast } from './components/shared';
 import { TaskCelebrationOverlay } from './components/TaskCelebrationOverlay';
 import { ComposePage } from './pages/ComposePage';
@@ -136,6 +136,10 @@ export default function App() {
     const now = demoForceLadder ? new Date('2026-09-02T00:00:00+08:00') : new Date();
     return effectiveClaimRatio(taskSnapshotYesterday, now);
   }, [taskSnapshotYesterday, demoForceLadder]);
+  const airdropRatioLadderActive = useMemo(() => {
+    const now = demoForceLadder ? new Date('2026-09-02T00:00:00+08:00') : new Date();
+    return isRatioLadderActive(now);
+  }, [demoForceLadder]);
   const lotQuota = useMemo(() => getLotQuota(demoFiveStarNodeCount), [demoFiveStarNodeCount]);
   const toggleDemoForceLadder = useCallback(() => setDemoForceLadder(prev => !prev), []);
   const toggleDemoForceNewUser = useCallback(() => setDemoForceNewUser(prev => !prev), []);
@@ -199,10 +203,8 @@ export default function App() {
     if (airdropClaimed || Date.now() > getAirdropDeadline()) return;
     // 可领取金额取决于 airdropClaimRatio：已统一处理昨日互动帖完成度、9/1 阶梯生效与新用户默认值
     const claimedAmount = Math.round(MOCK_PB_AIRDROP_AMOUNT * airdropClaimRatio / 100);
-    const onchainAmount = Math.ceil(claimedAmount / 2);
-    const airdropAmount = claimedAmount - onchainAmount;
+    const { onchainAmount, airdropAmount, fee } = splitAirdropClaim(claimedAmount);
     setPbWallets(prev => ({ ...prev, onchain: prev.onchain + onchainAmount, airdrop: prev.airdrop + airdropAmount }));
-    const fee = pbOnchainFee(onchainAmount);
     if (fee > 0) deductSup(fee, 'airdrop', resolveSupPool(supWallets, 'site_first', fee) ?? 'onchain');
     setAirdropClaimed(true);
     recordAirdropClaim(claimedAmount);
@@ -257,6 +259,40 @@ export default function App() {
   const deductSup = (amount: number, reason: SupTransactionReason, pool: SupWalletId = 'site') => {
     setSupWallets(prev => ({ ...prev, [pool]: Math.max(0, prev[pool] - amount) }));
     appendSupTransaction({ direction: 'out', amount, reason, wallet: pool });
+  };
+
+  /** 站内 SUP 是最小 0.0001 精度的小额资产；避免浮点减法产生的长尾小数污染显示。 */
+  const roundSup = (n: number) => Math.round(n * 10000) / 10000;
+
+  // ── 空投 PB / 站内 SUP 充值·提取：站内 PB 明确不可上链，不提供入口 ──
+  const depositAirdropPb = (amount: number) => {
+    if (amount <= 0) return;
+    setPbWallets(prev => ({ ...prev, airdrop: prev.airdrop + amount }));
+  };
+
+  const withdrawAirdropPb = (amount: number): boolean => {
+    if (amount <= 0 || pbWallets.airdrop < amount) return false;
+    const fee = pbOnchainFee(amount);
+    const pool = resolveSupPool(supWallets, 'site_first', fee);
+    if (fee > 0 && !pool) return false;
+    setPbWallets(prev => ({ ...prev, airdrop: prev.airdrop - amount, onchain: prev.onchain + amount }));
+    if (fee > 0 && pool) deductSup(fee, 'withdraw', pool);
+    return true;
+  };
+
+  const depositSiteSup = (amount: number) => {
+    if (amount <= 0) return;
+    setSupWallets(prev => ({ ...prev, site: roundSup(prev.site + amount) }));
+    appendSupTransaction({ direction: 'in', amount, reason: 'recharge', wallet: 'site' });
+  };
+
+  const withdrawSiteSup = (amount: number): boolean => {
+    if (amount <= 0 || supWallets.site < amount) return false;
+    const fee = pbOnchainFee(amount);
+    const net = roundSup(amount - fee);
+    setSupWallets(prev => ({ ...prev, site: roundSup(prev.site - amount), onchain: roundSup(prev.onchain + net) }));
+    appendSupTransaction({ direction: 'out', amount, reason: 'withdraw', wallet: 'site' });
+    return true;
   };
 
   // ── 地址迁移：前端只模拟申请、冻结和撤销；实际资料迁移交由后续服务处理 ──
@@ -715,9 +751,11 @@ export default function App() {
     // 演示「未创建」态时若真的去开通，退出该演示态，否则新建频道会被继续隐藏
     if (demoHideOwnChannels) setDemoHideOwnChannels(false);
     const channelId = `channel-${Date.now()}`;
+    // 代开通频道：地址校验通过后，频道归属受益人，付款人只记录在 payerName 里
+    const beneficiary = data.beneficiaryAddress ? findRegisteredUserByAddress(data.beneficiaryAddress) : undefined;
     const newChannel: Channel = {
       id: channelId,
-      ownerName: CURRENT_USER,
+      ownerName: beneficiary?.name ?? CURRENT_USER,
       name: data.name,
       description: data.description,
       avatarSeed: userProfile.avatarSeed,
@@ -725,6 +763,7 @@ export default function App() {
       tiers: withFreeTier(data.tiers),
       subscriberCount: 0,
       createdAt: new Date().toISOString().slice(0, 10),
+      payerName: beneficiary ? CURRENT_USER : undefined,
     };
     setChannels(prev => [...prev, newChannel]);
     setChannelCreatedPromptId(channelId);
@@ -1094,12 +1133,13 @@ export default function App() {
     openManageChannel, closeManageChannel,
     demoHideOwnChannels, toggleDemoHideOwnChannels,
     supWallets, supBalance, supHistory, deductSup, meritBalance: MOCK_MERIT_BALANCE,
+    depositAirdropPb, withdrawAirdropPb, depositSiteSup, withdrawSiteSup,
     walletConnected, connectWallet, requireWallet,
     walletAddress, walletConnecting, disconnectWallet,
     pbWallets, pbBalance, getPbWalletOptions, pickDefaultPbWallet, payPb, setDemoPbWallets, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
     addressMigrations, requestAddressMigration, cancelAddressMigration, dismissMigrationReminder,
     airdropClaimed, claimAirdrop,
-    taskSnapshotToday, taskSnapshotYesterday, airdropClaimRatio, lotQuota,
+    taskSnapshotToday, taskSnapshotYesterday, airdropClaimRatio, airdropRatioLadderActive, lotQuota,
     taskCelebrateSignal, recordTaskInteraction, getDailyTaskCalendar: getTaskCalendarMonth,
     resetDemoTasks, simulateDemoTaskInteractions,
     demoForceLadder, toggleDemoForceLadder, demoForceNewUser, toggleDemoForceNewUser,
@@ -1275,16 +1315,20 @@ export default function App() {
           return <CreateChannelModal existingChannel={channel} onClose={closeManageChannel} />;
         })()}
 
-        {/* 覆盖层：开通成功 → 引导设置会员档位 */}
-        {channelCreatedPromptId && (
-          <ChannelCreatedSuccessModal
-            onSetTiers={() => {
-              openManageChannel(channelCreatedPromptId);
-              setChannelCreatedPromptId(null);
-            }}
-            onDismiss={() => setChannelCreatedPromptId(null)}
-          />
-        )}
+        {/* 覆盖层：开通成功 → 引导设置会员档位（代开通场景付款人不是频道主，不引导设置档位） */}
+        {channelCreatedPromptId && (() => {
+          const createdChannel = channels.find(c => c.id === channelCreatedPromptId);
+          return (
+            <ChannelCreatedSuccessModal
+              ownerName={createdChannel?.payerName ? createdChannel.ownerName : undefined}
+              onSetTiers={() => {
+                openManageChannel(channelCreatedPromptId);
+                setChannelCreatedPromptId(null);
+              }}
+              onDismiss={() => setChannelCreatedPromptId(null)}
+            />
+          );
+        })()}
 
         {/* 覆盖层：频道订阅（多档选择） */}
         {channelSubscribeId && (

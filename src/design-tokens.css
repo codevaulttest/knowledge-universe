@@ -72,6 +72,7 @@
   --ku-color-lot-gold:            #d69e2e;  /* 一发十赞奖励图标主金 */
   --ku-color-lot-gold-light:      #f6c453;  /* 一发十赞奖励图标亮金 */
   --ku-color-lot-red:             #c62828;  /* 一发十赞文字/图标强调，白底对比度达标 */
+  --ku-color-lot-red-bright:      #ef4444;  /* 一发十赞红包主体 */
   --ku-color-lot-tint:            color-mix(in srgb, var(--ku-color-lot-gold) 12%, var(--ku-color-bg-phone));
   --ku-color-lot-tint-strong:     color-mix(in srgb, var(--ku-color-lot-gold) 20%, var(--ku-color-bg-phone));
   --ku-color-lot-border:          color-mix(in srgb, var(--ku-color-lot-gold) 55%, var(--ku-color-bg-phone));

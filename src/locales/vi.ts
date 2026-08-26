@@ -505,7 +505,6 @@ export const vi: Record<string, string> = {
   '复制节点编号': 'Sao chép mã nút',
   '子节点': 'Nút con',
   '查看子节点说明': 'Xem thông tin nút con',
-  '知识星球系统尚未正式上线，当前生成的是预留频道，系统上线后自动转为正式频道': 'Hệ thống Knowledge Planet chưa ra mắt — tạo kênh dự trữ sẽ tự động kích hoạt khi ra mắt',
   '开通规模': 'Quy mô',
   '按个数': 'Theo số lượng',
   '按星级包': 'Theo gói sao',
