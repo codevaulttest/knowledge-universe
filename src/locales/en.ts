@@ -882,7 +882,7 @@ export const en: Record<string, string> = {
   '还需发帖': 'Post to unlock',
   'BSP 巨星投流保底': 'BSP Guarantee',
   'BSP 巨星投流保底：': 'BSP guarantee: ',
-  '本月任务收益历史': 'This month\'s task history',
+  '本月空投收益历史': 'This month\'s airdrop history',
   '每日任务如何计算奖励': 'How daily task rewards are calculated',
   '每日荣誉值奖励：': 'Daily Honor points reward: ',
   '按互动帖数量分档换算，次日生效：{t1} 篇 {r1}%；{t2} 篇 {r2}%；{total} 篇 100%。': 'Tiered by interaction count, effective the next day: {t1} posts → {r1}%; {t2} posts → {r2}%; {total} posts → 100%.',
