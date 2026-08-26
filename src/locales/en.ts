@@ -805,6 +805,7 @@ export const en: Record<string, string> = {
   '当日已发帖': 'Posted today',
   '当日未发帖': 'Not posted this day',
   '当日互动': 'Interactions that day',
+  '空投额度': 'Airdrop quota',
   '今天已发帖': 'Posted today',
   '互动帖任务': 'Daily engagement task',
   '已完成 {count} / {total} 篇': 'Completed {count} / {total}',

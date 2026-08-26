@@ -160,6 +160,9 @@ function InteractionTaskHistorySheet({
             <span className="task-calendar-detail-row">
               {t('当日互动')}<strong>{selectedDay.snapshot.interactedCount} / {TASK_INTERACTION_POOL_SIZE}</strong>
             </span>
+            <span className="task-calendar-detail-row">
+              {t('空投额度')}<strong>65%</strong>
+            </span>
             {selectedDay.snapshot.earningsPb !== TASK_EARNINGS_UNSETTLED && (
               <span className="task-calendar-detail-row">
                 {t('当日收益')}<strong>
