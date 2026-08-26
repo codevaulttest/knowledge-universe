@@ -46,7 +46,7 @@ export function LotTaskSheet({
           </div>
 
           <p className="task-panel-note">
-            {t('当天发帖并完成一发十赞，决定今天的荣誉值奖励')}
+            {t('当天发帖并点赞满额度，决定今天的荣誉值奖励')}
           </p>
 
           <button type="button" className="bsp-rules-entry task-panel-rules-entry task-panel-rules-entry--neutral" onClick={() => setRulesOpen(true)}>

@@ -11240,6 +11240,62 @@ button {
   white-space: nowrap;
 }
 
+.bsp-record-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bsp-record-tabs .create-scale-tab {
+  width: 100%;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ku-planet2-space-xs);
+}
+
+.bsp-record-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-badge-bg);
+  color: var(--ku-color-badge-text);
+  font: var(--ku-text-caption-strong);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.bsp-record-status-badge {
+  position: absolute;
+  top: var(--ku-planet2-space-xs);
+  right: var(--ku-planet2-space-xs);
+  z-index: 1;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: var(--ku-planet2-radius-pill);
+  font: 700 12px/22px var(--ku-font-family);
+  white-space: nowrap;
+}
+
+.bsp-record-status-badge--active {
+  background: var(--ku-color-success-bg);
+  color: var(--ku-color-success-text);
+}
+
+.bsp-record-status-badge--pending {
+  background: var(--ku-color-warning-bg);
+  color: var(--ku-color-warning-text);
+}
+
+.bsp-record-status-badge--ended {
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-meta);
+}
+
 .planet-create-sheet .planet-confirm-btn {
   margin-top: 0;
 }
@@ -11306,7 +11362,7 @@ html[lang="zh-TW"] .planet-hero-title {
   letter-spacing: 0.08em;
 }
 
-/* 顶栏极简余额：深色半透明底 + 高对比浅色文字，融入星云 hero 底图 */
+/* 顶栏极简余额：实体深色底 + 高对比白色文字，抵抗星云 hero 底图的明暗变化 */
 .planet-hero-balances {
   position: relative;
   flex-shrink: 0;
@@ -11334,7 +11390,7 @@ html[lang="zh-TW"] .planet-hero-title {
   width: var(--ku-planet-hero-balances-icon-size);
   height: var(--ku-planet-hero-balances-icon-size);
   transform: translateY(-50%);
-  color: var(--ku-color-on-primary-muted);
+  color: var(--ku-color-on-primary);
 }
 
 .planet-hero-balances-row {
@@ -11372,7 +11428,7 @@ html[lang="zh-TW"] .planet-hero-title {
   font-family: var(--ku-font-family);
   font-size: 12px;
   font-weight: 500;
-  color: var(--ku-color-on-primary-muted);
+  color: var(--ku-color-on-primary);
   white-space: nowrap;
 }
 
@@ -11380,14 +11436,14 @@ html[lang="zh-TW"] .planet-hero-title {
   font-family: var(--ku-font-family);
   font-size: 12px;
   font-weight: 500;
-  color: var(--ku-color-on-primary-muted);
+  color: var(--ku-color-on-primary);
   white-space: nowrap;
 }
 
 .planet-hero-balances-chevron {
   flex-shrink: 0;
   margin-left: auto;
-  color: var(--ku-color-on-primary-muted);
+  color: var(--ku-color-on-primary);
 }
 
 /* 公告横幅叠压在 hero 底边（负 margin 需盖过 .planet-content 的 flex gap 才能真正压上插画）；
@@ -12896,46 +12952,40 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 
 /* ── 订单中心 ── */
-.orders-role-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--ku-color-border);
+.orders-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 10px 16px;
+  padding: 3px;
 }
-.orders-role-tab {
-  flex: 1;
+
+.orders-tabs .create-scale-tab {
+  width: 100%;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px;
-  border: 1px solid var(--ku-color-border-control);
-  border-radius: var(--ku-radius-pill);
-  background: var(--ku-color-bg-phone);
-  color: var(--ku-color-text-secondary);
-  font: var(--ku-text-body-sm);
-  cursor: pointer;
+  gap: var(--ku-planet2-space-xs);
 }
+
 .orders-empty-icon {
   display: block;
   margin: 0 auto 14px;
   color: var(--ku-color-text-meta);
 }
-.orders-role-badge {
-  min-width: 18px;
-  height: 18px;
+
+.orders-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
   padding: 0 5px;
-  border-radius: 999px;
+  border-radius: var(--ku-radius-pill);
   background: var(--ku-color-notification-badge);
-  color: #fff;
-  font: 700 12px/18px var(--ku-font-family);
-  text-align: center;
-}
-.orders-role-tab--active {
-  border-color: var(--ku-color-shop-btn);
-  background: var(--ku-color-shop-bg);
-  color: var(--ku-color-shop-strong);
-  font-weight: 600;
+  color: var(--ku-color-on-primary);
+  font: 700 14px/1 var(--ku-font-family);
+  font-variant-numeric: tabular-nums;
 }
 .orders-list {
   display: flex;
@@ -13039,11 +13089,6 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 
 /* 订单页全文最小 14px（含卡片内复用的联系商家 chip） */
-.orders-page .orders-role-badge {
-  min-width: 20px;
-  height: 20px;
-  font: 700 14px/20px var(--ku-font-family);
-}
 .orders-page .order-status {
   font: 600 14px/1 var(--ku-font-family);
 }

@@ -1350,6 +1350,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
           >
             <BspRecordList
               investments={bspRecords}
+              myAddress={walletAddress ?? MOCK_WALLET_ADDRESS}
               onOpenInvest={() => {
                 setBspRecordsOpen(false);
                 handleOpenBsp();

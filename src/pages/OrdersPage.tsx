@@ -49,14 +49,14 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
   return (
     <div className="page orders-page">
       <PageHeader title={t('我的订单')} onBack={canGoBack ? goBack : undefined} />
-      <div className="orders-role-tabs" role="tablist">
-        <button type="button" role="tab" aria-selected={role === 'buyer'} className={`orders-role-tab${role === 'buyer' ? ' orders-role-tab--active' : ''}`} onClick={() => setRole('buyer')}>
+      <div className="create-scale-toggle orders-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={role === 'buyer'} className={`create-scale-tab${role === 'buyer' ? ' create-scale-tab--active' : ''}`} onClick={() => setRole('buyer')}>
           {t('我买的')}
-          {buyerPending > 0 && <span className="orders-role-badge" aria-label={t('{count} 笔待处理', { count: buyerPending })}>{buyerPending}</span>}
+          {buyerPending > 0 && <span className="orders-tab-badge" aria-label={t('{count} 笔待处理', { count: buyerPending })}>{buyerPending}</span>}
         </button>
-        <button type="button" role="tab" aria-selected={role === 'seller'} className={`orders-role-tab${role === 'seller' ? ' orders-role-tab--active' : ''}`} onClick={() => setRole('seller')}>
+        <button type="button" role="tab" aria-selected={role === 'seller'} className={`create-scale-tab${role === 'seller' ? ' create-scale-tab--active' : ''}`} onClick={() => setRole('seller')}>
           {t('我卖的')}
-          {sellerPending > 0 && <span className="orders-role-badge" aria-label={t('{count} 笔待处理', { count: sellerPending })}>{sellerPending}</span>}
+          {sellerPending > 0 && <span className="orders-tab-badge" aria-label={t('{count} 笔待处理', { count: sellerPending })}>{sellerPending}</span>}
         </button>
       </div>
       <div className="scroll-area">

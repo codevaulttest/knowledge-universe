@@ -62,9 +62,11 @@ export type BspInvestment = {
  * 保证两处打开的「每日任务」面板对「是否有巨星投流保底」的判断一致。 */
 export function buildInitialBspInvestments(myAddress: string): BspInvestment[] {
   const now = new Date();
-  const period1 = bspEffectivePeriod(new Date(now.getTime() - 30 * DAY_MS));
+  const period1 = bspEffectivePeriod(now);
   const period2 = bspEffectivePeriod(new Date(now.getTime() - 5 * DAY_MS));
-  const period3 = bspEffectivePeriod(new Date(now.getTime() - 350 * DAY_MS));
+  const period3 = bspEffectivePeriod(new Date(now.getTime() - 400 * DAY_MS));
+  const period4 = bspEffectivePeriod(new Date(now.getTime() - 2 * DAY_MS));
+  const period5 = bspEffectivePeriod(now);
   return [
     {
       id: 'bsp1',
@@ -74,7 +76,7 @@ export function buildInitialBspInvestments(myAddress: string): BspInvestment[] {
       units: 10000,
       paidPb: bspPbCost(10000),
       paidSup: bspSupCost(10000),
-      createdAt: '2026-07-04 09:00',
+      createdAt: `${dayKey(now)} 09:00`,
       startDate: period1.startDate,
       endDate: period1.endDate,
       status: 'paid',
@@ -105,6 +107,32 @@ export function buildInitialBspInvestments(myAddress: string): BspInvestment[] {
       endDate: period3.endDate,
       status: 'paid',
     },
+    {
+      id: 'bsp4',
+      investorAddress: '0x4d2e8a1f3b6c95d0e7a48b1c2f9d3e6a5b0c7d1e',
+      beneficiaryAddress: myAddress,
+      beneficiaryKind: 'address',
+      units: 5000,
+      paidPb: bspPbCost(5000),
+      paidSup: bspSupCost(5000),
+      createdAt: '2026-08-24 14:20',
+      startDate: period4.startDate,
+      endDate: period4.endDate,
+      status: 'paid',
+    },
+    {
+      id: 'bsp5',
+      investorAddress: '0x8f1c6d3a9b2e05f7c4a1d8b6e3f0a9c2d5b7e4f1',
+      beneficiaryAddress: myAddress,
+      beneficiaryKind: 'address',
+      units: 2000,
+      paidPb: bspPbCost(2000),
+      paidSup: bspSupCost(2000),
+      createdAt: '2026-08-26 09:10',
+      startDate: period5.startDate,
+      endDate: period5.endDate,
+      status: 'paid',
+    },
   ];
 }
 
@@ -132,6 +160,16 @@ export function bspRemainingDays(endDate: string, now: Date = new Date()): numbe
   const end = new Date(`${endDate}T23:59:59`);
   const diff = end.getTime() - now.getTime();
   return Math.max(0, Math.ceil(diff / DAY_MS));
+}
+
+export type BspInvestmentStatus = 'pending' | 'active' | 'ended';
+
+/** 投放状态：生效期未到为待生效，在期为生效中，过期为已结束。 */
+export function bspInvestmentStatus(inv: Pick<BspInvestment, 'startDate' | 'endDate'>, now: Date = new Date()): BspInvestmentStatus {
+  const today = dayKey(now);
+  if (today < inv.startDate) return 'pending';
+  if (today > inv.endDate) return 'ended';
+  return 'active';
 }
 
 /** 打赏折算：签到前 1000 PB 到账为 0，其余来源到账 80%。 */

@@ -369,9 +369,9 @@
   --ku-planet-node-upgrade-bg:     rgba(0, 205, 184, 0.09);
   --ku-planet-node-upgrade-border: rgba(0, 205, 184, 0.35);
   --ku-planet-node-upgrade-text:   var(--ku-color-primary);
-  --ku-planet-hero-balances-bg:         rgba(8, 12, 22, 0.55);  /* 深色 chip，融入星云底图而非浮在其上 */
-  --ku-planet-hero-balances-bg-active:   rgba(8, 12, 22, 0.7);
-  --ku-planet-hero-balances-border:     rgba(255, 255, 255, 0.16);
+  --ku-planet-hero-balances-bg:         var(--ku-planet2-color-surface-dark);          /* 实体深色 chip，保证星云背景上的文字对比度 */
+  --ku-planet-hero-balances-bg-active:  var(--ku-planet2-color-surface-dark-elevated);
+  --ku-planet-hero-balances-border:     rgba(255, 255, 255, 0.38);
   --ku-planet-hero-balances-icon-size:   14px;
   --ku-planet-hero-balances-icon-text-gap: 8px;
 
