@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, ChevronRight, Info, X } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Info, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { formatCompactBalance } from '../formatCount';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
@@ -39,6 +39,7 @@ export function PlanetHeroBalances() {
         aria-label={assetAriaLabel}
         title={assetAriaLabel}
       >
+        <Wallet className="planet-hero-balances-icon" strokeWidth={2} aria-hidden="true" />
         <span className="planet-hero-balances-stack">
           <span className="planet-hero-balances-row">
             <span className="planet-hero-balances-item planet-hero-balances-item--pb">

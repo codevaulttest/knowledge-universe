@@ -217,7 +217,7 @@ function LotTaskHistorySheet({
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+      <div className="payment-sheet pb-info-sheet lot-task-history-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">{t('本月任务收益历史')}</span>
           <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')}>

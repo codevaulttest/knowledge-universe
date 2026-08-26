@@ -11298,12 +11298,12 @@ html[lang="zh-TW"] .planet-hero-title {
 
 /* 顶栏极简余额：半透明白底 + 中性色文字，边框保证边界 */
 .planet-hero-balances {
+  position: relative;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: var(--ku-planet2-space-xxs);
   margin-top: var(--ku-planet2-space-xxs);
-  padding: var(--ku-planet2-space-xxs) var(--ku-planet2-space-xs) var(--ku-planet2-space-xxs) var(--ku-planet2-space-sm);
+  padding: var(--ku-planet2-space-xxs) var(--ku-planet2-space-sm) var(--ku-planet2-space-xxs) calc(var(--ku-planet2-space-xs) + var(--ku-planet-hero-balances-icon-size) + var(--ku-planet-hero-balances-icon-text-gap));
   border: 1px solid var(--ku-color-border-control);
   border-radius: var(--ku-planet2-radius-lg);
   background: var(--ku-planet-hero-balances-bg);
@@ -11315,6 +11315,16 @@ html[lang="zh-TW"] .planet-hero-title {
 
 .planet-hero-balances:active {
   background: var(--ku-planet-hero-balances-bg-active);
+}
+
+.planet-hero-balances-icon {
+  position: absolute;
+  top: 50%;
+  left: var(--ku-planet2-space-xs);
+  width: var(--ku-planet-hero-balances-icon-size);
+  height: var(--ku-planet-hero-balances-icon-size);
+  transform: translateY(-50%);
+  color: var(--ku-color-text-meta);
 }
 
 .planet-hero-balances-stack {
@@ -11618,7 +11628,7 @@ html[lang="zh-TW"] .planet-hero-title {
 .lot-task-hero {
   display: flex;
   justify-content: center;
-  margin: 0 0 var(--ku-space-1);
+  margin: 0 0 var(--ku-space-3);
 }
 
 .lot-task-panel-sheet > .sheet-header {
@@ -11675,6 +11685,35 @@ html[lang="zh-TW"] .planet-hero-title {
 .lot-task-panel-sheet .task-milestone-chip--done {
   background: var(--ku-color-lot-red);
   color: var(--ku-color-on-primary);
+}
+
+.lot-task-history-sheet .task-calendar-month,
+.lot-task-history-sheet .task-calendar-day-earn.is-earned,
+.lot-task-history-sheet .task-calendar-detail-status.is-posted {
+  color: var(--ku-color-lot-red);
+}
+
+.lot-task-history-sheet .task-calendar-day.is-posted,
+.lot-task-history-sheet .task-calendar-day.is-full,
+.lot-task-history-sheet .task-calendar-detail {
+  background: var(--ku-color-lot-tint);
+}
+
+.lot-task-history-sheet .task-calendar-day.is-full {
+  box-shadow: inset 0 0 0 1.5px var(--ku-color-lot-red);
+}
+
+.lot-task-history-sheet .task-calendar-day.is-full .task-calendar-day-num {
+  color: var(--ku-color-lot-red);
+}
+
+.lot-task-history-sheet .task-calendar-day.is-today,
+.lot-task-history-sheet .task-calendar-day.is-selected {
+  border-color: var(--ku-color-lot-red);
+}
+
+.lot-task-history-sheet .task-calendar-day.is-selected {
+  box-shadow: 0 0 0 2px var(--ku-color-lot-tint-strong);
 }
 
 .lot-task-hero > img {

@@ -370,6 +370,8 @@
   --ku-planet-node-upgrade-text:   var(--ku-color-primary);
   --ku-planet-hero-balances-bg:         rgba(255, 255, 255, 0.86);  /* hero 顶栏余额 chip，透出星云底图 */
   --ku-planet-hero-balances-bg-active:   rgba(255, 255, 255, 0.94);
+  --ku-planet-hero-balances-icon-size:   14px;
+  --ku-planet-hero-balances-icon-text-gap: 8px;
 
   /* 节点面额标签（10 / 100 / 1000 PB），层级：金(最高) > 品牌主色(中) > 灰(基础) */
   --ku-planet-tier-prem-bg:    #ffedcc;                          /* 1000 PB —— 金，最高档 */

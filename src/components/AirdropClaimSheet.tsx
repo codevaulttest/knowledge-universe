@@ -92,7 +92,7 @@ export function AirdropClaimSheet({ amount, onClose }: { amount: number; onClose
               </div>
             ))}
             <div className="pay-combo-row airdrop-fee-row">
-              <span className="pay-combo-label">{t('手续费')}</span>
+              <span className="pay-combo-label">{t('Gas 费')}</span>
               <span className="pay-combo-value">{formatSupAmount(fee)} SUP</span>
             </div>
           </div>
