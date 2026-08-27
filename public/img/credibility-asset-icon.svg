@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">公信力资产图标</title>
+  <desc id="desc">扁平矢量勋章：红色双绶带托底，金色圆章内嵌白色对勾</desc>
+  <!--
+    Fallback hex values keep the intended palette when this file loads via an
+    <img> tag, where the host document's CSS custom properties do not inherit.
+  -->
+  <path d="M21.5 20 30.5 20 29 58 26 50 23 58Z" fill="var(--ku-color-lot-red-bright, #EF4444)"/>
+  <path d="M33.5 20 42.5 20 41 58 38 50 35 58Z" fill="var(--ku-color-lot-red-bright, #EF4444)"/>
+  <circle cx="32" cy="25" r="18" fill="var(--ku-color-lot-gold-light, #F6C453)"/>
+  <circle cx="32" cy="25" r="13.5" fill="var(--ku-color-lot-gold, #D69E2E)"/>
+  <path d="M24.5 25.3 29 29.8 40 18.8" fill="none" stroke="var(--ku-color-bg-phone, #FFFFFF)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

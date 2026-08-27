@@ -25,6 +25,7 @@ export function LotTaskSheet({
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const posted = taskSnapshotToday.posted;
+  const interactedCount = taskSnapshotToday.interactedCount;
   const bonusEligible = taskSnapshotToday.bonusEligible;
   const credibilityRewardStatus = taskSnapshotToday.credibilityRewardStatus;
 
@@ -55,23 +56,13 @@ export function LotTaskSheet({
             <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
           </button>
 
-          <LotTaskCard lotQuota={lotQuota} bonusEligible={bonusEligible} credibilityRewardStatus={credibilityRewardStatus} />
-
-          {/* 发帖任务：公信力里程碑与 BSP 保底的共同前置条件 */}
-          <div className={`task-card${posted ? ' task-card--done' : ''}`}>
-            <span className="task-card-icon" aria-hidden="true">
-              {posted ? <Check size={16} strokeWidth={2.6} /> : <Circle size={16} strokeWidth={1.9} />}
-            </span>
-            <span className="task-card-body">
-              <span className="task-card-title">{t('发帖任务')}</span>
-              <span className="task-card-desc">
-                {posted ? t('已发布内容') : t('还没有发布内容')}
-              </span>
-            </span>
-            <span className={`task-card-status${posted ? ' task-card-status--done' : ''}`}>
-              {posted ? t('已完成') : t('待完成')}
-            </span>
-          </div>
+          <LotTaskCard
+            lotQuota={lotQuota}
+            posted={posted}
+            interactedCount={interactedCount}
+            bonusEligible={bonusEligible}
+            credibilityRewardStatus={credibilityRewardStatus}
+          />
 
           {hasBspRecords && (
             <div className={`task-card${bspReady ? ' task-card--done' : ''}`}>
@@ -106,10 +97,14 @@ export function LotTaskSheet({
 
 function LotTaskCard({
   lotQuota,
+  posted,
+  interactedCount,
   bonusEligible,
   credibilityRewardStatus,
 }: {
   lotQuota: LotQuota;
+  posted: boolean;
+  interactedCount: number;
   bonusEligible: boolean;
   credibilityRewardStatus: 'none' | 'pending' | 'issued';
 }) {
@@ -117,6 +112,7 @@ function LotTaskCard({
   const statusLabel = bonusEligible
     ? credibilityRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')
     : t('待完成');
+  const interactionDone = interactedCount >= TASK_LOT_INTERACTIONS_PER_UNIT;
   return (
     <div className={`task-card task-card--lot${bonusEligible ? ' task-card--done' : ''}`}>
       <div className="task-card-head">
@@ -124,7 +120,6 @@ function LotTaskCard({
           {bonusEligible ? <Check size={16} strokeWidth={2.6} /> : <ThumbsUp size={16} strokeWidth={1.9} />}
         </span>
         <span className="task-card-body">
-          <span className="task-card-title">{t('公信力任务')}</span>
           <span className="task-card-desc">
             {t('当天发帖，并对其他帖子完成互动满 {interactions} 次，可得 +{credibility} 公信力', { interactions: TASK_LOT_INTERACTIONS_PER_UNIT, credibility: TASK_LOT_CREDIBILITY_PER_UNIT })}
           </span>
@@ -133,6 +128,20 @@ function LotTaskCard({
           <span className="task-card-ratio">{lotQuota.credibility}</span>
           <span className="task-card-ratio-label">{t('公信力上限')}</span>
         </span>
+      </div>
+
+      {/* 达成 270 上限的两个前置条件：发帖 + 互动满额，跟卡片头部的说明句一一对应，不再单独拆成一张卡 */}
+      <div className="task-card-conditions">
+        <div className={`task-card-condition-row${posted ? ' is-done' : ''}`}>
+          {posted ? <Check size={13} strokeWidth={2.6} /> : <Circle size={13} strokeWidth={1.9} />}
+          <span className="task-card-condition-label">{t('发帖')}</span>
+          <span className="task-card-condition-value">{posted ? t('已完成') : t('待完成')}</span>
+        </div>
+        <div className={`task-card-condition-row${interactionDone ? ' is-done' : ''}`}>
+          {interactionDone ? <Check size={13} strokeWidth={2.6} /> : <Circle size={13} strokeWidth={1.9} />}
+          <span className="task-card-condition-label">{t('互动满 {threshold} 次', { threshold: TASK_LOT_INTERACTIONS_PER_UNIT })}</span>
+          <span className="task-card-condition-value">{Math.min(interactedCount, TASK_LOT_INTERACTIONS_PER_UNIT)}/{TASK_LOT_INTERACTIONS_PER_UNIT}</span>
+        </div>
       </div>
 
       {lotQuota.fiveStarNodeCount > 0 ? (

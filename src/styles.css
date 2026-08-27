@@ -11791,6 +11791,34 @@ html[lang="zh-TW"] .planet-hero-title {
   margin-top: 1px;
 }
 
+/* 公信力任务卡内的前置条件：发帖 + 互动满额各自独立勾选，替代原来单独的发帖任务卡，
+   避免"发帖"被同时算进两张平级卡片 */
+.task-card-conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.task-card-condition-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ku-color-text-meta);
+}
+.task-card-condition-row.is-done {
+  color: var(--ku-color-primary-dark);
+}
+.task-card-condition-label {
+  flex: 1;
+  font: 500 12px/1.3 var(--ku-font-family);
+}
+.task-card-condition-value {
+  font: 600 12px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+}
+.task-card-condition-row.is-done .task-card-condition-value {
+  color: var(--ku-color-primary-dark);
+}
+
 /* 卡片内嵌算式：因子 → 因子 → 结果逐行竖排，同 .airdrop-calc 的版式语言，
    用浅底 + 结果行分隔线替代一句话塞多个数字 */
 .task-calc {
