@@ -357,7 +357,7 @@ function seedOrRealSnapshot(date: string, todayKey: string, quotaInteractions: n
   }
   return {
     date, posted: false, postedCount: 0, interactedCount: 0, claimRatio: TASK_RATIO_BASE,
-    earningsPb: TASK_EARNINGS_UNSETTLED, bonusEligible: false, credibilityRewardStatus: 'none',
+    earningsPb: 0, bonusEligible: false, credibilityRewardStatus: 'none',
   };
 }
 

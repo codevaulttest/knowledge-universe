@@ -169,7 +169,7 @@ function LotTaskCalendarSection({
           </div>
           <span className="task-calendar-detail-row">
             {t('当日公信力奖励')}<strong>
-              +<span className="task-calendar-detail-number">{earned}</span> {t('公信力')}
+              <span className="task-calendar-detail-number">+{earned}</span> {t('公信力')}
             </strong>
           </span>
         </div>

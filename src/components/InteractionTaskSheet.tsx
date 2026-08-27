@@ -123,7 +123,9 @@ function InteractionTaskCalendarSection({ month }: { month: TaskCalendarMonth })
       {selectedDay?.snapshot && (
         <div className="task-calendar-detail">
           <span className="task-calendar-detail-date">
-            {new Intl.DateTimeFormat(intlLocale, { month: 'long', day: 'numeric' }).format(new Date(`${selectedDay.date}T00:00:00`))}
+            {selectedDay.isToday
+              ? t('今天')
+              : new Intl.DateTimeFormat(intlLocale, { month: 'long', day: 'numeric' }).format(new Date(`${selectedDay.date}T00:00:00`))}
           </span>
           <span className="task-calendar-detail-row">
             {t('当日互动')}<strong>{selectedDay.snapshot.interactedCount} / {TASK_INTERACTION_POOL_SIZE}</strong>
