@@ -26,7 +26,7 @@ export const CURRENT_USER = DEFAULT_WALLET_DISPLAY;
 export const MOCK_PB_WALLETS = {
   onchain: 5600,
   station: 2400,
-  honor: 800,
+  credibility: 800,
   airdrop: 3200,
 } as const;
 /** 演示钱包 SUP 余额，站内/链上两池独立（连接后展示） */

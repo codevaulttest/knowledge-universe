@@ -3,15 +3,15 @@ import { AlertTriangle, Check, ChevronRight, Circle, History, Info, ThumbsUp, X 
 import { useApp } from '../AppContext';
 import { calendarIntlLocale } from '../dateUtils';
 import {
-  TASK_LOT_HONOR_PER_UNIT,
-  TASK_LOT_LIKES_PER_UNIT,
+  TASK_LOT_CREDIBILITY_PER_UNIT,
+  TASK_LOT_INTERACTIONS_PER_UNIT,
   TASK_LOT_UNITS_PER_NODE,
   type LotQuota,
   type TaskCalendarMonth,
 } from '../taskConfig';
 import { TaskCalendarView } from './TaskCalendarView';
 
-/** 一发十赞面板：一发十赞 + 发帖任务 + BSP 巨星投流保底 + 规则 + 历史（决定今天的荣誉值奖励）。 */
+/** 一发十赞面板：一发十赞 + 发帖任务 + BSP 巨星投流保底 + 规则 + 历史（决定今天的公信力奖励）。 */
 export function LotTaskSheet({
   onClose,
   hasBspRecords = false,
@@ -26,7 +26,7 @@ export function LotTaskSheet({
 
   const posted = taskSnapshotToday.posted;
   const bonusEligible = taskSnapshotToday.bonusEligible;
-  const honorRewardStatus = taskSnapshotToday.honorRewardStatus;
+  const credibilityRewardStatus = taskSnapshotToday.credibilityRewardStatus;
 
   const bspReady = posted;
 
@@ -46,7 +46,7 @@ export function LotTaskSheet({
           </div>
 
           <p className="task-panel-note">
-            {t('当天发帖并点赞满额度，决定今天的荣誉值奖励')}
+            {t('当天发帖并完成互动满额度，决定今天的公信力奖励')}
           </p>
 
           <button type="button" className="bsp-rules-entry task-panel-rules-entry task-panel-rules-entry--neutral" onClick={() => setRulesOpen(true)}>
@@ -55,9 +55,9 @@ export function LotTaskSheet({
             <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
           </button>
 
-          <LotTaskCard lotQuota={lotQuota} bonusEligible={bonusEligible} honorRewardStatus={honorRewardStatus} />
+          <LotTaskCard lotQuota={lotQuota} bonusEligible={bonusEligible} credibilityRewardStatus={credibilityRewardStatus} />
 
-          {/* 发帖任务：荣誉值里程碑与 BSP 保底的共同前置条件 */}
+          {/* 发帖任务：公信力里程碑与 BSP 保底的共同前置条件 */}
           <div className={`task-card${posted ? ' task-card--done' : ''}`}>
             <span className="task-card-icon" aria-hidden="true">
               {posted ? <Check size={16} strokeWidth={2.6} /> : <Circle size={16} strokeWidth={1.9} />}
@@ -107,15 +107,15 @@ export function LotTaskSheet({
 function LotTaskCard({
   lotQuota,
   bonusEligible,
-  honorRewardStatus,
+  credibilityRewardStatus,
 }: {
   lotQuota: LotQuota;
   bonusEligible: boolean;
-  honorRewardStatus: 'none' | 'pending' | 'issued';
+  credibilityRewardStatus: 'none' | 'pending' | 'issued';
 }) {
   const { t } = useApp();
   const statusLabel = bonusEligible
-    ? honorRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')
+    ? credibilityRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')
     : t('待完成');
   return (
     <div className={`task-card task-card--lot${bonusEligible ? ' task-card--done' : ''}`}>
@@ -126,30 +126,30 @@ function LotTaskCard({
         <span className="task-card-body">
           <span className="task-card-title">{t('一发十赞')}</span>
           <span className="task-card-desc">
-            {t('当天发帖，并给其他帖子点赞满 {likes} 次，可得 +{honor} 荣誉值', { likes: TASK_LOT_LIKES_PER_UNIT, honor: TASK_LOT_HONOR_PER_UNIT })}
+            {t('当天发帖，并对其他帖子完成互动满 {interactions} 次，可得 +{credibility} 公信力', { interactions: TASK_LOT_INTERACTIONS_PER_UNIT, credibility: TASK_LOT_CREDIBILITY_PER_UNIT })}
           </span>
         </span>
         <span className="task-card-ratio-col">
-          <span className="task-card-ratio">{lotQuota.honor}</span>
-          <span className="task-card-ratio-label">{t('荣誉值上限')}</span>
+          <span className="task-card-ratio">{lotQuota.credibility}</span>
+          <span className="task-card-ratio-label">{t('公信力上限')}</span>
         </span>
       </div>
 
       {lotQuota.fiveStarNodeCount > 0 ? (
         <>
-          {/* 竖排算式：五星节点数 × 每节点点赞额度 = 今日点赞额度，隐藏内部配额单位。 */}
+          {/* 竖排算式：五星节点数 × 每节点互动额度 = 今日互动额度，隐藏内部配额单位。 */}
           <div className="task-calc">
             <div className="task-calc-row">
               <span className="task-calc-label">{t('直连五星节点')}</span>
               <span className="task-calc-value">{lotQuota.fiveStarNodeCount} {t('个')}</span>
             </div>
             <div className="task-calc-row">
-              <span className="task-calc-label">{t('每个节点可点赞')}</span>
-              <span className="task-calc-value task-calc-op">× {TASK_LOT_UNITS_PER_NODE * TASK_LOT_LIKES_PER_UNIT} {t('次')}</span>
+              <span className="task-calc-label">{t('每个节点可互动')}</span>
+              <span className="task-calc-value task-calc-op">× {TASK_LOT_UNITS_PER_NODE * TASK_LOT_INTERACTIONS_PER_UNIT} {t('次')}</span>
             </div>
             <div className="task-calc-row task-calc-row--result">
-              <span className="task-calc-label">{t('今日点赞额度')}</span>
-              <span className="task-calc-value">{lotQuota.likes} {t('次')}</span>
+              <span className="task-calc-label">{t('今日互动额度')}</span>
+              <span className="task-calc-value">{lotQuota.interactions} {t('次')}</span>
             </div>
           </div>
           <div className="task-card-status-row">
@@ -161,10 +161,10 @@ function LotTaskCard({
       ) : (
         <div className="task-card-foot">
           <p className="task-group-note">
-            {t('还没有直连五星节点，今天可给他人点赞 {likes} 次，最多 +{honor} 荣誉值；每直连 1 个五星节点，点赞额度增加 {perNode} 次', {
-              likes: TASK_LOT_LIKES_PER_UNIT,
-              honor: TASK_LOT_HONOR_PER_UNIT,
-              perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_LIKES_PER_UNIT,
+            {t('还没有直连五星节点，今天可对他人帖子完成互动 {interactions} 次，最多 +{credibility} 公信力；每直连 1 个五星节点，互动额度增加 {perNode} 次', {
+              interactions: TASK_LOT_INTERACTIONS_PER_UNIT,
+              credibility: TASK_LOT_CREDIBILITY_PER_UNIT,
+              perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_INTERACTIONS_PER_UNIT,
             })}
           </p>
           <span className={`task-card-status${bonusEligible ? ' task-card-status--done' : ''}`}>
@@ -195,11 +195,11 @@ function LotTaskRulesSheet({ onClose }: { onClose: () => void }) {
           </p>
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('一发十赞：')}</strong>
-            {t('当天发帖并给其他帖子点赞满 {likes} 次，可得 +{honor} 荣誉值；每直连 1 个五星节点，每天增加 {perNode} 次点赞额度。未直连五星节点时，今天可点赞 {baseline} 次。奖励次日凌晨结算。', {
-              likes: TASK_LOT_LIKES_PER_UNIT,
-              honor: TASK_LOT_HONOR_PER_UNIT,
-              perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_LIKES_PER_UNIT,
-              baseline: TASK_LOT_LIKES_PER_UNIT,
+            {t('当天发帖并对其他帖子完成互动满 {interactions} 次，可得 +{credibility} 公信力；每直连 1 个五星节点，每天增加 {perNode} 次互动额度。未直连五星节点时，今天可互动 {baseline} 次。奖励次日凌晨结算。', {
+              interactions: TASK_LOT_INTERACTIONS_PER_UNIT,
+              credibility: TASK_LOT_CREDIBILITY_PER_UNIT,
+              perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_INTERACTIONS_PER_UNIT,
+              baseline: TASK_LOT_INTERACTIONS_PER_UNIT,
             })}
           </p>
           <p className="pb-info-sheet-para">
@@ -253,7 +253,7 @@ function LotTaskHistorySheet({
             if (!snapshot?.bonusEligible) return null;
             return (
               <span className="task-calendar-day-earn is-earned">
-                +{TASK_LOT_HONOR_PER_UNIT}
+                +{TASK_LOT_CREDIBILITY_PER_UNIT}
               </span>
             );
           }}
@@ -270,8 +270,8 @@ function LotTaskHistorySheet({
             </span>
             {selectedDay.snapshot.bonusEligible && (
               <span className="task-calendar-detail-row">
-                {t('当日荣誉值奖励')}<strong>
-                  +{TASK_LOT_HONOR_PER_UNIT} {t('荣誉值')} · {selectedDay.snapshot.honorRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')}
+                {t('当日公信力奖励')}<strong>
+                  +{TASK_LOT_CREDIBILITY_PER_UNIT} {t('公信力')} · {selectedDay.snapshot.credibilityRewardStatus === 'issued' ? t('已发放') : t('待次日凌晨发放')}
                 </strong>
               </span>
             )}
@@ -280,13 +280,13 @@ function LotTaskHistorySheet({
 
         <p className="task-calendar-lot-note">
           {lotQuota.fiveStarNodeCount > 0
-            ? t('你已直连 {nodes} 个五星节点，今天可给他人点赞 {likes} 次，最多 +{honor} 荣誉值', {
-                nodes: lotQuota.fiveStarNodeCount, likes: lotQuota.likes, honor: lotQuota.honor,
+            ? t('你已直连 {nodes} 个五星节点，今天可对他人帖子完成互动 {interactions} 次，最多 +{credibility} 公信力', {
+                nodes: lotQuota.fiveStarNodeCount, interactions: lotQuota.interactions, credibility: lotQuota.credibility,
               })
-            : t('你名下暂无直连的五星节点，今天可给他人点赞 {likes} 次，最多 +{honor} 荣誉值；每直连 1 个五星节点，点赞额度增加 {perNode} 次', {
-                likes: TASK_LOT_LIKES_PER_UNIT,
-                honor: TASK_LOT_HONOR_PER_UNIT,
-                perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_LIKES_PER_UNIT,
+            : t('你名下暂无直连的五星节点，今天可对他人帖子完成互动 {interactions} 次，最多 +{credibility} 公信力；每直连 1 个五星节点，互动额度增加 {perNode} 次', {
+                interactions: TASK_LOT_INTERACTIONS_PER_UNIT,
+                credibility: TASK_LOT_CREDIBILITY_PER_UNIT,
+                perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_INTERACTIONS_PER_UNIT,
               })}
         </p>
       </div>

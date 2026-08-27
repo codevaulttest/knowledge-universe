@@ -15,7 +15,7 @@ import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { InteractionTaskSheet } from './components/InteractionTaskSheet';
 import { LotTaskSheet } from './components/LotTaskSheet';
-import { effectiveClaimRatio, getIssuedHonorRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, isRatioLadderActive, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueHonorRewards, simulateInteractedCount, taskDayKey, TASK_BONUS_PB, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
+import { effectiveClaimRatio, getIssuedCredibilityRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, isRatioLadderActive, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueCredibilityRewards, simulateInteractedCount, taskDayKey, TASK_BONUS_PB, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
 import { Toast } from './components/shared';
 import { TaskCelebrationOverlay } from './components/TaskCelebrationOverlay';
 import { ComposePage } from './pages/ComposePage';
@@ -111,7 +111,7 @@ export default function App() {
   // ── 知识宇宙页：PB 余额 / 邀请绑定 / 周期性空投 ──────────────────
   const getInitialPbWallets = (): Record<PbWalletId, number> => ({
     ...MOCK_PB_WALLETS,
-    honor: MOCK_PB_WALLETS.honor + getIssuedHonorRewardTotal(),
+    credibility: MOCK_PB_WALLETS.credibility + getIssuedCredibilityRewardTotal(),
   });
   const [pbWallets, setPbWallets] = useState<Record<PbWalletId, number>>(getInitialPbWallets);
   /** 总额只用于资产总览，支付必须通过单钱包的 payPb。 */
@@ -119,7 +119,7 @@ export default function App() {
   const [inviterAddress, setInviterAddress] = useState<string | null>(null);
   const [airdropClaimed, setAirdropClaimed] = useState(false);
 
-  // 每日任务：互动帖任务决定明天空投领取比例，一发十赞决定今天荣誉值签到奖，两者互不相关
+  // 每日任务：互动帖任务决定明天空投领取比例，一发十赞决定今天公信力签到奖，两者互不相关
   const [taskSnapshotToday, setTaskSnapshotToday] = useState<TaskDaySnapshot>(() => getTaskSnapshot());
   // 开发工具：模拟 9/1 后阶梯规则生效 / 模拟新用户（无昨日记录）/ 切换直连五星节点数
   const [demoForceLadder, setDemoForceLadder] = useState(true);
@@ -238,7 +238,7 @@ export default function App() {
   const setDemoPbWallets = (preset: 'normal' | 'limited') => {
     setPbWallets(preset === 'normal'
       ? getInitialPbWallets()
-      : { onchain: 80, station: 2400, honor: 800 + getIssuedHonorRewardTotal(), airdrop: 40 });
+      : { onchain: 80, station: 2400, credibility: 800 + getIssuedCredibilityRewardTotal(), airdrop: 40 });
   };
 
   const [supWallets, setSupWallets] = useState<Record<SupWalletId, number>>(MOCK_SUP_WALLETS);
@@ -484,7 +484,7 @@ export default function App() {
 
   // 今天是否还有可领取的空投奖励，供互动帖任务入口红点展示
   const interactionTaskAlert = !airdropClaimed && Date.now() <= getAirdropDeadline();
-  // 今天是否还有待达成的荣誉值奖励，供一发十赞入口红点展示
+  // 今天是否还有待达成的公信力奖励，供一发十赞入口红点展示
   const lotTaskAlert = !taskSnapshotToday.bonusEligible;
 
 
@@ -519,11 +519,11 @@ export default function App() {
   // 奖励在北京时间跨日后结算；重新打开原型时也会补结算此前未发放的奖励。
   useEffect(() => {
     const refreshForNewTaskDay = () => {
-      const settledDates = settleDueHonorRewards();
+      const settledDates = settleDueCredibilityRewards();
       if (settledDates.length > 0) {
         const amount = settledDates.length * TASK_BONUS_PB;
-        setPbWallets(prev => ({ ...prev, honor: prev.honor + amount }));
-        showToast(t('已发放任务奖励 +{bonus} 荣誉值', { bonus: amount }));
+        setPbWallets(prev => ({ ...prev, credibility: prev.credibility + amount }));
+        showToast(t('已发放任务奖励 +{bonus} 公信力', { bonus: amount }));
       }
       setTaskSnapshotToday(getTaskSnapshot());
       setTaskSnapshotYesterday(getYesterdaySnapshot(new Date(), { forceNewUser: demoForceNewUser }));
@@ -1342,7 +1342,7 @@ export default function App() {
         {/* 覆盖层：互动帖任务（决定明天的空投领取比例） */}
         {interactionTaskOpen && <InteractionTaskSheet onClose={() => setInteractionTaskOpen(false)} />}
 
-        {/* 覆盖层：一发十赞（发帖 + 一发十赞 + BSP 保底，决定今天的荣誉值奖励） */}
+        {/* 覆盖层：一发十赞（发帖 + 一发十赞 + BSP 保底，决定今天的公信力奖励） */}
         {lotTaskOpen && (
           <LotTaskSheet
             onClose={() => setLotTaskOpen(false)}

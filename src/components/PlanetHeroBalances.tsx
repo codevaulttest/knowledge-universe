@@ -13,14 +13,14 @@ export function PlanetHeroBalances() {
   const { t, language, walletConnected, pbWallets, supWallets, meritBalance } = useApp();
   const [pbInfoOpen, setPbInfoOpen] = useState(false);
   const [pbDetailOpen, setPbDetailOpen] = useState(false);
-  const [honorInfoOpen, setHonorInfoOpen] = useState(false);
+  const [credibilityInfoOpen, setCredibilityInfoOpen] = useState(false);
   const [supInfoOpen, setSupInfoOpen] = useState(false);
   const [depositSheetKind, setDepositSheetKind] = useState<'airdrop' | 'sup' | null>(null);
 
   if (!walletConnected) return null;
 
   // 折叠徽章只保留"站内 PB"这一种主力展示（用户在充值/提取里主动管理、日常互动感最强的一层）；
-  // 荣誉值、链上 PB、空投 PB、站内 SUP、链上 SUP 五项不再参与求和，由"+5 种资产"提示承接，点开「我的资产」可看全部明细。
+  // 公信力、链上 PB、空投 PB、站内 SUP、链上 SUP 五项不再参与求和，由"+5 种资产"提示承接，点开「我的资产」可看全部明细。
   const HIDDEN_ASSET_COUNT = 5;
   const pbAsset = { value: pbWallets.station, unit: t('站内 PB'), ariaLabel: t('站内 PB') };
   const assetAriaLabel = `${formatCompactBalance(pbAsset.value, language)} ${pbAsset.ariaLabel}，${t('+{count} 种资产', { count: HIDDEN_ASSET_COUNT })}，${t('查看资产余额')}`;
@@ -73,7 +73,7 @@ export function PlanetHeroBalances() {
               <div className="pb-info-balances">
                 {PB_WALLET_DISPLAY_ORDER.map(wallet => {
                   const meta = PB_WALLETS[wallet];
-                  const isHonor = wallet === 'honor';
+                  const isCredibility = wallet === 'credibility';
                   return (
                     <div className="pb-info-balance-row" key={wallet}>
                       <span className="pb-info-balance-label pb-info-balance-label--with-action">
@@ -82,9 +82,9 @@ export function PlanetHeroBalances() {
                           type="button"
                           className="asset-overview-info-btn"
                           onClick={() => {
-                            if (isHonor) setHonorInfoOpen(true); else setPbDetailOpen(true);
+                            if (isCredibility) setCredibilityInfoOpen(true); else setPbDetailOpen(true);
                           }}
-                          aria-label={isHonor ? t('查看荣誉值说明') : t('查看 PB 说明')}
+                          aria-label={isCredibility ? t('查看公信力说明') : t('查看 PB 说明')}
                         >
                           <Info size={13} strokeWidth={2} />
                         </button>
@@ -179,15 +179,15 @@ export function PlanetHeroBalances() {
         document.body,
       )}
 
-      {honorInfoOpen && createPortal(
-        <div className="sheet-backdrop" onClick={() => setHonorInfoOpen(false)}>
+      {credibilityInfoOpen && createPortal(
+        <div className="sheet-backdrop" onClick={() => setCredibilityInfoOpen(false)}>
           <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
             <div className="sheet-header">
-              <span className="sheet-title">{t('荣誉值说明')}</span>
+              <span className="sheet-title">{t('公信力说明')}</span>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
-                onClick={() => setHonorInfoOpen(false)}
+                onClick={() => setCredibilityInfoOpen(false)}
                 aria-label={t('关闭')}
               >
                 <X size={18} strokeWidth={2} />
@@ -196,15 +196,15 @@ export function PlanetHeroBalances() {
             <div className="pb-info-sheet-body">
               <p className="pb-info-sheet-para">
                 <strong className="pb-info-sheet-label">{t('来源：')}</strong>
-                {t('完成每日任务的“发帖 + 10 次互动”里程碑后，系统于次日凌晨发放荣誉值。')}
+                {t('完成每日任务的“发帖 + 10 次互动”里程碑后，系统于次日凌晨发放公信力。')}
               </p>
               <p className="pb-info-sheet-para">
                 <strong className="pb-info-sheet-label">{t('用途：')}</strong>
-                {t('荣誉值可用于开通频道、BSP 巨星投流、节点升级、转让节点。')}
+                {t('公信力可用于开通频道、BSP 巨星投流、节点升级、转让节点。')}
               </p>
               <p className="pb-info-sheet-para">
                 <strong className="pb-info-sheet-label">{t('支付规则：')}</strong>
-                {t('使用荣誉值支付时免 Gas。')}
+                {t('使用公信力支付时免 Gas。')}
               </p>
             </div>
           </div>

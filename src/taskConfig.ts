@@ -7,9 +7,10 @@ import { MOCK_PB_AIRDROP_AMOUNT } from './mockData';
 //   每天对任意帖子做互动（点赞/评论/收藏/踩，任选其一，同一帖子多次
 //   操作只算一次）即完成 1 篇，累计达到 TASK_INTERACTION_POOL_SIZE 篇即
 //   封顶，按阶梯换算成次日领取比例，全部完成对应 100%。
-// 业务 B：一发十赞 → 当日荣誉值签到奖。
-//   当天发帖 + 给其他帖子点赞（互动）每满 TASK_LOT_LIKES_PER_UNIT 次为 1 组，每组发放
-//   TASK_LOT_HONOR_PER_UNIT 荣誉值；每日可完成组数由账号名下直连的
+// 业务 B：一发十赞 → 当日公信力签到奖。
+//   当天发帖 + 对其他帖子做任意互动（点赞/转发/收藏/踩/评论，任选其一）每满
+//   TASK_LOT_INTERACTIONS_PER_UNIT 次为 1 组，每组发放
+//   TASK_LOT_CREDIBILITY_PER_UNIT 公信力；每日可完成组数由账号名下直连的
 //   五星节点数决定（每个五星节点 TASK_LOT_UNITS_PER_NODE 组，未达五星
 //   不计入）；0 个五星节点时保底 TASK_LOT_BASELINE_UNITS 组。与空投
 //   领取比例无关。
@@ -32,19 +33,19 @@ export const TASK_RATIO_LADDER_START = '2026-09-01';
 /** 无昨日记录（今日/昨日注册的新用户）的默认领取比例。 */
 export const TASK_NEW_USER_CLAIM_RATIO = 100;
 
-// ── 业务 B：一发十赞 → 荣誉值签到奖 ──
-/** 1 组「一发十赞」= 当天发帖 + 给其他帖子点赞（互动）满该数量次。 */
-export const TASK_LOT_LIKES_PER_UNIT = 10;
-/** 每完成 1 组发放的荣誉值。 */
-export const TASK_LOT_HONOR_PER_UNIT = 10;
+// ── 业务 B：一发十赞 → 公信力签到奖 ──
+/** 1 组「一发十赞」= 当天发帖 + 对其他帖子做任意互动（点赞/转发/收藏/踩/评论）满该数量次。 */
+export const TASK_LOT_INTERACTIONS_PER_UNIT = 10;
+/** 每完成 1 组发放的公信力。 */
+export const TASK_LOT_CREDIBILITY_PER_UNIT = 10;
 /** 每个已直连的五星节点每日可完成的组数（未达五星不计入）。 */
 export const TASK_LOT_UNITS_PER_NODE = 9;
 /** 无五星节点时的保底组数（公司公告 9/1 生效）。 */
 export const TASK_LOT_BASELINE_UNITS = 1;
-/** @deprecated 改用 TASK_LOT_LIKES_PER_UNIT */
-export const TASK_BONUS_THRESHOLD = TASK_LOT_LIKES_PER_UNIT;
-/** @deprecated 改用 TASK_LOT_HONOR_PER_UNIT */
-export const TASK_BONUS_PB = TASK_LOT_HONOR_PER_UNIT;
+/** @deprecated 改用 TASK_LOT_INTERACTIONS_PER_UNIT */
+export const TASK_BONUS_THRESHOLD = TASK_LOT_INTERACTIONS_PER_UNIT;
+/** @deprecated 改用 TASK_LOT_CREDIBILITY_PER_UNIT */
+export const TASK_BONUS_PB = TASK_LOT_CREDIBILITY_PER_UNIT;
 
 // ── 日历 / 收益 ──
 /** 收益哨兵：-1 未结算（不渲染）；0 当天无红包；>0 实际到账 PB。 */
@@ -60,12 +61,12 @@ export type DailyTaskState = {
   /** 当天已互动过的帖子 id（去重）。 */
   interactedPostIds: string[];
   /** 达成的一发十赞奖励已在次日凌晨结算的时间。 */
-  honorRewardIssuedAt?: string;
+  credibilityRewardIssuedAt?: string;
   /** 当天实际领取的空投 PB；未领取/未结算时缺省。 */
   airdropClaimedPb?: number;
 };
 
-export type HonorRewardStatus = 'none' | 'pending' | 'issued';
+export type CredibilityRewardStatus = 'none' | 'pending' | 'issued';
 
 export type TaskDaySnapshot = {
   date: string;
@@ -75,10 +76,10 @@ export type TaskDaySnapshot = {
   claimRatio: number;
   /** 当天实际到账的空投收益（PB）。TASK_EARNINGS_UNSETTLED 未结算 / 0 无红包 / >0 金额。 */
   earningsPb: number;
-  /** 「一发十赞」里程碑是否达成：当天发帖 + 互动帖数达到 TASK_LOT_LIKES_PER_UNIT。 */
+  /** 「一发十赞」里程碑是否达成：当天发帖 + 互动次数达到 TASK_LOT_INTERACTIONS_PER_UNIT。 */
   bonusEligible: boolean;
-  /** 荣誉值奖励的结算状态。 */
-  honorRewardStatus: HonorRewardStatus;
+  /** 公信力奖励的结算状态。 */
+  credibilityRewardStatus: CredibilityRewardStatus;
 };
 
 export type LotQuota = {
@@ -86,17 +87,17 @@ export type LotQuota = {
   fiveStarNodeCount: number;
   /** 每日可完成的「一发十赞」组数 = fiveStarNodeCount × TASK_LOT_UNITS_PER_NODE，0 个五星节点时保底 TASK_LOT_BASELINE_UNITS。 */
   units: number;
-  /** 组数 × TASK_LOT_LIKES_PER_UNIT。 */
-  likes: number;
-  /** 组数 × TASK_LOT_HONOR_PER_UNIT。 */
-  honor: number;
+  /** 组数 × TASK_LOT_INTERACTIONS_PER_UNIT。 */
+  interactions: number;
+  /** 组数 × TASK_LOT_CREDIBILITY_PER_UNIT。 */
+  credibility: number;
 };
 
 /** 纯函数：直连五星节点数 → 当日「一发十赞」配额。 */
 export function getLotQuota(fiveStarNodeCount: number): LotQuota {
   const n = Math.max(0, Math.floor(fiveStarNodeCount));
   const units = n === 0 ? TASK_LOT_BASELINE_UNITS : n * TASK_LOT_UNITS_PER_NODE;
-  return { fiveStarNodeCount: n, units, likes: units * TASK_LOT_LIKES_PER_UNIT, honor: units * TASK_LOT_HONOR_PER_UNIT };
+  return { fiveStarNodeCount: n, units, interactions: units * TASK_LOT_INTERACTIONS_PER_UNIT, credibility: units * TASK_LOT_CREDIBILITY_PER_UNIT };
 }
 
 /** 阶梯规则是否已生效（北京时间 >= TASK_RATIO_LADDER_START）。 */
@@ -144,7 +145,7 @@ export function loadTaskState(date: string): DailyTaskState {
       date,
       posted: !!parsed.posted,
       interactedPostIds: Array.isArray(parsed.interactedPostIds) ? parsed.interactedPostIds : [],
-      honorRewardIssuedAt: typeof parsed.honorRewardIssuedAt === 'string' ? parsed.honorRewardIssuedAt : undefined,
+      credibilityRewardIssuedAt: typeof parsed.credibilityRewardIssuedAt === 'string' ? parsed.credibilityRewardIssuedAt : undefined,
       airdropClaimedPb: typeof parsed.airdropClaimedPb === 'number' ? parsed.airdropClaimedPb : undefined,
     };
   } catch {
@@ -184,7 +185,7 @@ export function markInteracted(postId: string, date: string = taskDayKey()): { s
 export function getTaskSnapshot(date: string = taskDayKey()): TaskDaySnapshot {
   const state = loadTaskState(date);
   const interactedCount = state.interactedPostIds.length;
-  const bonusEligible = state.posted && interactedCount >= TASK_LOT_LIKES_PER_UNIT;
+  const bonusEligible = state.posted && interactedCount >= TASK_LOT_INTERACTIONS_PER_UNIT;
   return {
     date,
     posted: state.posted,
@@ -192,7 +193,7 @@ export function getTaskSnapshot(date: string = taskDayKey()): TaskDaySnapshot {
     claimRatio: interactionRatio(interactedCount),
     earningsPb: typeof state.airdropClaimedPb === 'number' ? state.airdropClaimedPb : TASK_EARNINGS_UNSETTLED,
     bonusEligible,
-    honorRewardStatus: !bonusEligible ? 'none' : state.honorRewardIssuedAt ? 'issued' : 'pending',
+    credibilityRewardStatus: !bonusEligible ? 'none' : state.credibilityRewardIssuedAt ? 'issued' : 'pending',
   };
 }
 
@@ -205,7 +206,7 @@ export function recordAirdropClaim(amountPb: number, date: string = taskDayKey()
 }
 
 /** 补结算所有已跨过北京时间零点、但尚未发放的一发十赞奖励。 */
-export function settleDueHonorRewards(now: Date = new Date()): string[] {
+export function settleDueCredibilityRewards(now: Date = new Date()): string[] {
   const today = taskDayKey(now);
   const settled: string[] = [];
   try {
@@ -216,8 +217,8 @@ export function settleDueHonorRewards(now: Date = new Date()): string[] {
       if (date >= today) continue;
       const state = loadTaskState(date);
       const eligible = state.posted && state.interactedPostIds.length >= TASK_BONUS_THRESHOLD;
-      if (!eligible || state.honorRewardIssuedAt) continue;
-      saveTaskState({ ...state, honorRewardIssuedAt: now.toISOString() });
+      if (!eligible || state.credibilityRewardIssuedAt) continue;
+      saveTaskState({ ...state, credibilityRewardIssuedAt: now.toISOString() });
       settled.push(date);
     }
   } catch {
@@ -226,14 +227,14 @@ export function settleDueHonorRewards(now: Date = new Date()): string[] {
   return settled;
 }
 
-/** 已结算奖励在刷新页面后叠加回演示初始荣誉值余额。 */
-export function getIssuedHonorRewardTotal(): number {
+/** 已结算奖励在刷新页面后叠加回演示初始公信力余额。 */
+export function getIssuedCredibilityRewardTotal(): number {
   let total = 0;
   try {
     for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i);
       if (!key?.startsWith(STORAGE_PREFIX)) continue;
-      if (loadTaskState(key.slice(STORAGE_PREFIX.length)).honorRewardIssuedAt) total += TASK_BONUS_PB;
+      if (loadTaskState(key.slice(STORAGE_PREFIX.length)).credibilityRewardIssuedAt) total += TASK_BONUS_PB;
     }
   } catch {
     /* demo 环境忽略本地存储异常 */
@@ -263,7 +264,7 @@ export function getYesterdaySnapshot(now: Date = new Date(), opts?: { forceNewUs
     claimRatio: seedRatio,
     earningsPb: Math.round(MOCK_PB_AIRDROP_AMOUNT * seedRatio / 100),
     bonusEligible: true,
-    honorRewardStatus: 'issued',
+    credibilityRewardStatus: 'issued',
   };
 }
 
@@ -319,13 +320,13 @@ function seedOrRealSnapshot(date: string, todayKey: string): TaskDaySnapshot {
       interactedCount: seedCount,
       claimRatio: ratio,
       earningsPb: seedEarnings(seedIndex, ratio),
-      bonusEligible: seedCount >= TASK_LOT_LIKES_PER_UNIT,
-      honorRewardStatus: seedCount >= TASK_LOT_LIKES_PER_UNIT ? 'issued' : 'none',
+      bonusEligible: seedCount >= TASK_LOT_INTERACTIONS_PER_UNIT,
+      credibilityRewardStatus: seedCount >= TASK_LOT_INTERACTIONS_PER_UNIT ? 'issued' : 'none',
     };
   }
   return {
     date, posted: false, interactedCount: 0, claimRatio: TASK_RATIO_BASE,
-    earningsPb: TASK_EARNINGS_UNSETTLED, bonusEligible: false, honorRewardStatus: 'none',
+    earningsPb: TASK_EARNINGS_UNSETTLED, bonusEligible: false, credibilityRewardStatus: 'none',
   };
 }
 

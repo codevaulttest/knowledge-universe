@@ -11575,6 +11575,13 @@ html[lang="zh-TW"] .planet-hero-title {
   color: var(--ku-color-primary-dark);
 }
 
+/* 信息类数值徽章（如实时换算的比例），非完成态，视觉上跟 --done 同色系但语义独立 */
+.task-card-status--info {
+  border-color: transparent;
+  background: var(--ku-color-primary-alpha-14);
+  color: var(--ku-color-primary-dark);
+}
+
 .task-progress-track {
   position: relative;
   width: 100%;

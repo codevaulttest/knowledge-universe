@@ -62,7 +62,7 @@ export type AppContextValue = {
   interactionTaskAlert: boolean;
   lotTaskOpen: boolean;
   openLotTask: () => void;
-  /** 今天是否还有待达成的荣誉值奖励，供一发十赞入口红点展示 */
+  /** 今天是否还有待达成的公信力奖励，供一发十赞入口红点展示 */
   lotTaskAlert: boolean;
   recentSearches: string[];
   saveRecentSearch: (query: string) => void;
@@ -148,7 +148,7 @@ export type AppContextValue = {
   // 知识宇宙页：周期性 PB 空投
   airdropClaimed: boolean;
   claimAirdrop: () => void;
-  // 每日任务：互动帖任务决定明天空投领取比例，一发十赞决定今天荣誉值签到奖，两者互不相关
+  // 每日任务：互动帖任务决定明天空投领取比例，一发十赞决定今天公信力签到奖，两者互不相关
   taskSnapshotToday: TaskDaySnapshot;
   /** 无记录（新用户）为 null；见 effectiveClaimRatio 的 D4 分支 */
   taskSnapshotYesterday: TaskDaySnapshot | null;

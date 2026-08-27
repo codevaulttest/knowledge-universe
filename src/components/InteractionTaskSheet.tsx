@@ -3,17 +3,18 @@ import { AlertTriangle, Check, ChevronRight, History, Info, MousePointerClick, X
 import { useApp } from '../AppContext';
 import { calendarIntlLocale } from '../dateUtils';
 import { formatTokenAmount } from '../stakeConfig';
-import { TASK_EARNINGS_UNSETTLED, TASK_INTERACTION_POOL_SIZE, type TaskCalendarMonth } from '../taskConfig';
+import { interactionRatio, TASK_EARNINGS_UNSETTLED, TASK_INTERACTION_POOL_SIZE, type TaskCalendarMonth } from '../taskConfig';
 import { TaskCalendarView } from './TaskCalendarView';
 
 /** 互动帖任务面板：今日互动进度 + 规则 + 历史（决定明天的空投领取比例）。 */
 export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
-  const { t, taskSnapshotToday, getDailyTaskCalendar } = useApp();
+  const { t, taskSnapshotToday, getDailyTaskCalendar, airdropRatioLadderActive } = useApp();
   const [rulesOpen, setRulesOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const interacted = taskSnapshotToday.interactedCount;
   const progressPercent = Math.min(100, (interacted / TASK_INTERACTION_POOL_SIZE) * 100);
+  const projectedRatio = interactionRatio(interacted);
 
   return (
     <>
@@ -57,7 +58,13 @@ export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
               <div className="task-progress-fill" style={{ width: `${progressPercent}%` }} />
             </div>
 
-            <p className="task-group-note">{t('今天的互动次数决定明天的空投领取上限')}</p>
+            {airdropRatioLadderActive && (
+              <div className="task-card-status-row">
+                <span className="task-card-status task-card-status--info">
+                  {t('当前进度可领 {ratio}%', { ratio: projectedRatio })}
+                </span>
+              </div>
+            )}
           </div>
 
           <button type="button" className="bsp-rules-entry task-panel-rules-entry" onClick={() => setHistoryOpen(true)}>

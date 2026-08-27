@@ -5,17 +5,17 @@ export type PbWalletMeta = {
   labelKey: string;
   sourceKey: string;
   useSummaryKey: string;
-  /** 该钱包支付时 Gas 费从哪个池子出；none = 荣誉值，完全不产生手续费。 */
+  /** 该钱包支付时 Gas 费从哪个池子出；none = 公信力，完全不产生手续费。 */
   supSource: 'none' | 'onchain' | 'site_first';
-  /** 余额展示单位；荣誉值不是 PB，不能沿用「PB」文案。 */
+  /** 余额展示单位；公信力不是 PB，不能沿用「PB」文案。 */
   unitKey: string;
 };
 
-/** 受限资金优先，避免把荣誉值、站内 PB 长期闲置。 */
-export const PB_WALLET_PRIORITY: readonly PbWalletId[] = ['honor', 'onchain', 'station', 'airdrop'];
+/** 受限资金优先，避免把公信力、站内 PB 长期闲置。 */
+export const PB_WALLET_PRIORITY: readonly PbWalletId[] = ['credibility', 'onchain', 'station', 'airdrop'];
 
-/** 支付选择器的展示顺序（依会议口述：荣誉值、链上PB、站内PB、空投PB）。 */
-export const PB_WALLET_DISPLAY_ORDER: readonly PbWalletId[] = ['honor', 'onchain', 'station', 'airdrop'];
+/** 支付选择器的展示顺序（依会议口述：公信力、链上PB、站内PB、空投PB）。 */
+export const PB_WALLET_DISPLAY_ORDER: readonly PbWalletId[] = ['credibility', 'onchain', 'station', 'airdrop'];
 
 export const PB_WALLETS: Record<PbWalletId, PbWalletMeta> = {
   onchain: {
@@ -24,8 +24,8 @@ export const PB_WALLETS: Record<PbWalletId, PbWalletMeta> = {
   station: {
     id: 'station', labelKey: '站内 PB', sourceKey: '创世、钻石节点每月发放', useSummaryKey: '可用于开通频道及节点内互动', supSource: 'site_first', unitKey: 'PB',
   },
-  honor: {
-    id: 'honor', labelKey: '荣誉值', sourceKey: '每日任务发放', useSummaryKey: '可用于开通频道、BSP 巨星投流、节点升级、转让节点', supSource: 'none', unitKey: '荣誉值',
+  credibility: {
+    id: 'credibility', labelKey: '公信力', sourceKey: '每日任务发放', useSummaryKey: '可用于开通频道、BSP 巨星投流、节点升级、转让节点', supSource: 'none', unitKey: '公信力',
   },
   airdrop: {
     id: 'airdrop', labelKey: '空投 PB', sourceKey: '空投 50% 到账', useSummaryKey: '适用于全部 PB 用途', supSource: 'site_first', unitKey: 'PB',
@@ -38,8 +38,8 @@ export function walletConsumesSup(wallet: PbWalletId): boolean {
 
 /** 唯一的用途权限矩阵；新增用途会被 TypeScript 强制补齐。 */
 export const PB_USE_ALLOWED_WALLETS: Record<PbUse, readonly PbWalletId[]> = {
-  channel_open: ['honor', 'station', 'airdrop', 'onchain'],
-  bsp_invest: ['honor', 'airdrop', 'onchain'],
+  channel_open: ['credibility', 'station', 'airdrop', 'onchain'],
+  bsp_invest: ['credibility', 'airdrop', 'onchain'],
   post: ['station', 'airdrop', 'onchain'],
   like: ['station', 'airdrop', 'onchain'],
   dislike: ['station', 'airdrop', 'onchain'],
@@ -50,8 +50,8 @@ export const PB_USE_ALLOWED_WALLETS: Record<PbUse, readonly PbWalletId[]> = {
   partner: ['airdrop', 'onchain'],
   channel_subscribe: ['airdrop', 'onchain'],
   purchase: ['airdrop', 'onchain'],
-  node_upgrade: ['honor', 'airdrop', 'onchain'],
-  node_transfer: ['honor', 'airdrop', 'onchain'],
+  node_upgrade: ['credibility', 'airdrop', 'onchain'],
+  node_transfer: ['credibility', 'airdrop', 'onchain'],
   // 会议尚未覆盖以下用途，原型先保守仅开放通用 PB。
   tip: ['airdrop', 'onchain'],
 };

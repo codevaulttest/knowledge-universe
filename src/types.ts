@@ -304,7 +304,7 @@ export type SupTransactionReason =
   | 'withdraw';
 
 /** 四种 PB 钱包。余额彼此独立，一笔支付只使用其中一个钱包。 */
-export type PbWalletId = 'onchain' | 'station' | 'honor' | 'airdrop';
+export type PbWalletId = 'onchain' | 'station' | 'credibility' | 'airdrop';
 
 /** 站内 SUP(184) / 链上 SUP，手续费只从其中一个池子出，不跨池拼单。 */
 export type SupWalletId = 'site' | 'onchain';
