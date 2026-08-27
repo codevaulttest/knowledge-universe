@@ -139,7 +139,7 @@ function InteractionTaskCalendarSection({ month }: { month: TaskCalendarMonth })
           {selectedDay.snapshot.earningsPb !== TASK_EARNINGS_UNSETTLED && (
             <span className="task-calendar-detail-row">
               {t('当日收益')}<strong>
-                {selectedDay.snapshot.earningsPb > 0 ? `+${formatTokenAmount(selectedDay.snapshot.earningsPb)} PB` : t('0（未达成/已错过）')}
+                {selectedDay.snapshot.earningsPb > 0 ? `+${formatTokenAmount(selectedDay.snapshot.earningsPb)} PB` : '0'}
               </strong>
             </span>
           )}
