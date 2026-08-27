@@ -158,18 +158,18 @@ function LotTaskCalendarSection({
           <div className="task-calendar-detail-conditions">
             <span className={`task-calendar-detail-status${postCountDone ? ' is-posted' : ''}`}>
               {postCountDone ? <Check size={13} strokeWidth={2.6} /> : <Circle size={13} strokeWidth={1.9} />}
-              {t('发 {count} 篇帖子', { count: requiredPostCount })}
-              <strong>{t('已发 {count} / {total} 篇', { count: snapshot.postedCount, total: requiredPostCount })}</strong>
+              {t('发帖')}
+              <strong>{t('已发')} <span className="task-calendar-detail-number">{snapshot.postedCount}</span> / <span className="task-calendar-detail-number">{requiredPostCount}</span> {t('篇')}</strong>
             </span>
             <span className={`task-calendar-detail-status${interactionDone ? ' is-posted' : ''}`}>
               {interactionDone ? <Check size={13} strokeWidth={2.6} /> : <Circle size={13} strokeWidth={1.9} />}
-              {t('给别人的帖子互动')}
-              <strong>{t('已互动 {count} / {total} 次', { count: snapshot.interactedCount, total: lotQuota.interactions })}</strong>
+              {t('跟别人的帖子互动')}
+              <strong>{t('已互动')} <span className="task-calendar-detail-number">{snapshot.interactedCount}</span> / <span className="task-calendar-detail-number">{lotQuota.interactions}</span> {t('次')}</strong>
             </span>
           </div>
           <span className="task-calendar-detail-row">
             {t('当日公信力奖励')}<strong>
-              +{earned} {t('公信力')} · {snapshot.credibilityRewardStatus === 'issued' ? t('已发放') : snapshot.bonusEligible ? t('待次日凌晨发放') : t('待完成')}
+              +<span className="task-calendar-detail-number">{earned}</span> {t('公信力')}
             </strong>
           </span>
         </div>

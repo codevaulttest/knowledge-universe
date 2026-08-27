@@ -7224,6 +7224,13 @@ button {
   color: var(--ku-color-text-primary);
   font-weight: 700;
 }
+.lot-task-panel-sheet .task-calendar-detail-status strong,
+.lot-task-panel-sheet .task-calendar-detail-row strong {
+  color: var(--ku-color-text-primary);
+}
+.lot-task-panel-sheet .task-calendar-detail-number {
+  color: var(--ku-color-lot-red);
+}
 .task-calendar-detail-status.is-posted {
   color: var(--ku-color-primary);
 }
@@ -11517,10 +11524,6 @@ html[lang="zh-TW"] .planet-hero-title {
 .task-card--done {
   border-color: var(--ku-color-primary-alpha-14);
   background: var(--ku-color-primary-alpha-04);
-}
-
-.task-calendar-detail .task-card--calendar-detail {
-  margin: var(--ku-space-2) 0 0;
 }
 
 .task-card--interaction,

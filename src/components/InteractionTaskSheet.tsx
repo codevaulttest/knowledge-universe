@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Check, ChevronRight, Circle, Info, X } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Info, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { calendarIntlLocale } from '../dateUtils';
 import { formatTokenAmount } from '../stakeConfig';
@@ -15,7 +15,7 @@ import {
 } from '../taskConfig';
 import { TaskCalendarView } from './TaskCalendarView';
 
-/** 互动帖任务面板：规则 + 本月历史日历 + BSP 保底状态，一个入口直达，不再分成两层弹窗。 */
+/** 空投收益历史面板：规则 + 本月历史日历 + 当日任务状态，一个入口直达。 */
 export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
   const { t, getDailyTaskCalendar } = useApp();
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -25,7 +25,7 @@ export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
       <div className="sheet-backdrop" onClick={onClose}>
         <div className="payment-sheet task-panel-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
           <div className="sheet-header">
-            <span className="sheet-title">{t('互动帖任务')}</span>
+            <span className="sheet-title">{t('本月空投收益历史')}</span>
             <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')}>
               <X size={18} strokeWidth={2} />
             </button>
@@ -38,8 +38,6 @@ export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
             <span className="bsp-rules-entry-text">{t('查看完整任务规则')}</span>
             <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
           </button>
-
-          <div className="task-panel-section-label">{t('本月空投收益历史')}</div>
 
           <InteractionTaskCalendarSection month={getDailyTaskCalendar()} />
         </div>
@@ -101,7 +99,7 @@ function InteractionTaskCalendarSection({ month }: { month: TaskCalendarMonth })
     <>
       <TaskCalendarView
         month={month}
-        caption={t('格内数字是当天到账的收益，点开日期查看当天详情')}
+        caption={t('格内数字是当天到账的空投收益，点开日期查看当天详情')}
         selectedDate={selectedDate}
         onSelectDay={setSelectedDate}
         dayClassName={day => {
@@ -133,6 +131,9 @@ function InteractionTaskCalendarSection({ month }: { month: TaskCalendarMonth })
           <span className="task-calendar-detail-row">
             {t('空投额度')}<strong>65%</strong>
           </span>
+          <span className="task-calendar-detail-row">
+            {t('发帖')}<strong>{selectedDay.snapshot.posted ? '1 / 1' : '0 / 1'}</strong>
+          </span>
           {selectedDay.snapshot.earningsPb !== TASK_EARNINGS_UNSETTLED && (
             <span className="task-calendar-detail-row">
               {t('当日收益')}<strong>
@@ -140,20 +141,6 @@ function InteractionTaskCalendarSection({ month }: { month: TaskCalendarMonth })
               </strong>
             </span>
           )}
-          <div className={`task-card task-card--calendar-detail${selectedDay.snapshot.posted ? ' task-card--done' : ''}`}>
-            <span className="task-card-icon" aria-hidden="true">
-              {selectedDay.snapshot.posted ? <Check size={16} strokeWidth={2.6} /> : <Circle size={16} strokeWidth={1.9} />}
-            </span>
-            <span className="task-card-body">
-              <span className="task-card-title">{t('发 1 篇帖子')}</span>
-              <span className="task-card-desc">
-                {selectedDay.snapshot.posted ? t('明日可享 BSP 巨星投流收益') : t('完成后可享 BSP 巨星投流收益')}
-              </span>
-            </span>
-            <span className={`task-card-status${selectedDay.snapshot.posted ? ' task-card-status--done' : ''}`}>
-              {selectedDay.snapshot.posted ? t('已完成') : selectedDay.isToday ? t('待完成') : t('未完成')}
-            </span>
-          </div>
         </div>
       )}
     </>
