@@ -74,7 +74,7 @@ export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
 
           <button type="button" className="bsp-rules-entry task-panel-rules-entry" onClick={() => setHistoryOpen(true)}>
             <History size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
-            <span className="bsp-rules-entry-text">{t('本月空投收益历史')}</span>
+            <span className="bsp-rules-entry-text">{t('本月公信力收益历史')}</span>
             <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
           </button>
         </div>
@@ -142,7 +142,7 @@ function InteractionTaskHistorySheet({
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
-          <span className="sheet-title">{t('本月空投收益历史')}</span>
+          <span className="sheet-title">{t('本月公信力收益历史')}</span>
           <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
