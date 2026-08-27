@@ -94,7 +94,7 @@ export function getAirdropBreakdown(totalPb: number): { key: AirdropBreakdownKey
   return rows;
 }
 
-/** 演示用户名下直连的五星节点数，驱动「一发十赞」每日配额（0 个仍保底 1 组，≥1 个按 ×9 递增）。 */
+/** 演示用户名下直连的五星节点数，驱动「公信力任务」每日配额（0 个仍保底 1 组，≥1 个按 ×9 递增）。 */
 export const MOCK_FIVE_STAR_NODE_COUNT = 3;
 
 const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;

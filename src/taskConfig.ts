@@ -7,7 +7,7 @@ import { MOCK_PB_AIRDROP_AMOUNT } from './mockData';
 //   每天对任意帖子做互动（点赞/评论/收藏/踩，任选其一，同一帖子多次
 //   操作只算一次）即完成 1 篇，累计达到 TASK_INTERACTION_POOL_SIZE 篇即
 //   封顶，按阶梯换算成次日领取比例，全部完成对应 100%。
-// 业务 B：一发十赞 → 当日公信力签到奖。
+// 业务 B：公信力任务 → 当日公信力签到奖。
 //   当天发帖 + 对其他帖子做任意互动（点赞/转发/收藏/踩/评论，任选其一）每满
 //   TASK_LOT_INTERACTIONS_PER_UNIT 次为 1 组，每组发放
 //   TASK_LOT_CREDIBILITY_PER_UNIT 公信力；每日可完成组数由账号名下直连的
@@ -33,8 +33,8 @@ export const TASK_RATIO_LADDER_START = '2026-09-01';
 /** 无昨日记录（今日/昨日注册的新用户）的默认领取比例。 */
 export const TASK_NEW_USER_CLAIM_RATIO = 100;
 
-// ── 业务 B：一发十赞 → 公信力签到奖 ──
-/** 1 组「一发十赞」= 当天发帖 + 对其他帖子做任意互动（点赞/转发/收藏/踩/评论）满该数量次。 */
+// ── 业务 B：公信力任务 → 公信力签到奖 ──
+/** 1 组「公信力任务」= 当天发帖 + 对其他帖子做任意互动（点赞/转发/收藏/踩/评论）满该数量次。 */
 export const TASK_LOT_INTERACTIONS_PER_UNIT = 10;
 /** 每完成 1 组发放的公信力。 */
 export const TASK_LOT_CREDIBILITY_PER_UNIT = 10;
@@ -60,7 +60,7 @@ export type DailyTaskState = {
   posted: boolean;
   /** 当天已互动过的帖子 id（去重）。 */
   interactedPostIds: string[];
-  /** 达成的一发十赞奖励已在次日凌晨结算的时间。 */
+  /** 达成的公信力任务奖励已在次日凌晨结算的时间。 */
   credibilityRewardIssuedAt?: string;
   /** 当天实际领取的空投 PB；未领取/未结算时缺省。 */
   airdropClaimedPb?: number;
@@ -76,7 +76,7 @@ export type TaskDaySnapshot = {
   claimRatio: number;
   /** 当天实际到账的空投收益（PB）。TASK_EARNINGS_UNSETTLED 未结算 / 0 无红包 / >0 金额。 */
   earningsPb: number;
-  /** 「一发十赞」里程碑是否达成：当天发帖 + 互动次数达到 TASK_LOT_INTERACTIONS_PER_UNIT。 */
+  /** 「公信力任务」里程碑是否达成：当天发帖 + 互动次数达到 TASK_LOT_INTERACTIONS_PER_UNIT。 */
   bonusEligible: boolean;
   /** 公信力奖励的结算状态。 */
   credibilityRewardStatus: CredibilityRewardStatus;
@@ -85,7 +85,7 @@ export type TaskDaySnapshot = {
 export type LotQuota = {
   /** 账号名下直连的五星节点数。 */
   fiveStarNodeCount: number;
-  /** 每日可完成的「一发十赞」组数 = fiveStarNodeCount × TASK_LOT_UNITS_PER_NODE，0 个五星节点时保底 TASK_LOT_BASELINE_UNITS。 */
+  /** 每日可完成的「公信力任务」组数 = fiveStarNodeCount × TASK_LOT_UNITS_PER_NODE，0 个五星节点时保底 TASK_LOT_BASELINE_UNITS。 */
   units: number;
   /** 组数 × TASK_LOT_INTERACTIONS_PER_UNIT。 */
   interactions: number;
@@ -93,7 +93,7 @@ export type LotQuota = {
   credibility: number;
 };
 
-/** 纯函数：直连五星节点数 → 当日「一发十赞」配额。 */
+/** 纯函数：直连五星节点数 → 当日「公信力任务」配额。 */
 export function getLotQuota(fiveStarNodeCount: number): LotQuota {
   const n = Math.max(0, Math.floor(fiveStarNodeCount));
   const units = n === 0 ? TASK_LOT_BASELINE_UNITS : n * TASK_LOT_UNITS_PER_NODE;
@@ -205,7 +205,7 @@ export function recordAirdropClaim(amountPb: number, date: string = taskDayKey()
   return next;
 }
 
-/** 补结算所有已跨过北京时间零点、但尚未发放的一发十赞奖励。 */
+/** 补结算所有已跨过北京时间零点、但尚未发放的公信力任务奖励。 */
 export function settleDueCredibilityRewards(now: Date = new Date()): string[] {
   const today = taskDayKey(now);
   const settled: string[] = [];

@@ -11,7 +11,7 @@ import {
 } from '../taskConfig';
 import { TaskCalendarView } from './TaskCalendarView';
 
-/** 一发十赞面板：一发十赞 + 发帖任务 + BSP 巨星投流保底 + 规则 + 历史（决定今天的公信力奖励）。 */
+/** 公信力任务面板：公信力任务 + 发帖任务 + BSP 巨星投流保底 + 规则 + 历史（决定今天的公信力奖励）。 */
 export function LotTaskSheet({
   onClose,
   hasBspRecords = false,
@@ -35,7 +35,7 @@ export function LotTaskSheet({
       <div className="sheet-backdrop" onClick={onClose}>
         <div className="payment-sheet task-panel-sheet lot-task-panel-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
           <div className="sheet-header">
-            <span className="sheet-title">{t('一发十赞')}</span>
+            <span className="sheet-title">{t('公信力任务')}</span>
             <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')}>
               <X size={18} strokeWidth={2} />
             </button>
@@ -124,7 +124,7 @@ function LotTaskCard({
           {bonusEligible ? <Check size={16} strokeWidth={2.6} /> : <ThumbsUp size={16} strokeWidth={1.9} />}
         </span>
         <span className="task-card-body">
-          <span className="task-card-title">{t('一发十赞')}</span>
+          <span className="task-card-title">{t('公信力任务')}</span>
           <span className="task-card-desc">
             {t('当天发帖，并对其他帖子完成互动满 {interactions} 次，可得 +{credibility} 公信力', { interactions: TASK_LOT_INTERACTIONS_PER_UNIT, credibility: TASK_LOT_CREDIBILITY_PER_UNIT })}
           </span>
@@ -194,7 +194,7 @@ function LotTaskRulesSheet({ onClose }: { onClose: () => void }) {
             {t('每日任务如何计算奖励')}
           </p>
           <p className="pb-info-sheet-para">
-            <strong className="pb-info-sheet-label">{t('一发十赞：')}</strong>
+            <strong className="pb-info-sheet-label">{t('公信力任务：')}</strong>
             {t('当天发帖并对其他帖子完成互动满 {interactions} 次，可得 +{credibility} 公信力；每直连 1 个五星节点，每天增加 {perNode} 次互动额度。未直连五星节点时，今天可互动 {baseline} 次。奖励次日凌晨结算。', {
               interactions: TASK_LOT_INTERACTIONS_PER_UNIT,
               credibility: TASK_LOT_CREDIBILITY_PER_UNIT,
@@ -244,7 +244,7 @@ function LotTaskHistorySheet({
 
         <TaskCalendarView
           month={month}
-          caption={t('格内标记的是当天一发十赞的达成状态，点开日期查看当天详情')}
+          caption={t('格内标记的是当天公信力任务的达成状态，点开日期查看当天详情')}
           selectedDate={selectedDate}
           onSelectDay={setSelectedDate}
           dayClassName={day => (day.snapshot?.bonusEligible ? 'is-full' : (day.snapshot?.posted ? 'is-posted' : ''))}

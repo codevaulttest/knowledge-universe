@@ -62,7 +62,7 @@ export type AppContextValue = {
   interactionTaskAlert: boolean;
   lotTaskOpen: boolean;
   openLotTask: () => void;
-  /** 今天是否还有待达成的公信力奖励，供一发十赞入口红点展示 */
+  /** 今天是否还有待达成的公信力奖励，供公信力任务入口红点展示 */
   lotTaskAlert: boolean;
   recentSearches: string[];
   saveRecentSearch: (query: string) => void;
@@ -148,7 +148,7 @@ export type AppContextValue = {
   // 知识宇宙页：周期性 PB 空投
   airdropClaimed: boolean;
   claimAirdrop: () => void;
-  // 每日任务：互动帖任务决定明天空投领取比例，一发十赞决定今天公信力签到奖，两者互不相关
+  // 每日任务：互动帖任务决定明天空投领取比例，公信力任务决定今天公信力签到奖，两者互不相关
   taskSnapshotToday: TaskDaySnapshot;
   /** 无记录（新用户）为 null；见 effectiveClaimRatio 的 D4 分支 */
   taskSnapshotYesterday: TaskDaySnapshot | null;
@@ -162,7 +162,7 @@ export type AppContextValue = {
   recordTaskInteraction: (postId: string) => void;
   /** 当前自然月的日历（只含 1–31 号），供历史日历以常见日历样式展示 */
   getDailyTaskCalendar: () => TaskCalendarMonth;
-  /** 「一发十赞」当日配额，由直连五星节点数派生 */
+  /** 「公信力任务」当日配额，由直连五星节点数派生 */
   lotQuota: LotQuota;
   // 开发工具：重置/模拟今日任务，便于演示
   resetDemoTasks: () => void;
@@ -173,7 +173,7 @@ export type AppContextValue = {
   // 开发工具：模拟新用户（无昨日记录）
   demoForceNewUser: boolean;
   toggleDemoForceNewUser: () => void;
-  // 开发工具：切换直连五星节点数，驱动一发十赞配额
+  // 开发工具：切换直连五星节点数，驱动公信力任务配额
   demoFiveStarNodeCount: number;
   cycleDemoFiveStarNodeCount: () => void;
   // 知识宇宙节点：收藏（详情页与列表页共享同一份状态）

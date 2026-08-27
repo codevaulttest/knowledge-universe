@@ -5510,7 +5510,7 @@ button {
 .feed-bell-btn:active {
   background: var(--ku-color-primary-alpha-06);
 }
-/* ─── 一发十赞入口：领取奖励的横向图标 ─── */
+/* ─── 公信力任务入口：领取奖励的横向图标 ─── */
 .feed-lot-bonus-btn {
   width: calc(var(--ku-feed-header-side-column) - var(--ku-space-2));
   padding: var(--ku-space-1);
@@ -11547,6 +11547,24 @@ html[lang="zh-TW"] .planet-hero-title {
   gap: 4px;
 }
 
+/* 互动任务卡：count 与换算比例同栏竖排，用箭头直接连接因果，不再各自散落 */
+.task-card-ratio-col--stacked {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.task-card-ratio-col-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.task-card-ratio-hint {
+  font: 600 12px/1.2 var(--ku-font-family);
+  color: var(--ku-color-primary-dark);
+}
+
 .task-card-ratio {
   flex-shrink: 0;
   font: 700 15px/1 var(--ku-font-mono);
@@ -11570,13 +11588,6 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 
 .task-card-status--done {
-  border-color: transparent;
-  background: var(--ku-color-primary-alpha-14);
-  color: var(--ku-color-primary-dark);
-}
-
-/* 信息类数值徽章（如实时换算的比例），非完成态，视觉上跟 --done 同色系但语义独立 */
-.task-card-status--info {
   border-color: transparent;
   background: var(--ku-color-primary-alpha-14);
   color: var(--ku-color-primary-dark);
@@ -11766,7 +11777,7 @@ html[lang="zh-TW"] .planet-hero-title {
   text-align: left;
 }
 
-/* 一发十赞卡：配额说明 + 状态徽章同排，替代原来重复规则文案的 milestone chip */
+/* 公信力任务卡：配额说明 + 状态徽章同排，替代原来重复规则文案的 milestone chip */
 .task-card-foot {
   display: flex;
   align-items: flex-start;

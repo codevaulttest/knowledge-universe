@@ -286,7 +286,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
             type="button"
             className="feed-bell-btn feed-lot-bonus-btn"
             onClick={openLotTask}
-            aria-label={t('一发十赞')}
+            aria-label={t('公信力任务')}
           >
             <img src="/img/lot-bonus-reward-icon.webp" alt="" aria-hidden="true" />
             {lotTaskAlert && <span className="feed-bell-dot feed-bell-dot--plain" aria-hidden="true" />}

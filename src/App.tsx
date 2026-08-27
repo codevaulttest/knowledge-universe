@@ -119,7 +119,7 @@ export default function App() {
   const [inviterAddress, setInviterAddress] = useState<string | null>(null);
   const [airdropClaimed, setAirdropClaimed] = useState(false);
 
-  // 每日任务：互动帖任务决定明天空投领取比例，一发十赞决定今天公信力签到奖，两者互不相关
+  // 每日任务：互动帖任务决定明天空投领取比例，公信力任务决定今天公信力签到奖，两者互不相关
   const [taskSnapshotToday, setTaskSnapshotToday] = useState<TaskDaySnapshot>(() => getTaskSnapshot());
   // 开发工具：模拟 9/1 后阶梯规则生效 / 模拟新用户（无昨日记录）/ 切换直连五星节点数
   const [demoForceLadder, setDemoForceLadder] = useState(true);
@@ -477,14 +477,14 @@ export default function App() {
     requireWallet(() => setInteractionTaskOpen(true));
   };
 
-  // 常驻入口：随时打开「一发十赞」面板；未连接钱包时先引导连接
+  // 常驻入口：随时打开「公信力任务」面板；未连接钱包时先引导连接
   const openLotTask = () => {
     requireWallet(() => setLotTaskOpen(true));
   };
 
   // 今天是否还有可领取的空投奖励，供互动帖任务入口红点展示
   const interactionTaskAlert = !airdropClaimed && Date.now() <= getAirdropDeadline();
-  // 今天是否还有待达成的公信力奖励，供一发十赞入口红点展示
+  // 今天是否还有待达成的公信力奖励，供公信力任务入口红点展示
   const lotTaskAlert = !taskSnapshotToday.bonusEligible;
 
 
@@ -1342,7 +1342,7 @@ export default function App() {
         {/* 覆盖层：互动帖任务（决定明天的空投领取比例） */}
         {interactionTaskOpen && <InteractionTaskSheet onClose={() => setInteractionTaskOpen(false)} />}
 
-        {/* 覆盖层：一发十赞（发帖 + 一发十赞 + BSP 保底，决定今天的公信力奖励） */}
+        {/* 覆盖层：公信力任务（发帖 + 公信力任务 + BSP 保底，决定今天的公信力奖励） */}
         {lotTaskOpen && (
           <LotTaskSheet
             onClose={() => setLotTaskOpen(false)}

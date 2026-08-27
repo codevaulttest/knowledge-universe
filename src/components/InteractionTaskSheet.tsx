@@ -3,7 +3,17 @@ import { AlertTriangle, Check, ChevronRight, History, Info, MousePointerClick, X
 import { useApp } from '../AppContext';
 import { calendarIntlLocale } from '../dateUtils';
 import { formatTokenAmount } from '../stakeConfig';
-import { interactionRatio, TASK_EARNINGS_UNSETTLED, TASK_INTERACTION_POOL_SIZE, type TaskCalendarMonth } from '../taskConfig';
+import {
+  interactionRatio,
+  TASK_EARNINGS_UNSETTLED,
+  TASK_INTERACTION_POOL_SIZE,
+  TASK_RATIO_BASE,
+  TASK_RATIO_STEP1,
+  TASK_RATIO_STEP1_COUNT,
+  TASK_RATIO_STEP2,
+  TASK_RATIO_STEP2_COUNT,
+  type TaskCalendarMonth,
+} from '../taskConfig';
 import { TaskCalendarView } from './TaskCalendarView';
 
 /** 互动帖任务面板：今日互动进度 + 规则 + 历史（决定明天的空投领取比例）。 */
@@ -48,23 +58,20 @@ export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
                   {t('今天已互动 {count} / {total} 次', { count: interacted, total: TASK_INTERACTION_POOL_SIZE })}
                 </span>
               </span>
-              <span className="task-card-ratio-col">
-                <span className="task-card-ratio">{interacted}</span>
-                <span className="task-card-ratio-label">/ {TASK_INTERACTION_POOL_SIZE} {t('次')}</span>
+              <span className="task-card-ratio-col task-card-ratio-col--stacked">
+                <span className="task-card-ratio-col-row">
+                  <span className="task-card-ratio">{interacted}</span>
+                  <span className="task-card-ratio-label">/ {TASK_INTERACTION_POOL_SIZE} {t('次')}</span>
+                </span>
+                {airdropRatioLadderActive && (
+                  <span className="task-card-ratio-hint">{t('可领')} {projectedRatio}%</span>
+                )}
               </span>
             </div>
 
             <div className="task-progress-track">
               <div className="task-progress-fill" style={{ width: `${progressPercent}%` }} />
             </div>
-
-            {airdropRatioLadderActive && (
-              <div className="task-card-status-row">
-                <span className="task-card-status task-card-status--info">
-                  {t('当前进度可领 {ratio}%', { ratio: projectedRatio })}
-                </span>
-              </div>
-            )}
           </div>
 
           <button type="button" className="bsp-rules-entry task-panel-rules-entry" onClick={() => setHistoryOpen(true)}>
@@ -101,6 +108,13 @@ function InteractionTaskRulesSheet({ onClose }: { onClose: () => void }) {
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('互动帖任务：')}</strong>
             {t('每天对任意 {total} 篇帖子完成点赞/评论/转发/收藏/踩/解锁/打赏任一操作即视为完成 1 篇（同一帖子多次操作只算一次）。', { total: TASK_INTERACTION_POOL_SIZE })}
+          </p>
+          <p className="pb-info-sheet-para">
+            <strong className="pb-info-sheet-label">{t('阶梯规则：')}</strong>
+            {t('默认 {base}%；前 {count} 次每次 +{step}%，后 {count2} 次每次 +{step2}%，满 {total} 次为 100%。', {
+              base: TASK_RATIO_BASE, count: TASK_RATIO_STEP1_COUNT, step: TASK_RATIO_STEP1,
+              count2: TASK_RATIO_STEP2_COUNT, step2: TASK_RATIO_STEP2, total: TASK_INTERACTION_POOL_SIZE,
+            })}
           </p>
           <div className="sup-deposit-warning">
             <AlertTriangle size={16} strokeWidth={2} aria-hidden="true" />
