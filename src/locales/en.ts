@@ -77,6 +77,7 @@ export const en: Record<string, string> = {
   '分': 'm',
   '确认': 'Confirm',
   '发帖': 'Create post',
+  '发帖（巨星投流任务）': 'Post (Big Star Promotion Task)',
   '编辑帖子': 'Edit post',
   '暂无数据': 'No data yet',
   '已关注': 'Following',

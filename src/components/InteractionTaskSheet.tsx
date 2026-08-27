@@ -132,7 +132,7 @@ function InteractionTaskCalendarSection({ month }: { month: TaskCalendarMonth })
             {t('空投额度')}<strong>65%</strong>
           </span>
           <span className="task-calendar-detail-row">
-            {t('发帖')}<strong>{selectedDay.snapshot.posted ? '1 / 1' : '0 / 1'}</strong>
+            {t('发帖（巨星投流任务）')}<strong>{selectedDay.snapshot.posted ? '1 / 1' : '0 / 1'}</strong>
           </span>
           {selectedDay.snapshot.earningsPb !== TASK_EARNINGS_UNSETTLED && (
             <span className="task-calendar-detail-row">
