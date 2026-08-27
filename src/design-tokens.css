@@ -146,6 +146,7 @@
 
   /* ── 字号 / 行高 / 字重组合 ── */
   --ku-text-author-name:       700 16px/20px var(--ku-font-family);  /* 作者姓名 */
+  --ku-text-admin-bar-title:   700 20px/24px var(--ku-font-family);  /* 运营后台栏标题 */
   --ku-text-tab:               600 15px/1 var(--ku-font-family);     /* Tab 标签 */
   --ku-text-post-body:         400 16px/1.62 var(--ku-font-family);  /* 帖子正文 — iOS 标准正文尺寸 */
   --ku-text-node-label:        600 12px/1 var(--ku-font-family);     /* 节点 cell label */
@@ -435,6 +436,24 @@
   --ku-planet2-shadow-card: 0 6px 16px rgba(0, 0, 0, 0.12);
   /* 数字 / 地址等宽字体（节点编号、金额、钱包地址） */
   --ku-font-mono: 'SF Mono', 'Menlo', ui-monospace, 'JetBrains Mono', monospace;
+
+  /* ═══════════════════════════════════════════════════
+     运营后台外壳 (Admin Shell) —— 桌面端多地址代操作
+     ═══════════════════════════════════════════════════ */
+  --ku-layout-admin-sidebar-width: 280px;
+  --ku-layout-admin-bar-height:    52px;
+  --ku-color-admin-bar-bg:         #12161f;  /* 身份常驻条：深色，与手机壳白底强区隔 */
+  --ku-color-admin-bar-text:       #ffffff;
+  --ku-color-admin-bar-chip-bg:    rgba(255, 255, 255, 0.10);
+  --ku-color-admin-bar-chip-bg-hover: rgba(255, 255, 255, 0.16);
+  --ku-color-admin-sidebar-bg:     #171c27;
+  --ku-color-admin-sidebar-text:   #ffffff;
+  --ku-color-admin-sidebar-text-muted: #9aa3b8;  /* 对深底达标 4.5:1 */
+  --ku-color-admin-sidebar-border: rgba(255, 255, 255, 0.08);
+  --ku-color-admin-sidebar-row-active-bg: color-mix(in srgb, var(--ku-color-primary) 24%, var(--ku-color-admin-sidebar-bg));
+  --ku-color-admin-sidebar-row-active-border: var(--ku-color-primary);
+  --ku-color-admin-sidebar-row-hover-bg:  rgba(255, 255, 255, 0.06);
+  --ku-color-admin-stage-bg:       #e4e8f0;  /* 舞台区底色，与手机壳白底区隔 */
 }
 
 /* ════════════════════════════════════════════════════════════

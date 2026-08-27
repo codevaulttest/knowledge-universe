@@ -3,7 +3,6 @@ import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { withFreeTier } from './channelTiers';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
-import { buildInitialBspInvestments } from './bspConfig';
 import { formatScheduledAt } from './dateUtils';
 import type { AddressMigration, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import { PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
@@ -15,7 +14,7 @@ import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { InteractionTaskSheet } from './components/InteractionTaskSheet';
 import { LotTaskSheet } from './components/LotTaskSheet';
-import { effectiveClaimRatio, getIssuedCredibilityRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, isRatioLadderActive, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueCredibilityRewards, simulateInteractedCount, taskDayKey, TASK_BONUS_PB, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
+import { effectiveClaimRatio, getIssuedCredibilityRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, isRatioLadderActive, lotCredibilityEarned, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueCredibilityRewards, simulateInteractedCount, taskDayKey, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
 import { Toast } from './components/shared';
 import { TaskCelebrationOverlay } from './components/TaskCelebrationOverlay';
 import { ComposePage } from './pages/ComposePage';
@@ -31,9 +30,16 @@ import { ShopPage } from './pages/ShopPage';
 import { ShopItemPage } from './pages/ShopItemPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { NodeDetailPage } from './pages/NodeDetailPage';
+import { accountDisplayName, type AdminAccount } from './adminAccounts';
 
 
-export default function App() {
+export default function App({ account, onLanguageChange }: {
+  /** 运营后台模式下，以哪个账号身份运行本应用实例；不传即今天的单账号行为 */
+  account?: AdminAccount;
+  onLanguageChange?: (language: Language) => void;
+} = {}) {
+  /** 账号命名空间：运营后台模式下每个账号的本地存储互相隔离 */
+  const ns = useCallback((key: string) => account ? `${key}:${account.address}` : key, [account]);
   const [stack, setStack] = useState<Route[]>([{ page: 'P0', tab: 0 }]);
   const [nodeTransferAutoOpenId, setNodeTransferAutoOpenId] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
@@ -57,6 +63,7 @@ export default function App() {
   const [extraRepliesByPostId, setExtraRepliesByPostId] = useState<Record<string, Reply[]>>({});
 
   const [language, setLanguage] = useState<Language>('zh-CN');
+  useEffect(() => { onLanguageChange?.(language); }, [language, onLanguageChange]);
   const [confirmDelete, setConfirmDelete] = useState<{ postId: string; onAfterDelete?: () => void } | null>(null);
   const [editPostId, setEditPostId] = useState<string | null>(null);
   const [confirmUnfollow, setConfirmUnfollow] = useState<string | null>(null);
@@ -77,7 +84,7 @@ export default function App() {
   const [walletConnected, setWalletConnected] = useState(true);
   const [showConnectWallet, setShowConnectWallet] = useState(false);
   // 知识宇宙页用的钱包地址态，与 walletConnected 同步维护，供该页头部的钱包 chip 展示
-  const [walletAddress, setWalletAddress] = useState<string | null>(MOCK_WALLET_ADDRESS);
+  const [walletAddress, setWalletAddress] = useState<string | null>(account?.address ?? MOCK_WALLET_ADDRESS);
   const [walletConnecting, setWalletConnecting] = useState(false);
 
   // 显式的"连接钱包"入口（顶部快捷按钮、主页引导按钮）直接连接，无需二次确认；
@@ -91,7 +98,7 @@ export default function App() {
     pending?.();
     setWalletConnecting(true);
     setTimeout(() => {
-      setWalletAddress(MOCK_WALLET_ADDRESS);
+      setWalletAddress(account?.address ?? MOCK_WALLET_ADDRESS);
       setWalletConnecting(false);
     }, 600);
   };
@@ -111,7 +118,7 @@ export default function App() {
   // ── 知识宇宙页：PB 余额 / 邀请绑定 / 周期性空投 ──────────────────
   const getInitialPbWallets = (): Record<PbWalletId, number> => ({
     ...MOCK_PB_WALLETS,
-    credibility: MOCK_PB_WALLETS.credibility + getIssuedCredibilityRewardTotal(),
+    credibility: MOCK_PB_WALLETS.credibility + getIssuedCredibilityRewardTotal(getLotQuota(MOCK_FIVE_STAR_NODE_COUNT).interactions),
   });
   const [pbWallets, setPbWallets] = useState<Record<PbWalletId, number>>(getInitialPbWallets);
   /** 总额只用于资产总览，支付必须通过单钱包的 payPb。 */
@@ -120,17 +127,16 @@ export default function App() {
   const [airdropClaimed, setAirdropClaimed] = useState(false);
 
   // 每日任务：互动帖任务决定明天空投领取比例，公信力任务决定今天公信力签到奖，两者互不相关
-  const [taskSnapshotToday, setTaskSnapshotToday] = useState<TaskDaySnapshot>(() => getTaskSnapshot());
+  const [taskSnapshotToday, setTaskSnapshotToday] = useState<TaskDaySnapshot>(
+    () => getTaskSnapshot(taskDayKey(), getLotQuota(MOCK_FIVE_STAR_NODE_COUNT).interactions),
+  );
   // 开发工具：模拟 9/1 后阶梯规则生效 / 模拟新用户（无昨日记录）/ 切换直连五星节点数
   const [demoForceLadder, setDemoForceLadder] = useState(true);
   const [demoForceNewUser, setDemoForceNewUser] = useState(false);
   const [demoFiveStarNodeCount, setDemoFiveStarNodeCount] = useState(MOCK_FIVE_STAR_NODE_COUNT);
   const [taskSnapshotYesterday, setTaskSnapshotYesterday] = useState<TaskDaySnapshot | null>(
-    () => getYesterdaySnapshot(new Date(), { forceNewUser: demoForceNewUser }),
+    () => getYesterdaySnapshot(new Date(), { forceNewUser: demoForceNewUser, quotaInteractions: getLotQuota(MOCK_FIVE_STAR_NODE_COUNT).interactions }),
   );
-  useEffect(() => {
-    setTaskSnapshotYesterday(getYesterdaySnapshot(new Date(), { forceNewUser: demoForceNewUser }));
-  }, [demoForceNewUser]);
   const airdropClaimRatio = useMemo(() => {
     // demoForceLadder 只需让 isRatioLadderActive 判定为真，用生效日当天即可，无需模拟精确日期
     const now = demoForceLadder ? new Date('2026-09-02T00:00:00+08:00') : new Date();
@@ -141,6 +147,13 @@ export default function App() {
     return isRatioLadderActive(now);
   }, [demoForceLadder]);
   const lotQuota = useMemo(() => getLotQuota(demoFiveStarNodeCount), [demoFiveStarNodeCount]);
+  useEffect(() => {
+    setTaskSnapshotToday(getTaskSnapshot(taskDayKey(), lotQuota.interactions));
+    setTaskSnapshotYesterday(getYesterdaySnapshot(new Date(), {
+      forceNewUser: demoForceNewUser,
+      quotaInteractions: lotQuota.interactions,
+    }));
+  }, [demoForceNewUser, lotQuota.interactions]);
   const toggleDemoForceLadder = useCallback(() => setDemoForceLadder(prev => !prev), []);
   const toggleDemoForceNewUser = useCallback(() => setDemoForceNewUser(prev => !prev), []);
   const FIVE_STAR_NODE_COUNT_CYCLE = [0, 1, 3, 5];
@@ -164,7 +177,7 @@ export default function App() {
 
   const recordTaskInteraction = (postId: string) => {
     const { state, added } = markInteracted(postId);
-    const after = getTaskSnapshot();
+    const after = getTaskSnapshot(taskDayKey(), lotQuota.interactions);
     setTaskSnapshotToday(after);
     if (added && state.interactedPostIds.length > 0 && state.interactedPostIds.length % TASK_CELEBRATE_EVERY === 0) {
       setTaskCelebrateSignal(s => s + 1);
@@ -173,20 +186,20 @@ export default function App() {
 
   const recordTaskPosted = () => {
     markPosted();
-    const after = getTaskSnapshot();
+    const after = getTaskSnapshot(taskDayKey(), lotQuota.interactions);
     setTaskSnapshotToday(after);
   };
 
   // 开发工具：重置今日任务记录，便于重新体验任务面板
   const resetDemoTasks = () => {
     resetTasks();
-    setTaskSnapshotToday(getTaskSnapshot());
+    setTaskSnapshotToday(getTaskSnapshot(taskDayKey(), lotQuota.interactions));
   };
 
   // 开发工具：直接模拟今日互动帖完成数（无需真的操作 35 篇帖子即可预览阶梯比例与庆祝动效）
   const simulateDemoTaskInteractions = (count: number) => {
     simulateInteractedCount(count);
-    setTaskSnapshotToday(getTaskSnapshot());
+    setTaskSnapshotToday(getTaskSnapshot(taskDayKey(), lotQuota.interactions));
     if (count > 0 && count % TASK_CELEBRATE_EVERY === 0) setTaskCelebrateSignal(s => s + 1);
   };
 
@@ -208,7 +221,7 @@ export default function App() {
     if (fee > 0) deductSup(fee, 'airdrop', resolveSupPool(supWallets, 'site_first', fee) ?? 'onchain');
     setAirdropClaimed(true);
     recordAirdropClaim(claimedAmount);
-    setTaskSnapshotToday(getTaskSnapshot());
+    setTaskSnapshotToday(getTaskSnapshot(taskDayKey(), lotQuota.interactions));
     showToast(t('领取成功，+{MOCK_PB_AIRDROP_AMOUNT} PB', { MOCK_PB_AIRDROP_AMOUNT: claimedAmount }));
   };
 
@@ -238,7 +251,7 @@ export default function App() {
   const setDemoPbWallets = (preset: 'normal' | 'limited') => {
     setPbWallets(preset === 'normal'
       ? getInitialPbWallets()
-      : { onchain: 80, station: 2400, credibility: 800 + getIssuedCredibilityRewardTotal(), airdrop: 40 });
+      : { onchain: 80, station: 2400, credibility: 800 + getIssuedCredibilityRewardTotal(lotQuota.interactions), airdrop: 40 });
   };
 
   const [supWallets, setSupWallets] = useState<Record<SupWalletId, number>>(MOCK_SUP_WALLETS);
@@ -435,34 +448,36 @@ export default function App() {
 
   const [drafts, setDrafts] = useState<Draft[]>(() => {
     try {
-      const saved = localStorage.getItem('ku-drafts');
+      const saved = localStorage.getItem(ns('ku-drafts'));
       return saved ? JSON.parse(saved) : MOCK_DRAFTS;
     } catch { return MOCK_DRAFTS; }
   });
 
   useEffect(() => {
-    localStorage.setItem('ku-drafts', JSON.stringify(drafts));
-  }, [drafts]);
+    localStorage.setItem(ns('ku-drafts'), JSON.stringify(drafts));
+  }, [drafts, ns]);
+
+  const defaultProfile = (): UserProfile => account
+    ? { nickname: accountDisplayName(account), avatarSeed: account.avatarSeed }
+    : { nickname: DEFAULT_WALLET_DISPLAY, avatarSeed: AVATAR_PRESET_SEEDS[0] };
 
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('ku-profile');
-      const profile: UserProfile = saved
-        ? JSON.parse(saved)
-        : { nickname: DEFAULT_WALLET_DISPLAY, avatarSeed: AVATAR_PRESET_SEEDS[0] };
+      const saved = localStorage.getItem(ns('ku-profile'));
+      const profile: UserProfile = saved ? JSON.parse(saved) : defaultProfile();
       // 旧演示人格「林知远」已废弃，统一落到钱包短名
       if (profile.nickname === '林知远') {
         profile.nickname = DEFAULT_WALLET_DISPLAY;
-        localStorage.setItem('ku-profile', JSON.stringify(profile));
+        localStorage.setItem(ns('ku-profile'), JSON.stringify(profile));
       }
       return profile;
-    } catch { return { nickname: DEFAULT_WALLET_DISPLAY, avatarSeed: AVATAR_PRESET_SEEDS[0] }; }
+    } catch { return defaultProfile(); }
   });
 
   const updateUserProfile = (profile: UserProfile) => {
     requireWallet(() => {
       setUserProfile(profile);
-      localStorage.setItem('ku-profile', JSON.stringify(profile));
+      localStorage.setItem(ns('ku-profile'), JSON.stringify(profile));
     });
   };
 
@@ -519,14 +534,20 @@ export default function App() {
   // 奖励在北京时间跨日后结算；重新打开原型时也会补结算此前未发放的奖励。
   useEffect(() => {
     const refreshForNewTaskDay = () => {
-      const settledDates = settleDueCredibilityRewards();
+      const settledDates = settleDueCredibilityRewards(lotQuota.interactions);
       if (settledDates.length > 0) {
-        const amount = settledDates.length * TASK_BONUS_PB;
+        const amount = settledDates.reduce((total, date) => {
+          const snapshot = getTaskSnapshot(date, lotQuota.interactions);
+          return total + lotCredibilityEarned(snapshot.postedCount, snapshot.interactedCount, lotQuota.interactions);
+        }, 0);
         setPbWallets(prev => ({ ...prev, credibility: prev.credibility + amount }));
         showToast(t('已发放任务奖励 +{bonus} 公信力', { bonus: amount }));
       }
-      setTaskSnapshotToday(getTaskSnapshot());
-      setTaskSnapshotYesterday(getYesterdaySnapshot(new Date(), { forceNewUser: demoForceNewUser }));
+      setTaskSnapshotToday(getTaskSnapshot(taskDayKey(), lotQuota.interactions));
+      setTaskSnapshotYesterday(getYesterdaySnapshot(new Date(), {
+        forceNewUser: demoForceNewUser,
+        quotaInteractions: lotQuota.interactions,
+      }));
     };
 
     refreshForNewTaskDay();
@@ -538,7 +559,7 @@ export default function App() {
       refreshForNewTaskDay();
     }, 60_000);
     return () => window.clearInterval(timer);
-  }, [t, demoForceNewUser]);
+  }, [t, demoForceNewUser, lotQuota.interactions]);
 
   const openLink = (postId: string, mode: 'link' | 'unlock' = 'link') => {
     requireWallet(() => {
@@ -1140,7 +1161,7 @@ export default function App() {
     addressMigrations, requestAddressMigration, cancelAddressMigration, dismissMigrationReminder,
     airdropClaimed, claimAirdrop,
     taskSnapshotToday, taskSnapshotYesterday, airdropClaimRatio, airdropRatioLadderActive, lotQuota,
-    taskCelebrateSignal, recordTaskInteraction, getDailyTaskCalendar: getTaskCalendarMonth,
+    taskCelebrateSignal, recordTaskInteraction, getDailyTaskCalendar: () => getTaskCalendarMonth(new Date(), lotQuota.interactions),
     resetDemoTasks, simulateDemoTaskInteractions,
     demoForceLadder, toggleDemoForceLadder, demoForceNewUser, toggleDemoForceNewUser,
     demoFiveStarNodeCount, cycleDemoFiveStarNodeCount,
@@ -1342,12 +1363,9 @@ export default function App() {
         {/* 覆盖层：互动帖任务（决定明天的空投领取比例） */}
         {interactionTaskOpen && <InteractionTaskSheet onClose={() => setInteractionTaskOpen(false)} />}
 
-        {/* 覆盖层：公信力任务（发帖 + 公信力任务 + BSP 保底，决定今天的公信力奖励） */}
+        {/* 覆盖层：公信力任务（发帖 + 公信力任务，决定今天的公信力奖励） */}
         {lotTaskOpen && (
-          <LotTaskSheet
-            onClose={() => setLotTaskOpen(false)}
-            hasBspRecords={buildInitialBspInvestments(MOCK_WALLET_ADDRESS).length > 0}
-          />
+          <LotTaskSheet onClose={() => setLotTaskOpen(false)} />
         )}
 
         {/* 覆盖层：搜索（居中弹窗） */}

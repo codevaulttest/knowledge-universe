@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Wrench, X } from 'lucide-react';
 import { useApp } from '../AppContext';
+import { getShellMode, setShellMode } from '../shellMode';
 
 type DevPanelProps = {
   children?: ReactNode;
@@ -118,6 +119,18 @@ export function DevPanel({ children }: DevPanelProps) {
           </button>
           <button type="button" className="planet-dev-menu-item" onClick={() => setDemoPbWallets('limited')}>
             <span>{t('模拟通用 PB 余额不足')}</span>
+          </button>
+          <button
+            type="button"
+            className="planet-dev-menu-item"
+            role="menuitemcheckbox"
+            aria-checked={getShellMode() === 'admin'}
+            onClick={() => setShellMode(getShellMode() === 'admin' ? 'app' : 'admin')}
+          >
+            <span>{t('运营后台模式')}</span>
+            <span className={`planet-dev-menu-toggle${getShellMode() === 'admin' ? ' planet-dev-menu-toggle--on' : ''}`}>
+              {getShellMode() === 'admin' ? t('开') : t('关')}
+            </span>
           </button>
           {children}
         </div>

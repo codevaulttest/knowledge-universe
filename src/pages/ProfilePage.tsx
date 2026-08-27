@@ -12,6 +12,7 @@ import { Avatar, AuthorName, ChannelCard, ChannelMemberBadge, GenesisBadge, Page
 import { ImageWithFallback } from '../components/ImageWithFallback';
 import { useChannelListSearch } from '../components/channelSearch';
 import { isPostVisible, formatScheduledAt } from '../dateUtils';
+import { isValidWalletAddress } from '../formatAddress';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
@@ -838,7 +839,7 @@ function AddressMigrationSheet({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const normalizedTarget = targetAddress.trim().toLowerCase();
-  const addressValid = /^0x[a-fA-F0-9]{40}$/.test(targetAddress.trim());
+  const addressValid = isValidWalletAddress(targetAddress);
   const isDifferentAddress = normalizedTarget !== sourceAddress.toLowerCase();
   const pbSufficient = pbWallets.onchain >= ADDRESS_MIGRATION_PB_FEE;
   const supSufficient = supBalance >= ADDRESS_MIGRATION_SUP_FEE;

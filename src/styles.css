@@ -7188,6 +7188,29 @@ button {
   font: 700 14px/1.3 var(--ku-font-family);
   color: var(--ku-color-text-primary);
 }
+.task-calendar-detail-summary,
+.task-calendar-detail-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.task-calendar-detail-summary-copy {
+  font: 500 12px/1.5 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+}
+.task-calendar-detail-summary-emphasis {
+  color: var(--ku-color-lot-red);
+  font-weight: 700;
+}
+.task-calendar-detail-conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.task-calendar-detail-conditions .task-calendar-detail-status {
+  width: 100%;
+}
 .task-calendar-detail-status {
   display: inline-flex;
   align-items: center;
@@ -7195,6 +7218,11 @@ button {
   width: fit-content;
   font: 600 13px/1.4 var(--ku-font-family);
   color: var(--ku-color-text-meta);
+}
+.task-calendar-detail-status strong {
+  margin-left: auto;
+  color: var(--ku-color-text-primary);
+  font-weight: 700;
 }
 .task-calendar-detail-status.is-posted {
   color: var(--ku-color-primary);
@@ -7209,7 +7237,6 @@ button {
   color: var(--ku-color-text-primary);
   font-weight: 700;
 }
-
 /* ── Profile Edit Button ── */
 .profile-edit-btn {
   display: inline-flex;
@@ -11492,6 +11519,10 @@ html[lang="zh-TW"] .planet-hero-title {
   background: var(--ku-color-primary-alpha-04);
 }
 
+.task-calendar-detail .task-card--calendar-detail {
+  margin: var(--ku-space-2) 0 0;
+}
+
 .task-card--interaction,
 .task-card--lot {
   flex-direction: column;
@@ -11552,6 +11583,12 @@ html[lang="zh-TW"] .planet-hero-title {
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
+}
+
+/* 「今天已得」这类抬头文字，比 .task-card-ratio-label 更弱一档 */
+.task-card-ratio-caption {
+  font: 500 12px/1.2 var(--ku-font-family);
+  color: var(--ku-color-text-meta);
 }
 
 .task-card-ratio-col-row {
@@ -11717,33 +11754,61 @@ html[lang="zh-TW"] .planet-hero-title {
   color: var(--ku-color-lot-red);
 }
 
-.lot-task-history-sheet .task-calendar-month,
-.lot-task-history-sheet .task-calendar-day-earn.is-earned,
-.lot-task-history-sheet .task-calendar-detail-status.is-posted {
+/* 金红主题下的条件行：默认灰在 --ku-color-lot-tint 金色底上不足 4.5:1，完成态青色与主题色系冲突 */
+.lot-task-panel-sheet .task-card-condition-row {
+  color: var(--ku-color-text-secondary);
+}
+.lot-task-panel-sheet .task-card-condition-row.is-done,
+.lot-task-panel-sheet .task-card-condition-row.is-done .task-card-condition-value {
   color: var(--ku-color-lot-red);
 }
 
-.lot-task-history-sheet .task-calendar-day.is-posted,
-.lot-task-history-sheet .task-calendar-day.is-full,
-.lot-task-history-sheet .task-calendar-detail {
+/* 进度条默认是品牌青，金红卡里需要跟随主题 */
+.lot-task-panel-sheet .task-progress-track {
+  background: var(--ku-color-lot-tint-strong);
+}
+.lot-task-panel-sheet .task-progress-fill {
+  background: var(--ku-color-lot-red);
+}
+
+.lot-task-panel-sheet .task-calendar-month,
+.lot-task-panel-sheet .task-calendar-day-earn.is-earned,
+.lot-task-panel-sheet .task-calendar-detail-status.is-posted {
+  color: var(--ku-color-lot-red);
+}
+
+.lot-task-panel-sheet .task-calendar-day.is-posted,
+.lot-task-panel-sheet .task-calendar-day.is-full,
+.lot-task-panel-sheet .task-calendar-detail {
   background: var(--ku-color-lot-tint);
 }
 
-.lot-task-history-sheet .task-calendar-day.is-full {
-  box-shadow: inset 0 0 0 1.5px var(--ku-color-lot-red);
+.lot-task-panel-sheet .task-calendar-day.is-full {
+  background: var(--ku-color-lot-red);
+  box-shadow: none;
 }
 
-.lot-task-history-sheet .task-calendar-day.is-full .task-calendar-day-num {
-  color: var(--ku-color-lot-red);
+.lot-task-panel-sheet .task-calendar-day.is-full .task-calendar-day-num,
+.lot-task-panel-sheet .task-calendar-day.is-full .task-calendar-day-earn.is-earned {
+  color: var(--ku-color-on-primary);
 }
 
-.lot-task-history-sheet .task-calendar-day.is-today,
-.lot-task-history-sheet .task-calendar-day.is-selected {
+.lot-task-panel-sheet .task-calendar-day.is-today,
+.lot-task-panel-sheet .task-calendar-day.is-selected {
   border-color: var(--ku-color-lot-red);
 }
 
-.lot-task-history-sheet .task-calendar-day.is-selected {
+.lot-task-panel-sheet .task-calendar-day.is-selected {
   box-shadow: 0 0 0 2px var(--ku-color-lot-tint-strong);
+}
+
+/* 面板内的小节标题：今天进度 / 本月收益历史，分隔卡片区与日历区 */
+.task-panel-section-label {
+  padding: 10px 2px 6px;
+  font: 600 12px/1 var(--ku-font-family);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ku-color-text-secondary);
 }
 
 .lot-task-hero > img {
@@ -11817,6 +11882,24 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 .task-card-condition-row.is-done .task-card-condition-value {
   color: var(--ku-color-primary-dark);
+}
+
+/* 「离下一份公信力还差几次」进度：分母固定是结算单位（10次），不是当日总额度，
+   这样进度条本身在教用户「每满 10 次结算 1 组」，且永远走得动 */
+.task-next-unit {
+  margin: 2px 0 0;
+}
+.task-next-unit-hint {
+  margin: 6px 0 0;
+  font: 400 12px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+}
+
+/* 算式块抬头，定性这块算式在回答什么问题 */
+.task-calc-caption {
+  margin: 0 0 2px;
+  font: 600 12px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
 }
 
 /* 卡片内嵌算式：因子 → 因子 → 结果逐行竖排，同 .airdrop-calc 的版式语言，
@@ -13206,3 +13289,262 @@ html[lang="zh-TW"] .planet-hero-title {
 .node-detail-actionbar { position: absolute; right: 0; bottom: 0; left: 0; padding: var(--ku-planet2-space-sm) var(--ku-feed-padding-x) calc(var(--ku-planet2-space-sm) + env(safe-area-inset-bottom)); border-top: 1px solid var(--ku-color-border); background: var(--ku-color-bg-phone); }
 .node-detail-transfer-btn { display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: var(--ku-planet2-height-button); gap: var(--ku-planet2-space-xs); border: 0; border-radius: var(--ku-radius-pill); background: var(--ku-color-primary); color: var(--ku-color-on-primary); font: var(--ku-text-action-cta-lg); cursor: pointer; }
 .node-detail-transfer-btn:active, .node-detail-upgrade-btn:active, .node-detail-toggle-btn:active, .node-detail-subsidy-row:not(:disabled):active { background: var(--ku-color-primary-alpha-14); }
+
+/* ============================================================
+ * 运营后台外壳 (Admin Shell) —— 桌面端多地址代操作
+ * ============================================================ */
+.admin-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--ku-color-admin-stage-bg);
+}
+
+.admin-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-space-4);
+  flex: 0 0 auto;
+  height: var(--ku-layout-admin-bar-height);
+  padding: 0 var(--ku-space-5);
+  background: var(--ku-color-admin-bar-bg);
+  color: var(--ku-color-admin-bar-text);
+}
+
+.admin-bar-title {
+  font: var(--ku-text-admin-bar-title);
+  color: var(--ku-color-admin-bar-text);
+  white-space: nowrap;
+}
+
+.admin-bar-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-space-2);
+  margin: 0 auto 0 var(--ku-space-4);
+  padding: var(--ku-space-1) var(--ku-space-3) var(--ku-space-1) var(--ku-space-2);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-admin-bar-chip-bg);
+  color: var(--ku-color-admin-bar-text);
+}
+.admin-bar-identity:hover { background: var(--ku-color-admin-bar-chip-bg-hover); }
+.admin-bar-identity .avatar { width: 24px; height: 24px; }
+
+.admin-bar-identity-label {
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-admin-bar-text);
+}
+
+.admin-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.admin-sidebar {
+  display: none;
+  flex-direction: column;
+  flex: 0 0 var(--ku-layout-admin-sidebar-width);
+  overflow-y: auto;
+  background: var(--ku-color-admin-sidebar-bg);
+  border-right: 1px solid var(--ku-color-admin-sidebar-border);
+}
+
+.admin-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ku-space-4) var(--ku-space-4) var(--ku-space-2);
+  color: var(--ku-color-admin-sidebar-text);
+  font: var(--ku-text-caption-strong);
+}
+
+.admin-sidebar-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-admin-sidebar-row-hover-bg);
+  color: var(--ku-color-admin-sidebar-text);
+}
+.admin-sidebar-add-btn:hover { background: var(--ku-color-admin-sidebar-row-active-bg); }
+
+.admin-sidebar-list {
+  display: flex;
+  flex-direction: column;
+  padding: var(--ku-space-2);
+  gap: var(--ku-space-1);
+}
+
+.admin-sidebar-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: var(--ku-radius-card);
+  border-left: 3px solid transparent;
+}
+.admin-sidebar-row:hover { background: var(--ku-color-admin-sidebar-row-hover-bg); }
+.admin-sidebar-row--active {
+  background: var(--ku-color-admin-sidebar-row-active-bg);
+  border-left-color: var(--ku-color-admin-sidebar-row-active-border);
+}
+.admin-sidebar-row--active .admin-sidebar-row-name { font-weight: 700; }
+
+.admin-sidebar-row-main {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: var(--ku-space-3);
+  padding: var(--ku-space-2) var(--ku-space-3);
+  text-align: left;
+}
+.admin-sidebar-row-main .avatar { width: 32px; height: 32px; flex: 0 0 auto; }
+
+.admin-sidebar-row-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.admin-sidebar-row-name {
+  color: var(--ku-color-admin-sidebar-text);
+  font: var(--ku-text-body-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-sidebar-row-address {
+  color: var(--ku-color-admin-sidebar-text-muted);
+  font: var(--ku-text-meta);
+  font-family: var(--ku-font-mono);
+}
+
+.admin-sidebar-row-remark {
+  color: var(--ku-color-admin-sidebar-text-muted);
+  font: var(--ku-text-meta);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-sidebar-row-check {
+  flex: 0 0 auto;
+  color: var(--ku-color-primary);
+}
+
+.admin-sidebar-row-menu-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  padding-right: var(--ku-space-2);
+}
+
+.admin-sidebar-row-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ku-radius-pill);
+  color: var(--ku-color-admin-sidebar-text-muted);
+}
+.admin-sidebar-row-menu-btn:hover { background: var(--ku-color-admin-sidebar-row-hover-bg); color: var(--ku-color-admin-sidebar-text); }
+
+.admin-sidebar-row-menu {
+  position: absolute;
+  top: 100%;
+  right: var(--ku-space-2);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  margin-top: var(--ku-space-1);
+  padding: var(--ku-space-1);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  box-shadow: var(--ku-shadow-modal);
+}
+.admin-sidebar-row-menu button {
+  padding: var(--ku-space-2) var(--ku-space-3);
+  border-radius: var(--ku-radius-badge);
+  color: var(--ku-color-text-primary);
+  font: var(--ku-text-body-sm);
+  text-align: left;
+}
+.admin-sidebar-row-menu button:hover { background: var(--ku-color-bg-secondary); }
+.admin-sidebar-row-menu-danger { color: var(--ku-color-text-danger); }
+.admin-sidebar-row-menu button:disabled { color: var(--ku-color-text-meta); cursor: not-allowed; }
+.admin-sidebar-row-menu button:disabled:hover { background: transparent; }
+
+.admin-stage {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.admin-app-instance,
+.admin-app-instance .phone-shell {
+  height: 100%;
+}
+.admin-app-instance {
+  position: relative;
+}
+.admin-app-instance .phone-shell {
+  max-width: var(--ku-layout-max-width);
+  min-height: 0;
+  box-shadow: var(--ku-shadow-phone);
+}
+/* .planet-dev-entry 平时用 100vw 居中反推手机壳右边界；
+   后台模式下手机壳不再居中于整个视口（左边让出了地址栏），改成相对手机壳自身定位 */
+.admin-app-instance .planet-dev-entry {
+  position: absolute;
+  right: 0;
+}
+
+.admin-mobile-switcher .admin-sidebar-list { padding: 0; }
+.admin-mobile-switcher .admin-sidebar-row-name,
+.admin-mobile-switcher .admin-sidebar-row-address,
+.admin-mobile-switcher .admin-sidebar-row-remark { color: var(--ku-color-text-primary); }
+.admin-mobile-switcher .admin-sidebar-row-address,
+.admin-mobile-switcher .admin-sidebar-row-remark { color: var(--ku-color-text-meta); }
+.admin-mobile-switcher .admin-sidebar-row-menu-btn { color: var(--ku-color-text-meta); }
+.admin-mobile-switcher .admin-sidebar-row-menu-btn:hover { background: var(--ku-color-bg-secondary); color: var(--ku-color-text-primary); }
+.admin-mobile-switcher .admin-sidebar-row--active { background: var(--ku-color-primary-alpha-06); }
+.admin-mobile-switcher .admin-sidebar-row:hover { background: var(--ku-color-bg-secondary); }
+
+.admin-add-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-4);
+}
+
+/* 侧栏 + 手机壳在 800px 以上仍有足够空间并排展示。
+   两者最小组合约 760px，保留少量余量，避免在 895px 附近再次跳变。 */
+@media (min-width: 800px) {
+  .admin-shell .sheet-backdrop:has(.compose-modal) {
+    justify-content: flex-start;
+    padding-left: calc(var(--ku-layout-admin-sidebar-width) + (100vw - var(--ku-layout-admin-sidebar-width) - var(--ku-layout-max-width)) / 2);
+    padding-right: 0;
+  }
+  .admin-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+  }
+  .admin-sidebar {
+    padding-top: var(--ku-layout-admin-bar-height);
+  }
+  .admin-bar,
+  .admin-sidebar { width: var(--ku-layout-admin-sidebar-width); }
+  .admin-sidebar { display: flex; }
+}

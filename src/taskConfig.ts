@@ -8,8 +8,8 @@ import { MOCK_PB_AIRDROP_AMOUNT } from './mockData';
 //   操作只算一次）即完成 1 篇，累计达到 TASK_INTERACTION_POOL_SIZE 篇即
 //   封顶，按阶梯换算成次日领取比例，全部完成对应 100%。
 // 业务 B：公信力任务 → 当日公信力签到奖。
-//   当天发帖 + 对其他帖子做任意互动（点赞/转发/收藏/踩/评论，任选其一）每满
-//   TASK_LOT_INTERACTIONS_PER_UNIT 次为 1 组，每组发放
+//   当天每发布 1 篇帖子解锁 1 个五星节点的奖励额度；对其他帖子做任意互动
+//   （点赞/转发/收藏/踩/评论，任选其一）每满 TASK_LOT_INTERACTIONS_PER_UNIT 次为 1 组，每组发放
 //   TASK_LOT_CREDIBILITY_PER_UNIT 公信力；每日可完成组数由账号名下直连的
 //   五星节点数决定（每个五星节点 TASK_LOT_UNITS_PER_NODE 组，未达五星
 //   不计入）；0 个五星节点时保底 TASK_LOT_BASELINE_UNITS 组。与空投
@@ -58,6 +58,8 @@ export type DailyTaskState = {
   date: string;
   /** 当天是否至少发布过一篇帖子。 */
   posted: boolean;
+  /** 当天已发布的帖子数；旧版仅有 posted 的记录按 1 篇兼容。 */
+  postedCount: number;
   /** 当天已互动过的帖子 id（去重）。 */
   interactedPostIds: string[];
   /** 达成的公信力任务奖励已在次日凌晨结算的时间。 */
@@ -71,12 +73,13 @@ export type CredibilityRewardStatus = 'none' | 'pending' | 'issued';
 export type TaskDaySnapshot = {
   date: string;
   posted: boolean;
+  postedCount: number;
   interactedCount: number;
   /** 互动帖任务对应的领取比例（%，0-100），按当天互动数换算的「赚到的」值。 */
   claimRatio: number;
   /** 当天实际到账的空投收益（PB）。TASK_EARNINGS_UNSETTLED 未结算 / 0 无红包 / >0 金额。 */
   earningsPb: number;
-  /** 「公信力任务」里程碑是否达成：当天发帖 + 互动次数达到 TASK_LOT_INTERACTIONS_PER_UNIT。 */
+  /** 「公信力任务」是否已领满：发帖数解锁全部节点额度，且互动次数达到当日额度。 */
   bonusEligible: boolean;
   /** 公信力奖励的结算状态。 */
   credibilityRewardStatus: CredibilityRewardStatus;
@@ -92,6 +95,19 @@ export type LotQuota = {
   /** 组数 × TASK_LOT_CREDIBILITY_PER_UNIT。 */
   credibility: number;
 };
+
+/** 满额公信力所需的发帖数：每个五星节点对应 1 篇；无五星节点时保留 1 篇基础任务。 */
+export function lotRequiredPostCount(fiveStarNodeCount: number): number {
+  return Math.max(1, Math.floor(fiveStarNodeCount));
+}
+
+/** 当天真正赚到的公信力：每篇帖子解锁 1 个节点的 9 组额度，再按互动完成组数结算。 */
+export function lotCredibilityEarned(postedCount: number, interactedCount: number, quotaInteractions: number): number {
+  const quotaUnits = Math.floor(quotaInteractions / TASK_LOT_INTERACTIONS_PER_UNIT);
+  const unlockedUnits = Math.min(quotaUnits, Math.max(0, Math.floor(postedCount)) * TASK_LOT_UNITS_PER_NODE);
+  const interactionUnits = Math.floor(Math.min(interactedCount, quotaInteractions) / TASK_LOT_INTERACTIONS_PER_UNIT);
+  return Math.min(unlockedUnits, interactionUnits) * TASK_LOT_CREDIBILITY_PER_UNIT;
+}
 
 /** 纯函数：直连五星节点数 → 当日「公信力任务」配额。 */
 export function getLotQuota(fiveStarNodeCount: number): LotQuota {
@@ -125,7 +141,7 @@ export function taskDayKey(date: Date = new Date()): string {
 }
 
 function emptyState(date: string): DailyTaskState {
-  return { date, posted: false, interactedPostIds: [] };
+  return { date, posted: false, postedCount: 0, interactedPostIds: [] };
 }
 
 /** 按逐次累进规则将互动帖完成数换算为空投领取比例（%）；与是否发帖无关。 */
@@ -144,6 +160,9 @@ export function loadTaskState(date: string): DailyTaskState {
     return {
       date,
       posted: !!parsed.posted,
+      postedCount: typeof parsed.postedCount === 'number'
+        ? Math.max(0, Math.floor(parsed.postedCount))
+        : (parsed.posted ? 1 : 0),
       interactedPostIds: Array.isArray(parsed.interactedPostIds) ? parsed.interactedPostIds : [],
       credibilityRewardIssuedAt: typeof parsed.credibilityRewardIssuedAt === 'string' ? parsed.credibilityRewardIssuedAt : undefined,
       airdropClaimedPb: typeof parsed.airdropClaimedPb === 'number' ? parsed.airdropClaimedPb : undefined,
@@ -161,11 +180,10 @@ function saveTaskState(state: DailyTaskState): void {
   }
 }
 
-/** 标记今天已发帖（幂等）。 */
+/** 记录今天新发布的帖子。 */
 export function markPosted(date: string = taskDayKey()): DailyTaskState {
   const state = loadTaskState(date);
-  if (state.posted) return state;
-  const next: DailyTaskState = { ...state, posted: true };
+  const next: DailyTaskState = { ...state, posted: true, postedCount: state.postedCount + 1 };
   saveTaskState(next);
   return next;
 }
@@ -176,19 +194,21 @@ export function markInteracted(postId: string, date: string = taskDayKey()): { s
   if (state.interactedPostIds.includes(postId)) return { state, added: false };
   const next: DailyTaskState = {
     ...state,
-    interactedPostIds: [...state.interactedPostIds, postId].slice(0, TASK_INTERACTION_POOL_SIZE),
+    interactedPostIds: [...state.interactedPostIds, postId],
   };
   saveTaskState(next);
   return { state: next, added: true };
 }
 
-export function getTaskSnapshot(date: string = taskDayKey()): TaskDaySnapshot {
+export function getTaskSnapshot(date: string = taskDayKey(), quotaInteractions: number = TASK_LOT_INTERACTIONS_PER_UNIT): TaskDaySnapshot {
   const state = loadTaskState(date);
   const interactedCount = state.interactedPostIds.length;
-  const bonusEligible = state.posted && interactedCount >= TASK_LOT_INTERACTIONS_PER_UNIT;
+  const bonusEligible = lotCredibilityEarned(state.postedCount, interactedCount, quotaInteractions)
+    >= Math.floor(quotaInteractions / TASK_LOT_INTERACTIONS_PER_UNIT) * TASK_LOT_CREDIBILITY_PER_UNIT;
   return {
     date,
     posted: state.posted,
+    postedCount: state.postedCount,
     interactedCount,
     claimRatio: interactionRatio(interactedCount),
     earningsPb: typeof state.airdropClaimedPb === 'number' ? state.airdropClaimedPb : TASK_EARNINGS_UNSETTLED,
@@ -206,7 +226,7 @@ export function recordAirdropClaim(amountPb: number, date: string = taskDayKey()
 }
 
 /** 补结算所有已跨过北京时间零点、但尚未发放的公信力任务奖励。 */
-export function settleDueCredibilityRewards(now: Date = new Date()): string[] {
+export function settleDueCredibilityRewards(quotaInteractions: number, now: Date = new Date()): string[] {
   const today = taskDayKey(now);
   const settled: string[] = [];
   try {
@@ -216,7 +236,8 @@ export function settleDueCredibilityRewards(now: Date = new Date()): string[] {
       const date = key.slice(STORAGE_PREFIX.length);
       if (date >= today) continue;
       const state = loadTaskState(date);
-      const eligible = state.posted && state.interactedPostIds.length >= TASK_BONUS_THRESHOLD;
+      const eligible = lotCredibilityEarned(state.postedCount, state.interactedPostIds.length, quotaInteractions)
+        >= Math.floor(quotaInteractions / TASK_LOT_INTERACTIONS_PER_UNIT) * TASK_LOT_CREDIBILITY_PER_UNIT;
       if (!eligible || state.credibilityRewardIssuedAt) continue;
       saveTaskState({ ...state, credibilityRewardIssuedAt: now.toISOString() });
       settled.push(date);
@@ -227,14 +248,15 @@ export function settleDueCredibilityRewards(now: Date = new Date()): string[] {
   return settled;
 }
 
-/** 已结算奖励在刷新页面后叠加回演示初始公信力余额。 */
-export function getIssuedCredibilityRewardTotal(): number {
+/** 已结算奖励在刷新页面后叠加回演示初始公信力余额；demo 无历史节点数记录，按当日配额封顶往期天数。 */
+export function getIssuedCredibilityRewardTotal(quotaInteractions: number): number {
   let total = 0;
   try {
     for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i);
       if (!key?.startsWith(STORAGE_PREFIX)) continue;
-      if (loadTaskState(key.slice(STORAGE_PREFIX.length)).credibilityRewardIssuedAt) total += TASK_BONUS_PB;
+      const state = loadTaskState(key.slice(STORAGE_PREFIX.length));
+      if (state.credibilityRewardIssuedAt) total += lotCredibilityEarned(state.postedCount, state.interactedPostIds.length, quotaInteractions);
     }
   } catch {
     /* demo 环境忽略本地存储异常 */
@@ -247,24 +269,29 @@ export function getIssuedCredibilityRewardTotal(): number {
  * 返回 null 表示昨日确实无任何记录（新注册用户），供 effectiveClaimRatio 走 D4 新用户分支。
  * opts.forceNewUser 供 DevPanel 演示该分支，跳过 seed。
  */
-export function getYesterdaySnapshot(now: Date = new Date(), opts?: { forceNewUser?: boolean }): TaskDaySnapshot | null {
+export function getYesterdaySnapshot(now: Date = new Date(), opts?: { forceNewUser?: boolean; quotaInteractions?: number }): TaskDaySnapshot | null {
   if (opts?.forceNewUser) return null;
   const yesterday = taskDayKey(new Date(now.getTime() - DAY_MS));
+  const quotaInteractions = opts?.quotaInteractions ?? TASK_LOT_INTERACTIONS_PER_UNIT;
   const state = loadTaskState(yesterday);
   if (state.posted || state.interactedPostIds.length > 0) {
-    return getTaskSnapshot(yesterday);
+    return getTaskSnapshot(yesterday, quotaInteractions);
   }
   // seed：demo 首次打开时展示一份「昨天已发帖 + 完成了大半互动帖 + 已领取空投」的示例快照，而非全零
   const seedCount = 20;
   const seedRatio = interactionRatio(seedCount);
+  const postedCount = lotRequiredPostCount(Math.ceil(quotaInteractions / (TASK_LOT_UNITS_PER_NODE * TASK_LOT_INTERACTIONS_PER_UNIT)));
+  const bonusEligible = lotCredibilityEarned(postedCount, seedCount, quotaInteractions)
+    >= Math.floor(quotaInteractions / TASK_LOT_INTERACTIONS_PER_UNIT) * TASK_LOT_CREDIBILITY_PER_UNIT;
   return {
     date: yesterday,
     posted: true,
+    postedCount,
     interactedCount: seedCount,
     claimRatio: seedRatio,
     earningsPb: Math.round(MOCK_PB_AIRDROP_AMOUNT * seedRatio / 100),
-    bonusEligible: true,
-    credibilityRewardStatus: 'issued',
+    bonusEligible,
+    credibilityRewardStatus: bonusEligible ? 'issued' : 'none',
   };
 }
 
@@ -301,37 +328,41 @@ function seedEarnings(seedIndex: number, ratio: number): number {
   return Math.round(MOCK_PB_AIRDROP_AMOUNT * ratio / 100);
 }
 
-function seedOrRealSnapshot(date: string, todayKey: string): TaskDaySnapshot {
+function seedOrRealSnapshot(date: string, todayKey: string, quotaInteractions: number): TaskDaySnapshot {
   const state = loadTaskState(date);
   if (date === todayKey || state.posted || state.interactedPostIds.length > 0) {
-    return getTaskSnapshot(date);
+    return getTaskSnapshot(date, quotaInteractions);
   }
   // seed：demo 环境无历史数据时，用一份「隔天有记录」的示例节奏兜底，
-  // 其中每 7 个有记录的天里包含 1 天互动满 TASK_INTERACTION_POOL_SIZE，便于日历深色档有样本可看
+  // 其中每 7 个有记录的天里包含 1 天互动领满当前节点额度，便于日历展示满额状态样本。
   const daysAgo = Math.round((new Date(todayKey).getTime() - new Date(date).getTime()) / DAY_MS);
   if (daysAgo % 2 === 1) {
-    const seedPattern = [18, 25, 33, TASK_INTERACTION_POOL_SIZE, 20, 28, 15];
+    const seedPattern = [18, 25, 33, quotaInteractions, 20, 28, 15];
     const seedIndex = (daysAgo - 1) / 2;
     const seedCount = seedPattern[seedIndex % seedPattern.length];
     const ratio = interactionRatio(seedCount);
+    const postedCount = lotRequiredPostCount(Math.ceil(quotaInteractions / (TASK_LOT_UNITS_PER_NODE * TASK_LOT_INTERACTIONS_PER_UNIT)));
+    const bonusEligible = lotCredibilityEarned(postedCount, seedCount, quotaInteractions)
+      >= Math.floor(quotaInteractions / TASK_LOT_INTERACTIONS_PER_UNIT) * TASK_LOT_CREDIBILITY_PER_UNIT;
     return {
       date,
       posted: true,
+      postedCount,
       interactedCount: seedCount,
       claimRatio: ratio,
       earningsPb: seedEarnings(seedIndex, ratio),
-      bonusEligible: seedCount >= TASK_LOT_INTERACTIONS_PER_UNIT,
-      credibilityRewardStatus: seedCount >= TASK_LOT_INTERACTIONS_PER_UNIT ? 'issued' : 'none',
+      bonusEligible,
+      credibilityRewardStatus: bonusEligible ? 'issued' : 'none',
     };
   }
   return {
-    date, posted: false, interactedCount: 0, claimRatio: TASK_RATIO_BASE,
+    date, posted: false, postedCount: 0, interactedCount: 0, claimRatio: TASK_RATIO_BASE,
     earningsPb: TASK_EARNINGS_UNSETTLED, bonusEligible: false, credibilityRewardStatus: 'none',
   };
 }
 
 /** 按自然月生成日历格子，只含当月 1–31 号；leadingBlanks 供视图补前置空位保持周几对齐。 */
-export function getTaskCalendarMonth(now: Date = new Date()): TaskCalendarMonth {
+export function getTaskCalendarMonth(now: Date = new Date(), quotaInteractions: number = TASK_LOT_INTERACTIONS_PER_UNIT): TaskCalendarMonth {
   const year = now.getFullYear();
   const month = now.getMonth();
   const todayKey = taskDayKey(now);
@@ -348,7 +379,7 @@ export function getTaskCalendarMonth(now: Date = new Date()): TaskCalendarMonth 
       day,
       isToday: date === todayKey,
       isFuture,
-      snapshot: isFuture ? null : seedOrRealSnapshot(date, todayKey),
+      snapshot: isFuture ? null : seedOrRealSnapshot(date, todayKey, quotaInteractions),
     });
   }
 
@@ -364,10 +395,10 @@ export function resetTasks(date: string = taskDayKey()): void {
   }
 }
 
-/** 仅供演示：将今天的互动帖完成数直接设为指定值（用于快速演示阶梯比例/庆祝动效，无需真的操作 35 篇帖子）。 */
+/** 仅供演示：将今天的互动帖完成数直接设为指定值（空投比例仍独立在 35 次封顶）。 */
 export function simulateInteractedCount(count: number, date: string = taskDayKey()): DailyTaskState {
   const state = loadTaskState(date);
-  const n = Math.max(0, Math.min(TASK_INTERACTION_POOL_SIZE, count));
+  const n = Math.max(0, Math.floor(count));
   const interactedPostIds = Array.from({ length: n }, (_, i) => `sim-${i + 1}`);
   const next: DailyTaskState = { ...state, interactedPostIds };
   saveTaskState(next);
