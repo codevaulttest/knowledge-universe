@@ -25,7 +25,6 @@ export const en: Record<string, string> = {
   '起步 {base}% · 前 {count} 次每次 +{step}% · 后 {count2} 次每次 +{step2}%': 'Starts at {base}% · first {count}: +{step}% each · next {count2}: +{step2}% each',
   '默认 {base}%；前 {count} 篇每完成 1 篇增加 {step}%，后 {count2} 篇每完成 1 篇增加 {step2}%，满 {total} 篇为 100%，次日生效。': 'Starts at {base}%. Each of the first {count} posts adds {step}%, then each of the next {count2} adds {step}%; {total} posts reaches 100% for the next day.',
   '当天至少发布 1 篇内容，且互动帖满 {threshold} 篇，次日凌晨发放 +{bonus} 公信力。': 'Publish at least one post and interact with {threshold} posts to receive +{bonus} Credibility points at midnight the next day.',
-  '今天已互动 {count} / {total} 次': '{count} / {total} interactions today',
   '查看公信力说明': 'View Credibility points details',
   '公信力说明': 'About Credibility points',
   '来源：': 'Source:',

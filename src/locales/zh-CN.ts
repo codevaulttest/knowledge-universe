@@ -25,7 +25,6 @@ export const zhCN: Record<string, string> = {
   '起步 {base}% · 前 {count} 次每次 +{step}% · 后 {count2} 次每次 +{step2}%': '起步 {base}% · 前 {count} 次每次 +{step}% · 后 {count2} 次每次 +{step2}%',
   '默认 {base}%；前 {count} 篇每完成 1 篇增加 {step}%，后 {count2} 篇每完成 1 篇增加 {step2}%，满 {total} 篇为 100%，次日生效。': '默认 {base}%；前 {count} 篇每完成 1 篇增加 {step}%，后 {count2} 篇每完成 1 篇增加 {step2}%，满 {total} 篇为 100%，次日生效。',
   '当天至少发布 1 篇内容，且互动帖满 {threshold} 篇，次日凌晨发放 +{bonus} 公信力。': '当天至少发布 1 篇内容，且互动帖满 {threshold} 篇，次日凌晨发放 +{bonus} 公信力。',
-  '今天已互动 {count} / {total} 次': '今天已互动 {count} / {total} 次',
   '查看公信力说明': '查看公信力说明',
   '公信力说明': '公信力说明',
   '来源：': '来源：',

@@ -54,9 +54,7 @@ export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
               </span>
               <span className="task-card-body">
                 <span className="task-card-title">{t('互动帖任务')}</span>
-                <span className="task-card-desc">
-                  {t('今天已互动 {count} / {total} 次', { count: interacted, total: TASK_INTERACTION_POOL_SIZE })}
-                </span>
+                <span className="task-card-desc">{t('今天已互动')}</span>
               </span>
               <span className="task-card-ratio-col task-card-ratio-col--stacked">
                 <span className="task-card-ratio-col-row">
