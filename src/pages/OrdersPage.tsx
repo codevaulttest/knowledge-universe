@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageCircle, PackageCheck, PackageOpen, Truck } from 'lucide-react';
+import { ChevronRight, MessageCircle, PackageCheck, PackageOpen, Truck } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
 import type { ShopOrder } from '../types';
@@ -81,7 +81,8 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
                     className="order-card-title"
                     onClick={() => navigate({ page: 'P_SHOP_ITEM', postId: o.postId })}
                   >
-                    {o.productTitle}
+                    <span className="order-card-title-text">{o.productTitle}</span>
+                    <ChevronRight size={16} strokeWidth={2.2} aria-hidden="true" className="order-card-title-chevron" />
                   </button>
                   <span className={`order-status order-status--${o.status}`}>
                     {shopOrderStatusLabel(o.status, zh)}

@@ -30,7 +30,7 @@ export const en: Record<string, string> = {
   '来源：': 'Source:',
   '用途：': 'Uses:',
   '支付规则：': 'Payment rule:',
-  '完成每日任务的“发帖 + 10 次互动”里程碑后，系统于次日凌晨发放公信力。': 'Credibility points are issued at midnight the next day after completing the daily milestone: publish a post and interact 10 times.',
+  '完成当天的公信力任务后，奖励将在次日凌晨发放。': 'After you complete today\'s Credibility Task, the reward arrives the next morning.',
   '公信力可用于开通频道与 BSP 巨星投流。': 'Credibility points can be used for channel creation and BSP Superstar Promotion.',
   '公信力可用于开通频道、BSP 巨星投流、节点升级、转让节点。': 'Credibility points can be used for channel creation, BSP Superstar Promotion, node upgrades, and node transfers.',
   '使用公信力支付时免 Gas。': 'Payments with Credibility points are gas-free.',

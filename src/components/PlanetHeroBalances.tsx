@@ -196,7 +196,7 @@ export function PlanetHeroBalances() {
             <div className="pb-info-sheet-body">
               <p className="pb-info-sheet-para">
                 <strong className="pb-info-sheet-label">{t('来源：')}</strong>
-                {t('完成每日任务的“发帖 + 10 次互动”里程碑后，系统于次日凌晨发放公信力。')}
+                {t('完成当天的公信力任务后，奖励将在次日凌晨发放。')}
               </p>
               <p className="pb-info-sheet-para">
                 <strong className="pb-info-sheet-label">{t('用途：')}</strong>
