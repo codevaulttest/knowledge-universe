@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { withFreeTier } from './channelTiers';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_KNOWLEDGE_CERTS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { formatScheduledAt } from './dateUtils';
-import type { AddressMigration, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import type { AddressMigration, Channel, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import { PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
@@ -29,6 +29,8 @@ import { SearchPage } from './pages/SearchPage';
 import { ShopPage } from './pages/ShopPage';
 import { ShopItemPage } from './pages/ShopItemPage';
 import { OrdersPage } from './pages/OrdersPage';
+import { CertsPage } from './pages/CertsPage';
+import { CertDetailPage } from './pages/CertDetailPage';
 import { NodeDetailPage } from './pages/NodeDetailPage';
 import { accountDisplayName, type AdminAccount } from './adminAccounts';
 
@@ -847,6 +849,7 @@ export default function App({ account, onLanguageChange }: {
   // ── 小黄车：收货地址 + 订单 ──────────────────────────────────────
   const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>(MOCK_SHIPPING_ADDRESSES);
   const [shopOrders, setShopOrders] = useState<ShopOrder[]>(MOCK_SHOP_ORDERS);
+  const [knowledgeCerts, setKnowledgeCerts] = useState<KnowledgeCert[]>(MOCK_KNOWLEDGE_CERTS);
 
   const defaultAddress = shippingAddresses.find(a => a.isDefault) ?? shippingAddresses[0] ?? null;
 
@@ -973,6 +976,28 @@ export default function App({ account, onLanguageChange }: {
       ? { ...o, status: 'settled' }
       : o));
     showToast(t('已结算'));
+  };
+
+  // 开发工具：模拟 cron 完成铸造（pending → minted）
+  const simulateCertMint = (certId: string) => {
+    setKnowledgeCerts(prev => prev.map(c => c.id === certId
+      ? {
+          ...c,
+          status: 'minted',
+          issuedAt: Date.now(),
+          tokenId: c.tokenId ?? String(Math.floor(Math.random() * 1e17)).padStart(17, '0'),
+          txHash: c.txHash ?? `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
+        }
+      : c));
+    showToast(t('已铸造'));
+  };
+
+  // 开发工具：模拟人工判定刷赞后回收（minted → burned）
+  const simulateCertBurn = (certId: string, reason: string) => {
+    setKnowledgeCerts(prev => prev.map(c => c.id === certId
+      ? { ...c, status: 'burned', burnedAt: Date.now(), burnReason: reason }
+      : c));
+    showToast(t('已回收'));
   };
 
   const handlePaySuccess = () => {
@@ -1169,6 +1194,7 @@ export default function App({ account, onLanguageChange }: {
     shopOrders, shippingAddresses, defaultAddress,
     addShippingAddress, setDefaultAddress, removeShippingAddress,
     placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle,
+    knowledgeCerts, simulateCertMint, simulateCertBurn,
     navBarsHidden, setNavBarsHidden,
   };
 
@@ -1188,6 +1214,8 @@ export default function App({ account, onLanguageChange }: {
         {pageRoute.page === 'P_DM_CHAT' && <DmChatPage peerId={pageRoute.peerId} />}
         {pageRoute.page === 'P_SHOP' && <ShopPage />}
         {pageRoute.page === 'P_ORDERS' && <OrdersPage initialRole={pageRoute.role} />}
+        {pageRoute.page === 'P_CERTS' && <CertsPage />}
+        {pageRoute.page === 'P_CERT' && <CertDetailPage certId={pageRoute.certId} />}
 
         {/* 码库全局底部导航（知识宇宙内始终保持同一套宿主导航）*/}
         {showBottomNav && <BottomNav route={pageRoute} setTab={setTab} />}

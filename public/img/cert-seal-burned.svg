@@ -1,0 +1,18 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <g opacity="0.55">
+    <path d="M60 8 L104 26 L104 58 C104 84 84 100 60 112 L60 8 Z" fill="#c04040" />
+    <path d="M60 8 L16 26 L16 58 C16 84 36 100 60 112 L60 8 Z" fill="#a03636" />
+    <path d="M60 66 L104 58 C102 82 84 98 60 110 L60 66 Z" fill="#7a2828" />
+    <path d="M60 66 L16 58 C18 82 36 98 60 110 L60 66 Z" fill="#6e2424" />
+  </g>
+  <g fill="none" stroke="#1a0d0d" stroke-width="3" stroke-linecap="round" opacity="0.5">
+    <line x1="60" y1="60" x2="60" y2="38" />
+    <line x1="60" y1="60" x2="40" y2="72" />
+    <line x1="60" y1="60" x2="80" y2="72" />
+  </g>
+  <circle cx="60" cy="60" r="8" fill="#1a0d0d" opacity="0.5" />
+  <path d="M60 8 L104 26 L104 58 C104 84 84 100 60 112 C36 100 16 84 16 58 L16 26 Z"
+        fill="none" stroke="#c04040" stroke-width="2" opacity="0.6" />
+  <!-- 斜向划线，标示已回收/失效 -->
+  <line x1="18" y1="20" x2="102" y2="100" stroke="#c04040" stroke-width="4" stroke-dasharray="7 5" stroke-linecap="round" />
+</svg>

@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, AddressMigration, Channel, Draft, InteractionAction, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import type { ActivityGroup, AddressMigration, Channel, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import type { LotQuota, TaskCalendarMonth, TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
@@ -195,6 +195,12 @@ export type AppContextValue = {
   confirmShopReceipt: (orderId: string) => void;
   /** 开发工具：模拟 T+15 月结到账（待结算 → 已结算） */
   simulateShopSettle: (orderId: string) => void;
+  /** 知识确权认证：文章满 100 赞后由 cron 铸造的链上 NFT 凭证列表 */
+  knowledgeCerts: KnowledgeCert[];
+  /** 开发工具：模拟 cron 完成铸造（pending → minted） */
+  simulateCertMint: (certId: string) => void;
+  /** 开发工具：模拟人工判定刷赞后回收（minted → burned） */
+  simulateCertBurn: (certId: string, reason: string) => void;
   /** 首页信息流下滑时，顶部/底部导航渐隐让出沉浸空间 */
   navBarsHidden: boolean;
   setNavBarsHidden: Dispatch<SetStateAction<boolean>>;

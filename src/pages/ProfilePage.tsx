@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Award, Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Award, BadgeCheck, Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -17,7 +17,7 @@ import { isValidWalletAddress } from '../formatAddress';
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, meritBalance } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, knowledgeCerts, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, meritBalance } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
@@ -165,6 +165,18 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     </button>
   ) : null;
 
+  const mintedCertCount = isOwn ? knowledgeCerts.filter(c => c.holder === CURRENT_USER && c.status === 'minted').length : 0;
+  const certSection = isOwn ? (
+    <button type="button" className="channel-summary-entry" onClick={() => navigate({ page: 'P_CERTS' })}>
+      <BadgeCheck size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-cert-gold-strong)' }} />
+      <span className="channel-summary-entry-text">
+        <span className="channel-summary-entry-label">{t('我的知识确权认证')}</span>
+        <span className="channel-summary-entry-sub">{t('{count} 份已铸造', { count: mintedCertCount })}</span>
+      </span>
+      <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
+    </button>
+  ) : null;
+
   return (
     <div className="page">
       {!isOwn && <PageHeader onBack={canGoBack ? goBack : undefined} className="page-header--transparent" />}
@@ -268,6 +280,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         </div>
 
         {channelSection}
+        {certSection}
         {isOwn && (
           <div className="channel-summary-row">
             {orderSection}

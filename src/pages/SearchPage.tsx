@@ -21,7 +21,7 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState('');
   const [debouncedQ, setDebouncedQ] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [tab, setTab] = useState<'all' | 'posts' | 'users' | 'channels'>('all');
+  const [tab, setTab] = useState<'posts' | 'users' | 'channels'>('posts');
   const [shopOnly, setShopOnly] = useState(false);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
   }, [query, saveRecentSearch]);
 
   useEffect(() => {
-    setTab('all');
+    setTab('posts');
   }, [query]);
 
   const matchedPosts = useMemo(() => {
@@ -104,8 +104,8 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
               </button>
             )}
           </div>
-          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
-            <X size={18} strokeWidth={2} />
+          <button type="button" className="modal-close search-close-btn" onClick={onClose}>
+            {t('取消')}
           </button>
         </div>
 
@@ -153,16 +153,6 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
             <nav className="activity-filter-tabs" aria-label={t('搜索筛选')}>
               <button
                 type="button"
-                className={`activity-filter-tab${tab === 'all' && !shopOnly ? ' activity-filter-tab--active' : ''}`}
-                onClick={() => {
-                  setTab('all');
-                  setShopOnly(false);
-                }}
-              >
-                {t('全部')}
-              </button>
-              <button
-                type="button"
                 className={`activity-filter-tab${tab === 'posts' && !shopOnly ? ' activity-filter-tab--active' : ''}`}
                 onClick={() => {
                   setTab('posts');
@@ -194,7 +184,10 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
               <button
                 type="button"
                 className={`activity-filter-tab activity-filter-tab--shop${shopOnly ? ' activity-filter-tab--active' : ''}`}
-                onClick={() => setShopOnly(v => !v)}
+                onClick={() => {
+                  setTab('posts');
+                  setShopOnly(v => !v);
+                }}
                 aria-pressed={shopOnly}
               >
                 {t('小黄车')}
@@ -212,7 +205,7 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
                 <>
                   {visiblePosts.length > 0 && (
                     <section className="search-results-group">
-                      {tab === 'all' && <div className="search-section-label">{t('帖子')}</div>}
+                      {tab !== 'posts' && <div className="search-section-label">{t('帖子')}</div>}
                       <div className="feed">
                         {visiblePosts.map((post, index) => (
                           <PostCard
@@ -227,7 +220,7 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
 
                   {visibleUsers.length > 0 && (
                     <section className="search-results-group">
-                      {tab === 'all' && <div className="search-section-label">{t('用户')}</div>}
+                      {tab !== 'users' && <div className="search-section-label">{t('用户')}</div>}
                       <div className="search-user-list">
                         {visibleUsers.map(user => {
                           const isFollowing = followedAuthors.has(user.name);
@@ -264,7 +257,7 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
 
                   {visibleChannels.length > 0 && (
                     <section className="search-results-group">
-                      {tab === 'all' && <div className="search-section-label">{t('频道')}</div>}
+                      {tab !== 'channels' && <div className="search-section-label">{t('频道')}</div>}
                       <div className="channel-discover-list">
                         {visibleChannels.map((channel, index) => (
                           <ChannelCard

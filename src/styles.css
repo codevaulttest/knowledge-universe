@@ -4,6 +4,7 @@
  * 禁止在此文件引入任何硬编码设计值（插画色除外）。
  * ============================================================ */
 @import "./design-tokens.css";
+@import "./cert.css";
 
 /* ── Reset ── */
 * { box-sizing: border-box; }
@@ -5628,6 +5629,7 @@ button {
   overflow-x: auto;
   scrollbar-width: none;
 }
+
 .activity-filter-tabs::-webkit-scrollbar {
   display: none;
 }
@@ -6096,9 +6098,16 @@ button {
   gap: var(--ku-search-input-gap);
   min-height: var(--ku-search-header-height);
   padding: 0 var(--ku-feed-padding-x);
-  border-bottom: 1px solid var(--ku-color-border);
   background: var(--ku-color-bg-phone);
   flex-shrink: 0;
+}
+
+.search-close-btn {
+  min-height: var(--ku-search-input-height);
+  padding: 0;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-search-text);
+  white-space: nowrap;
 }
 
 .search-input-wrap {
@@ -6159,6 +6168,10 @@ button {
   padding: var(--ku-search-content-padding-top) var(--ku-feed-padding-x) var(--ku-search-content-padding-bottom);
 }
 
+.search-page .profile-empty-sub {
+  font: var(--ku-search-text);
+}
+
 .search-section,
 .search-results-group {
   display: flex;
@@ -6180,7 +6193,7 @@ button {
 
 .search-clear-all {
   color: var(--ku-color-primary-dark);
-  font: var(--ku-text-meta);
+  font: var(--ku-search-text);
 }
 
 .search-chips {
@@ -6217,7 +6230,7 @@ button {
   border-radius: var(--ku-radius-nav-shell);
   background: var(--ku-color-bg-phone);
   color: var(--ku-color-text-primary);
-  font: var(--ku-text-meta);
+  font: var(--ku-search-text);
   transition: background var(--ku-motion-fast), border-color var(--ku-motion-fast);
 }
 
@@ -6239,7 +6252,7 @@ button {
   border: 0;
   background: transparent;
   color: inherit;
-  font: var(--ku-text-meta);
+  font: var(--ku-search-text);
   text-align: left;
 }
 

@@ -1,4 +1,4 @@
-import type { ActivityGroup, Channel, ChannelSubscriber, DmConversation, OutgoingTip, Post, PostActors, ProfileContacts, Reply, ShippingAddress, ShopOrder } from './types';
+import type { ActivityGroup, Channel, ChannelSubscriber, DmConversation, KnowledgeCert, OutgoingTip, Post, PostActors, ProfileContacts, Reply, ShippingAddress, ShopOrder } from './types';
 import { withFreeTier } from './channelTiers';
 
 export type UserListItem = {
@@ -852,6 +852,22 @@ export const ALL_POSTS: Post[] = [
     rating: 0, replies: 8, links: 0, shares: 2, saves: 29, likes: 67,
     channelId: 'channel-me-2', minTierIndex: 1,
   },
+  // ── 知识确权认证演示帖（当前用户）：pending / burned 两态 ──
+  {
+    id: 'cert-pending-1', author: CURRENT_USER, time: '3 小时前',
+    title: '从零搭建个人知识库：工具选型与目录结构实践\n记录了三次推倒重来后，最终稳定下来的一套方法论。',
+    articlePreview: '知识库最容易崩的地方不是工具，而是目录结构。这篇复盘了从大而全到按项目切分的演变过程，附可直接套用的目录模板。',
+    kind: 'article', visiblePercent: 100, isNode: true, stakeTier: 100, nodeId: 'Kb3mZ7',
+    rating: 3, replies: 22, links: 9, shares: 14, saves: 51, likes: 132,
+  },
+  {
+    id: 'cert-burned-1', author: CURRENT_USER, time: '9 天前',
+    title: '效率工具横评：5 款笔记软件深度体验\n用了三个月才敢下结论，附打分表。',
+    articlePreview: '从编辑体验、同步速度、跨端一致性到导出自由度，五款主流笔记软件的真实使用对比。',
+    kind: 'article', visiblePercent: 100, isNode: true, stakeTier: 100, nodeId: 'Ef6nQ1',
+    rating: 2, replies: 15, links: 5, shares: 8, saves: 33, likes: 145,
+  },
+
 ];
 
 
@@ -1243,5 +1259,49 @@ export const MOCK_SHOP_ORDERS: ShopOrder[] = [
     address: { id: 'addr-b2', name: '刘女士', phone: '135****9902', detail: '成都市高新区天府三街 199 号 太平洋保险大厦 20F' },
     status: 'completed', createdAt: Date.now() - 1000 * 60 * 60 * 24 * 2,
     carrier: '京东物流', trackingNo: 'JD0055217788013', estMerit: 150,
+  },
+];
+
+// ── 知识确权认证：文章满 100 赞后由 cron 铸造的链上 NFT 凭证种子数据 ──
+export const MOCK_KNOWLEDGE_CERTS: KnowledgeCert[] = [
+  {
+    id: 'KU-KC-20260000412', postId: 'p9', status: 'minted', holder: CURRENT_USER,
+    issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 3, likesAtMint: 150,
+    contentHash: '05bd857af7f70bf51b6aac9d4e112a8f3c7b2e91f4d6a0c8e5b3d2f1a7c9e4b6',
+    tokenId: '53234914853141795189840113938456271650482947316',
+    txHash: '0xa89df6537e7998a5f9dfb288a9262d80f50c26c60a5174ce1de7a10616c3b95f',
+    issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
+  },
+  {
+    id: 'KU-KC-20260000198', postId: 'p2', status: 'minted', holder: '阿May的研究笔记',
+    issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 11, likesAtMint: 214,
+    contentHash: '9e2c6f1a4d7b0834eac5f92d1b6087a3c4e5f60918273645fabc0d1e2f3a4b5',
+    tokenId: '41207765218843906612205173390946612053177720184',
+    txHash: '0x71bcaa4d61e2f5c8a4b9d0e6f2317c8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e',
+    issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
+  },
+  {
+    id: 'KU-KC-20260000355', postId: 'shop-ph-article', status: 'minted', holder: '阿May的研究笔记',
+    issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 6, likesAtMint: 201,
+    contentHash: '3f8a1c9e2b6d5074f1a3c8e9d2b4f6017c9e2a4d6b8f0135e7c9a1b3d5f7091',
+    tokenId: '68901234567890123456789012345678901234567890123',
+    txHash: '0x2b4d6f8091a3c5e7092b4d6f8a1c3e5f7091b3d5f7092b4d6f8a1c3e5f70912',
+    issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
+  },
+  {
+    id: 'KU-KC-20260000487', postId: 'cert-pending-1', status: 'pending', holder: CURRENT_USER,
+    likesAtMint: 132,
+    contentHash: '7c1e3a5f9082b4d6f8091a3c5e7092b4d6f8a1c3e5f7091b3d5f7092b4d6f8a',
+    issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
+  },
+  {
+    id: 'KU-KC-20260000276', postId: 'cert-burned-1', status: 'burned', holder: CURRENT_USER,
+    issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 8, likesAtMint: 145,
+    burnedAt: Date.now() - 1000 * 60 * 60 * 6,
+    burnReason: '经人工核查存在异常点赞，认证已回收',
+    contentHash: 'ad2f4b6d8e01f3a5c7092b4d6f8a1c3e5f7091b3d5f7092b4d6f8a1c3e5f709',
+    tokenId: '10293847561029384756102938475610293847561029384',
+    txHash: '0xf0918273645fabc0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5061728394a5b6c7d8',
+    issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
 ];

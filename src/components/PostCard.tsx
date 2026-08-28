@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, Pencil, Radio, Repeat2, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, Users } from 'lucide-react';
+import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, Pencil, Radio, Repeat2, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, Users } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
@@ -227,7 +227,7 @@ export function PostCard({
   /** 透传给 GeminiNodeBadge：仅「我的主页」用空心链接按钮 */
   chainOutline?: boolean;
 }) {
-  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, requireWallet } = useApp();
+  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, requireWallet, knowledgeCerts } = useApp();
   const [moreOpen, setMoreOpen] = useState(false);
   const [actorsTab, setActorsTab] = useState<PostAction | 'link' | 'tip' | null>(null);
   const [showTip, setShowTip] = useState(false);
@@ -240,6 +240,7 @@ export function PostCard({
   const isFollowing = followedAuthors.has(post.author);
   const totalImgs = post.imageCount ?? 3;
   const genesisTier = getGenesisTier(post.author);
+  const cert = knowledgeCerts.find(c => c.postId === post.id && c.status === 'minted');
   const shopPriceFull = post.shop
     ? t('{price} PB', { price: formatTokenAmount(getShopMinPrice(post.shop)) })
     : '';
@@ -321,6 +322,17 @@ export function PostCard({
                 <Radio size={11} strokeWidth={2.2} />
                 {channel.name}
               </span>
+            )}
+            {cert && (
+              <button
+                type="button"
+                className="post-cert-badge"
+                aria-label={t('已确权 · 查看认证证书')}
+                onClick={e => { e.stopPropagation(); navigate({ page: 'P_CERT', certId: cert.id }); }}
+              >
+                <BadgeCheck size={11} strokeWidth={2.2} />
+                {t('已确权')}
+              </button>
             )}
             {isOwn && requiredTier && (
               <span className="post-tier-badge" aria-label={t('需订阅达到 {name} 及以上', { name: requiredTier.name })}>
