@@ -69,7 +69,7 @@ function LotTaskRulesSheet({ onClose }: { onClose: () => void }) {
             })}
           </p>
           <p className="pb-info-sheet-para">
-            {t('直连五星节点时，每有 1 个直连五星节点，额外增加 {perNode} 公信力额度，发 1 篇帖子并完成 {perNode} 次互动即可领满。例如，有 {nodes} 个直连五星节点，每天最多可获得 {total} 公信力额度，发 {nodes} 篇帖子并完成 {total} 次互动即可领满。', {
+            {t('直连五星节点时，当日上限按直连节点数计算：每个节点对应 {perNode} 公信力额度，发 1 篇帖子并完成 {perNode} 次互动即可领满。例如，有 {nodes} 个直连五星节点，每天最多可获得 {total} 公信力额度，发 {nodes} 篇帖子并完成 {total} 次互动即可领满。', {
               perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_CREDIBILITY_PER_UNIT,
               nodes: 3,
               total: 3 * TASK_LOT_UNITS_PER_NODE * TASK_LOT_CREDIBILITY_PER_UNIT,
