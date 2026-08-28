@@ -1,6 +1,6 @@
-import { Home, MessageCircle, Plus, User } from 'lucide-react';
+import { Home, Plus, ShoppingCart, User } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { CURRENT_USER, DM_CONVERSATIONS } from '../mockData';
+import { CURRENT_USER } from '../mockData';
 import type { Route } from '../types';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 
@@ -12,14 +12,13 @@ export function BottomNav({ route, setTab }: {
   setTab: (t: 0 | 1 | 2 | 3) => void;
 }) {
   const { navigate, navigateRoot, openCompose, requireWallet, t, refreshHomeFeed, navBarsHidden } = useApp();
-  const unreadDmCount = DM_CONVERSATIONS.reduce((s, c) => s + c.unread, 0);
 
   const isHome = route.page === 'P0';
   const isPlanet = route.page === 'P_PLANET';
-  const isDm = route.page === 'P_DM' || route.page === 'P_DM_CHAT';
+  const isShop = (route.page === 'P0' && route.tab === 3) || route.page === 'P_SHOP';
   const isMine = route.page === 'P6' && route.authorName === CURRENT_USER;
 
-  const activeCol = isHome ? 0 : isPlanet ? 1 : isDm ? 3 : isMine ? 4 : -1;
+  const activeCol = isHome && !isShop ? 0 : isPlanet ? 1 : isShop ? 3 : isMine ? 4 : -1;
 
   // 首页点击：不在顶部先滚回顶部，已在顶部再点才刷新 feed
   const onHomeClick = () => {
@@ -70,16 +69,12 @@ export function BottomNav({ route, setTab }: {
       </button>
       <button
         type="button"
-        className={`nav-item${isDm ? ' nav-item--active' : ''}`}
-        onClick={() => requireWallet(() => navigate({ page: 'P_DM' }))}
-        aria-label={t('消息')}
-        style={{ position: 'relative' }}
+        className={`nav-item${isShop ? ' nav-item--active' : ''}`}
+        onClick={() => setTab(3)}
+        aria-label={t('小黄车')}
       >
-        <MessageCircle size={20} strokeWidth={2} />
-        <span className="nav-label">{t('消息')}</span>
-        {unreadDmCount > 0 && (
-          <span className="nav-inbox-dot">{unreadDmCount > 9 ? '9+' : unreadDmCount}</span>
-        )}
+        <ShoppingCart size={20} strokeWidth={2} />
+        <span className="nav-label">{t('小黄车')}</span>
       </button>
       <button
         type="button"

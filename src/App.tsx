@@ -1368,7 +1368,7 @@ export default function App({ account, onLanguageChange }: {
           <LotTaskSheet onClose={() => setLotTaskOpen(false)} />
         )}
 
-        {/* 覆盖层：搜索（居中弹窗） */}
+        {/* 搜索全页面：覆盖宿主内容，关闭后回到原信息流 */}
         {searchOpen && <SearchPage onClose={closeSearch} />}
 
         {/* Toast */}

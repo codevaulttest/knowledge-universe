@@ -6065,23 +6065,26 @@ button {
    Search Page
    ═══════════════════════════════════════════════════════════════ */
 .search-page {
+  position: absolute;
+  inset: 0;
+  z-index: var(--ku-layer-search-page);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--ku-color-bg-phone);
 }
 
-/* ─── 搜索弹窗：居中显示，替代整页跳转 ─── */
-.search-modal {
+/* ─── 搜索全页面：覆盖宿主内容，保留自己的滚动区域 ─── */
+.search-page-shell {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: var(--ku-modal-width);
-  max-height: var(--ku-modal-max-height);
+  height: 100%;
   overflow: hidden;
   background: var(--ku-color-bg-phone);
-  border-radius: var(--ku-radius-modal);
-  box-shadow: var(--ku-shadow-modal);
 }
 
-.search-modal-scroll {
+.search-page-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -11956,6 +11959,10 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 .lot-task-panel-sheet .task-calc-row--result .task-calc-value {
   color: var(--ku-color-lot-red);
+}
+/* 公信力规则弹窗独立于 .lot-task-panel-sheet 渲染，用修饰类拿到同一套金红配色 */
+.task-calc--lot {
+  background: var(--ku-color-lot-tint);
 }
 
 .task-calendar-lot-note {

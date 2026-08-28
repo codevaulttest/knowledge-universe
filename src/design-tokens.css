@@ -301,6 +301,7 @@
   --ku-modal-screen-padding:   24px;
   --ku-modal-content-padding:  20px;
   --ku-modal-max-height:       calc(100vh - 48px);
+  --ku-layer-search-page:      210;
   --ku-lightbox-lock-icon-size: 28px;
   --ku-lightbox-lock-gap:      12px;
   --ku-lightbox-unlock-padding-y: 10px;

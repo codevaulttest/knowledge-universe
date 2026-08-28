@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Bookmark, HandCoins, Link, MessageCircle, Radio, Repeat2, ThumbsUp } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { ALL_POSTS } from '../mockData';
+import { ALL_POSTS, DM_CONVERSATIONS } from '../mockData';
 import { Avatar, PageHeader } from '../components/shared';
 import { isChinese } from '../i18n';
 import type { ActivityGroup, ActivityType } from '../types';
@@ -142,6 +142,7 @@ function ActivityItem({
 export function ActivityPage() {
   const { goBack, navigate, activityGroups, markAllRead, posts, t, language } = useApp();
   const [filter, setFilter] = useState<FilterTab>('all');
+  const unreadDmCount = DM_CONVERSATIONS.reduce((sum, conversation) => sum + conversation.unread, 0);
 
   useEffect(() => {
     markAllRead();
@@ -182,6 +183,19 @@ export function ActivityPage() {
       <PageHeader
         title={t('通知')}
         onBack={goBack}
+        action={(
+          <button
+            type="button"
+            className="inbox-switch-btn"
+            onClick={() => navigate({ page: 'P_DM' })}
+            aria-label={t('私信')}
+          >
+            <MessageCircle size={22} strokeWidth={2} />
+            {unreadDmCount > 0 && (
+              <span className="inbox-switch-dot">{unreadDmCount > 9 ? '9+' : unreadDmCount}</span>
+            )}
+          </button>
+        )}
       />
       <div className="scroll-area">
         <nav className="activity-filter-tabs">

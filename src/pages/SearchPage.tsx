@@ -72,8 +72,8 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className="search-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+    <div className="search-page" role="main" aria-label={t('搜索')}>
+      <div className="search-page-shell">
         <div className="search-header">
           <div className="search-input-wrap">
             <Search size={16} strokeWidth={2} className="search-input-icon" />
@@ -112,7 +112,7 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        <div className="search-modal-scroll">
+        <div className="search-page-scroll">
         {!hasQuery ? (
           <div className="search-content">
             {recentSearches.length > 0 && (

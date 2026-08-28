@@ -35,7 +35,7 @@ export function LotTaskSheet({
 
           <button type="button" className="bsp-rules-entry task-panel-rules-entry task-panel-rules-entry--neutral" onClick={() => setRulesOpen(true)}>
             <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
-            <span className="bsp-rules-entry-text">{t('查看完整任务规则')}</span>
+            <span className="bsp-rules-entry-text">{t('查看完整公信力任务规则')}</span>
             <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
           </button>
 
@@ -43,45 +43,44 @@ export function LotTaskSheet({
         </div>
       </div>
 
-      {rulesOpen && <LotTaskRulesSheet onClose={() => setRulesOpen(false)} lotQuota={lotQuota} />}
+      {rulesOpen && <LotTaskRulesSheet onClose={() => setRulesOpen(false)} />}
     </>
   );
 }
 
-function LotTaskRulesSheet({ onClose, lotQuota }: { onClose: () => void; lotQuota: LotQuota }) {
+function LotTaskRulesSheet({ onClose }: { onClose: () => void }) {
   const { t } = useApp();
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
-          <span className="sheet-title">{t('任务规则')}</span>
+          <span className="sheet-title">{t('公信力任务规则')}</span>
           <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
 
         <div className="pb-info-sheet-body">
-          <p className="pb-info-sheet-para pb-info-sheet-heading">
-            {t('每日任务如何计算奖励')}
-          </p>
           <p className="pb-info-sheet-para">
-            <strong className="pb-info-sheet-label">{t('公信力任务：')}</strong>
-            {t('当天发布 {posts} 篇帖子，并对其他帖子完成互动满 {interactions} 次，可领满 +{credibility} 公信力；每直连 1 个五星节点，每天增加 1 篇发帖条件和 {perNode} 次互动额度。未直连五星节点时，发布 1 篇帖子并完成 {baseline} 次互动即可领满。奖励次日凌晨结算。', {
-              posts: lotRequiredPostCount(lotQuota.fiveStarNodeCount),
-              interactions: lotQuota.interactions,
-              credibility: lotQuota.credibility,
-              perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_INTERACTIONS_PER_UNIT,
+            {t('未直连五星节点时，当日上限为 {credibility} 公信力：发 1 篇帖子并完成 {baseline} 次互动即可领满。', {
+              credibility: TASK_LOT_CREDIBILITY_PER_UNIT,
               baseline: TASK_LOT_INTERACTIONS_PER_UNIT,
             })}
           </p>
           <p className="pb-info-sheet-para">
-            <strong className="pb-info-sheet-label">{t('BSP 巨星投流保底：')}</strong>
-            {t('当天至少发布 1 篇内容即视为完成。当天发帖，次日即享有打赏保底。')}
+            {t('直连五星节点时，每有 1 个直连五星节点，额外增加 {perNode} 公信力额度，发 1 篇帖子并完成 {perNode} 次互动即可领满。例如，有 {nodes} 个直连五星节点，每天最多可获得 {total} 公信力额度，发 {nodes} 篇帖子并完成 {total} 次互动即可领满。', {
+              perNode: TASK_LOT_UNITS_PER_NODE * TASK_LOT_CREDIBILITY_PER_UNIT,
+              nodes: 3,
+              total: 3 * TASK_LOT_UNITS_PER_NODE * TASK_LOT_CREDIBILITY_PER_UNIT,
+            })}
+          </p>
+          <p className="pb-info-sheet-para">
+            {t('奖励次日凌晨结算。')}
           </p>
           <div className="sup-deposit-warning">
             <AlertTriangle size={16} strokeWidth={2} aria-hidden="true" />
-            <span>{t('具体比例后续可能调整，请以任务面板内实际展示为准。')}</span>
+            <span>{t('具体数值后续可能调整，请以任务面板内实际展示为准。')}</span>
           </div>
         </div>
       </div>
