@@ -90,12 +90,18 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
                 </div>
 
                 <div className="order-card-meta">
-                  <span>{role === 'buyer' ? t('卖家：{name}', { name: o.sellerName }) : t('买家：{name}', { name: o.buyerName })}</span>
-                  <span>
-                    {formatOrderTime(o.createdAt)}
-                    {o.variantLabel ? ` · ${t('规格：{label}', { label: o.variantLabel })}` : ''}
-                    {' · × '}{o.quantity}
-                  </span>
+                  <span className="order-card-counterparty">{role === 'buyer' ? t('卖家：{name}', { name: o.sellerName }) : t('买家：{name}', { name: o.buyerName })}</span>
+                  <div className="order-card-order-summary">
+                    <span>
+                      <span className="order-card-order-label">{t('下单时间')}</span>
+                      <strong>{formatOrderTime(o.createdAt)}</strong>
+                    </span>
+                    <span>
+                      <span className="order-card-order-label">{t('数量')}</span>
+                      <strong>× {o.quantity}</strong>
+                    </span>
+                    {o.variantLabel && <span className="order-card-variant">{t('规格：{label}', { label: o.variantLabel })}</span>}
+                  </div>
                 </div>
 
                 <div className="order-card-price">

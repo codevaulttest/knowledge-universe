@@ -992,6 +992,8 @@ export const zhCN: Record<string, string> = {
   '小黄车商城': '小黄车商城',
   '商城': '商城',
   '我的订单': '我的订单',
+  '下单时间': '下单时间',
+  '数量': '数量',
   '{count} 笔待处理': '{count} 笔待处理',
   '我的 ADN': '我的 ADN',
   '{count} 优点': '{count} 优点',

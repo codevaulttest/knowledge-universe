@@ -992,6 +992,8 @@ export const en: Record<string, string> = {
   '小黄车商城': 'Shop Mall',
   '商城': 'Shop',
   '我的订单': 'My Orders',
+  '下单时间': 'Order time',
+  '数量': 'Quantity',
   '{count} 笔待处理': '{count} to handle',
   '我的 ADN': 'My ADN',
   '{count} 优点': '{count} pts',

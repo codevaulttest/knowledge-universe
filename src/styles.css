@@ -6189,6 +6189,23 @@ button {
   gap: var(--ku-search-chip-gap);
 }
 
+.search-recent-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-recent-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--ku-search-input-height);
+  border-bottom: 1px solid var(--ku-color-border-divider);
+}
+
+.search-recent-row:last-child {
+  border-bottom: none;
+}
+
 .search-chip,
 .search-chip--recent {
   display: inline-flex;
@@ -6217,14 +6234,19 @@ button {
   color: var(--ku-color-primary);
 }
 
-.search-filter-row {
-  display: flex;
-  padding: var(--ku-search-content-padding-top) var(--ku-feed-padding-x) 0;
-  flex-shrink: 0;
+.search-chip-label {
+  padding: var(--ku-space-2) 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: var(--ku-text-meta);
+  text-align: left;
 }
 
-.search-chip-label {
-  color: inherit;
+.activity-filter-tab--shop {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ku-space-2);
 }
 
 .search-chip-remove {
@@ -13176,6 +13198,7 @@ html[lang="zh-TW"] .planet-hero-title {
 .order-card-title-chevron {
   flex-shrink: 0;
   color: var(--ku-color-text-meta);
+  transform: translateY(calc(-1 * var(--ku-space-1) / 4));
 }
 .order-status {
   flex-shrink: 0;
@@ -13192,10 +13215,33 @@ html[lang="zh-TW"] .planet-hero-title {
 .order-status--settled { background: var(--ku-color-success-bg); color: var(--ku-color-success-text); }
 .order-card-meta {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: var(--ku-space-1);
   color: var(--ku-color-text-secondary);
   font: var(--ku-text-meta);
+}
+.order-card-order-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ku-space-3);
+  color: var(--ku-color-text-secondary);
+}
+.order-card-order-summary > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--ku-space-1);
+}
+.order-card-order-summary strong {
+  color: var(--ku-color-text-primary);
+  font: var(--ku-text-order-summary-value);
+  font-variant-numeric: tabular-nums;
+}
+.order-card-order-label,
+.order-card-variant {
+  color: var(--ku-color-text-meta);
 }
 .order-card-price {
   color: var(--ku-color-shop-strong);
@@ -13258,6 +13304,9 @@ html[lang="zh-TW"] .planet-hero-title {
 .orders-page .order-card-settle-note,
 .orders-page .shop-item-contact-chip {
   font: 400 14px/1.4 var(--ku-font-family);
+}
+.orders-page .order-card-order-summary strong {
+  font: var(--ku-text-order-summary-value);
 }
 .orders-page .order-action-btn {
   font: 600 14px/1 var(--ku-font-family);

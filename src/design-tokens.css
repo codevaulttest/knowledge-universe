@@ -166,6 +166,7 @@
   --ku-text-reward-chip:       400 12px/1 var(--ku-font-family);     /* 收益芯片 */
   --ku-text-caption:           400 12px/1 var(--ku-font-family);     /* 最小辅助文字 */
   --ku-text-caption-strong:    700 12px/1.4 var(--ku-font-family);   /* 强调辅助文字 */
+  --ku-text-order-summary-value: 700 14px/1.4 var(--ku-font-family); /* 订单时间、数量等摘要值 */
   --ku-text-locked-media:      600 12px/1 var(--ku-font-family);     /* 锁定图片提示 */
 
   /* ── 间距与控件尺寸 ── */

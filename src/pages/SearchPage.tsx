@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Search, ShoppingCart, TrendingUp, X } from 'lucide-react';
+import { Check, Search, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { PostCard } from '../components/PostCard';
-import { Avatar, AuthorName } from '../components/shared';
-
-const TRENDING = ['AI Agent', 'RAG 技术', '独立开发', 'Figma 组件', 'Prompt 工程', 'Web3', '知识宇宙', '数据方法论'];
+import { Avatar, AuthorName, ChannelCard } from '../components/shared';
 
 export function SearchPage({ onClose }: { onClose: () => void }) {
   const {
     navigate,
     posts,
+    channels,
     followedAuthors,
     toggleFollow,
     recentSearches,
@@ -22,7 +21,7 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState('');
   const [debouncedQ, setDebouncedQ] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [tab, setTab] = useState<'all' | 'posts' | 'users'>('all');
+  const [tab, setTab] = useState<'all' | 'posts' | 'users' | 'channels'>('all');
   const [shopOnly, setShopOnly] = useState(false);
 
   useEffect(() => {
@@ -61,10 +60,20 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
     );
   }, [debouncedQ]);
 
-  const visiblePosts = tab === 'users' ? [] : matchedPosts;
-  const visibleUsers = tab === 'posts' ? [] : matchedUsers;
+  const matchedChannels = useMemo(() => {
+    if (!debouncedQ) return [];
+    return channels.filter(channel =>
+      channel.name.toLowerCase().includes(debouncedQ) ||
+      channel.ownerName.toLowerCase().includes(debouncedQ) ||
+      channel.description.toLowerCase().includes(debouncedQ),
+    );
+  }, [channels, debouncedQ]);
+
+  const visiblePosts = tab === 'users' || tab === 'channels' ? [] : matchedPosts;
+  const visibleUsers = tab === 'posts' || tab === 'channels' ? [] : matchedUsers;
+  const visibleChannels = tab === 'posts' || tab === 'users' ? [] : matchedChannels;
   const hasQuery = query.trim().length > 0 || shopOnly;
-  const hasResults = visiblePosts.length > 0 || visibleUsers.length > 0;
+  const hasResults = visiblePosts.length > 0 || visibleUsers.length > 0 || visibleChannels.length > 0;
 
   const applyQuery = (nextQuery: string) => setQuery(nextQuery);
   const goToProfile = (authorName: string) => {
@@ -100,18 +109,6 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        <div className="search-filter-row">
-          <button
-            type="button"
-            className={`search-chip${shopOnly ? ' search-chip--active' : ''}`}
-            onClick={() => setShopOnly(v => !v)}
-            aria-pressed={shopOnly}
-          >
-            <ShoppingCart size={14} strokeWidth={2} />
-            {t('小黄车帖子')}
-          </button>
-        </div>
-
         <div className="search-page-scroll">
         {!hasQuery ? (
           <div className="search-content">
@@ -123,9 +120,9 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
                     {t('清空全部')}
                   </button>
                 </div>
-                <div className="search-chips">
+                <div className="search-recent-list">
                   {recentSearches.map(item => (
-                    <div key={item} className="search-chip search-chip--recent">
+                    <div key={item} className="search-recent-row">
                       <button type="button" className="search-chip-label" onClick={() => applyQuery(item)}>
                         {item}
                       </button>
@@ -143,19 +140,6 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
               </section>
             )}
 
-            <section className="search-section">
-              <div className="search-section-head">
-                <div className="search-section-label">{t('热门话题')}</div>
-              </div>
-              <div className="search-chips">
-                {TRENDING.map(item => (
-                  <button key={item} type="button" className="search-chip" onClick={() => applyQuery(item)}>
-                    <TrendingUp size={14} strokeWidth={2} />
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </section>
           </div>
         ) : isSearching ? (
           <div className="search-content">
@@ -169,24 +153,51 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
             <nav className="activity-filter-tabs" aria-label={t('搜索筛选')}>
               <button
                 type="button"
-                className={`activity-filter-tab${tab === 'all' ? ' activity-filter-tab--active' : ''}`}
-                onClick={() => setTab('all')}
+                className={`activity-filter-tab${tab === 'all' && !shopOnly ? ' activity-filter-tab--active' : ''}`}
+                onClick={() => {
+                  setTab('all');
+                  setShopOnly(false);
+                }}
               >
                 {t('全部')}
               </button>
               <button
                 type="button"
-                className={`activity-filter-tab${tab === 'posts' ? ' activity-filter-tab--active' : ''}`}
-                onClick={() => setTab('posts')}
+                className={`activity-filter-tab${tab === 'posts' && !shopOnly ? ' activity-filter-tab--active' : ''}`}
+                onClick={() => {
+                  setTab('posts');
+                  setShopOnly(false);
+                }}
               >
                 {t('帖子')}
               </button>
               <button
                 type="button"
-                className={`activity-filter-tab${tab === 'users' ? ' activity-filter-tab--active' : ''}`}
-                onClick={() => setTab('users')}
+                className={`activity-filter-tab${tab === 'users' && !shopOnly ? ' activity-filter-tab--active' : ''}`}
+                onClick={() => {
+                  setTab('users');
+                  setShopOnly(false);
+                }}
               >
                 {t('用户')}
+              </button>
+              <button
+                type="button"
+                className={`activity-filter-tab${tab === 'channels' && !shopOnly ? ' activity-filter-tab--active' : ''}`}
+                onClick={() => {
+                  setTab('channels');
+                  setShopOnly(false);
+                }}
+              >
+                {t('频道')}
+              </button>
+              <button
+                type="button"
+                className={`activity-filter-tab activity-filter-tab--shop${shopOnly ? ' activity-filter-tab--active' : ''}`}
+                onClick={() => setShopOnly(v => !v)}
+                aria-pressed={shopOnly}
+              >
+                {t('小黄车')}
               </button>
             </nav>
 
@@ -247,6 +258,23 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
                             </div>
                           );
                         })}
+                      </div>
+                    </section>
+                  )}
+
+                  {visibleChannels.length > 0 && (
+                    <section className="search-results-group">
+                      {tab === 'all' && <div className="search-section-label">{t('频道')}</div>}
+                      <div className="channel-discover-list">
+                        {visibleChannels.map((channel, index) => (
+                          <ChannelCard
+                            key={channel.id}
+                            channel={channel}
+                            index={index}
+                            onClick={() => navigate({ page: 'P_CHANNEL', channelId: channel.id })}
+                            showSubscribe
+                          />
+                        ))}
                       </div>
                     </section>
                   )}
