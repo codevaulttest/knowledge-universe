@@ -14,6 +14,10 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
 
   return (
     <>
+      <div className="cert-rule-banner">
+        {t('帖子满 100 赞自动铸造确权认证，永久上链。')}
+      </div>
+
       <button
         type="button"
         className="bsp-rules-entry task-panel-rules-entry--neutral"

@@ -1169,6 +1169,7 @@ export const en: Record<string, string> = {
   '由 知识宇宙 颁发': 'Issued by Wisverse',
   '由 SuperAIChain 提供安全保障': 'Secured by SuperAIChain',
   '文章获得 100 个赞后，次日自动铸造一份知识确权认证，永久记录在链上。': 'Once an article reaches 100 likes, a knowledge certificate is automatically minted the next day and permanently recorded on-chain.',
+  '帖子满 100 赞自动铸造确权认证，永久上链。': 'Certification auto-mints at 100 likes, permanently on-chain.',
   '{count} 份': '{count}',
   '确权认证空态': 'Empty certificates state',
   '触发铸造：{id}': 'Mint now: {id}',

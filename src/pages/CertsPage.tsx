@@ -9,19 +9,17 @@ import { formatScheduledAt } from '../dateUtils';
 
 export function CertsPage() {
   const { t, goBack, canGoBack, navigate, knowledgeCerts, posts, simulateCertMint, simulateCertBurn } = useApp();
-  const [tab, setTab] = useState<CertStatus>('minted');
+  const [tab, setTab] = useState<Exclude<CertStatus, 'pending'>>('minted');
   // 开发工具：模拟空态（不改动种子数据）
   const [demoEmpty, setDemoEmpty] = useState(false);
 
   const myCerts = demoEmpty ? [] : knowledgeCerts.filter(c => c.holder === CURRENT_USER);
   const mintedCount = myCerts.filter(c => c.status === 'minted').length;
-  const pendingCount = myCerts.filter(c => c.status === 'pending').length;
   const burnedCount = myCerts.filter(c => c.status === 'burned').length;
   const filtered = myCerts.filter(c => c.status === tab);
 
-  const tabConfig: { key: CertStatus; label: string; count: number }[] = [
+  const tabConfig: { key: Exclude<CertStatus, 'pending'>; label: string; count: number }[] = [
     { key: 'minted', label: t('已铸造'), count: mintedCount },
-    { key: 'pending', label: t('待铸造'), count: pendingCount },
     { key: 'burned', label: t('已销毁'), count: burnedCount },
   ];
 

@@ -416,6 +416,14 @@
   font-size: 12.5px;
   line-height: 1.6;
 }
+/* 证书详情弹层已有 payment-sheet 自身内边距，复用横幅时去掉重复的左右外边距；
+   这里只作为规则入口上方的辅助说明，去掉底色，文字降级为中性色 */
+.cert-detail-page .cert-rule-banner {
+  margin: 0 0 var(--ku-space-3);
+  padding: 0;
+  background: none;
+  color: var(--ku-color-text-secondary);
+}
 
 /* ═══════════════════════════════════ 文章列表徽章 */
 
@@ -458,7 +466,7 @@
 
 .certs-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 10px 16px;
   padding: 3px;
 }
@@ -472,4 +480,9 @@
   gap: var(--ku-planet2-space-xs);
   padding-left: 6px;
   padding-right: 6px;
+}
+
+.certs-tabs .orders-tab-badge {
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-secondary);
 }

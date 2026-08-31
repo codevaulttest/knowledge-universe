@@ -18,7 +18,7 @@ export function CertRulesSheet({ onClose }: { onClose: () => void }) {
         <div className="pb-info-sheet-body">
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('确权条件：')}</strong>
-            {t('帖子获得 100 个赞后，次日自动铸造一份知识确权认证。')}
+            {t('帖子获得 100 个赞后，自动铸造一份知识确权认证。')}
           </p>
 
           <p className="pb-info-sheet-para">
