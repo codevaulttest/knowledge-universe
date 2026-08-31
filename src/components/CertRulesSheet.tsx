@@ -28,7 +28,7 @@ export function CertRulesSheet({ onClose }: { onClose: () => void }) {
 
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('查看位置：')}</strong>
-            {t('打开个人主页，在“帖子”下的“已确权”分类中查看已确权的帖子。')}
+            {t('打开个人主页，在“帖子”中选择“已确权”，即可查看已确权的帖子。')}
           </p>
 
           <p className="pb-info-sheet-para">
