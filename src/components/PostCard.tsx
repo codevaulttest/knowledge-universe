@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, Pencil, Radio, Repeat2, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, Users } from 'lucide-react';
+import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, Pencil, Radio, Repeat2, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, Users, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
@@ -239,7 +239,7 @@ export function PostCard({
   const views = post.views ?? derivedStat(post.id, 2, 80, 4200);
   const isFollowing = followedAuthors.has(post.author);
   const totalImgs = post.imageCount ?? 3;
-  const cert = knowledgeCerts.find(c => c.postId === post.id && c.status === 'minted');
+  const cert = knowledgeCerts.find(c => c.postId === post.id && c.status !== 'pending');
   const shopPriceFull = post.shop
     ? t('{price} PB', { price: formatTokenAmount(getShopMinPrice(post.shop)) })
     : '';
@@ -321,7 +321,7 @@ export function PostCard({
                 {channel.name}
               </span>
             )}
-            {cert && (
+            {cert?.status === 'minted' && (
               <button
                 type="button"
                 className="post-cert-badge"
@@ -333,6 +333,20 @@ export function PostCard({
                   <Check className="post-cert-badge-check" strokeWidth={4.5} aria-hidden="true" />
                 </span>
                 <span className="post-cert-badge-text">{t('已确权')}</span>
+              </button>
+            )}
+            {cert?.status === 'burned' && (
+              <button
+                type="button"
+                className="post-cert-badge post-cert-badge--burned"
+                aria-label={t('已销毁')}
+                onClick={e => { e.stopPropagation(); navigate({ page: 'P_CERT', certId: cert.id }); }}
+              >
+                <span className="post-cert-badge-mark" aria-hidden="true">
+                  <BadgeCheck className="post-cert-badge-icon" aria-hidden="true" />
+                  <X className="post-cert-badge-check" strokeWidth={4.5} aria-hidden="true" />
+                </span>
+                <span className="post-cert-badge-text">{t('已销毁')}</span>
               </button>
             )}
             {isOwn && requiredTier && (

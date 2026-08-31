@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { BadgeCheck, Check, ChevronRight, Info } from 'lucide-react';
+import { BadgeCheck, Check, ChevronRight, Info, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS } from '../mockData';
 import { formatScheduledAt } from '../dateUtils';
 import type { KnowledgeCert } from '../types';
 import { CertRulesSheet } from './CertRulesSheet';
 
-/** 知识确权认证证书卡：黑金物料，三态（已铸造 / 待铸造 / 已销毁）*/
+/** 知识确权认证证书卡：黑金物料，三态（已确权 / 待铸造 / 已销毁）*/
 export function CertCard({ cert }: { cert: KnowledgeCert }) {
   const { t, posts } = useApp();
   const sourcePost = posts.find(p => p.id === cert.postId) ?? ALL_POSTS.find(p => p.id === cert.postId);
@@ -31,12 +31,17 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
 
       <div className="cert-card" data-cert-state={cert.status}>
         <div className="cert-status-head">
-          {cert.status === 'minted' && (
+          {cert.status === 'minted' ? (
             <span className="cert-seal-icon" aria-hidden="true">
               <BadgeCheck className="cert-seal-icon-shape" />
               <Check className="cert-seal-icon-check" strokeWidth={3} />
             </span>
-          )}
+          ) : cert.status === 'burned' ? (
+            <span className="cert-burned-glyph" aria-hidden="true">
+              <BadgeCheck className="cert-burned-glyph-shape" />
+              <X className="cert-burned-glyph-x" strokeWidth={3} />
+            </span>
+          ) : null}
           <div className="cert-status-pill">
             <span className="cert-pill-dot" />
             <span>
@@ -88,7 +93,6 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
 
         {cert.status === 'burned' && (
           <div className="cert-burned-body">
-            <img src="/img/cert-seal-burned.svg" alt="" className="cert-burned-glyph" />
             <div className="cert-burned-title">{t('该认证已回收')}</div>
             <div className="cert-burned-desc">{cert.burnReason ?? t('经人工核查存在异常点赞，认证已回收')}</div>
 

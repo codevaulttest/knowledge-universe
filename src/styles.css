@@ -5674,6 +5674,40 @@ button {
   border-radius: 1px;
   background: var(--ku-color-primary);
 }
+/* 嵌在已有左右内边距的 .feed 容器里时（如 ProfilePage 确权 tab），去掉自身左右内边距，避免与外层内边距叠加 */
+.activity-filter-tabs--flush {
+  padding-left: 0;
+  padding-right: 0;
+}
+.activity-filter-tabs--certs .activity-filter-tab--active {
+  color: var(--ku-color-text-primary);
+  font-weight: 700;
+}
+.activity-filter-tabs--certs .activity-filter-tab {
+  font: var(--ku-text-meta-lg);
+  font-weight: 500;
+  padding-top: 0;
+}
+.activity-filter-tabs--certs .activity-filter-tab:first-child {
+  padding-left: 0;
+}
+.activity-filter-tabs--certs .activity-filter-tab--active::after {
+  display: none;
+}
+.activity-filter-tabs--certs {
+  width: calc(100% + var(--ku-feed-padding-x) * 2);
+  margin-left: calc(var(--ku-feed-padding-x) * -1);
+  padding-top: 0;
+  padding-left: var(--ku-feed-padding-x);
+  padding-right: var(--ku-feed-padding-x);
+}
+/* 数量仅作辅助计数，不代表待处理/需关注，用中性色文字而非强调色徽标 */
+.activity-filter-tab-count {
+  margin-left: 4px;
+  color: var(--ku-color-text-meta);
+  font: 400 13px/1 var(--ku-font-family);
+  font-variant-numeric: tabular-nums;
+}
 
 .activity-item {
   display: flex;
@@ -5995,7 +6029,7 @@ button {
   flex-shrink: 0;
   font: var(--ku-text-meta);
   font-weight: 600;
-  color: var(--ku-color-text-primary);
+  color: var(--ku-color-genesis-gold-text);
   font-variant-numeric: tabular-nums;
 }
 .draft-item-body {

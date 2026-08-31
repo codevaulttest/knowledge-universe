@@ -19,7 +19,7 @@ export function CertsPage() {
   const filtered = myCerts.filter(c => c.status === tab);
 
   const tabConfig: { key: Exclude<CertStatus, 'pending'>; label: string; count: number }[] = [
-    { key: 'minted', label: t('已铸造'), count: mintedCount },
+    { key: 'minted', label: t('已确权'), count: mintedCount },
     { key: 'burned', label: t('已销毁'), count: burnedCount },
   ];
 
@@ -80,7 +80,7 @@ export function CertsPage() {
                     </span>
                   </span>
                   <span className={`cert-list-item-pill cert-list-item-pill--${cert.status}`}>
-                    {cert.status === 'minted' ? t('已铸造') : cert.status === 'pending' ? t('待铸造') : t('已销毁')}
+                    {cert.status === 'minted' ? t('已确权') : cert.status === 'pending' ? t('待铸造') : t('已销毁')}
                   </span>
                   <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" style={{ color: 'var(--ku-color-text-meta)', flexShrink: 0 }} />
                 </button>

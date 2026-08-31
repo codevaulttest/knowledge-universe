@@ -997,7 +997,7 @@ export default function App({ account, onLanguageChange }: {
           txHash: c.txHash ?? `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
         }
       : c));
-    showToast(t('已铸造'));
+    showToast(t('已确权'));
   };
 
   // 开发工具：模拟人工判定刷赞后回收（minted → burned）

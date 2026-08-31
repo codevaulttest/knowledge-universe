@@ -4,7 +4,7 @@ import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
 import type { UserListItem } from '../mockData';
-import type { AddressMigration, Channel, ChannelSubscriber, Draft, Language, OutgoingTip, ProfileContacts, RepostedBy, UserProfile } from '../types';
+import type { AddressMigration, Channel, ChannelSubscriber, CertStatus, Draft, Language, OutgoingTip, ProfileContacts, RepostedBy, UserProfile } from '../types';
 import { PostCard } from '../components/PostCard';
 import { DevPanel } from '../components/DevPanel';
 import { ConfirmDeleteDraftModal, Ios26Alert, TipModal } from '../components/Overlays';
@@ -46,8 +46,9 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     .filter((p): p is (typeof allPosts)[number] => !!p && !p.deleted && p.author !== authorName && isPostVisible(p))
     .map(post => ({ post, repostedBy: { name: authorName, avatarIdx: theirAvatarIdx } }));
 
-  // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 打赏，4 = 收藏，5 = 赞过
-  const [profileTab, setProfileTab] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
+  // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 打赏，4 = 收藏，5 = 赞过，6 = 确权
+  const [profileTab, setProfileTab] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6>(0);
+  const [certFilter, setCertFilter] = useState<Exclude<CertStatus, 'pending'>>('minted');
   // 他人主页内容筛选：'all' | 'free' | 'sub'
   const [contentFilter, setContentFilter] = useState<'all' | 'free' | 'sub'>('all');
   const [followListType, setFollowListType] = useState<'following' | 'followers' | null>(null);
@@ -165,17 +166,17 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     </button>
   ) : null;
 
-  const mintedCertCount = isOwn ? knowledgeCerts.filter(c => c.holder === CURRENT_USER && c.status === 'minted').length : 0;
-  const certSection = isOwn ? (
-    <button type="button" className="channel-summary-entry" onClick={() => navigate({ page: 'P_CERTS' })}>
-      <BadgeCheck size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-cert-gold-strong)' }} />
-      <span className="channel-summary-entry-text">
-        <span className="channel-summary-entry-label">{t('我的知识确权认证')}</span>
-        <span className="channel-summary-entry-sub">{t('{count} 份已铸造', { count: mintedCertCount })}</span>
-      </span>
-      <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
-    </button>
-  ) : null;
+  const myCerts = isOwn ? knowledgeCerts.filter(c => c.holder === CURRENT_USER) : [];
+  const mintedCertCount = myCerts.filter(c => c.status === 'minted').length;
+  const burnedCertCount = myCerts.filter(c => c.status === 'burned').length;
+  const filteredCerts = myCerts.filter(c => c.status === certFilter);
+  const certPosts = filteredCerts
+    .map(cert => allPosts.find(p => p.id === cert.postId) ?? ALL_POSTS.find(p => p.id === cert.postId))
+    .filter((p): p is (typeof allPosts)[number] => !!p);
+  const certTabConfig: { key: Exclude<CertStatus, 'pending'>; label: string; count: number }[] = [
+    { key: 'minted', label: t('已确权'), count: mintedCertCount },
+    { key: 'burned', label: t('已销毁'), count: burnedCertCount },
+  ];
 
   return (
     <div className="page">
@@ -280,7 +281,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
         </div>
 
         {channelSection}
-        {certSection}
         {isOwn && (
           <div className="channel-summary-row">
             {orderSection}
@@ -356,6 +356,16 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               <Edit3 size={14} strokeWidth={2} />
               {t('草稿')}
               {drafts.length > 0 && <span className="profile-content-tab-badge">{drafts.length}</span>}
+            </button>
+            <button
+              type="button"
+              id="profile-tab-certs"
+              className={`profile-content-tab${profileTab === 6 ? ' profile-content-tab--active' : ''}`}
+              onClick={() => setProfileTab(6)}
+              aria-selected={profileTab === 6}
+            >
+              <BadgeCheck size={14} strokeWidth={2} style={{ color: 'var(--ku-color-text-secondary)' }} />
+              {t('确权')}
             </button>
             <button
               type="button"
@@ -458,6 +468,37 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                     else navigate({ page: 'P6', authorName: tip.recipientName });
                   }}
                 />
+              ))
+            )}
+          </section>
+        ) : isOwn && profileTab === 6 ? (
+          <section className="feed">
+            <nav className="activity-filter-tabs activity-filter-tabs--flush activity-filter-tabs--certs" role="tablist">
+              {certTabConfig.map(tc => (
+                <button
+                  key={tc.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={certFilter === tc.key}
+                  className={`activity-filter-tab${certFilter === tc.key ? ' activity-filter-tab--active' : ''}`}
+                  onClick={() => setCertFilter(tc.key)}
+                >
+                  {tc.label}
+                  {tc.count > 0 && (
+                    <span className="activity-filter-tab-count" aria-label={t('{count} 份', { count: tc.count })}>{tc.count}</span>
+                  )}
+                </button>
+              ))}
+            </nav>
+            {certPosts.length === 0 ? (
+              <div className="profile-empty-state">
+                <BadgeCheck size={32} strokeWidth={1.2} className="profile-empty-icon" />
+                <p className="profile-empty-title">{t('还没有知识确权认证')}</p>
+                <p className="profile-empty-sub">{t('文章满 100 赞即可获得')}</p>
+              </div>
+            ) : (
+              certPosts.map((post, i) => (
+                <PostCard key={post.id} post={post} index={i % 3} chainOutline={isOwn} />
               ))
             )}
           </section>
@@ -1456,7 +1497,7 @@ function OutgoingTipItem({ tip, onOpen }: { tip: OutgoingTip; onOpen: () => void
           <span>{formatTime(tip.createdAt)}</span>
         </div>
       </div>
-      <span className="tip-history-item-amount">-{tip.amount} PB</span>
+      <span className="tip-history-item-amount">{tip.amount} PB</span>
     </button>
   );
 }

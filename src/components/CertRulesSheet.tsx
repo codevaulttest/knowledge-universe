@@ -27,6 +27,11 @@ export function CertRulesSheet({ onClose }: { onClose: () => void }) {
           </p>
 
           <p className="pb-info-sheet-para">
+            <strong className="pb-info-sheet-label">{t('查看位置：')}</strong>
+            {t('打开个人主页，在“确权”分类中查看已确权的帖子。')}
+          </p>
+
+          <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('回收机制：')}</strong>
             {t('经人工核查存在异常点赞的文章，其认证会被回收，状态变为已销毁。')}
           </p>

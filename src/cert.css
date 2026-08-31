@@ -128,7 +128,7 @@
 .cert-rule {
   height: 1px;
   background: var(--ku-color-border-card);
-  margin-bottom: 16px;
+  margin-bottom: var(--ku-space-2);
   transform-origin: left center;
   animation: certRuleIn 0.5s cubic-bezier(.4, 0, .2, 1) 0.2s both;
 }
@@ -139,9 +139,9 @@
 }
 
 .cert-field {
-  display: grid;
-  grid-template-columns: 40% 60%;
-  gap: var(--ku-space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-1);
   padding: 10px 0;
   border-bottom: 1px solid var(--ku-color-border-card);
 }
@@ -152,7 +152,6 @@
   letter-spacing: .04em;
   color: var(--ku-color-text-meta);
   font-weight: 500;
-  padding-top: 2px;
   line-height: 1.4;
 }
 
@@ -278,9 +277,24 @@
 }
 
 .cert-burned-glyph {
+  position: relative;
   width: 64px;
   height: 64px;
-  margin-bottom: 4px;
+  color: var(--ku-color-text-danger);
+}
+.cert-burned-glyph-shape {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+.cert-burned-glyph-x {
+  position: absolute;
+  inset: 0;
+  width: var(--ku-space-8);
+  height: var(--ku-space-8);
+  margin: auto;
+  color: var(--ku-color-on-primary);
 }
 
 .cert-burned-title {
@@ -299,6 +313,12 @@
 .cert-burned-meta {
   margin-top: 8px;
   width: 100%;
+  text-align: left;
+}
+
+.cert-burned-body > .cert-field {
+  width: 100%;
+  align-self: stretch;
   text-align: left;
 }
 
@@ -413,7 +433,7 @@
   border-radius: var(--ku-radius-card);
   background: var(--ku-cert-gold-strong-bg);
   color: var(--ku-cert-gold-strong);
-  font-size: 12.5px;
+  font: var(--ku-text-meta);
   line-height: 1.6;
 }
 /* 证书详情弹层已有 payment-sheet 自身内边距，复用横幅时去掉重复的左右外边距；
@@ -442,6 +462,16 @@
   flex-shrink: 0;
 }
 .post-cert-badge:active { opacity: 0.85; }
+.post-cert-badge--burned {
+  background: var(--ku-color-danger-bg);
+  color: var(--ku-color-text-danger);
+}
+.post-cert-badge--burned .post-cert-badge-icon {
+  fill: currentColor;
+}
+.post-cert-badge--burned .post-cert-badge-check {
+  color: var(--ku-color-danger-bg);
+}
 .post-cert-badge-mark {
   position: relative;
   display: inline-flex;
