@@ -1147,7 +1147,7 @@ export const en: Record<string, string> = {
   '帖子获得 100 个赞后，次日自动铸造一份知识确权认证。': 'Once a post reaches 100 likes, a certification is automatically minted the next day.',
   '上链记录：': 'On-chain record: ',
   '查看位置：': 'Where to view: ',
-  '打开个人主页，在“确权”分类中查看已确权的帖子。': 'Open your profile and select the “Certificates” section to view your certified posts.',
+  '打开个人主页，在“帖子”下的“已确权”分类中查看已确权的帖子。': 'Open your profile, then select “Certified” under “Posts” to view your certified posts.',
   '认证包含证书编号、内容指纹、交易哈希等信息，永久记录在链上，不可篡改。': 'The certification records the ID, content fingerprint, and transaction hash on-chain permanently and immutably.',
   '回收机制：': 'Revocation: ',
   '经人工核查存在异常点赞的文章，其认证会被回收，状态变为已销毁。': 'If manual review finds abnormal likes, the certification is revoked and marked as burned.',

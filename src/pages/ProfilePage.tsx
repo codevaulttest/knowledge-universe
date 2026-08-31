@@ -46,9 +46,9 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     .filter((p): p is (typeof allPosts)[number] => !!p && !p.deleted && p.author !== authorName && isPostVisible(p))
     .map(post => ({ post, repostedBy: { name: authorName, avatarIdx: theirAvatarIdx } }));
 
-  // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 打赏，4 = 收藏，5 = 赞过，6 = 确权
-  const [profileTab, setProfileTab] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6>(0);
-  const [certFilter, setCertFilter] = useState<Exclude<CertStatus, 'pending'>>('minted');
+  // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 打赏，4 = 收藏，5 = 赞过
+  const [profileTab, setProfileTab] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
+  const [postCertFilter, setPostCertFilter] = useState<'all' | Exclude<CertStatus, 'pending'>>('all');
   // 他人主页内容筛选：'all' | 'free' | 'sub'
   const [contentFilter, setContentFilter] = useState<'all' | 'free' | 'sub'>('all');
   const [followListType, setFollowListType] = useState<'following' | 'followers' | null>(null);
@@ -169,14 +169,19 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const myCerts = isOwn ? knowledgeCerts.filter(c => c.holder === CURRENT_USER) : [];
   const mintedCertCount = myCerts.filter(c => c.status === 'minted').length;
   const burnedCertCount = myCerts.filter(c => c.status === 'burned').length;
-  const filteredCerts = myCerts.filter(c => c.status === certFilter);
-  const certPosts = filteredCerts
+  const certPostsByStatus = (status: Exclude<CertStatus, 'pending'>) => myCerts
+    .filter(cert => cert.status === status)
     .map(cert => allPosts.find(p => p.id === cert.postId) ?? ALL_POSTS.find(p => p.id === cert.postId))
     .filter((p): p is (typeof allPosts)[number] => !!p);
-  const certTabConfig: { key: Exclude<CertStatus, 'pending'>; label: string; count: number }[] = [
+  const postFilterTabs: { key: 'all' | Exclude<CertStatus, 'pending'>; label: string; count?: number }[] = [
+    { key: 'all', label: t('全部') },
     { key: 'minted', label: t('已确权'), count: mintedCertCount },
     { key: 'burned', label: t('已销毁'), count: burnedCertCount },
   ];
+  const filteredPostEntries: { post: (typeof allPosts)[number]; repostedBy?: RepostedBy }[] = isOwn && profileTab === 0 && postCertFilter !== 'all'
+    ? certPostsByStatus(postCertFilter).map(post => ({ post }))
+    : displayedEntries;
+  const filteredPosts = filteredPostEntries.map(entry => entry.post);
 
   return (
     <div className="page">
@@ -359,16 +364,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             </button>
             <button
               type="button"
-              id="profile-tab-certs"
-              className={`profile-content-tab${profileTab === 6 ? ' profile-content-tab--active' : ''}`}
-              onClick={() => setProfileTab(6)}
-              aria-selected={profileTab === 6}
-            >
-              <BadgeCheck size={14} strokeWidth={2} style={{ color: 'var(--ku-color-text-secondary)' }} />
-              {t('确权')}
-            </button>
-            <button
-              type="button"
               id="profile-tab-reposted"
               className={`profile-content-tab${profileTab === 2 ? ' profile-content-tab--active' : ''}`}
               onClick={() => setProfileTab(2)}
@@ -471,40 +466,28 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               ))
             )}
           </section>
-        ) : isOwn && profileTab === 6 ? (
+        ) : (
           <section className="feed">
-            <nav className="activity-filter-tabs activity-filter-tabs--flush activity-filter-tabs--certs" role="tablist">
-              {certTabConfig.map(tc => (
+            {isOwn && profileTab === 0 && (
+              <nav className="activity-filter-tabs activity-filter-tabs--flush activity-filter-tabs--certs" role="tablist" aria-label={t('帖子筛选')}>
+              {postFilterTabs.map(tc => (
                 <button
                   key={tc.key}
                   type="button"
                   role="tab"
-                  aria-selected={certFilter === tc.key}
-                  className={`activity-filter-tab${certFilter === tc.key ? ' activity-filter-tab--active' : ''}`}
-                  onClick={() => setCertFilter(tc.key)}
+                  aria-selected={postCertFilter === tc.key}
+                  className={`activity-filter-tab${postCertFilter === tc.key ? ' activity-filter-tab--active' : ''}`}
+                  onClick={() => setPostCertFilter(tc.key)}
                 >
                   {tc.label}
-                  {tc.count > 0 && (
+                  {tc.count !== undefined && tc.count > 0 && (
                     <span className="activity-filter-tab-count" aria-label={t('{count} 份', { count: tc.count })}>{tc.count}</span>
                   )}
                 </button>
               ))}
             </nav>
-            {certPosts.length === 0 ? (
-              <div className="profile-empty-state">
-                <BadgeCheck size={32} strokeWidth={1.2} className="profile-empty-icon" />
-                <p className="profile-empty-title">{t('还没有知识确权认证')}</p>
-                <p className="profile-empty-sub">{t('文章满 100 赞即可获得')}</p>
-              </div>
-            ) : (
-              certPosts.map((post, i) => (
-                <PostCard key={post.id} post={post} index={i % 3} chainOutline={isOwn} />
-              ))
             )}
-          </section>
-        ) : (
-          <section className="feed">
-            {displayedEntries.map((entry, i) => (
+            {filteredPostEntries.map((entry, i) => (
               <React.Fragment key={`${entry.post.id}-${entry.repostedBy?.name ?? 'orig'}`}>
                 {isOwn && !isPostVisible(entry.post) && entry.post.scheduledAt && (
                   <p className="profile-scheduled-badge">
@@ -521,9 +504,15 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 />
               </React.Fragment>
             ))}
-            {displayedPosts.length === 0 && (
+            {filteredPosts.length === 0 && (
               <div className="profile-empty-state">
-                {profileTab === 2 ? (
+                {isOwn && profileTab === 0 && postCertFilter !== 'all' ? (
+                  <>
+                    <BadgeCheck size={32} strokeWidth={1.2} className="profile-empty-icon" />
+                    <p className="profile-empty-title">{t('还没有知识确权认证')}</p>
+                    <p className="profile-empty-sub">{t('文章满 100 赞即可获得')}</p>
+                  </>
+                ) : profileTab === 2 ? (
                   <>
                     <Repeat2 size={32} strokeWidth={1.2} className="profile-empty-icon" />
                     <p className="profile-empty-title">{t('还没有转发')}</p>
