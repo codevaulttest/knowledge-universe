@@ -60,7 +60,7 @@ export type CertStatus = 'minted' | 'pending' | 'burned';
 
 /** 知识确权认证：一篇文章满 100 赞后由 cron 铸造的链上 NFT 凭证 */
 export type KnowledgeCert = {
-  id: string; // 证书编号，如 'KU-KC-20260001007'
+  id: string; // 证书编号，如 'WV-KC-20260001007'
   postId: string; // 对应文章
   status: CertStatus;
   holder: string; // 当前持有人（作者名）

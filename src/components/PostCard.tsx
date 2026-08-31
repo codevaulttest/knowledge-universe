@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, Pencil, Radio, Repeat2, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, Users } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { CURRENT_USER, getGenesisTier, POST_ACTORS } from '../mockData';
+import { CURRENT_USER, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
-import { ArticleFeedCard, AuthorName, Avatar, GenesisBadge, GeminiNodeBadge, MediaPlaceholder, PostContent } from './shared';
+import { ArticleFeedCard, AuthorName, Avatar, GeminiNodeBadge, MediaPlaceholder, PostContent } from './shared';
 import { TipModal, Ios26Alert } from './Overlays';
 import { isChinese, localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
@@ -239,7 +239,6 @@ export function PostCard({
   const views = post.views ?? derivedStat(post.id, 2, 80, 4200);
   const isFollowing = followedAuthors.has(post.author);
   const totalImgs = post.imageCount ?? 3;
-  const genesisTier = getGenesisTier(post.author);
   const cert = knowledgeCerts.find(c => c.postId === post.id && c.status === 'minted');
   const shopPriceFull = post.shop
     ? t('{price} PB', { price: formatTokenAmount(getShopMinPrice(post.shop)) })
@@ -313,7 +312,6 @@ export function PostCard({
         <div className="author-meta" onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') navigate({ page: 'P6', authorName: post.author }); }}>
           <span className="post-author-name-row">
             <AuthorName name={displayName} as="h2" />
-            {genesisTier && <GenesisBadge tier={genesisTier} />}
           </span>
           <div className="author-meta-row">
             <span className="author-time">{localizeTime(post.time, language)}</span>
@@ -327,11 +325,14 @@ export function PostCard({
               <button
                 type="button"
                 className="post-cert-badge"
-                aria-label={t('已确权 · 查看认证证书')}
-                onClick={e => { e.stopPropagation(); navigate({ page: 'P_CERT', certId: cert.id }); }}
-              >
-                <BadgeCheck size={11} strokeWidth={2.2} />
-                {t('已确权')}
+              aria-label={t('已确权 · 查看认证证书')}
+              onClick={e => { e.stopPropagation(); navigate({ page: 'P_CERT', certId: cert.id }); }}
+            >
+                <span className="post-cert-badge-mark" aria-hidden="true">
+                  <BadgeCheck className="post-cert-badge-icon" aria-hidden="true" />
+                  <Check className="post-cert-badge-check" strokeWidth={4.5} aria-hidden="true" />
+                </span>
+                <span className="post-cert-badge-text">{t('已确权')}</span>
               </button>
             )}
             {isOwn && requiredTier && (

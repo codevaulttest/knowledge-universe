@@ -581,7 +581,7 @@ export const ALL_POSTS: Post[] = [
     id: 'shop-mine', author: CURRENT_USER, time: '1 天前',
     title: '我的手作机械键盘（客制化 · 静电容轴）。整套含卫星轴调教与消音棉，支持改键。下单请备注配列。',
     kind: 'image', imageCount: 2, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Mk2wQ8',
-    rating: 5, replies: 9, links: 5, shares: 3, saves: 41, likes: 97,
+    rating: 5, replies: 9, links: 5, shares: 3, saves: 41, likes: 132,
     shop: { price: 12000, rebatePercent: 20, partnerRebatePercent: 10, stock: 5 },
   },
   {
@@ -1265,7 +1265,7 @@ export const MOCK_SHOP_ORDERS: ShopOrder[] = [
 // ── 知识确权认证：文章满 100 赞后由 cron 铸造的链上 NFT 凭证种子数据 ──
 export const MOCK_KNOWLEDGE_CERTS: KnowledgeCert[] = [
   {
-    id: 'KU-KC-20260000412', postId: 'p9', status: 'minted', holder: CURRENT_USER,
+    id: 'WV-KC-20260000412', postId: 'p9', status: 'minted', holder: CURRENT_USER,
     issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 3, likesAtMint: 150,
     contentHash: '05bd857af7f70bf51b6aac9d4e112a8f3c7b2e91f4d6a0c8e5b3d2f1a7c9e4b6',
     tokenId: '53234914853141795189840113938456271650482947316',
@@ -1273,7 +1273,7 @@ export const MOCK_KNOWLEDGE_CERTS: KnowledgeCert[] = [
     issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
   {
-    id: 'KU-KC-20260000198', postId: 'p2', status: 'minted', holder: '阿May的研究笔记',
+    id: 'WV-KC-20260000198', postId: 'p2', status: 'minted', holder: '阿May的研究笔记',
     issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 11, likesAtMint: 214,
     contentHash: '9e2c6f1a4d7b0834eac5f92d1b6087a3c4e5f60918273645fabc0d1e2f3a4b5',
     tokenId: '41207765218843906612205173390946612053177720184',
@@ -1281,7 +1281,7 @@ export const MOCK_KNOWLEDGE_CERTS: KnowledgeCert[] = [
     issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
   {
-    id: 'KU-KC-20260000355', postId: 'shop-ph-article', status: 'minted', holder: '阿May的研究笔记',
+    id: 'WV-KC-20260000355', postId: 'shop-ph-article', status: 'minted', holder: '阿May的研究笔记',
     issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 6, likesAtMint: 201,
     contentHash: '3f8a1c9e2b6d5074f1a3c8e9d2b4f6017c9e2a4d6b8f0135e7c9a1b3d5f7091',
     tokenId: '68901234567890123456789012345678901234567890123',
@@ -1289,19 +1289,35 @@ export const MOCK_KNOWLEDGE_CERTS: KnowledgeCert[] = [
     issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
   {
-    id: 'KU-KC-20260000487', postId: 'cert-pending-1', status: 'pending', holder: CURRENT_USER,
+    id: 'WV-KC-20260000487', postId: 'cert-pending-1', status: 'pending', holder: CURRENT_USER,
     likesAtMint: 132,
     contentHash: '7c1e3a5f9082b4d6f8091a3c5e7092b4d6f8a1c3e5f7091b3d5f7092b4d6f8a',
     issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
   {
-    id: 'KU-KC-20260000276', postId: 'cert-burned-1', status: 'burned', holder: CURRENT_USER,
+    id: 'WV-KC-20260000276', postId: 'cert-burned-1', status: 'burned', holder: CURRENT_USER,
     issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 8, likesAtMint: 145,
     burnedAt: Date.now() - 1000 * 60 * 60 * 6,
     burnReason: '经人工核查存在异常点赞，认证已回收',
     contentHash: 'ad2f4b6d8e01f3a5c7092b4d6f8a1c3e5f7091b3d5f7092b4d6f8a1c3e5f709',
     tokenId: '10293847561029384756102938475610293847561029384',
     txHash: '0xf0918273645fabc0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5061728394a5b6c7d8',
+    issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
+  },
+  {
+    id: 'WV-KC-20260000523', postId: 'shop-iphone', status: 'minted', holder: '极客前沿',
+    issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 2, likesAtMint: 428,
+    contentHash: 'f9758b650f17751cfc8089d6355fabebad635fa92f6aebb1f0ce96fd9c8b527c',
+    tokenId: '62592625540211963',
+    txHash: '0x6bc18f6d161cc14a6c5e022fc96a903ad1f2682cdc2d6ba53d0a9729f4de9de6',
+    issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
+  },
+  {
+    id: 'WV-KC-20260000601', postId: 'shop-mine', status: 'minted', holder: CURRENT_USER,
+    issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 1, likesAtMint: 132,
+    contentHash: '93afbd59996bbc200cadb46c7fee4a1eb8830ab4f2b10ae63be0d4560aba3301',
+    tokenId: '19930683504345219',
+    txHash: '0x16a80e6a42a66f6acf24b7ed5a8c2806ad4e05ce242ef77ac04cb18e4c001aa2',
     issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
 ];

@@ -507,7 +507,8 @@ export default function App({ account, onLanguageChange }: {
 
   const route = stack[stack.length - 1];
   const shopItemOpen = route.page === 'P_SHOP_ITEM';
-  const pageRoute = shopItemOpen && stack.length > 1 ? stack[stack.length - 2]! : route;
+  const certOpen = route.page === 'P_CERT';
+  const pageRoute = (shopItemOpen || certOpen) && stack.length > 1 ? stack[stack.length - 2]! : route;
   const tab = pageRoute.page === 'P0' ? pageRoute.tab : 0;
   const navigate = (r: Route) => { setSearchOpen(false); setStack(s => [...s, r]); };
   const navigateRoot = (r: Route) => setStack([r]);
@@ -1209,6 +1210,16 @@ export default function App({ account, onLanguageChange }: {
   return (
     <AppProvider value={ctx}>
       <div className="phone-shell" data-layer="knowledge-feed-page">
+        <svg width="0" height="0" aria-hidden="true" style={{ position: 'absolute' }}>
+          <defs>
+            <linearGradient id="cert-gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="var(--ku-cert-gold-shine)" />
+              <stop offset="42%" stopColor="var(--ku-cert-gold)" />
+              <stop offset="72%" stopColor="var(--ku-cert-gold-strong)" />
+              <stop offset="100%" stopColor="var(--ku-cert-gold)" />
+            </linearGradient>
+          </defs>
+        </svg>
         {/* 页面主体 */}
         {pageRoute.page === 'P0' && <FeedPage tab={tab} setTab={setTab} />}
         {pageRoute.page === 'P2' && <PostDetailPage postId={pageRoute.postId} scrollToComments={pageRoute.scrollToComments} />}
@@ -1222,7 +1233,6 @@ export default function App({ account, onLanguageChange }: {
         {pageRoute.page === 'P_SHOP' && <ShopPage />}
         {pageRoute.page === 'P_ORDERS' && <OrdersPage initialRole={pageRoute.role} />}
         {pageRoute.page === 'P_CERTS' && <CertsPage />}
-        {pageRoute.page === 'P_CERT' && <CertDetailPage certId={pageRoute.certId} />}
 
         {/* 码库全局底部导航（知识宇宙内始终保持同一套宿主导航）*/}
         {showBottomNav && <BottomNav route={pageRoute} setTab={setTab} />}
@@ -1230,6 +1240,15 @@ export default function App({ account, onLanguageChange }: {
         {/* 覆盖层：商品详情弹窗 */}
         {shopItemOpen && (
           <ShopItemPage postId={route.postId} onClose={goBack} />
+        )}
+
+        {/* 覆盖层：认证详情弹窗 */}
+        {certOpen && (
+          <div className="sheet-backdrop cert-detail-backdrop" onClick={goBack}>
+            <div className="payment-sheet" role="dialog" aria-modal="true" aria-label={t('认证详情')} onClick={e => e.stopPropagation()}>
+              <CertDetailPage certId={route.certId} onClose={goBack} />
+            </div>
+          </div>
         )}
 
         {/* 覆盖层：发帖居中弹窗 */}

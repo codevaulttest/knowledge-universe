@@ -1,29 +1,42 @@
 import { useState } from 'react';
+import { BadgeCheck, Check, ChevronRight, Info } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS } from '../mockData';
 import { formatScheduledAt } from '../dateUtils';
 import type { KnowledgeCert } from '../types';
-import { CertExplorerSheet } from './CertExplorerSheet';
+import { CertRulesSheet } from './CertRulesSheet';
 
 /** 知识确权认证证书卡：黑金物料，三态（已铸造 / 待铸造 / 已销毁）*/
 export function CertCard({ cert }: { cert: KnowledgeCert }) {
-  const { t, posts, openArticleReader } = useApp();
-  const [explorer, setExplorer] = useState<{ label: string; value: string } | null>(null);
+  const { t, posts } = useApp();
   const sourcePost = posts.find(p => p.id === cert.postId) ?? ALL_POSTS.find(p => p.id === cert.postId);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   return (
     <>
-      <div className="cert-card" data-cert-state={cert.status}>
-        <div className="cert-corners"><i /><i /><i /><i /></div>
+      <button
+        type="button"
+        className="bsp-rules-entry task-panel-rules-entry--neutral"
+        onClick={() => setRulesOpen(true)}
+        aria-label={t('了解知识确权规则')}
+      >
+        <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
+        <span className="bsp-rules-entry-text">{t('了解知识确权规则')}</span>
+        <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
+      </button>
 
+      <div className="cert-card" data-cert-state={cert.status}>
         <div className="cert-status-head">
           {cert.status === 'minted' && (
-            <img src="/img/cert-seal.svg" alt="" className="cert-seal-icon" />
+            <span className="cert-seal-icon" aria-hidden="true">
+              <BadgeCheck className="cert-seal-icon-shape" />
+              <Check className="cert-seal-icon-check" strokeWidth={3} />
+            </span>
           )}
           <div className="cert-status-pill">
             <span className="cert-pill-dot" />
             <span>
-              {cert.status === 'minted' ? t('已铸造') : cert.status === 'pending' ? t('待铸造') : t('已销毁')}
+              {cert.status === 'minted' ? t('已确权') : cert.status === 'pending' ? t('待铸造') : t('已销毁')}
             </span>
           </div>
         </div>
@@ -55,40 +68,16 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
               </div>
 
               <div className="cert-field">
-                <span className="cert-f-label">{t('铸造时赞数')}</span>
-                <span className="cert-f-val">{cert.likesAtMint ?? '—'}</span>
-              </div>
-            </div>
-
-            <div className="cert-onchain-block">
-              <div className="cert-onchain-header">
-                <span className="cert-onchain-label">{t('链上信息')}</span>
-                <span className="cert-onchain-line-dec" />
-              </div>
-
-              <div className="cert-chain-row">
-                <span className="cert-ch-key">{t('发行方')}</span>
-                <span className="cert-ch-val" style={{ cursor: 'default' }}>{cert.issuerAddress}</span>
+                <span className="cert-f-label">{t('交易哈希')}</span>
+                {cert.status === 'minted' ? (
+                  <span className="cert-f-val cert-mono cert-ch-link">
+                    {cert.txHash}
+                  </span>
+                ) : (
+                  <span className="cert-f-val cert-muted">{t('等待次日铸造')}</span>
+                )}
               </div>
 
-              {cert.status === 'minted' ? (
-                <>
-                  <div className="cert-chain-row">
-                    <span className="cert-ch-key">Token ID</span>
-                    <button type="button" className="cert-ch-val" onClick={() => setExplorer({ label: 'Token ID', value: cert.tokenId! })}>
-                      {cert.tokenId}
-                    </button>
-                  </div>
-                  <div className="cert-chain-row">
-                    <span className="cert-ch-key">{t('铸造交易')}</span>
-                    <button type="button" className="cert-ch-val" onClick={() => setExplorer({ label: t('铸造交易'), value: cert.txHash! })}>
-                      {cert.txHash}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="cert-pending-note">{t('等待次日铸造')}</div>
-              )}
             </div>
           </>
         )}
@@ -110,34 +99,15 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
               </div>
             </div>
 
-            <div className="cert-onchain-block" style={{ marginTop: 14, width: '100%' }}>
-              <div className="cert-onchain-header">
-                <span className="cert-onchain-label">{t('链上信息')}</span>
-                <span className="cert-onchain-line-dec" />
-              </div>
-              <div className="cert-chain-row">
-                <span className="cert-ch-key">Token ID</span>
-                <button type="button" className="cert-ch-val" onClick={() => setExplorer({ label: 'Token ID', value: cert.tokenId! })}>
-                  {cert.tokenId}
-                </button>
-              </div>
-              <div className="cert-chain-row">
-                <span className="cert-ch-key">{t('铸造交易')}</span>
-                <button type="button" className="cert-ch-val" onClick={() => setExplorer({ label: t('铸造交易'), value: cert.txHash! })}>
-                  {cert.txHash}
-                </button>
-              </div>
+            <div className="cert-field">
+              <span className="cert-f-label">{t('交易哈希')}</span>
+              <span className="cert-f-val cert-mono cert-ch-link">
+                {cert.txHash}
+              </span>
             </div>
           </div>
         )}
 
-        <div className="cert-foot">
-          <div className="cert-foot-row">
-            <span className="cert-foot-item">{t('由 知识宇宙 颁发')}</span>
-            <span className="cert-foot-sep" />
-            <span className="cert-foot-item">{t('由 SuperAIChain 提供安全保障')}</span>
-          </div>
-        </div>
       </div>
 
       {sourcePost && (
@@ -145,15 +115,13 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
           type="button"
           className="cert-f-val cert-link"
           style={{ display: 'block', margin: '14px auto 0', textAlign: 'center' }}
-          onClick={() => openArticleReader(sourcePost)}
         >
-          {t('查看所属文章')}
+          {t('前往区块链浏览器')}
         </button>
       )}
 
-      {explorer && (
-        <CertExplorerSheet label={explorer.label} value={explorer.value} onClose={() => setExplorer(null)} />
-      )}
+      {rulesOpen && <CertRulesSheet onClose={() => setRulesOpen(false)} />}
+
     </>
   );
 }

@@ -459,14 +459,11 @@
   --ku-color-admin-stage-bg:       #e4e8f0;  /* 舞台区底色，与手机壳白底区隔 */
 
   /* ═══════════════════════════════════════════════════
-     知识确权认证证书（黑金物料，固定配色，不随主题切换）
-     源自 Wiseverse 链上确权证书视觉语言；对比度已重新核算，
-     所有取值相对 --ku-cert-card (#0f0f0f) 均达 WCAG AA 4.5:1+。
+     知识确权认证证书（知识宇宙浅色物料）
+     金色仅作为"认证"身份识别色，用在状态/印章/链上信息等局部，
+     主体沿用全站浅色 --ku-color-* token；金色取值对浅色底
+     （白 / --ku-cert-gold-strong-bg）均达 WCAG AA 4.5:1+。
      ═══════════════════════════════════════════════════ */
-
-  --ku-cert-bg:                #080808;
-  --ku-cert-card:               #0f0f0f;
-  --ku-cert-card-hi:            #141414;
 
   --ku-cert-gold:               #C8A96E;
   --ku-cert-gold-06:            rgba(200, 169, 110, 0.06);
@@ -478,22 +475,12 @@
   --ku-cert-gold-30:            rgba(200, 169, 110, 0.30);
   --ku-cert-gold-60:            rgba(200, 169, 110, 0.60);
 
-  /* 浅色场景（列表页入口、文章徽章）用的加深金，压在白/浅灰底上达 4.5:1+ */
+  /* 压在白 / 浅灰底上达 4.5:1+ 的加深金 */
   --ku-cert-gold-strong:        #7A5A20;
   --ku-cert-gold-strong-bg:     #f7f0e2;
 
-  --ku-cert-text:               #F2EDE3;  /* 主文本，对比度 16.4:1 */
-  --ku-cert-text-muted:         rgba(242, 237, 227, 0.75);  /* 次级文本，9.4:1 */
-  --ku-cert-text-faint:         rgba(242, 237, 227, 0.55);  /* 最弱文本（仅限非正文场景），5.5:1 */
-
-  --ku-cert-error:              #cb6262;  /* 在 error-10 底上对 --ku-cert-card 达 4.55:1 */
-  --ku-cert-error-10:           rgba(203, 98, 98, 0.10);
-  --ku-cert-error-32:           rgba(203, 98, 98, 0.32);
-  --ku-cert-error-50:           rgba(203, 98, 98, 0.50);
-
-  --ku-cert-radius-pill:        2px;
-  --ku-cert-shadow:             0 0 0 1px rgba(200, 169, 110, 0.08), 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(200, 169, 110, 0.04);
-  --ku-cert-shadow-minted:      0 0 0 1px var(--ku-cert-gold-20), 0 20px 70px rgba(0, 0, 0, 0.7), 0 0 60px var(--ku-cert-gold-12), 0 0 120px var(--ku-cert-gold-06);
+  /* 认证徽章金属渐变高光色，与 --ku-cert-gold / --ku-cert-gold-strong 搭配形成金属光泽扫面 */
+  --ku-cert-gold-shine:         #F0DBA8;
 
   --ku-font-mono:               'Courier New', monospace;
 }
