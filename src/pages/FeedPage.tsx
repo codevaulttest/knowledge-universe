@@ -187,7 +187,7 @@ const NAV_HIDE_SCROLL_DELTA = 6;
 // 距顶部多近内强制显示导航（避免刚滚动一点就误隐藏）
 const NAV_HIDE_TOP_GUARD = 24;
 
-export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 1 | 2 | 3) => void }) {
+export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 2) => void }) {
   const { followedAuthors, navigate, unreadActivityCount, openLotTask, lotTaskAlert, t, walletConnected, connectWallet, requireWallet, homeFeedRefreshNonce, showToast, navBarsHidden, setNavBarsHidden, openSearch } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevTabRef = useRef(tab);
@@ -244,9 +244,9 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
     return () => clearTimeout(t);
   }, [tab]);
 
-  // 关注 / 频道依赖身份数据，游客点击先引导连接钱包；推荐、商城为公开浏览，无需连接
-  const goTab = (next: 0 | 1 | 2 | 3) => {
-    if (next === 0 || next === 3) { setTab(next); return; }
+  // 关注 / 频道依赖身份数据，游客点击先引导连接钱包；推荐为公开浏览，无需连接
+  const goTab = (next: 0 | 1 | 2) => {
+    if (next === 0) { setTab(next); return; }
     requireWallet(() => setTab(next));
   };
 
@@ -273,8 +273,8 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
     if (s.axis !== 'x') return;
     const dx = e.changedTouches[0].clientX - s.x0;
     if (Math.abs(dx) < SWIPE_THRESHOLD) return;
-    if (dx < 0 && tab < 3) goTab((tab + 1) as 0 | 1 | 2 | 3);
-    else if (dx > 0 && tab > 0) goTab((tab - 1) as 0 | 1 | 2 | 3);
+    if (dx < 0 && tab < 2) goTab((tab + 1) as 0 | 1 | 2);
+    else if (dx > 0 && tab > 0) goTab((tab - 1) as 0 | 1 | 2);
   };
 
   return (
@@ -296,7 +296,6 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
           <button className={tab === 0 ? 'active' : ''} type="button" onClick={() => goTab(0)}>{t('推荐')}</button>
           <button className={tab === 1 ? 'active' : ''} type="button" onClick={() => goTab(1)}>{t('关注2')}</button>
           <button className={tab === 2 ? 'active' : ''} type="button" onClick={() => goTab(2)}>{t('频道')}</button>
-          <button className={tab === 3 ? 'active' : ''} type="button" onClick={() => goTab(3)}>{t('商城')}</button>
         </nav>
         <div className="feed-header-right">
           <button
@@ -349,7 +348,6 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2 | 3; setTab: (t: 0 | 
         {tab === 0 && <RecommendFeed key={feedKey} scrollRef={scrollRef} />}
         {tab === 1 && <FollowFeed key={feedKey} followedAuthors={followedAuthors} />}
         {tab === 2 && <ChannelDiscoverFeed key={feedKey} />}
-        {tab === 3 && <ShopFeed key={feedKey} />}
       </div>
       <DevPanel />
     </>

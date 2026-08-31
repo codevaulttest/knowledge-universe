@@ -2753,6 +2753,21 @@ button {
   font: 600 15px/1 var(--ku-font-family);
   color: var(--ku-color-text-primary);
 }
+.sheet-header-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.shop-addr-form-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: none;
+  background: none;
+  color: var(--ku-color-text-secondary);
+  cursor: pointer;
+}
 .sheet-amount-row {
   display: flex;
   align-items: center;
@@ -13036,6 +13051,7 @@ html[lang="zh-TW"] .planet-hero-title {
   cursor: pointer;
   text-align: left;
 }
+.shop-addr-edit,
 .shop-addr-delete {
   flex-shrink: 0;
   display: flex;
@@ -13047,6 +13063,7 @@ html[lang="zh-TW"] .planet-hero-title {
   color: var(--ku-color-text-meta);
   cursor: pointer;
 }
+.shop-addr-edit:hover { color: var(--ku-color-shop-strong); }
 .shop-addr-delete:hover { color: var(--ku-color-text-danger); }
 .shop-addr-item--active { border-color: var(--ku-color-shop-btn); }
 .shop-addr-check { color: var(--ku-color-shop); flex-shrink: 0; }

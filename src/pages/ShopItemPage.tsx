@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bookmark, Check, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, Phone, Plus, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
+import { Bookmark, Check, ChevronLeft, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, Pencil, Phone, Plus, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
 import type { PbWalletId, ProfileContacts, ShippingAddress, ShopOrder } from '../types';
@@ -21,7 +21,7 @@ export const CONTACT_CHANNELS: { key: keyof ProfileContacts; label: string; icon
 export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () => void }) {
   const {
     posts, navigate, t, requireWallet,
-    shippingAddresses, defaultAddress, addShippingAddress, removeShippingAddress, setDefaultAddress,
+    shippingAddresses, defaultAddress, addShippingAddress, removeShippingAddress, setDefaultAddress, updateShippingAddress,
     placeShopOrder, showToast, openImageLightbox,
     savedPostIds, togglePostAction, userProfile, requestPostInteraction,
   } = useApp();
@@ -35,6 +35,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const [contactsExpanded, setContactsExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [editingAddrId, setEditingAddrId] = useState<string | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(defaultAddress?.id ?? null);
   // 下单后的「已提交」确认弹窗（可关闭；链上确认在后台异步进行）
   const [submittedOrder, setSubmittedOrder] = useState<ShopOrder | null>(null);
@@ -94,8 +95,40 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
 
   const formValid = !!(formName.trim() && formPhone.trim() && formRegion && formDetail.trim());
 
+  const openAddForm = () => {
+    setEditingAddrId(null);
+    setFormName(''); setFormPhone(''); setFormRegion(''); setFormDetail(''); setFormSetDefault(false);
+    setAddOpen(true);
+  };
+
+  const openEditForm = (addr: ShippingAddress) => {
+    setEditingAddrId(addr.id);
+    setFormName(addr.name);
+    setFormPhone(addr.phone);
+    setFormRegion(addr.region ?? '');
+    setFormDetail(addr.detail);
+    setFormSetDefault(!!addr.isDefault);
+    setAddOpen(true);
+  };
+
+  const closeForm = () => {
+    setAddOpen(false);
+    setEditingAddrId(null);
+  };
+
   const submitAddress = () => {
     if (!formValid) return;
+    if (editingAddrId) {
+      updateShippingAddress(editingAddrId, {
+        name: formName.trim(),
+        phone: formPhone.trim(),
+        region: formRegion,
+        detail: formDetail.trim(),
+        isDefault: formSetDefault,
+      });
+      closeForm();
+      return;
+    }
     const addr = addShippingAddress({
       name: formName.trim(),
       phone: formPhone.trim(),
@@ -367,10 +400,19 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
 
       {/* 地址选择 / 新增 */}
       {pickerOpen && (
-        <div className="sheet-backdrop" onClick={() => { setPickerOpen(false); setAddOpen(false); }}>
+        <div className="sheet-backdrop" onClick={() => { setPickerOpen(false); closeForm(); }}>
           <div className="payment-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
             <div className="sheet-header">
-              <span className="sheet-title">{addOpen ? t('新增收货地址') : t('选择收货地址')}</span>
+              <div className="sheet-header-left">
+                {addOpen && (
+                  <button type="button" className="shop-addr-form-back" onClick={closeForm} aria-label={t('返回')}>
+                    <ChevronLeft size={20} strokeWidth={2} />
+                  </button>
+                )}
+                <span className="sheet-title">
+                  {addOpen ? (editingAddrId ? t('编辑收货地址') : t('新增收货地址')) : t('选择收货地址')}
+                </span>
+              </div>
             </div>
             {addOpen ? (
               <div className="shop-addr-form">
@@ -400,7 +442,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                   </button>
                 )}
                 <button type="button" className="shop-addr-save-btn" onClick={submitAddress} disabled={!formValid}>
-                  {t('保存并使用')}
+                  {editingAddrId ? t('保存') : t('保存并使用')}
                 </button>
               </div>
             ) : (
@@ -422,6 +464,14 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                             <span className="shop-item-addr-line2">{fullAddr(addr)}</span>
                           </span>
                           {selectedAddressId === addr.id && <Check size={16} strokeWidth={2.4} className="shop-addr-check" />}
+                        </button>
+                        <button
+                          type="button"
+                          className="shop-addr-edit"
+                          onClick={() => openEditForm(addr)}
+                          aria-label={t('编辑')}
+                        >
+                          <Pencil size={16} strokeWidth={2} />
                         </button>
                         <button
                           type="button"
@@ -448,7 +498,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                     </div>
                   ))}
                 </div>
-                <button type="button" className="shop-addr-add-btn" onClick={() => setAddOpen(true)}>
+                <button type="button" className="shop-addr-add-btn" onClick={openAddForm}>
                   <Plus size={16} strokeWidth={2.2} />{t('新增收货地址')}
                 </button>
               </>

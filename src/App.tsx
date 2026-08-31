@@ -518,7 +518,7 @@ export default function App({ account, onLanguageChange }: {
     setEditProfileAutoOpen(true);
   };
   const goBack = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
-  const setTab = (t: 0 | 1 | 2 | 3) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
+  const setTab = (t: 0 | 1 | 2) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
 
   useEffect(() => {
     if (pageRoute.page !== 'P0' && navBarsHidden) setNavBarsHidden(false);
@@ -867,6 +867,13 @@ export default function App({ account, onLanguageChange }: {
     setShippingAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addressId })));
   };
 
+  const updateShippingAddress = (addressId: string, data: Omit<ShippingAddress, 'id'>) => {
+    setShippingAddresses(prev => prev.map(a => {
+      if (a.id === addressId) return { ...a, ...data };
+      return data.isDefault ? { ...a, isDefault: false } : a;
+    }));
+  };
+
   const removeShippingAddress = (addressId: string) => {
     setShippingAddresses(prev => {
       const filtered = prev.filter(a => a.id !== addressId);
@@ -1192,7 +1199,7 @@ export default function App({ account, onLanguageChange }: {
     demoFiveStarNodeCount, cycleDemoFiveStarNodeCount,
     favoriteNodeIds, toggleFavoriteNode,
     shopOrders, shippingAddresses, defaultAddress,
-    addShippingAddress, setDefaultAddress, removeShippingAddress,
+    addShippingAddress, setDefaultAddress, removeShippingAddress, updateShippingAddress,
     placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle,
     knowledgeCerts, simulateCertMint, simulateCertBurn,
     navBarsHidden, setNavBarsHidden,

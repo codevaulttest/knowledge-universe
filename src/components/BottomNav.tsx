@@ -9,13 +9,13 @@ const HOME_TOP_THRESHOLD = 8;
 
 export function BottomNav({ route, setTab }: {
   route: Route;
-  setTab: (t: 0 | 1 | 2 | 3) => void;
+  setTab: (t: 0 | 1 | 2) => void;
 }) {
   const { navigate, navigateRoot, openCompose, requireWallet, t, refreshHomeFeed, navBarsHidden } = useApp();
 
   const isHome = route.page === 'P0';
   const isPlanet = route.page === 'P_PLANET';
-  const isShop = (route.page === 'P0' && route.tab === 3) || route.page === 'P_SHOP';
+  const isShop = route.page === 'P_SHOP';
   const isMine = route.page === 'P6' && route.authorName === CURRENT_USER;
 
   const activeCol = isHome && !isShop ? 0 : isPlanet ? 1 : isShop ? 3 : isMine ? 4 : -1;
@@ -70,7 +70,7 @@ export function BottomNav({ route, setTab }: {
       <button
         type="button"
         className={`nav-item${isShop ? ' nav-item--active' : ''}`}
-        onClick={() => setTab(3)}
+        onClick={() => navigateRoot({ page: 'P_SHOP' })}
         aria-label={t('小黄车')}
       >
         <ShoppingCart size={20} strokeWidth={2} />
