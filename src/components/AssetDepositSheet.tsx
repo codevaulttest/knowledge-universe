@@ -7,12 +7,11 @@ import { pbOnchainFee } from '../walletConfig';
 import { MOCK_WALLET_ADDRESS } from '../mockData';
 
 type AssetKind = 'airdrop' | 'sup';
-type Tab = 'deposit' | 'withdraw';
+type AssetAction = 'deposit' | 'withdraw';
 
-/** 空投 PB / 站内 SUP 的充值·提取浮层。站内 PB 明确不可上链，不接入此组件。 */
-export function AssetDepositSheet({ kind, onClose }: { kind: AssetKind; onClose: () => void }) {
+/** 空投 PB / 站内 SUP 的单一充值或提取浮层。站内 PB 明确不可上链，不接入此组件。 */
+export function AssetDepositSheet({ action, kind, onClose }: { action: AssetAction; kind: AssetKind; onClose: () => void }) {
   const { t, pbWallets, supWallets, depositAirdropPb, withdrawAirdropPb, depositSiteSup, withdrawSiteSup, showToast } = useApp();
-  const [tab, setTab] = useState<Tab>('deposit');
   const [amountInput, setAmountInput] = useState('');
   const [depositing, setDepositing] = useState(false);
 
@@ -32,6 +31,7 @@ export function AssetDepositSheet({ kind, onClose }: { kind: AssetKind; onClose:
   const fee = amount > 0 ? pbOnchainFee(amount) : 0;
   const netAmount = kind === 'sup' ? Math.max(0, amount - fee) : amount;
   const canWithdraw = amount > 0 && amount <= balance;
+  const isDeposit = action === 'deposit';
 
   const handleConfirmDeposit = () => {
     if (depositing || amount <= 0) return;
@@ -60,29 +60,10 @@ export function AssetDepositSheet({ kind, onClose }: { kind: AssetKind; onClose:
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="payment-sheet sup-deposit-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
-          <span className="sheet-title">{t('{asset} 充值·提取', { asset: assetLabel })}</span>
+          <span className="sheet-title">{assetLabel} {t(isDeposit ? '充值' : '提取')}</span>
           <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
-        </div>
-
-        <div className="stake-code-block">
-          <div className="create-scale-toggle">
-            <button
-              type="button"
-              className={`create-scale-tab${tab === 'deposit' ? ' create-scale-tab--active' : ''}`}
-              onClick={() => { setTab('deposit'); setAmountInput(''); }}
-            >
-              {t('充值')}
-            </button>
-            <button
-              type="button"
-              className={`create-scale-tab${tab === 'withdraw' ? ' create-scale-tab--active' : ''}`}
-              onClick={() => { setTab('withdraw'); setAmountInput(''); }}
-            >
-              {t('提取')}
-            </button>
-          </div>
         </div>
 
         <div className="sup-deposit-body">
@@ -91,7 +72,7 @@ export function AssetDepositSheet({ kind, onClose }: { kind: AssetKind; onClose:
             <span className="pb-info-balance-value">{format(balance)} {unit}</span>
           </div>
 
-          {tab === 'deposit' ? (
+          {isDeposit ? (
             <>
               <div className="sup-deposit-qr" aria-hidden="true">
                 <QrCode size={72} strokeWidth={1.2} />
