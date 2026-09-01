@@ -54,7 +54,7 @@ export const PB_USE_ALLOWED_WALLETS: Record<PbUse, readonly PbWalletId[]> = {
   node_transfer: ['credibility', 'airdrop', 'onchain'],
   // 会议尚未覆盖以下用途，原型先保守仅开放通用 PB。
   tip: ['airdrop', 'onchain'],
-  // 发帖超长费：数组顺序即扣款优先级，优先可提取 PB，不足回落站内 PB、链上 PB。
+  // 发帖超长费：可从可提取、站内或链上 PB 中任选其一，不跨钱包拼单。
   post_overlength: ['airdrop', 'station', 'onchain'],
 };
 
@@ -117,11 +117,10 @@ export function computeOverlengthFee(length: number): number {
     : 0;
 }
 
-/** 按 post_overlength 的钱包优先级找第一个余额够付的钱包，不跨钱包拼单。 */
-export function resolveOverlengthFeeWallet(
+/** 是否至少存在一个可支付超长费的钱包；具体钱包由用户在确认页选择。 */
+export function hasAffordableOverlengthFeeWallet(
   pbWallets: Record<PbWalletId, number>,
   amount: number,
-): PbWalletId | null {
-  if (amount <= 0) return null;
-  return PB_USE_ALLOWED_WALLETS.post_overlength.find(w => pbWallets[w] >= amount) ?? null;
+): boolean {
+  return amount <= 0 || PB_USE_ALLOWED_WALLETS.post_overlength.some(wallet => pbWallets[wallet] >= amount);
 }

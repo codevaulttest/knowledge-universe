@@ -14,11 +14,14 @@ export function PbWalletPicker({
   amount,
   value,
   onChange,
+  autoSelect = true,
 }: {
   use: PbUse;
   amount: number;
   value: PbWalletId | null;
   onChange: (wallet: PbWalletId | null) => void;
+  /** 默认保留既有支付流的自动推荐；需要用户先明确选择时关闭。 */
+  autoSelect?: boolean;
 }) {
   const { t, pbWallets, getPbWalletOptions, pickDefaultPbWallet } = useApp();
   const options = getPbWalletOptions(use, amount);
@@ -43,8 +46,9 @@ export function PbWalletPicker({
 
   useEffect(() => {
     const current = options.find(option => option.wallet === value);
-    if (!current?.allowed || !current.sufficient) onChange(pickDefaultPbWallet(use, amount));
-  }, [amount, onChange, options, pickDefaultPbWallet, use, value]);
+    if (current?.allowed && current.sufficient) return;
+    onChange(autoSelect ? pickDefaultPbWallet(use, amount) : null);
+  }, [amount, autoSelect, onChange, options, pickDefaultPbWallet, use, value]);
 
   const selectedMeta = value ? PB_WALLETS[value] : null;
 

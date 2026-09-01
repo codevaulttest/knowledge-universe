@@ -1,26 +1,29 @@
 import { X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import type { PbWalletId } from '../types';
-import { PB_WALLETS } from '../walletConfig';
-import { formatTokenAmount } from '../stakeConfig';
+import { PbWalletPicker } from './PbWalletPicker';
+import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
+import { pbOnchainFee } from '../walletConfig';
 
 /**
- * 发帖超长费确认弹窗：费用与扣款钱包已由调用方按优先级算好，
- * 弹窗只做最终展示 + 确认，不提供手动选钱包（对齐「优先可提取 PB」的自动扣款语义）。
+ * 发帖超长费确认弹窗：用户明确选择扣款钱包，再由 App.payPb 集中校验并扣款。
  */
 export function OverlengthFeeSheet({
   fee,
   wallet,
+  onWalletChange,
   onConfirm,
   onClose,
 }: {
   fee: number;
-  wallet: PbWalletId;
+  wallet: PbWalletId | null;
+  onWalletChange: (wallet: PbWalletId | null) => void;
   onConfirm: () => void;
   onClose: () => void;
 }) {
-  const { t, pbWallets } = useApp();
-  const meta = PB_WALLETS[wallet];
+  const { t } = useApp();
+  // 当前超长费允许的三种 PB 钱包均会产生 SUP Gas。
+  const gasFee = pbOnchainFee(fee);
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -34,21 +37,24 @@ export function OverlengthFeeSheet({
 
         <div className="pay-combo-breakdown">
           <div className="pay-combo-row">
-            <span className="pay-combo-label">{t('PB 消耗')}</span>
+            <span className="pay-combo-label">{t('费用')}</span>
             <span className="pay-combo-value">{formatTokenAmount(fee)} PB</span>
           </div>
           <div className="pay-combo-row">
-            <span className="pay-combo-label">{t('扣款钱包')}</span>
-            <span className="pay-combo-value">
-              {t(meta.labelKey)} · {t('余额 {amount} {unit}', { amount: formatTokenAmount(pbWallets[wallet]), unit: t(meta.unitKey) })}
-            </span>
+            <span className="pay-combo-label">{t('Gas 费')}</span>
+            <span className="pay-combo-value">{formatSupAmount(gasFee)} SUP</span>
           </div>
-          <p className="pay-combo-hint">
-            {t('优先从 PB 余额扣除，不足时按 可提取 → 站内 → 链上 顺序回落')}
-          </p>
         </div>
 
-        <button type="button" className="planet-confirm-btn" onClick={onConfirm}>
+        <PbWalletPicker
+          use="post_overlength"
+          amount={fee}
+          value={wallet}
+          onChange={onWalletChange}
+          autoSelect={false}
+        />
+
+        <button type="button" className="planet-confirm-btn" onClick={onConfirm} disabled={!wallet}>
           {`${t('确认扣款')} · ${formatTokenAmount(fee)} PB`}
         </button>
       </div>

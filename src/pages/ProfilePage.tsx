@@ -1277,6 +1277,7 @@ function ChannelCollaborationModal({
 }) {
   const { t } = useApp();
   const [confirmRevokeAuthId, setConfirmRevokeAuthId] = useState<string | null>(null);
+  const [confirmDeclineAuthId, setConfirmDeclineAuthId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'invites' | 'channels'>(pendingIncoming.length > 0 ? 'invites' : 'channels');
   const channelName = (channelId: string) => channels.find(c => c.id === channelId)?.name ?? channelId;
   const handleInviteResponse = (authId: string, response: 'accept' | 'decline') => {
@@ -1323,7 +1324,7 @@ function ChannelCollaborationModal({
                 {t('{name} 邀请你协作《{channel}》', { name: auth.ownerName, channel: channelName(auth.channelId) })}
               </span>
               <span className="channel-collab-invite-actions">
-                <button type="button" className="channel-collab-decline-btn" onClick={() => handleInviteResponse(auth.id, 'decline')}>
+                <button type="button" className="channel-collab-decline-btn" onClick={() => setConfirmDeclineAuthId(auth.id)}>
                   {t('拒绝')}
                 </button>
                 <button type="button" className="channel-collab-accept-btn" onClick={() => handleInviteResponse(auth.id, 'accept')}>
@@ -1359,6 +1360,19 @@ function ChannelCollaborationModal({
           onConfirm={() => {
             onRevoke(confirmRevokeAuthId);
             setConfirmRevokeAuthId(null);
+          }}
+        />
+      )}
+      {confirmDeclineAuthId && (
+        <Ios26Alert
+          title={t('确认拒绝邀请？')}
+          message={t('拒绝后将无法协作该频道')}
+          cancelLabel={t('取消')}
+          confirmLabel={t('拒绝')}
+          onCancel={() => setConfirmDeclineAuthId(null)}
+          onConfirm={() => {
+            handleInviteResponse(confirmDeclineAuthId, 'decline');
+            setConfirmDeclineAuthId(null);
           }}
         />
       )}

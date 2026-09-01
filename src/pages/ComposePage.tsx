@@ -5,14 +5,14 @@ import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 import { useChannelListSearch } from '../components/channelSearch';
 import { CURRENT_USER } from '../mockData';
-import type { Draft, Post, ShopInfo, StakeTier } from '../types';
+import type { Draft, PbWalletId, Post, ShopInfo, StakeTier } from '../types';
 import { STAKE_TIERS, stakeTierDescription, stakeTierLabel, SUP_COST_BY_TIER } from '../stakeConfig';
 import { SHOP_MAX_REBATE_PERCENT, MERIT_PB_PER_POINT, MERIT_PER_ADN, computeShopFee, isRebateSplitValid } from '../shopConfig';
 import { isChinese } from '../i18n';
 import { formatScheduledAt } from '../dateUtils';
 import { ScheduleDateTimePicker } from '../components/ScheduleDateTimePicker';
 import { OverlengthFeeSheet } from '../components/OverlengthFeeSheet';
-import { POST_FREE_CHARS, computeOverlengthFee, resolveOverlengthFeeWallet } from '../walletConfig';
+import { POST_FREE_CHARS, computeOverlengthFee, hasAffordableOverlengthFeeWallet, pbOnchainFee } from '../walletConfig';
 
 type VariantDraft = { id: string; label: string; price: string; stock: string };
 
@@ -116,8 +116,7 @@ export function ComposePage({
   // 免费额度 1000 字，超出部分每 1000 字收 1 PB 超长费；普通帖用 text，长文用正文纯文本长度
   const contentLength = articleMode ? articleBodyLength : text.length;
   const overlengthFee = computeOverlengthFee(contentLength);
-  const overlengthWallet = resolveOverlengthFeeWallet(pbWallets, overlengthFee);
-  const overlengthAffordable = overlengthFee === 0 || overlengthWallet !== null;
+  const overlengthAffordable = hasAffordableOverlengthFeeWallet(pbWallets, overlengthFee);
 
   // 小黄车仅在 1000 PB 节点档位可用；档位变化后自动收起，避免带着无效配置提交
   const shopEligible = stakeTier === 1000;
@@ -235,6 +234,7 @@ export function ComposePage({
   const [publishing, setPublishing] = useState(false);
   const [exitMenuOpen, setExitMenuOpen] = useState(false);
   const [overlengthSheetOpen, setOverlengthSheetOpen] = useState(false);
+  const [overlengthPaymentWallet, setOverlengthPaymentWallet] = useState<PbWalletId | null>(null);
 
   const hasContent = articleMode
     ? articleTitle.trim().length > 0 || articleBodyHasContent || hasCover
@@ -315,6 +315,7 @@ export function ComposePage({
       return;
     }
     if (overlengthFee > 0) {
+      setOverlengthPaymentWallet(null);
       setOverlengthSheetOpen(true);
       return;
     }
@@ -322,7 +323,16 @@ export function ComposePage({
   };
 
   const handleConfirmOverlengthFee = () => {
-    if (!overlengthWallet || !payPb({ amount: overlengthFee, use: 'post_overlength', wallet: overlengthWallet })) {
+    if (!overlengthPaymentWallet) {
+      showToast(t('请选择支付钱包'));
+      return;
+    }
+    if (!payPb({
+      amount: overlengthFee,
+      use: 'post_overlength',
+      wallet: overlengthPaymentWallet,
+      supCost: pbOnchainFee(overlengthFee),
+    })) {
       showToast(t('超长费余额不足，请减少字数或先充值'));
       setOverlengthSheetOpen(false);
       return;
@@ -1141,12 +1151,13 @@ export function ComposePage({
         />
       )}
 
-      {overlengthSheetOpen && overlengthWallet && (
+      {overlengthSheetOpen && (
         <OverlengthFeeSheet
           fee={overlengthFee}
-          wallet={overlengthWallet}
+          wallet={overlengthPaymentWallet}
+          onWalletChange={setOverlengthPaymentWallet}
           onConfirm={handleConfirmOverlengthFee}
-          onClose={() => setOverlengthSheetOpen(false)}
+          onClose={() => { setOverlengthSheetOpen(false); setOverlengthPaymentWallet(null); }}
         />
       )}
 
