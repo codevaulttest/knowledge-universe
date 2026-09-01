@@ -799,6 +799,7 @@ export const zhCN: Record<string, string> = {
   '我的频道 · {count}': '我的频道 · {count}',
   '{ownerName} 的频道 · {count}': '{ownerName} 的频道 · {count}',
   '{count} 个频道 · 共 {total} 人已订阅': '{count} 个频道 · 共 {total} 人已订阅',
+  '共 {total} 人已订阅': '共 {total} 人已订阅',
   '任务': '任务',
   '今天': '今天',
   '昨天': '昨天',

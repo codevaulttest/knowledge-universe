@@ -799,6 +799,7 @@ export const en: Record<string, string> = {
   '我的频道 · {count}': 'My channels · {count}',
   '{ownerName} 的频道 · {count}': '{ownerName}\'s channels · {count}',
   '{count} 个频道 · 共 {total} 人已订阅': '{count} channels · {total} subscribers',
+  '共 {total} 人已订阅': '{total} subscribers',
   '任务': 'Tasks',
   '今天': 'Today',
   '昨天': 'Yesterday',

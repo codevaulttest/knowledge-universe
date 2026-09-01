@@ -111,10 +111,12 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     <button type="button" className={`channel-summary-entry${isOwn ? ' channel-summary-entry--half' : ''}`} onClick={() => setChannelDirectoryOpen(true)}>
       <Radio size={14} strokeWidth={2.2} className="channel-summary-entry-icon" />
       <span className="channel-summary-entry-text">
-        <span className="channel-summary-entry-label">{isOwn ? t('我的频道') : t('{count} 个频道 · 共 {total} 人已订阅', { count: ownerChannels.length, total: channelTotalSubscribers })}</span>
+        <span className="channel-summary-entry-label">
+          {isOwn ? <>{t('我的频道')}<span className="channel-summary-entry-count">{ownerChannels.length}</span></> : t('{count} 个频道 · 共 {total} 人已订阅', { count: ownerChannels.length, total: channelTotalSubscribers })}
+        </span>
         {isOwn && (
         <span className="channel-summary-entry-sub">
-          {t('{count} 个频道 · 共 {total} 人已订阅', { count: ownerChannels.length, total: channelTotalSubscribers })}
+          {t('共 {total} 人已订阅', { total: channelTotalSubscribers })}
         </span>
         )}
       </span>
@@ -1310,7 +1312,7 @@ function ChannelCollaborationModal({
             onClick={() => setActiveTab('channels')}
           >
             {t('我协作的频道')}
-            {delegatedChannels.length > 0 && <span className="orders-tab-badge">{delegatedChannels.length}</span>}
+            {delegatedChannels.length > 0 && <span className="orders-tab-badge channel-collab-tab-badge--neutral">{delegatedChannels.length}</span>}
           </button>
         </nav>
         <div className="follow-list-content channel-collab-content">

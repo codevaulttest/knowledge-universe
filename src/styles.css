@@ -4675,6 +4675,11 @@ button {
   white-space: nowrap;
   flex-shrink: 0;
 }
+.channel-summary-entry-count {
+  margin-left: var(--ku-space-1);
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-body-sm);
+}
 .channel-summary-entry-sub {
   font: var(--ku-text-caption);
   color: var(--ku-color-text-secondary);
@@ -8216,6 +8221,10 @@ button {
   height: var(--ku-space-4);
   padding: 0 var(--ku-space-1);
   font: var(--ku-text-caption-strong);
+}
+.channel-collab-tabs .channel-collab-tab-badge--neutral {
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-secondary);
 }
 .channel-collab-content {
   padding: var(--ku-space-2) var(--ku-modal-content-padding);
