@@ -8110,6 +8110,30 @@ button {
 .channel-collab-row:last-of-type {
   border-bottom: none;
 }
+.channel-collab-info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  gap: var(--ku-space-1);
+  text-align: left;
+  cursor: pointer;
+}
+.channel-collab-name-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.channel-collab-name-row .channel-collab-name {
+  flex: 0 1 auto;
+}
+.channel-collab-name-chevron {
+  flex-shrink: 0;
+  color: var(--ku-color-text-meta);
+}
 .channel-collab-name {
   flex: 1 1 auto;
   min-width: 0;
@@ -8166,6 +8190,17 @@ button {
   min-width: 0;
   font: var(--ku-text-body-sm);
   color: var(--ku-color-text-primary);
+}
+.channel-collab-channel-link {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ku-color-badge-text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: var(--ku-space-1);
+  cursor: pointer;
 }
 .channel-collab-invite-actions {
   display: flex;

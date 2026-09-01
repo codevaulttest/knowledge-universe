@@ -1973,6 +1973,7 @@ function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
   const [addressInput, setAddressInput] = useState('');
   const [addressStatus, setAddressStatus] = useState<'1' | '2' | '3' | '4'>('1');
   const [verifying, setVerifying] = useState(false);
+  const [confirmRevokeAuthId, setConfirmRevokeAuthId] = useState<string | null>(null);
   const collabDelegate = addressStatus === '3' ? findRegisteredUserByAddress(addressInput.trim()) : undefined;
   const collabAuths = channelAuthorizations.filter(a => a.channelId === channel.id && a.status !== 'declined');
 
@@ -2022,7 +2023,7 @@ function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
             {statusLabel(auth.status)}
           </span>
           {(auth.status === 'pending' || auth.status === 'active') && (
-            <button type="button" className="channel-collab-revoke-btn" onClick={() => revokeChannelAuthorization(auth.id)}>
+            <button type="button" className="channel-collab-revoke-btn" onClick={() => setConfirmRevokeAuthId(auth.id)}>
               {t('撤销')}
             </button>
           )}
@@ -2070,6 +2071,19 @@ function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
             {t('发送授权邀请')}
           </button>
         </div>
+      )}
+      {confirmRevokeAuthId && (
+        <Ios26Alert
+          title={t('确认撤销授权？')}
+          message={t('撤销后对方将无法代发该频道内容')}
+          cancelLabel={t('取消')}
+          confirmLabel={t('撤销')}
+          onCancel={() => setConfirmRevokeAuthId(null)}
+          onConfirm={() => {
+            revokeChannelAuthorization(confirmRevokeAuthId);
+            setConfirmRevokeAuthId(null);
+          }}
+        />
       )}
     </div>
   );

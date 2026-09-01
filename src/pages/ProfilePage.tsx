@@ -1275,7 +1275,7 @@ function ChannelCollaborationModal({
   onRevoke: (authId: string) => void;
   onClose: () => void;
 }) {
-  const { t } = useApp();
+  const { t, navigate } = useApp();
   const [confirmRevokeAuthId, setConfirmRevokeAuthId] = useState<string | null>(null);
   const [confirmDeclineAuthId, setConfirmDeclineAuthId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'invites' | 'channels'>(pendingIncoming.length > 0 ? 'invites' : 'channels');
@@ -1321,7 +1321,14 @@ function ChannelCollaborationModal({
             <div key={auth.id} className="channel-collab-invite-row">
               <Avatar index={0} seed={auth.ownerName} />
               <span className="channel-collab-invite-text">
-                {t('{name} 邀请你协作《{channel}》', { name: auth.ownerName, channel: channelName(auth.channelId) })}
+                {t('{name} 邀请你协作频道：', { name: auth.ownerName })}
+                <button
+                  type="button"
+                  className="channel-collab-channel-link"
+                  onClick={() => { navigate({ page: 'P_CHANNEL', channelId: auth.channelId }); onClose(); }}
+                >
+                  {channelName(auth.channelId)}
+                </button>
               </span>
               <span className="channel-collab-invite-actions">
                 <button type="button" className="channel-collab-decline-btn" onClick={() => setConfirmDeclineAuthId(auth.id)}>
@@ -1338,8 +1345,17 @@ function ChannelCollaborationModal({
               const auth = channelAuthorizations.find(a => a.channelId === channel.id && a.status === 'active');
               return (
                 <div key={channel.id} className="channel-collab-row">
-                  <span className="channel-collab-name">{channel.name}</span>
-                  <span className="channel-collab-owner">{t('来自 {name} 的授权', { name: channel.ownerName })}</span>
+                  <button
+                    type="button"
+                    className="channel-collab-info"
+                    onClick={() => { navigate({ page: 'P_CHANNEL', channelId: channel.id }); onClose(); }}
+                  >
+                    <span className="channel-collab-name-row">
+                      <span className="channel-collab-name">{channel.name}</span>
+                      <ChevronRight size={16} strokeWidth={2} className="channel-collab-name-chevron" aria-hidden />
+                    </span>
+                    <span className="channel-collab-owner">{t('来自 {name} 的授权', { name: channel.ownerName })}</span>
+                  </button>
                   {auth && (
                     <button type="button" className="channel-collab-revoke-btn" onClick={() => setConfirmRevokeAuthId(auth.id)}>
                       {t('退出协作')}
