@@ -4,7 +4,6 @@ import { useApp } from '../AppContext';
 import {
   calendarIntlLocale,
   dayKey,
-  formatScheduledAt,
   getCalendarMonth,
 } from '../dateUtils';
 
@@ -74,7 +73,6 @@ export function ScheduleDateTimePicker({
   }, [selectedDate, hour, minute]);
 
   const draftValid = draft.getTime() > minMs;
-  const preview = formatScheduledAt(draft.getTime());
 
   const shiftMonth = (delta: number) => {
     const next = new Date(viewYear, viewMonth + delta, 1);
@@ -186,9 +184,11 @@ export function ScheduleDateTimePicker({
           </label>
         </div>
 
-        <p className={`schedule-picker-preview${!draftValid ? ' is-invalid' : ''}`}>
-          {draftValid ? preview : t('定时发布时间需晚于当前时间')}
-        </p>
+        {!draftValid && (
+          <p className="schedule-picker-preview is-invalid">
+            {t('定时发布时间需晚于当前时间')}
+          </p>
+        )}
 
         <button
           type="button"

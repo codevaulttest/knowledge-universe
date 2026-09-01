@@ -107,17 +107,25 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
               <div className="stake-code-row">
                 <div className="stake-code-input-wrap">
                   <input
-                    className="stake-code-input"
+                    className="stake-code-input stake-code-input--with-action"
                     type="text"
                     inputMode="decimal"
                     value={amountInput}
                     onChange={e => handleAmountChange(e.target.value)}
                     placeholder={t('请输入提取数量')}
                   />
-                  <span className="bsp-qty-unit">{unit}</span>
+                  <button
+                    type="button"
+                    className="pb-info-balance-action-btn asset-max-btn"
+                    onClick={() => setAmountInput(format(balance))}
+                    aria-label={t('提取最大额度')}
+                  >
+                    {t('最大')}
+                  </button>
                 </div>
+                <span className="bsp-qty-unit">{unit}</span>
               </div>
-              <div className="sup-deposit-row">
+              <div className="sup-deposit-row sup-deposit-row--fee">
                 <span className="sup-deposit-label">{t('Gas 费')}</span>
                 <span className="sup-deposit-value">{formatSupAmount(fee)} SUP</span>
               </div>

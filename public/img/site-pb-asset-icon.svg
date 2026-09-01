@@ -1,0 +1,10 @@
+<svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">站内 PB 资产图标</title>
+  <desc id="desc">产品主题色圆形宇宙大爆炸轨道，右下角带 P 字标</desc>
+  <circle cx="13" cy="13" r="13" fill="var(--ku-color-verified, #1B6BFF)"/>
+  <path d="M4.18 18.08c-.63-1.17.37-2.58 1.4-3.24" stroke="var(--ku-color-on-primary, #FFFFFF)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M17.55 5c2.07-1.45 4-1.72 4.5-.8" stroke="var(--ku-color-on-primary, #FFFFFF)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M17.62 5.17C14.44 2.5 9.7 2.91 7 6.1c-2.69 3.18-2.29 7.93.9 10.62 3.18 2.69 7.93 2.28 10.62-.9 2.69-3.18 2.28-7.96-.9-10.65Z" stroke="var(--ku-color-on-primary, #FFFFFF)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22.05 4.2c.8 1.48-2.5 5.44-7.41 9.3-4.91 3.86-9.56 6.24-10.46 4.58" stroke="var(--ku-color-on-primary, #FFFFFF)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M16.4 15.1v6.2m0-6.2h1.35a1.8 1.8 0 0 1 0 3.6H16.4" stroke="var(--ku-color-on-primary, #FFFFFF)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

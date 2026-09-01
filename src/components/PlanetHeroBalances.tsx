@@ -1,16 +1,70 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine, ChevronRight, Info, Wallet, X } from 'lucide-react';
+import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Award, ChevronRight, Info, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { formatCompactBalance } from '../formatCount';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import { PB_WALLETS, PB_WALLET_DISPLAY_ORDER } from '../walletConfig';
+import { MERIT_PER_ADN } from '../shopConfig';
 import { AssetDepositSheet } from './AssetDepositSheet';
 
 type AssetSheetState = {
   action: 'deposit' | 'withdraw';
   kind: 'airdrop' | 'sup';
 };
+
+function AssetSymbol({ kind }: { kind: 'onchain-pb' | 'onchain-sup' | 'credibility' | 'account' | 'airdrop-pb' | 'site-sup' | 'merit' }) {
+  if (kind === 'onchain-pb') {
+    return (
+      <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>
+        <img className="pb-info-asset-symbol-image" src="/img/PiKey-P币.svg" alt="" aria-hidden="true" />
+      </span>
+    );
+  }
+
+  if (kind === 'onchain-sup') {
+    return (
+      <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>
+        <img className="pb-info-asset-symbol-image" src="/img/SUP.svg" alt="" aria-hidden="true" />
+      </span>
+    );
+  }
+
+  if (kind === 'airdrop-pb') {
+    return (
+      <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>
+        <img className="pb-info-asset-symbol-image" src="/img/site-pb-asset-icon.svg" alt="" aria-hidden="true" />
+      </span>
+    );
+  }
+
+  if (kind === 'site-sup') {
+    return <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>SUP</span>;
+  }
+
+  if (kind === 'credibility') {
+    return (
+      <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>
+        <img className="pb-info-asset-symbol-image pb-info-asset-symbol-image--credibility" src="/img/credibility-asset-icon.svg" alt="" aria-hidden="true" />
+      </span>
+    );
+  }
+
+  if (kind === 'account') {
+    return (
+      <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>
+        <img className="pb-info-asset-symbol-image" src="/img/dedicated-pb-asset-icon.svg" alt="" aria-hidden="true" />
+      </span>
+    );
+  }
+
+  const Icon = Award;
+  return (
+    <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>
+      <Icon size={16} strokeWidth={2.2} aria-hidden="true" />
+    </span>
+  );
+}
 
 /** 页顶 hero 资产摘要：最多展示三种高频资产；后续类型以 +N 保持入口高度不变。 */
 export function PlanetHeroBalances() {
@@ -19,6 +73,7 @@ export function PlanetHeroBalances() {
   const [pbDetailOpen, setPbDetailOpen] = useState(false);
   const [credibilityInfoOpen, setCredibilityInfoOpen] = useState(false);
   const [supInfoOpen, setSupInfoOpen] = useState(false);
+  const [meritInfoOpen, setMeritInfoOpen] = useState(false);
   const [assetSheet, setAssetSheet] = useState<AssetSheetState | null>(null);
 
   if (!walletConnected) return null;
@@ -74,15 +129,19 @@ export function PlanetHeroBalances() {
             </div>
 
             <div className="pb-info-sheet-body">
-              <div className="pb-info-group">
+              <div className="pb-info-section">
                 <span className="pb-info-group-title">{t('链上资产')}</span>
+                <div className="pb-info-group">
                 <div className="pb-info-balances">
                   {PB_WALLET_DISPLAY_ORDER.filter(wallet => wallet === 'onchain').map(wallet => {
                     const meta = PB_WALLETS[wallet];
                     return (
                       <div className="pb-info-balance-row" key={wallet}>
                         <span className="pb-info-balance-label pb-info-balance-label--with-action">
-                          <span>{t(meta.labelKey)}</span>
+                          <span className="pb-info-balance-asset">
+                            <AssetSymbol kind="onchain-pb" />
+                            <span>{t('PB')}</span>
+                          </span>
                           <button
                             type="button"
                             className="asset-overview-info-btn"
@@ -93,14 +152,17 @@ export function PlanetHeroBalances() {
                           </button>
                         </span>
                         <span className="pb-info-balance-value">
-                          {formatTokenAmount(pbWallets[wallet])} {t(meta.unitKey)}
+                          {formatTokenAmount(pbWallets[wallet])} <span className="pb-info-balance-unit">{t(meta.unitKey)}</span>
                         </span>
                       </div>
                     );
                   })}
                   <div className="pb-info-balance-row">
                     <span className="pb-info-balance-label pb-info-balance-label--with-action">
-                      <span>{t('链上 SUP')}</span>
+                      <span className="pb-info-balance-asset">
+                        <AssetSymbol kind="onchain-sup" />
+                        <span>{t('SUP')}</span>
+                      </span>
                       <button
                         type="button"
                         className="asset-overview-info-btn"
@@ -110,21 +172,27 @@ export function PlanetHeroBalances() {
                         <Info size={13} strokeWidth={2} />
                       </button>
                     </span>
-                    <span className="pb-info-balance-value">{formatSupAmount(supWallets.onchain)} SUP</span>
+                    <span className="pb-info-balance-value">{formatSupAmount(supWallets.onchain)} <span className="pb-info-balance-unit">SUP</span></span>
                   </div>
+                </div>
                 </div>
               </div>
 
-              <div className="pb-info-group">
+              <div className="pb-info-section">
                 <span className="pb-info-group-title">{t('链下资产')}</span>
+                <div className="pb-info-group">
                 <div className="pb-info-balances">
                   {PB_WALLET_DISPLAY_ORDER.filter(wallet => wallet !== 'onchain').map(wallet => {
                     const meta = PB_WALLETS[wallet];
                     const isCredibility = wallet === 'credibility';
+                    const isDedicatedAccount = wallet === 'station';
                     return (
-                      <div className="pb-info-balance-row" key={wallet}>
+                      <div className={`pb-info-balance-row${wallet === 'airdrop' ? ' pb-info-balance-row--with-actions' : ''}`} key={wallet}>
                         <span className="pb-info-balance-label pb-info-balance-label--with-action">
-                          <span>{t(meta.labelKey)}</span>
+                          <span className="pb-info-balance-asset">
+                            <AssetSymbol kind={isCredibility ? 'credibility' : isDedicatedAccount ? 'account' : 'airdrop-pb'} />
+                            <span>{isDedicatedAccount ? t('专户 PB') : isCredibility ? t(meta.labelKey) : t('PB')}</span>
+                          </span>
                           <button
                             type="button"
                             className="asset-overview-info-btn"
@@ -135,36 +203,39 @@ export function PlanetHeroBalances() {
                           >
                             <Info size={13} strokeWidth={2} />
                           </button>
-                          {wallet === 'airdrop' && (
-                            <span className="pb-info-balance-actions">
-                              <button
-                                type="button"
-                                className="pb-info-balance-action-btn"
-                                onClick={() => setAssetSheet({ kind: 'airdrop', action: 'deposit' })}
-                              >
-                                <ArrowDownToLine size={14} strokeWidth={2} aria-hidden="true" />
-                                {t('充值')}
-                              </button>
-                              <button
-                                type="button"
-                                className="pb-info-balance-action-btn"
-                                onClick={() => setAssetSheet({ kind: 'airdrop', action: 'withdraw' })}
-                              >
-                                <ArrowUpFromLine size={14} strokeWidth={2} aria-hidden="true" />
-                                {t('提取')}
-                              </button>
-                            </span>
-                          )}
                         </span>
                         <span className="pb-info-balance-value">
-                          {formatTokenAmount(pbWallets[wallet])} {t(meta.unitKey)}
+                          {formatTokenAmount(pbWallets[wallet])} <span className="pb-info-balance-unit">{t(meta.unitKey)}</span>
                         </span>
+                        {wallet === 'airdrop' && (
+                          <span className="pb-info-balance-actions">
+                            <button
+                              type="button"
+                              className="pb-info-balance-action-btn pb-info-balance-action-btn--deposit"
+                              onClick={() => setAssetSheet({ kind: 'airdrop', action: 'deposit' })}
+                            >
+                              <ArrowDownToLine size={14} strokeWidth={2} aria-hidden="true" />
+                              {t('充值')}
+                            </button>
+                            <button
+                              type="button"
+                              className="pb-info-balance-action-btn"
+                              onClick={() => setAssetSheet({ kind: 'airdrop', action: 'withdraw' })}
+                            >
+                              <ArrowUpFromLine size={14} strokeWidth={2} aria-hidden="true" />
+                              {t('提取')}
+                            </button>
+                          </span>
+                        )}
                       </div>
                     );
                   })}
-                  <div className="pb-info-balance-row">
+                  <div className="pb-info-balance-row pb-info-balance-row--with-actions">
                     <span className="pb-info-balance-label pb-info-balance-label--with-action">
-                      <span>{t('站内 SUP')}</span>
+                      <span className="pb-info-balance-asset">
+                        <AssetSymbol kind="site-sup" />
+                        <span>{t('SUP')}</span>
+                      </span>
                       <button
                         type="button"
                         className="asset-overview-info-btn"
@@ -173,31 +244,45 @@ export function PlanetHeroBalances() {
                       >
                         <Info size={13} strokeWidth={2} />
                       </button>
-                      <span className="pb-info-balance-actions">
-                        <button
-                          type="button"
-                          className="pb-info-balance-action-btn"
-                          onClick={() => setAssetSheet({ kind: 'sup', action: 'deposit' })}
-                        >
-                          <ArrowDownToLine size={14} strokeWidth={2} aria-hidden="true" />
-                          {t('充值')}
-                        </button>
-                        <button
-                          type="button"
-                          className="pb-info-balance-action-btn"
-                          onClick={() => setAssetSheet({ kind: 'sup', action: 'withdraw' })}
-                        >
-                          <ArrowUpFromLine size={14} strokeWidth={2} aria-hidden="true" />
-                          {t('提取')}
-                        </button>
-                      </span>
                     </span>
-                    <span className="pb-info-balance-value">{formatSupAmount(supWallets.site)} SUP</span>
+                    <span className="pb-info-balance-value">{formatSupAmount(supWallets.site)} <span className="pb-info-balance-unit">SUP</span></span>
+                    <span className="pb-info-balance-actions">
+                      <button
+                        type="button"
+                        className="pb-info-balance-action-btn pb-info-balance-action-btn--deposit"
+                        onClick={() => setAssetSheet({ kind: 'sup', action: 'deposit' })}
+                      >
+                        <ArrowDownToLine size={14} strokeWidth={2} aria-hidden="true" />
+                        {t('充值')}
+                      </button>
+                      <button
+                        type="button"
+                        className="pb-info-balance-action-btn"
+                        onClick={() => setAssetSheet({ kind: 'sup', action: 'withdraw' })}
+                      >
+                        <ArrowUpFromLine size={14} strokeWidth={2} aria-hidden="true" />
+                        {t('提取')}
+                      </button>
+                    </span>
                   </div>
                   <div className="pb-info-balance-row">
-                    <span className="pb-info-balance-label">{t('优点')}</span>
-                    <span className="pb-info-balance-value">{meritBalance} {t('优点')}</span>
+                    <span className="pb-info-balance-label pb-info-balance-label--with-action">
+                      <span className="pb-info-balance-asset">
+                        <AssetSymbol kind="merit" />
+                        <span>{t('优点')}</span>
+                      </span>
+                      <button
+                        type="button"
+                        className="asset-overview-info-btn"
+                        onClick={() => setMeritInfoOpen(true)}
+                        aria-label={t('查看优点说明')}
+                      >
+                        <Info size={13} strokeWidth={2} />
+                      </button>
+                    </span>
+                    <span className="pb-info-balance-value">{meritBalance} <span className="pb-info-balance-unit">{t('优点')}</span></span>
                   </div>
+                </div>
                 </div>
               </div>
 
@@ -289,6 +374,34 @@ export function PlanetHeroBalances() {
                 <AlertTriangle size={16} strokeWidth={2} aria-hidden="true" />
                 <span>{t('作为承载链上价值、驱动 AI 与区块链融合的核心纽带，SUP 的流动性与经济模型贯穿超智链的整个应用生态。')}</span>
               </div>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {meritInfoOpen && createPortal(
+        <div className="sheet-backdrop" onClick={() => setMeritInfoOpen(false)}>
+          <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+            <div className="sheet-header">
+              <span className="sheet-title">{t('优点说明')}</span>
+              <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={() => setMeritInfoOpen(false)} aria-label={t('关闭')}>
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+            <div className="pb-info-sheet-body">
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('来源：')}</strong>
+                {t('在小黄车完成购物后，按订单金额赠送优点。')}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('用途：')}</strong>
+                {t('满 {count} 优点兑 1 张 ADN 抽奖券。', { count: MERIT_PER_ADN })}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('结算规则：')}</strong>
+                {t('优点结算将于 9 月 15 日首次发放。')}
+              </p>
             </div>
           </div>
         </div>,

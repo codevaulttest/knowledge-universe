@@ -79,6 +79,13 @@
   --ku-color-member-badge:        #7C3AED;  /* 频道会员身份小标——与创世节点金/银色系区分，避免混淆 */
   --ku-color-member-badge-bg:     #efe6ff;
 
+  /* 资产标识：按资产来源与权益属性区分，浅底用于资产弹窗圆形图标 */
+  --ku-asset-icon-size:           26px;
+  --ku-asset-site-sup:            var(--ku-color-success-text);
+  --ku-asset-site-sup-bg:         var(--ku-color-success-bg);
+  --ku-asset-merit:               var(--ku-color-genesis-gold-text);
+  --ku-asset-merit-bg:            var(--ku-color-genesis-gold-bg);
+
   /* 小黄车（帖子即商品）——暖黄购物色系，独立于品牌青绿与创世金 */
   --ku-color-shop:                #c8820a;  /* 小黄车主色（文字/图标，对深色文本达标 AA）*/
   --ku-color-shop-strong:        #a86c00;  /* 价格等强调文本 */
@@ -433,6 +440,7 @@
   --ku-planet2-space-xxl: 48px;
   --ku-planet2-space-section: 96px;
   --ku-planet2-dev-entry-bottom: 103px;
+  --ku-planet2-hero-title-offset-y: 7px;
 
   --ku-planet2-height-button: 44px;
   --ku-planet2-shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.04);
