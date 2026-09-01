@@ -490,7 +490,6 @@
   /* 认证徽章金属渐变高光色，与 --ku-cert-gold / --ku-cert-gold-strong 搭配形成金属光泽扫面 */
   --ku-cert-gold-shine:         #F0DBA8;
 
-  --ku-font-mono:               'Courier New', monospace;
 }
 
 /* ════════════════════════════════════════════════════════════

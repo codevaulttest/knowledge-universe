@@ -65,7 +65,9 @@ function AssetSymbol({ kind }: { kind: 'onchain-pb' | 'onchain-sup' | 'credibili
   const Icon = Award;
   return (
     <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>
-      <Icon size={16} strokeWidth={2.2} aria-hidden="true" />
+      <span className="pb-info-asset-symbol-merit-surface">
+        <Icon size={16} strokeWidth={2.2} aria-hidden="true" />
+      </span>
     </span>
   );
 }
@@ -83,7 +85,7 @@ export function PlanetHeroBalances() {
   if (!walletConnected) return null;
 
   // 折叠徽章只保留"站内 PB"这一种主力展示（用户在充值/提取里主动管理、日常互动感最强的一层）；
-  // 公信力、链上 PB、空投 PB、站内 SUP、链上 SUP 五项不再参与求和，由"+5 种资产"提示承接，点开「我的资产」可看全部明细。
+  // 公信力、链上 PB、可提取 PB、站内 SUP、链上 SUP 五项不再参与求和，由"+5 种资产"提示承接，点开「我的资产」可看全部明细。
   const HIDDEN_ASSET_COUNT = 5;
   const pbAsset = { value: pbWallets.station, unit: t('站内 PB'), ariaLabel: t('站内 PB') };
   const assetAriaLabel = `${formatCompactBalance(pbAsset.value, language)} ${pbAsset.ariaLabel}，${t('+{count} 种资产', { count: HIDDEN_ASSET_COUNT })}，${t('查看资产余额')}`;

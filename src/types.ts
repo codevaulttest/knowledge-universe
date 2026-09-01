@@ -348,7 +348,8 @@ export type PbUse =
   | 'purchase'
   | 'tip'
   | 'node_upgrade'
-  | 'node_transfer';
+  | 'node_transfer'
+  | 'post_overlength';
 
 /** 地址迁移由后续服务执行；前端只维护申请、撤销与展示状态。 */
 export type AddressMigrationStatus = 'pending' | 'cancelled' | 'awaiting_execution' | 'completed';

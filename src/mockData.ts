@@ -72,6 +72,33 @@ export const MOCK_CHANNEL_AUTHORIZATIONS: ChannelAuthorization[] = [
     createdAt: Date.now() - 1000 * 60 * 60 * 6,
   },
   {
+    id: 'collab-3',
+    channelId: 'channel-amay',
+    ownerName: '阿May的研究笔记',
+    delegateAddress: MOCK_WALLET_ADDRESS.toLowerCase(),
+    delegateName: CURRENT_USER,
+    status: 'pending',
+    createdAt: Date.now() - 1000 * 60 * 60 * 12,
+  },
+  {
+    id: 'collab-4',
+    channelId: 'channel-yanlei',
+    ownerName: '产品大叔严磊',
+    delegateAddress: MOCK_WALLET_ADDRESS.toLowerCase(),
+    delegateName: CURRENT_USER,
+    status: 'pending',
+    createdAt: Date.now() - 1000 * 60 * 60 * 24,
+  },
+  {
+    id: 'collab-5',
+    channelId: 'channel-aieff',
+    ownerName: 'AI 效率研究所',
+    delegateAddress: MOCK_WALLET_ADDRESS.toLowerCase(),
+    delegateName: CURRENT_USER,
+    status: 'pending',
+    createdAt: Date.now() - 1000 * 60 * 60 * 36,
+  },
+  {
     // 视角二：CURRENT_USER 作为频道主，已授权「阿May的研究笔记」代发 channel-me-2
     id: 'collab-2',
     channelId: 'channel-me-2',

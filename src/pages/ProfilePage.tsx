@@ -104,23 +104,19 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   // 频道目录：他人主页展示在身份区下方；自己主页降级为次优先级，排在核心社交数据之后。
   // 主页上只放一个固定高度的摘要入口，完整的搜索 + 分页目录收进弹层——否则频道一多
   // （几十上千个），主页会被频道列表占满，「帖子/草稿/转发」等 tab 永远刷不到。
-  // 摘要行本身补上频道主、总订阅数、前 1-2 个频道名预览，尽量在不占用额外高度的前提下提升信息密度
+  // 摘要行只保留频道与订阅总数，频道名称在完整目录中查看。
   const [channelDirectoryOpen, setChannelDirectoryOpen] = useState(false);
   const channelTotalSubscribers = ownerChannels.reduce((sum, c) => sum + c.subscriberCount, 0);
-  const channelNamePreview = (() => {
-    const names = ownerChannels.slice(0, 2).map(c => c.name).join('、');
-    return ownerChannels.length > 2 ? t('{names} 等', { names }) : names;
-  })();
   const channelSection = ownerChannels.length > 0 ? (
-    <button type="button" className="channel-summary-entry" onClick={() => setChannelDirectoryOpen(true)}>
+    <button type="button" className={`channel-summary-entry${isOwn ? ' channel-summary-entry--half' : ''}`} onClick={() => setChannelDirectoryOpen(true)}>
       <Radio size={14} strokeWidth={2.2} className="channel-summary-entry-icon" />
       <span className="channel-summary-entry-text">
-        <span className="channel-summary-entry-label">
+        <span className="channel-summary-entry-label">{isOwn ? t('我的频道') : t('{count} 个频道 · 共 {total} 人已订阅', { count: ownerChannels.length, total: channelTotalSubscribers })}</span>
+        {isOwn && (
+        <span className="channel-summary-entry-sub">
           {t('{count} 个频道 · 共 {total} 人已订阅', { count: ownerChannels.length, total: channelTotalSubscribers })}
         </span>
-        <span className="channel-summary-entry-sub">
-          {channelNamePreview}
-        </span>
+        )}
       </span>
       <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
     </button>
@@ -170,9 +166,9 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const [channelCollabOpen, setChannelCollabOpen] = useState(false);
   const collabAlertCount = pendingIncomingChannelAuthorizations.length;
   const collabSection = isOwn && (collabAlertCount > 0 || delegatedChannels.length > 0) ? (
-    <button type="button" className="channel-summary-entry" onClick={() => setChannelCollabOpen(true)}>
+    <button type="button" className="channel-summary-entry channel-summary-entry--half" onClick={() => setChannelCollabOpen(true)}>
       <UserCheck size={14} strokeWidth={2.2} className="channel-summary-entry-icon" />
-      <span className="channel-summary-entry-text">
+      <span className="channel-summary-entry-text channel-summary-entry-text--inline">
         <span className="channel-summary-entry-label">{t('频道协作')}</span>
         {collabAlertCount > 0 && (
           <span className="channel-summary-entry-sub">{t('{count} 条邀请待处理', { count: collabAlertCount })}</span>
@@ -300,15 +296,18 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             </>
           )}
         </div>
-
-        {channelSection}
+        {isOwn ? (
+          <div className="channel-summary-row">
+            {channelSection}
+            {collabSection}
+          </div>
+        ) : channelSection}
         {isOwn && (
           <div className="channel-summary-row">
             {orderSection}
             {meritSection}
           </div>
         )}
-        {collabSection}
 
         {/* 关注/打赏/私信操作行延伸进头部视觉区块，与背景插画同属一体 */}
         {!isOwn && (
@@ -1275,7 +1274,13 @@ function ChannelCollaborationModal({
   onClose: () => void;
 }) {
   const { t } = useApp();
+  const [confirmRevokeAuthId, setConfirmRevokeAuthId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'invites' | 'channels'>(pendingIncoming.length > 0 ? 'invites' : 'channels');
   const channelName = (channelId: string) => channels.find(c => c.id === channelId)?.name ?? channelId;
+  const handleInviteResponse = (authId: string, response: 'accept' | 'decline') => {
+    onRespond(authId, response);
+    if (pendingIncoming.length === 1) setActiveTab('channels');
+  };
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -1286,49 +1291,75 @@ function ChannelCollaborationModal({
             <X size={18} strokeWidth={2} />
           </button>
         </div>
+        <nav className="create-scale-toggle channel-collab-tabs" role="tablist" aria-label={t('频道协作')}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'invites'}
+            className={`create-scale-tab${activeTab === 'invites' ? ' create-scale-tab--active' : ''}`}
+            onClick={() => setActiveTab('invites')}
+          >
+            {t('待处理邀请')}
+            {pendingIncoming.length > 0 && <span className="orders-tab-badge" aria-label={t('{count} 条邀请待处理', { count: pendingIncoming.length })}>{pendingIncoming.length}</span>}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'channels'}
+            className={`create-scale-tab${activeTab === 'channels' ? ' create-scale-tab--active' : ''}`}
+            onClick={() => setActiveTab('channels')}
+          >
+            {t('我协作的频道')}
+            {delegatedChannels.length > 0 && <span className="orders-tab-badge">{delegatedChannels.length}</span>}
+          </button>
+        </nav>
         <div className="follow-list-content channel-collab-content">
-          {pendingIncoming.length > 0 && (
-            <div className="channel-collab-group">
-              <span className="channel-collab-group-title">{t('待处理邀请')}</span>
-              {pendingIncoming.map(auth => (
-                <div key={auth.id} className="channel-collab-invite-row">
-                  <Avatar index={0} seed={auth.ownerName} />
-                  <span className="channel-collab-invite-text">
-                    {t('{name} 邀请你协作《{channel}》', { name: auth.ownerName, channel: channelName(auth.channelId) })}
-                  </span>
-                  <span className="channel-collab-invite-actions">
-                    <button type="button" className="channel-collab-decline-btn" onClick={() => onRespond(auth.id, 'decline')}>
-                      {t('婉拒')}
-                    </button>
-                    <button type="button" className="channel-collab-accept-btn" onClick={() => onRespond(auth.id, 'accept')}>
-                      {t('接受')}
-                    </button>
-                  </span>
-                </div>
-              ))}
+          {activeTab === 'invites' ? pendingIncoming.map(auth => (
+            <div key={auth.id} className="channel-collab-invite-row">
+              <Avatar index={0} seed={auth.ownerName} />
+              <span className="channel-collab-invite-text">
+                {t('{name} 邀请你协作《{channel}》', { name: auth.ownerName, channel: channelName(auth.channelId) })}
+              </span>
+              <span className="channel-collab-invite-actions">
+                <button type="button" className="channel-collab-decline-btn" onClick={() => handleInviteResponse(auth.id, 'decline')}>
+                  {t('拒绝')}
+                </button>
+                <button type="button" className="channel-collab-accept-btn" onClick={() => handleInviteResponse(auth.id, 'accept')}>
+                  {t('接受')}
+                </button>
+              </span>
             </div>
-          )}
-          <div className="channel-collab-group">
-            <span className="channel-collab-group-title">{t('我协作的频道')}</span>
-            {delegatedChannels.length === 0 ? (
-              <div className="channel-directory-empty">{t('暂无协作中的频道')}</div>
-            ) : delegatedChannels.map(channel => {
+          )) : delegatedChannels.length === 0 ? (
+            <div className="channel-directory-empty">{t('暂无协作中的频道')}</div>
+          ) : delegatedChannels.map(channel => {
               const auth = channelAuthorizations.find(a => a.channelId === channel.id && a.status === 'active');
               return (
                 <div key={channel.id} className="channel-collab-row">
                   <span className="channel-collab-name">{channel.name}</span>
                   <span className="channel-collab-owner">{t('来自 {name} 的授权', { name: channel.ownerName })}</span>
                   {auth && (
-                    <button type="button" className="channel-collab-revoke-btn" onClick={() => onRevoke(auth.id)}>
+                    <button type="button" className="channel-collab-revoke-btn" onClick={() => setConfirmRevokeAuthId(auth.id)}>
                       {t('退出协作')}
                     </button>
                   )}
                 </div>
               );
             })}
-          </div>
         </div>
       </div>
+      {confirmRevokeAuthId && (
+        <Ios26Alert
+          title={t('确认退出协作？')}
+          message={t('退出后将失去在该频道代发帖的权限')}
+          cancelLabel={t('取消')}
+          confirmLabel={t('退出协作')}
+          onCancel={() => setConfirmRevokeAuthId(null)}
+          onConfirm={() => {
+            onRevoke(confirmRevokeAuthId);
+            setConfirmRevokeAuthId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

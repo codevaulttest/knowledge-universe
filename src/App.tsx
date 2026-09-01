@@ -280,7 +280,7 @@ export default function App({ account, onLanguageChange }: {
   /** 站内 SUP 是最小 0.0001 精度的小额资产；避免浮点减法产生的长尾小数污染显示。 */
   const roundSup = (n: number) => Math.round(n * 10000) / 10000;
 
-  // ── 空投 PB / 站内 SUP 充值·提取：站内 PB 明确不可上链，不提供入口 ──
+  // ── 可提取 PB / 站内 SUP 充值·提取：站内 PB 明确不可上链，不提供入口 ──
   const depositAirdropPb = (amount: number) => {
     if (amount <= 0) return;
     setPbWallets(prev => ({ ...prev, airdrop: prev.airdrop + amount }));

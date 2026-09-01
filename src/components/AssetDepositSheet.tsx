@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { QrCode, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import { pbOnchainFee } from '../walletConfig';
@@ -9,13 +9,13 @@ import { MOCK_WALLET_ADDRESS } from '../mockData';
 type AssetKind = 'airdrop' | 'sup';
 type AssetAction = 'deposit' | 'withdraw';
 
-/** 空投 PB / 站内 SUP 的单一充值或提取浮层。站内 PB 明确不可上链，不接入此组件。 */
+/** 可提取 PB / 站内 SUP 的单一充值或提取浮层。站内 PB 明确不可上链，不接入此组件。 */
 export function AssetDepositSheet({ action, kind, onClose }: { action: AssetAction; kind: AssetKind; onClose: () => void }) {
   const { t, pbWallets, supWallets, depositAirdropPb, withdrawAirdropPb, depositSiteSup, withdrawSiteSup, showToast } = useApp();
   const [amountInput, setAmountInput] = useState('');
   const [depositing, setDepositing] = useState(false);
 
-  const assetLabel = kind === 'airdrop' ? t('空投 PB') : t('站内 SUP');
+  const assetLabel = kind === 'airdrop' ? t('PB') : t('站内 SUP');
   const unit = kind === 'airdrop' ? 'PB' : 'SUP';
   const balance = kind === 'airdrop' ? pbWallets.airdrop : supWallets.site;
   const format = kind === 'airdrop' ? formatTokenAmount : formatSupAmount;
@@ -29,7 +29,6 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
 
   const amount = parseFloat(amountInput) || 0;
   const fee = amount > 0 ? pbOnchainFee(amount) : 0;
-  const netAmount = kind === 'sup' ? Math.max(0, amount - fee) : amount;
   const canWithdraw = amount > 0 && amount <= balance;
   const isDeposit = action === 'deposit';
 
@@ -74,9 +73,6 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
 
           {isDeposit ? (
             <>
-              <div className="sup-deposit-qr" aria-hidden="true">
-                <QrCode size={72} strokeWidth={1.2} />
-              </div>
               <div className="sup-deposit-row sup-deposit-row--address">
                 <span className="sup-deposit-label">{t('我的钱包地址')}</span>
                 <span className="sup-deposit-address">{MOCK_WALLET_ADDRESS}</span>
@@ -129,12 +125,6 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
                 <span className="sup-deposit-label">{t('Gas 费')}</span>
                 <span className="sup-deposit-value">{formatSupAmount(fee)} SUP</span>
               </div>
-              {kind === 'sup' && (
-                <div className="sup-deposit-row">
-                  <span className="sup-deposit-label">{t('到账数量')}</span>
-                  <span className="sup-deposit-value">{formatSupAmount(netAmount)} SUP</span>
-                </div>
-              )}
               <button type="button" className="planet-confirm-btn" disabled={!canWithdraw} onClick={handleConfirmWithdraw}>
                 {t('确认提取')}
               </button>

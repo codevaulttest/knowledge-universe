@@ -64,7 +64,7 @@ export type DailyTaskState = {
   interactedPostIds: string[];
   /** 达成的公信力任务奖励已在次日凌晨结算的时间。 */
   credibilityRewardIssuedAt?: string;
-  /** 当天实际领取的空投 PB；未领取/未结算时缺省。 */
+  /** 当天实际领取的可提取 PB；未领取/未结算时缺省。 */
   airdropClaimedPb?: number;
 };
 

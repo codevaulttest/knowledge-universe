@@ -11,8 +11,8 @@ import { SHOP_MAX_REBATE_PERCENT, MERIT_PB_PER_POINT, MERIT_PER_ADN, computeShop
 import { isChinese } from '../i18n';
 import { formatScheduledAt } from '../dateUtils';
 import { ScheduleDateTimePicker } from '../components/ScheduleDateTimePicker';
-
-const MAX_POST_CHARS = 500;
+import { OverlengthFeeSheet } from '../components/OverlengthFeeSheet';
+import { POST_FREE_CHARS, computeOverlengthFee, resolveOverlengthFeeWallet } from '../walletConfig';
 
 type VariantDraft = { id: string; label: string; price: string; stock: string };
 
@@ -31,7 +31,7 @@ export function ComposePage({
   draft?: Draft | null;
   onRegisterCloseHandler?: (handler: () => void) => void;
 }) {
-  const { openPay, showToast, updatePost, saveDraft, updateDraft, stagePendingPost, publishPost, t, language, channels, delegatedChannels, userProfile, openEditProfileContacts } = useApp();
+  const { openPay, showToast, updatePost, saveDraft, updateDraft, stagePendingPost, publishPost, t, language, channels, delegatedChannels, userProfile, openEditProfileContacts, pbWallets, payPb } = useApp();
   const isEditMode = !!editPost;
   const myChannels = channels.filter(c => c.ownerName === CURRENT_USER);
   // 发帖选择器同时容纳「自己拥有」与「被授权代发」的频道，后者在列表和已选态里都标出属于谁
@@ -106,13 +106,18 @@ export function ComposePage({
   const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
   const [currentBlock, setCurrentBlock] = useState('p');
   const [articleBodyHasContent, setArticleBodyHasContent] = useState(false);
+  const [articleBodyLength, setArticleBodyLength] = useState(0);
 
   const kind: Post['kind'] = articleMode ? 'article'
     : hasVideo ? 'video'
     : imgCount > 0 ? 'image'
     : 'text';
 
-  const isOverLimit = !articleMode && text.length > MAX_POST_CHARS;
+  // 免费额度 1000 字，超出部分每 1000 字收 1 PB 超长费；普通帖用 text，长文用正文纯文本长度
+  const contentLength = articleMode ? articleBodyLength : text.length;
+  const overlengthFee = computeOverlengthFee(contentLength);
+  const overlengthWallet = resolveOverlengthFeeWallet(pbWallets, overlengthFee);
+  const overlengthAffordable = overlengthFee === 0 || overlengthWallet !== null;
 
   // 小黄车仅在 1000 PB 节点档位可用；档位变化后自动收起，避免带着无效配置提交
   const shopEligible = stakeTier === 1000;
@@ -149,16 +154,16 @@ export function ComposePage({
 
   const canPublish = (articleMode
     ? articleTitle.trim().length > 0 && articleBodyHasContent
-    : (text.trim().length > 0 || imgCount > 0 || hasVideo) && !isOverLimit) && shopValid && scheduleValid;
+    : (text.trim().length > 0 || imgCount > 0 || hasVideo)) && overlengthAffordable && shopValid && scheduleValid;
 
   const publishBlockReason = (): string | null => {
     if (articleMode) {
       if (articleTitle.trim().length === 0) return t('请输入文章标题');
       if (!articleBodyHasContent) return t('请输入文章正文');
     } else {
-      if (isOverLimit) return t('内容超出字数限制');
       if (text.trim().length === 0 && imgCount === 0 && !hasVideo) return t('请输入内容或添加图片');
     }
+    if (!overlengthAffordable) return t('超长费余额不足，请减少字数或先充值');
     if (shopEnabled) {
       if (!hasContacts) return t('请先设置联系方式');
       if (shopUseVariants) {
@@ -183,10 +188,11 @@ export function ComposePage({
     return null;
   };
 
+  // 草稿不产生费用，任意字数都允许保存
   const canSaveDraft = !isEditMode && (
     articleMode
       ? articleTitle.trim().length > 0
-      : text.trim().length > 0 && !isOverLimit
+      : text.trim().length > 0
   );
 
   const updateActiveFormats = () => {
@@ -228,6 +234,7 @@ export function ComposePage({
 
   const [publishing, setPublishing] = useState(false);
   const [exitMenuOpen, setExitMenuOpen] = useState(false);
+  const [overlengthSheetOpen, setOverlengthSheetOpen] = useState(false);
 
   const hasContent = articleMode
     ? articleTitle.trim().length > 0 || articleBodyHasContent || hasCover
@@ -256,13 +263,7 @@ export function ComposePage({
     onRegisterCloseHandler?.(handleCloseAttempt);
   }, [handleCloseAttempt, onRegisterCloseHandler]);
 
-  const handlePublish = () => {
-    if (publishing) return;
-    if (!canPublish) {
-      const reason = publishBlockReason();
-      if (reason) showToast(reason);
-      return;
-    }
+  const proceedPublish = () => {
     if (isEditMode) {
       const tierChanged = editPostChannel && editMinTierIndex !== (editPost.minTierIndex ?? 0);
       updatePost(editPost.id, text.trim(), tierChanged ? { minTierIndex: editMinTierIndex } : undefined);
@@ -304,6 +305,30 @@ export function ComposePage({
       setPublishing(true);
       publishPost(postData);
     }
+  };
+
+  const handlePublish = () => {
+    if (publishing) return;
+    if (!canPublish) {
+      const reason = publishBlockReason();
+      if (reason) showToast(reason);
+      return;
+    }
+    if (overlengthFee > 0) {
+      setOverlengthSheetOpen(true);
+      return;
+    }
+    proceedPublish();
+  };
+
+  const handleConfirmOverlengthFee = () => {
+    if (!overlengthWallet || !payPb({ amount: overlengthFee, use: 'post_overlength', wallet: overlengthWallet })) {
+      showToast(t('超长费余额不足，请减少字数或先充值'));
+      setOverlengthSheetOpen(false);
+      return;
+    }
+    setOverlengthSheetOpen(false);
+    proceedPublish();
   };
 
   const handleSaveDraft = () => {
@@ -565,7 +590,11 @@ export function ComposePage({
               role="textbox"
               aria-multiline="true"
               aria-label={t('文章内容编辑器')}
-              onInput={() => setArticleBodyHasContent(!!editorRef.current?.textContent?.trim())}
+              onInput={() => {
+                const plain = editorRef.current?.textContent ?? '';
+                setArticleBodyHasContent(!!plain.trim());
+                setArticleBodyLength(plain.length);
+              }}
               onKeyDown={e => {
                 if (e.key === 'Tab') {
                   e.preventDefault();
@@ -573,6 +602,22 @@ export function ComposePage({
                 }
               }}
             />
+            <div className={`compose-char-count${!overlengthAffordable ? ' compose-char-count--error' : ''}`}>
+              <span>{articleBodyLength}</span>
+              <span className="compose-char-sep">/</span>
+              <span>{POST_FREE_CHARS}</span>
+            </div>
+            {overlengthFee > 0 && (
+              overlengthAffordable ? (
+                <p className="compose-char-fee-hint">
+                  {t('超出免费额度 {count} 字，发布时将收取 {fee} PB 超长费', { count: articleBodyLength - POST_FREE_CHARS, fee: overlengthFee })}
+                </p>
+              ) : (
+                <p className="compose-char-error">
+                  {t('超长费余额不足，请减少字数或先充值')}
+                </p>
+              )
+            )}
           </>
         )}
 
@@ -582,7 +627,7 @@ export function ComposePage({
             {/* 主编辑框 */}
             <div className="compose-input-wrap">
               <textarea
-                className={`compose-input${isOverLimit ? ' compose-input--error' : ''}${isEditMode ? ' compose-input--readonly' : ''}`}
+                className={`compose-input${!overlengthAffordable ? ' compose-input--error' : ''}${isEditMode ? ' compose-input--readonly' : ''}`}
                 placeholder={t('分享你的知识…')}
                 value={text}
                 onChange={e => { if (!isEditMode) setText(e.target.value); }}
@@ -595,15 +640,21 @@ export function ComposePage({
                 </p>
               ) : (
                 <>
-                  <div className={`compose-char-count${isOverLimit ? ' compose-char-count--error' : ''}`}>
+                  <div className={`compose-char-count${!overlengthAffordable ? ' compose-char-count--error' : ''}`}>
                     <span>{text.length}</span>
                     <span className="compose-char-sep">/</span>
-                    <span>{MAX_POST_CHARS}</span>
+                    <span>{POST_FREE_CHARS}</span>
                   </div>
-                  {isOverLimit && (
-                    <p className="compose-char-error">
-                      {t('超出字数限制 {MAX_POST_CHARS} 字', { MAX_POST_CHARS: text.length - MAX_POST_CHARS })}
-                    </p>
+                  {overlengthFee > 0 && (
+                    overlengthAffordable ? (
+                      <p className="compose-char-fee-hint">
+                        {t('超出免费额度 {count} 字，发布时将收取 {fee} PB 超长费', { count: text.length - POST_FREE_CHARS, fee: overlengthFee })}
+                      </p>
+                    ) : (
+                      <p className="compose-char-error">
+                        {t('超长费余额不足，请减少字数或先充值')}
+                      </p>
+                    )
                   )}
                 </>
               )}
@@ -1087,6 +1138,15 @@ export function ComposePage({
           value={scheduledAtLocal}
           onConfirm={handleScheduleConfirm}
           onClose={handleSchedulePickerClose}
+        />
+      )}
+
+      {overlengthSheetOpen && overlengthWallet && (
+        <OverlengthFeeSheet
+          fee={overlengthFee}
+          wallet={overlengthWallet}
+          onConfirm={handleConfirmOverlengthFee}
+          onClose={() => setOverlengthSheetOpen(false)}
         />
       )}
 

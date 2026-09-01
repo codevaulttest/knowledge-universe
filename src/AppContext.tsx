@@ -110,7 +110,7 @@ export type AppContextValue = {
   supBalance: number;
   supHistory: SupTransaction[];
   deductSup: (amount: number, reason: SupTransactionReason, pool?: SupWalletId) => void;
-  /** 空投 PB / 站内 SUP 充值·提取：站内 PB 明确不可上链，不提供入口。提取失败（余额不足）返回 false。 */
+  /** 可提取 PB / 站内 SUP 充值·提取：站内 PB 明确不可上链，不提供入口。提取失败（余额不足）返回 false。 */
   depositAirdropPb: (amount: number) => void;
   withdrawAirdropPb: (amount: number) => boolean;
   depositSiteSup: (amount: number) => void;

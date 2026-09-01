@@ -28,7 +28,7 @@ export const PB_WALLETS: Record<PbWalletId, PbWalletMeta> = {
     id: 'credibility', labelKey: '公信力', sourceKey: '每日任务发放', useSummaryKey: '可用于开通频道、BSP 巨星投流、节点升级、转让节点', supSource: 'none', unitKey: '公信力',
   },
   airdrop: {
-    id: 'airdrop', labelKey: '空投 PB', sourceKey: '空投 50% 到账', useSummaryKey: '适用于全部 PB 用途', supSource: 'site_first', unitKey: 'PB',
+    id: 'airdrop', labelKey: 'PB', sourceKey: '空投 50% 到账', useSummaryKey: '适用于全部 PB 用途', supSource: 'site_first', unitKey: 'PB',
   },
 };
 
@@ -54,6 +54,8 @@ export const PB_USE_ALLOWED_WALLETS: Record<PbUse, readonly PbWalletId[]> = {
   node_transfer: ['credibility', 'airdrop', 'onchain'],
   // 会议尚未覆盖以下用途，原型先保守仅开放通用 PB。
   tip: ['airdrop', 'onchain'],
+  // 发帖超长费：数组顺序即扣款优先级，优先可提取 PB，不足回落站内 PB、链上 PB。
+  post_overlength: ['airdrop', 'station', 'onchain'],
 };
 
 export function allowedWalletsForUse(use: PbUse): readonly PbWalletId[] {
@@ -71,6 +73,7 @@ export function supReasonForPbUse(use: PbUse): SupTransactionReason {
     save: 'save', unlock: 'unlock', partner: 'partner',
     channel_subscribe: 'chain_unlock', purchase: 'purchase', tip: 'chain_unlock',
     node_upgrade: 'node_upgrade', node_transfer: 'node_transfer',
+    post_overlength: 'post',
   };
   return map[use];
 }
@@ -102,4 +105,23 @@ export function resolveSupPool(
   if (source === 'onchain') return supWallets.onchain >= amount ? 'onchain' : null;
   if (supWallets.site >= amount) return 'site';
   return supWallets.onchain >= amount ? 'onchain' : null;
+}
+
+/** 发帖免费字数额度；超出部分每 POST_OVERLENGTH_CHARS_PER_PB 字收取 1 PB 超长费。 */
+export const POST_FREE_CHARS = 1000;
+export const POST_OVERLENGTH_CHARS_PER_PB = 1000;
+
+export function computeOverlengthFee(length: number): number {
+  return length > POST_FREE_CHARS
+    ? Math.ceil((length - POST_FREE_CHARS) / POST_OVERLENGTH_CHARS_PER_PB)
+    : 0;
+}
+
+/** 按 post_overlength 的钱包优先级找第一个余额够付的钱包，不跨钱包拼单。 */
+export function resolveOverlengthFeeWallet(
+  pbWallets: Record<PbWalletId, number>,
+  amount: number,
+): PbWalletId | null {
+  if (amount <= 0) return null;
+  return PB_USE_ALLOWED_WALLETS.post_overlength.find(w => pbWallets[w] >= amount) ?? null;
 }
