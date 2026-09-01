@@ -1,4 +1,4 @@
-import type { ActivityGroup, Channel, ChannelSubscriber, DmConversation, KnowledgeCert, OutgoingTip, Post, PostActors, ProfileContacts, Reply, ShippingAddress, ShopOrder } from './types';
+import type { ActivityGroup, Channel, ChannelAuthorization, ChannelSubscriber, DmConversation, KnowledgeCert, OutgoingTip, Post, PostActors, ProfileContacts, Reply, ShippingAddress, ShopOrder } from './types';
 import { withFreeTier } from './channelTiers';
 
 export type UserListItem = {
@@ -57,6 +57,32 @@ export function findRegisteredUserByAddress(address: string): UserListItem | und
   const name = MOCK_REGISTERED_ADDRESSES[address.trim().toLowerCase()];
   return name ? ALL_USERS_MOCK.find(u => u.name === name) : undefined;
 }
+
+/** 频道授权演示数据：覆盖「作为频道主已发出授权」与「作为被授权人收到待接受邀请」两种视角，
+ *  便于单一登录身份（CURRENT_USER）独立走通完整授权闭环 */
+export const MOCK_CHANNEL_AUTHORIZATIONS: ChannelAuthorization[] = [
+  {
+    // 视角一：CURRENT_USER 作为被授权人，收到「极客前沿」的待接受邀请
+    id: 'collab-1',
+    channelId: 'channel-jike',
+    ownerName: '极客前沿',
+    delegateAddress: MOCK_WALLET_ADDRESS.toLowerCase(),
+    delegateName: CURRENT_USER,
+    status: 'pending',
+    createdAt: Date.now() - 1000 * 60 * 60 * 6,
+  },
+  {
+    // 视角二：CURRENT_USER 作为频道主，已授权「阿May的研究笔记」代发 channel-me-2
+    id: 'collab-2',
+    channelId: 'channel-me-2',
+    ownerName: CURRENT_USER,
+    delegateAddress: '0x5f2a8c1e6d9b3074a5c6e8f0123456789abcdef0',
+    delegateName: '阿May的研究笔记',
+    status: 'active',
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 3,
+    respondedAt: Date.now() - 1000 * 60 * 60 * 24 * 2,
+  },
+];
 
 /** 将 6 位邀请码解析为邀请人钱包地址；未知码用确定性 mock 地址，保证 demo 可绑任意码 */
 export function resolveInviterAddress(code: string): string {

@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { withFreeTier } from './channelTiers';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_KNOWLEDGE_CERTS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_CHANNEL_AUTHORIZATIONS, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_KNOWLEDGE_CERTS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { formatScheduledAt } from './dateUtils';
-import type { AddressMigration, Channel, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import { isValidWalletAddress } from './formatAddress';
+import type { AddressMigration, Channel, ChannelAuthorization, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import { PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
@@ -389,6 +390,79 @@ export default function App({ account, onLanguageChange }: {
   };
 
   const [channels, setChannels] = useState<Channel[]>(ALL_CHANNELS);
+
+  // ── 频道授权：频道主授权他人钱包地址代为发帖，需对方接受后生效，双方可随时撤销 ──
+  const [channelAuthorizations, setChannelAuthorizations] = useState<ChannelAuthorization[]>(MOCK_CHANNEL_AUTHORIZATIONS);
+  const normalizedWalletAddress = (walletAddress ?? '').toLowerCase();
+
+  const delegatedChannels = useMemo(() => {
+    const activeChannelIds = new Set(
+      channelAuthorizations
+        .filter(a => a.status === 'active' && a.delegateAddress === normalizedWalletAddress)
+        .map(a => a.channelId),
+    );
+    return channels.filter(c => activeChannelIds.has(c.id));
+  }, [channels, channelAuthorizations, normalizedWalletAddress]);
+
+  const pendingIncomingChannelAuthorizations = useMemo(
+    () => channelAuthorizations.filter(a => a.status === 'pending' && a.delegateAddress === normalizedWalletAddress),
+    [channelAuthorizations, normalizedWalletAddress],
+  );
+
+  const requestChannelAuthorization = (channelId: string, delegateAddress: string): { ok: boolean; message?: string } => {
+    const channel = channels.find(c => c.id === channelId);
+    if (!channel || channel.ownerName !== CURRENT_USER) return { ok: false, message: t('无权操作该频道') };
+    if (!isValidWalletAddress(delegateAddress)) return { ok: false, message: t('请输入合法的钱包地址') };
+    const normalized = delegateAddress.trim().toLowerCase();
+    if (normalized === normalizedWalletAddress) return { ok: false, message: t('不能授权给自己') };
+    const alreadyExists = channelAuthorizations.some(a =>
+      a.channelId === channelId && a.delegateAddress === normalized && (a.status === 'pending' || a.status === 'active'));
+    if (alreadyExists) return { ok: false, message: t('该地址已是本频道的协作者或邀请待处理') };
+
+    const delegate = findRegisteredUserByAddress(normalized);
+    const authorization: ChannelAuthorization = {
+      id: `collab-${Date.now()}`,
+      channelId,
+      ownerName: CURRENT_USER,
+      delegateAddress: normalized,
+      delegateName: delegate?.name,
+      status: 'pending',
+      createdAt: Date.now(),
+    };
+    setChannelAuthorizations(prev => [authorization, ...prev]);
+    showToast(t('已发送授权邀请，等待对方接受'));
+    return { ok: true };
+  };
+
+  const respondToChannelAuthorization = (authId: string, response: 'accept' | 'decline') => {
+    const auth = channelAuthorizations.find(a => a.id === authId);
+    if (!auth || auth.status !== 'pending' || auth.delegateAddress !== normalizedWalletAddress) return;
+    setChannelAuthorizations(prev => prev.map(a => a.id === authId
+      ? { ...a, status: response === 'accept' ? 'active' : 'declined', respondedAt: Date.now() }
+      : a));
+    showToast(response === 'accept' ? t('已接受授权，可在发帖时选择该频道') : t('已婉拒该邀请'));
+  };
+
+  const revokeChannelAuthorization = (authId: string) => {
+    const auth = channelAuthorizations.find(a => a.id === authId);
+    if (!auth || (auth.status !== 'pending' && auth.status !== 'active')) return;
+    const isOwnerSide = auth.ownerName === CURRENT_USER;
+    const isDelegateSide = auth.delegateAddress === normalizedWalletAddress;
+    if (!isOwnerSide && !isDelegateSide) return;
+    setChannelAuthorizations(prev => prev.map(a => a.id === authId
+      ? { ...a, status: 'revoked', revokedAt: Date.now(), revokedBy: isOwnerSide ? 'owner' : 'delegate' }
+      : a));
+    showToast(t('已撤销授权'));
+  };
+
+  const resolveDelegatedDisplayAuthor = (channelId?: string): string | undefined => {
+    if (!channelId) return undefined;
+    const channel = channels.find(c => c.id === channelId);
+    if (!channel || channel.ownerName === CURRENT_USER) return undefined;
+    const hasActiveGrant = channelAuthorizations.some(a =>
+      a.channelId === channelId && a.status === 'active' && a.delegateAddress === normalizedWalletAddress);
+    return hasActiveGrant ? channel.ownerName : undefined;
+  };
   // 开发工具：模拟「当前用户尚未创建任何频道」；默认关闭（原型自带 5 个自有频道）
   const [demoHideOwnChannels, setDemoHideOwnChannels] = useState(false);
   const visibleChannels = useMemo(
@@ -1029,6 +1103,7 @@ export default function App({ account, onLanguageChange }: {
           stakeTier: pendingNewPost.stakeTier,
           nodeId: Math.random().toString(36).slice(2, 8).toUpperCase(),
           channelId: pendingNewPost.channelId,
+          displayAuthorName: resolveDelegatedDisplayAuthor(pendingNewPost.channelId),
           minTierIndex: pendingNewPost.minTierIndex,
           shop: pendingNewPost.shop,
           rating: 0,
@@ -1136,6 +1211,7 @@ export default function App({ account, onLanguageChange }: {
       stakeTier: data.stakeTier,
       nodeId: data.isNode ? Math.random().toString(36).slice(2, 8).toUpperCase() : undefined,
       channelId: data.channelId,
+      displayAuthorName: resolveDelegatedDisplayAuthor(data.channelId),
       minTierIndex: data.minTierIndex,
       shop: data.shop,
       scheduledAt: data.scheduledAt,
@@ -1192,6 +1268,8 @@ export default function App({ account, onLanguageChange }: {
     walletAddress, walletConnecting, disconnectWallet,
     pbWallets, pbBalance, getPbWalletOptions, pickDefaultPbWallet, payPb, setDemoPbWallets, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
     addressMigrations, requestAddressMigration, cancelAddressMigration, dismissMigrationReminder,
+    channelAuthorizations, requestChannelAuthorization, respondToChannelAuthorization, revokeChannelAuthorization,
+    delegatedChannels, pendingIncomingChannelAuthorizations,
     airdropClaimed, claimAirdrop,
     taskSnapshotToday, taskSnapshotYesterday, airdropClaimRatio, airdropRatioLadderActive, lotQuota,
     taskCelebrateSignal, recordTaskInteraction, getDailyTaskCalendar: () => getTaskCalendarMonth(new Date(), lotQuota.interactions),

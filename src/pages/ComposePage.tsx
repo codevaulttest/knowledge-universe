@@ -31,9 +31,11 @@ export function ComposePage({
   draft?: Draft | null;
   onRegisterCloseHandler?: (handler: () => void) => void;
 }) {
-  const { openPay, showToast, updatePost, saveDraft, updateDraft, stagePendingPost, publishPost, t, language, channels, userProfile, openEditProfileContacts } = useApp();
+  const { openPay, showToast, updatePost, saveDraft, updateDraft, stagePendingPost, publishPost, t, language, channels, delegatedChannels, userProfile, openEditProfileContacts } = useApp();
   const isEditMode = !!editPost;
   const myChannels = channels.filter(c => c.ownerName === CURRENT_USER);
+  // 发帖选择器同时容纳「自己拥有」与「被授权代发」的频道，后者在列表和已选态里都标出属于谁
+  const pickerChannels = [...myChannels, ...delegatedChannels];
   // 编辑已发布的频道帖子时，可见档位允许调整，但只能单向放宽（降低门槛/改成免费档），
   // 不能收紧（提高门槛）——已经被看过的内容不能再收回去锁上，参考 YouTube 只支持
   // "付费档 → 免费档"、不支持反向操作的惯例
@@ -54,8 +56,8 @@ export function ComposePage({
   const [visibility, setVisibility] = useState(draft?.visibility ?? 30);
   const [selectedChannelId, setSelectedChannelId] = useState<string | undefined>(undefined);
   const [channelPickerOpen, setChannelPickerOpen] = useState(false);
-  const channelPicker = useChannelListSearch(myChannels);
-  const selectedChannel = myChannels.find(c => c.id === selectedChannelId);
+  const channelPicker = useChannelListSearch(pickerChannels);
+  const selectedChannel = pickerChannels.find(c => c.id === selectedChannelId);
   const [minTierIndex, setMinTierIndex] = useState(0);
   // 小黄车（仅 1000 PB 节点帖可挂载）
   const [shopEnabled, setShopEnabled] = useState(false);
@@ -675,7 +677,7 @@ export function ComposePage({
 
         {/* 同步至频道（仅拥有频道时可见）—— 频道门槛优先于知识宇宙单条付费生效，所以放在前面。
             一个人可拥有多个频道，用可搜索的单选选择器代替原来的单频道开关 */}
-        {!isEditMode && myChannels.length > 0 && (
+        {!isEditMode && pickerChannels.length > 0 && (
           <div className="compose-section compose-stake-section compose-stake-section--channel">
             <div className="compose-stake-heading">
               <Radio size={16} strokeWidth={2} />
@@ -688,6 +690,11 @@ export function ComposePage({
             >
               <span className="compose-channel-picker-trigger-label">
                 {selectedChannel ? selectedChannel.name : t('不同步到任何频道')}
+                {selectedChannel && selectedChannel.ownerName !== CURRENT_USER && (
+                  <span className="channel-delegate-badge channel-delegate-badge--inline">
+                    {t('来自 {name} 的授权', { name: selectedChannel.ownerName })}
+                  </span>
+                )}
               </span>
               <ChevronRight size={16} strokeWidth={2} aria-hidden />
             </button>
@@ -1117,7 +1124,7 @@ export function ComposePage({
                 <X size={18} strokeWidth={2} />
               </button>
             </div>
-            {myChannels.length > 1 && (
+            {pickerChannels.length > 1 && (
               <div className="channel-directory-search-wrap channel-picker-search-wrap">
                 <Search size={15} strokeWidth={2} className="channel-directory-search-icon" aria-hidden />
                 <input
@@ -1156,7 +1163,14 @@ export function ComposePage({
                 >
                   <Radio size={16} strokeWidth={2.2} className="channel-picker-item-radio" aria-hidden />
                   <span className="channel-picker-item-info">
-                    <span className="channel-picker-item-name">{c.name}</span>
+                    <span className="channel-picker-item-name">
+                      {c.name}
+                      {c.ownerName !== CURRENT_USER && (
+                        <span className="channel-delegate-badge">
+                          {t('来自 {name} 的授权', { name: c.ownerName })}
+                        </span>
+                      )}
+                    </span>
                     <span className="channel-picker-item-desc">
                       {t('{subscriberCount} 人已订阅', { subscriberCount: c.subscriberCount })}
                     </span>

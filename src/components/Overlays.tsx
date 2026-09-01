@@ -14,6 +14,7 @@ import { formatSuperAmount, formatSupAmount, stakeTierDescription, SUPER_BY_TIER
 import type { StakeTier } from '../types';
 import { PbWalletPicker } from './PbWalletPicker';
 import { CHANNEL_OPEN_PB_COST, walletConsumesSup } from '../walletConfig';
+import { shortenAddress } from '../formatAddress';
 
 
 // Lightbox photo backgrounds — local SVG illustrations, same order as img-grid-cell nth-child
@@ -394,7 +395,7 @@ export function GeminiStakeModal({
               rows={3}
               value={commentText}
               onChange={e => setCommentText(e.target.value)}
-              placeholder={t('回复 {author}…', { author: post.author })}
+              placeholder={t('回复 {author}…', { author: post.displayAuthorName ?? post.author })}
             />
           </label>
         )}
@@ -871,9 +872,10 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
   const content = ARTICLE_CONTENT[post.id] ?? `# ${post.title}\n\n文章内容加载中…`;
   const hasCover = post.articleHasCover !== false;
   const displayTitle = post.title.split('\n')[0]?.trim() || post.title;
-  const authorMeta = ALL_USERS_MOCK.find(user => user.name === post.author);
+  const displayName = post.displayAuthorName ?? post.author;
+  const authorMeta = ALL_USERS_MOCK.find(user => user.name === displayName);
   const avatarIdx = authorMeta?.avatarIdx ?? Math.max(0, ALL_POSTS.findIndex(p => p.author === post.author)) % 3;
-  const isFollowing = followedAuthors.has(post.author);
+  const isFollowing = followedAuthors.has(displayName);
 
   const lines = content.split('\n');
   const visibleLineCount = unlocked ? lines.length : Math.max(1, Math.floor(lines.length * post.visiblePercent / 100));
@@ -936,12 +938,12 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
                 className="article-reader-author-info"
                 role="button"
                 tabIndex={0}
-                onClick={() => navigate({ page: 'P6', authorName: post.author })}
-                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate({ page: 'P6', authorName: post.author }); }}
+                onClick={() => navigate({ page: 'P6', authorName: displayName })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate({ page: 'P6', authorName: displayName }); }}
               >
-                <Avatar index={avatarIdx} seed={post.author} />
+                <Avatar index={avatarIdx} seed={displayName} />
                 <div className="article-reader-author-text">
-                  <AuthorName name={post.author} className="article-reader-author-name" />
+                  <AuthorName name={displayName} className="article-reader-author-name" />
                   <span className="article-reader-time">{localizeTime(post.time, language)}</span>
                 </div>
               </div>
@@ -949,8 +951,8 @@ export function ArticleReader({ post, onClose }: { post: Post; onClose: () => vo
                 <button
                   type="button"
                   className={`follow-btn follow-btn--sm${isFollowing ? ' follow-btn--following' : ''}`}
-                  onClick={(e) => { e.stopPropagation(); toggleFollow(post.author); }}
-                  aria-label={isFollowing ? t('取消关注 {author}', { author: post.author }) : t('关注 {author}', { author: post.author })}
+                  onClick={(e) => { e.stopPropagation(); toggleFollow(displayName); }}
+                  aria-label={isFollowing ? t('取消关注 {author}', { author: displayName }) : t('关注 {author}', { author: displayName })}
                 >
                   {isFollowing
                     ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注')}</span>
@@ -1037,7 +1039,8 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
   const [videoError, setVideoError] = useState(false);
   const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
   const speedMenuRef = useRef<HTMLDivElement>(null);
-  const authorMeta = ALL_USERS_MOCK.find(u => u.name === post.author);
+  const videoDisplayName = post.displayAuthorName ?? post.author;
+  const authorMeta = ALL_USERS_MOCK.find(u => u.name === videoDisplayName);
   const authorAvatarIdx = authorMeta?.avatarIdx ?? 0;
 
   // Close speed menu on click outside
@@ -1212,9 +1215,9 @@ export function VideoPlayer({ post, index = 0, onClose }: { post: Post; index?: 
           <div className="video-player-bottom">
             {/* Author row */}
             <div className="video-player-author-row">
-              <Avatar index={authorAvatarIdx} seed={post.author} onClick={() => navigate({ page: 'P6', authorName: post.author })} />
-              <div className="video-player-author-meta" onClick={() => navigate({ page: 'P6', authorName: post.author })} style={{ cursor: 'pointer' }}>
-                <AuthorName name={post.author} as="h2" />
+              <Avatar index={authorAvatarIdx} seed={videoDisplayName} onClick={() => navigate({ page: 'P6', authorName: videoDisplayName })} />
+              <div className="video-player-author-meta" onClick={() => navigate({ page: 'P6', authorName: videoDisplayName })} style={{ cursor: 'pointer' }}>
+                <AuthorName name={videoDisplayName} as="h2" />
                 <span>{post.time}</span>
               </div>
             </div>
@@ -1964,6 +1967,114 @@ function channelTierPriceError(
   return null;
 }
 
+function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
+  const { t, showToast, channelAuthorizations, requestChannelAuthorization, revokeChannelAuthorization } = useApp();
+  const [formOpen, setFormOpen] = useState(false);
+  const [addressInput, setAddressInput] = useState('');
+  const [addressStatus, setAddressStatus] = useState<'1' | '2' | '3' | '4'>('1');
+  const [verifying, setVerifying] = useState(false);
+  const collabDelegate = addressStatus === '3' ? findRegisteredUserByAddress(addressInput.trim()) : undefined;
+  const collabAuths = channelAuthorizations.filter(a => a.channelId === channel.id && a.status !== 'declined');
+
+  const handleAddressChange = (value: string) => {
+    setAddressInput(value);
+    setAddressStatus(value.trim() ? '2' : '1');
+  };
+
+  const handleVerifyAddress = () => {
+    const address = addressInput.trim();
+    if (!address || verifying) return;
+    setVerifying(true);
+    setTimeout(() => {
+      setAddressStatus(findRegisteredUserByAddress(address) ? '3' : '4');
+      setVerifying(false);
+    }, 500);
+  };
+
+  const handleSendInvite = () => {
+    const result = requestChannelAuthorization(channel.id, addressInput.trim());
+    if (result.ok) {
+      setFormOpen(false);
+      setAddressInput('');
+      setAddressStatus('1');
+    } else {
+      showToast(result.message ?? t('发送失败'));
+    }
+  };
+
+  const statusLabel = (status: 'pending' | 'active' | 'declined' | 'revoked') => {
+    if (status === 'pending') return t('待对方接受');
+    if (status === 'active') return t('协作中');
+    if (status === 'revoked') return t('已撤销');
+    return t('已婉拒');
+  };
+
+  return (
+    <div className="edit-profile-field">
+      <span className="edit-profile-label">{t('协作者授权')}</span>
+      <p className="channel-tier-section-hint">
+        {t('授权后对方可用自己的账号为该频道发帖，发布内容仍展示为你的频道署名')}
+      </p>
+      {collabAuths.map(auth => (
+        <div key={auth.id} className="channel-collab-row">
+          <span className="channel-collab-name">{auth.delegateName ?? shortenAddress(auth.delegateAddress)}</span>
+          <span className={`channel-collab-status channel-collab-status--${auth.status}`}>
+            {statusLabel(auth.status)}
+          </span>
+          {(auth.status === 'pending' || auth.status === 'active') && (
+            <button type="button" className="channel-collab-revoke-btn" onClick={() => revokeChannelAuthorization(auth.id)}>
+              {t('撤销')}
+            </button>
+          )}
+        </div>
+      ))}
+      {!formOpen ? (
+        <button type="button" className="channel-tier-add-btn" onClick={() => setFormOpen(true)}>
+          <Plus size={16} strokeWidth={2.5} aria-hidden />
+          {t('授权协作者')}
+        </button>
+      ) : (
+        <div className="stake-code-block">
+          <div className="stake-code-row">
+            <div className="stake-code-input-wrap">
+              <input
+                className="stake-code-input"
+                type="text"
+                value={addressInput}
+                onChange={e => handleAddressChange(e.target.value)}
+                placeholder={t('请输入对方钱包地址')}
+              />
+            </div>
+            <button
+              type="button"
+              className="stake-code-verify-btn"
+              onClick={handleVerifyAddress}
+              disabled={!addressInput.trim() || verifying}
+            >
+              {verifying ? <Loader2 size={14} strokeWidth={2} className="planet-spin" /> : t('校验')}
+            </button>
+          </div>
+          {addressStatus === '3' && collabDelegate && (
+            <span className="stake-code-status stake-code-status--ok">
+              <ShieldCheck size={13} strokeWidth={2} />
+              {t('将授权 {name} 代发内容', { name: collabDelegate.name })}
+            </span>
+          )}
+          {addressStatus === '4' && (
+            <span className="stake-code-status stake-code-status--fail">
+              <ShieldX size={13} strokeWidth={2} />
+              {t('该地址未在知识宇宙注册，请确认地址是否正确')}
+            </span>
+          )}
+          <button type="button" className="planet-confirm-btn" disabled={addressStatus !== '3'} onClick={handleSendInvite}>
+            {t('发送授权邀请')}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function CreateChannelModal({ existingChannel, onClose }: { existingChannel?: Channel; onClose: () => void }) {
   const { t, createChannel, updateChannel, userProfile, payPb, showToast, channels } = useApp();
   // 一个人可以开多个频道，默认名称如果都叫「{nickname}的频道」会难以区分——
@@ -2253,6 +2364,8 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
             )}
           </div>
           )}
+
+          {isEdit && existingChannel && <ChannelCollaboratorsSection channel={existingChannel} />}
 
           {!isEdit && (
             <div className="edit-profile-field">

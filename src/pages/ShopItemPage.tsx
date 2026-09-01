@@ -205,11 +205,11 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
               <button
                 type="button"
                 className="shop-item-seller"
-                onClick={() => navigate({ page: 'P6', authorName: post.author })}
-                aria-label={t('卖家：{name}', { name: post.author })}
+                onClick={() => navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author })}
+                aria-label={t('卖家：{name}', { name: post.displayAuthorName ?? post.author })}
               >
                 <Store size={14} strokeWidth={2} aria-hidden="true" />
-                <span className="shop-item-seller-name">{post.author}</span>
+                <span className="shop-item-seller-name">{post.displayAuthorName ?? post.author}</span>
                 <ChevronRight size={15} strokeWidth={2} aria-hidden="true" />
               </button>
               <div className="shop-item-seller-actions">

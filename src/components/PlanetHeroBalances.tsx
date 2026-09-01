@@ -39,7 +39,11 @@ function AssetSymbol({ kind }: { kind: 'onchain-pb' | 'onchain-sup' | 'credibili
   }
 
   if (kind === 'site-sup') {
-    return <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>SUP</span>;
+    return (
+      <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>
+        <img className="pb-info-asset-symbol-image" src="/img/site-sup-asset-icon.svg" alt="" aria-hidden="true" />
+      </span>
+    );
   }
 
   if (kind === 'credibility') {

@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, AddressMigration, Channel, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import type { ActivityGroup, AddressMigration, Channel, ChannelAuthorization, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import type { LotQuota, TaskCalendarMonth, TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
@@ -140,6 +140,15 @@ export type AppContextValue = {
   requestAddressMigration: (targetAddress: string) => { ok: boolean; message?: string };
   cancelAddressMigration: (migrationId: string) => boolean;
   dismissMigrationReminder: (migrationId: string) => void;
+  /** 频道授权：频道主授权他人钱包地址代为发帖，需对方接受后生效，双方可随时撤销 */
+  channelAuthorizations: ChannelAuthorization[];
+  requestChannelAuthorization: (channelId: string, delegateAddress: string) => { ok: boolean; message?: string };
+  respondToChannelAuthorization: (authId: string, response: 'accept' | 'decline') => void;
+  revokeChannelAuthorization: (authId: string) => void;
+  /** 当前用户持有的有效代发授权对应的频道，供发帖选择器等复用 */
+  delegatedChannels: Channel[];
+  /** 当前用户收到的待处理频道授权邀请 */
+  pendingIncomingChannelAuthorizations: ChannelAuthorization[];
   // 知识宇宙页：邀请码绑定
   myInviteCode: string;
   /** 已绑定邀请人的钱包地址；未绑定为 null */

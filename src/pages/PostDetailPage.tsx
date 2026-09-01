@@ -74,7 +74,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
   const shopPriceFull = post.shop
     ? t('{price} PB', { price: formatTokenAmount(getShopMinPrice(post.shop)) })
     : '';
-  const displayName = isOwn ? userProfile.nickname : post.author;
+  const displayName = post.displayAuthorName ?? (isOwn ? userProfile.nickname : post.author);
   const isLinked = linkedPostIds.has(post.id);
   // 频道会员门槛：与 PostCard 一致，未达标时强制锁定，优先于按比例解锁
   const channel = post.channelId ? channels.find(c => c.id === post.channelId) : undefined;
@@ -204,8 +204,8 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
         <div className="detail-author-row">
           <Avatar
             index={0}
-            seed={isOwn ? userProfile.avatarSeed : post.author}
-            onClick={() => navigate({ page: 'P6', authorName: post.author })}
+            seed={post.displayAuthorName ?? (isOwn ? userProfile.avatarSeed : post.author)}
+            onClick={() => navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author })}
           />
           <div className="author-meta">
             <span className="post-author-name-row">
@@ -442,7 +442,7 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
         )}
         <input
           className="reply-input"
-          placeholder={t('回复 {author}…', { author: post.author })}
+          placeholder={t('回复 {author}…', { author: displayName })}
           value={replyText}
           onChange={e => setReplyText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleSendReply(); }}

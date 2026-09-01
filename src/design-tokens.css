@@ -78,13 +78,13 @@
   --ku-color-lot-border:          color-mix(in srgb, var(--ku-color-lot-gold) 55%, var(--ku-color-bg-phone));
   --ku-color-member-badge:        #7C3AED;  /* 频道会员身份小标——与创世节点金/银色系区分，避免混淆 */
   --ku-color-member-badge-bg:     #efe6ff;
+  --ku-color-delegate-badge:      #0a6b4f;  /* 频道授权来源小标——与会员档位徽章的紫色区分，对浅底达 4.5:1 */
+  --ku-color-delegate-badge-bg:   #e3f7ee;
 
   /* 资产标识：按资产来源与权益属性区分，浅底用于资产弹窗圆形图标 */
   --ku-asset-icon-size:           26px;
-  --ku-asset-site-sup:            var(--ku-color-success-text);
-  --ku-asset-site-sup-bg:         var(--ku-color-success-bg);
-  --ku-asset-merit:               var(--ku-color-genesis-gold-text);
-  --ku-asset-merit-bg:            var(--ku-color-genesis-gold-bg);
+  --ku-asset-credibility-icon-size: 30px;
+  --ku-asset-merit:               #82bf27;
 
   /* 小黄车（帖子即商品）——暖黄购物色系，独立于品牌青绿与创世金 */
   --ku-color-shop:                #c8820a;  /* 小黄车主色（文字/图标，对深色文本达标 AA）*/

@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Award, BadgeCheck, Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Award, BadgeCheck, Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
 import type { UserListItem } from '../mockData';
-import type { AddressMigration, Channel, ChannelSubscriber, CertStatus, Draft, Language, OutgoingTip, ProfileContacts, RepostedBy, UserProfile } from '../types';
+import type { AddressMigration, Channel, ChannelAuthorization, ChannelSubscriber, CertStatus, Draft, Language, OutgoingTip, ProfileContacts, RepostedBy, UserProfile } from '../types';
 import { PostCard } from '../components/PostCard';
 import { DevPanel } from '../components/DevPanel';
 import { ConfirmDeleteDraftModal, Ios26Alert, TipModal } from '../components/Overlays';
@@ -17,7 +17,7 @@ import { isValidWalletAddress } from '../formatAddress';
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, knowledgeCerts, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, meritBalance } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, knowledgeCerts, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, meritBalance, channelAuthorizations, delegatedChannels, pendingIncomingChannelAuthorizations, respondToChannelAuthorization, revokeChannelAuthorization } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
@@ -166,6 +166,22 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     </button>
   ) : null;
 
+  // 频道协作：仅自己主页展示，收到待接受邀请或已持有代发权限时才出现入口，避免空态占位
+  const [channelCollabOpen, setChannelCollabOpen] = useState(false);
+  const collabAlertCount = pendingIncomingChannelAuthorizations.length;
+  const collabSection = isOwn && (collabAlertCount > 0 || delegatedChannels.length > 0) ? (
+    <button type="button" className="channel-summary-entry" onClick={() => setChannelCollabOpen(true)}>
+      <UserCheck size={14} strokeWidth={2.2} className="channel-summary-entry-icon" />
+      <span className="channel-summary-entry-text">
+        <span className="channel-summary-entry-label">{t('频道协作')}</span>
+        {collabAlertCount > 0 && (
+          <span className="channel-summary-entry-sub">{t('{count} 条邀请待处理', { count: collabAlertCount })}</span>
+        )}
+      </span>
+      <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
+    </button>
+  ) : null;
+
   const myCerts = isOwn ? knowledgeCerts.filter(c => c.holder === CURRENT_USER) : [];
   const mintedCertCount = myCerts.filter(c => c.status === 'minted').length;
   const burnedCertCount = myCerts.filter(c => c.status === 'burned').length;
@@ -292,6 +308,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             {meritSection}
           </div>
         )}
+        {collabSection}
 
         {/* 关注/打赏/私信操作行延伸进头部视觉区块，与背景插画同属一体 */}
         {!isOwn && (
@@ -564,6 +581,18 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           channels={ownerChannels}
           isOwn={isOwn}
           onClose={() => setChannelDirectoryOpen(false)}
+        />
+      )}
+
+      {channelCollabOpen && (
+        <ChannelCollaborationModal
+          channels={channels}
+          pendingIncoming={pendingIncomingChannelAuthorizations}
+          delegatedChannels={delegatedChannels}
+          channelAuthorizations={channelAuthorizations}
+          onRespond={respondToChannelAuthorization}
+          onRevoke={revokeChannelAuthorization}
+          onClose={() => setChannelCollabOpen(false)}
         />
       )}
 
@@ -1223,6 +1252,82 @@ function ChannelDirectoryModal({
             </button>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ChannelCollaborationModal({
+  channels,
+  pendingIncoming,
+  delegatedChannels,
+  channelAuthorizations,
+  onRespond,
+  onRevoke,
+  onClose,
+}: {
+  channels: Channel[];
+  pendingIncoming: ChannelAuthorization[];
+  delegatedChannels: Channel[];
+  channelAuthorizations: ChannelAuthorization[];
+  onRespond: (authId: string, response: 'accept' | 'decline') => void;
+  onRevoke: (authId: string) => void;
+  onClose: () => void;
+}) {
+  const { t } = useApp();
+  const channelName = (channelId: string) => channels.find(c => c.id === channelId)?.name ?? channelId;
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="follow-list-modal channel-collab-modal" onClick={e => e.stopPropagation()}>
+        <div className="follow-list-header">
+          <span className="follow-list-title">{t('频道协作')}</span>
+          <button type="button" className="follow-list-close" onClick={onClose} aria-label={t('关闭')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+        <div className="follow-list-content channel-collab-content">
+          {pendingIncoming.length > 0 && (
+            <div className="channel-collab-group">
+              <span className="channel-collab-group-title">{t('待处理邀请')}</span>
+              {pendingIncoming.map(auth => (
+                <div key={auth.id} className="channel-collab-invite-row">
+                  <Avatar index={0} seed={auth.ownerName} />
+                  <span className="channel-collab-invite-text">
+                    {t('{name} 邀请你协作《{channel}》', { name: auth.ownerName, channel: channelName(auth.channelId) })}
+                  </span>
+                  <span className="channel-collab-invite-actions">
+                    <button type="button" className="channel-collab-decline-btn" onClick={() => onRespond(auth.id, 'decline')}>
+                      {t('婉拒')}
+                    </button>
+                    <button type="button" className="channel-collab-accept-btn" onClick={() => onRespond(auth.id, 'accept')}>
+                      {t('接受')}
+                    </button>
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="channel-collab-group">
+            <span className="channel-collab-group-title">{t('我协作的频道')}</span>
+            {delegatedChannels.length === 0 ? (
+              <div className="channel-directory-empty">{t('暂无协作中的频道')}</div>
+            ) : delegatedChannels.map(channel => {
+              const auth = channelAuthorizations.find(a => a.channelId === channel.id && a.status === 'active');
+              return (
+                <div key={channel.id} className="channel-collab-row">
+                  <span className="channel-collab-name">{channel.name}</span>
+                  <span className="channel-collab-owner">{t('来自 {name} 的授权', { name: channel.ownerName })}</span>
+                  {auth && (
+                    <button type="button" className="channel-collab-revoke-btn" onClick={() => onRevoke(auth.id)}>
+                      {t('退出协作')}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

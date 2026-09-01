@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
   <title id="title">公信力资产图标</title>
-  <desc id="desc">双色金色圆章，中央为透明镂空四芒星</desc>
-  <path fill="var(--ku-color-lot-gold, #D69E2E)" fill-rule="evenodd" d="M32 2a30 30 0 1 0 0 60 30 30 0 0 0 0-60Zm0 14 4.2 11.8L48 32l-11.8 4.2L32 48l-4.2-11.8L16 32l11.8-4.2L32 16Z"/>
-  <path fill="var(--ku-color-lot-gold-light, #F6C453)" fill-rule="evenodd" d="M32 9a23 23 0 1 0 0 46 23 23 0 0 0 0-46Zm0 7 4.2 11.8L48 32l-11.8 4.2L32 48l-4.2-11.8L16 32l11.8-4.2L32 16Z"/>
+  <desc id="desc">金色圆底上的红色四芒星</desc>
+  <circle cx="32" cy="32" r="28" fill="var(--ku-color-lot-gold-light, #F6C453)"/>
+  <path fill="var(--ku-color-lot-red, #C62828)" d="M32 16 36.2 27.8 48 32l-11.8 4.2L32 48l-4.2-11.8L16 32l11.8-4.2L32 16Z"/>
 </svg>

@@ -2482,7 +2482,7 @@ button {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin: 10px 12px -4px;
+  margin: 10px 0 -4px;
   color: var(--ku-color-text-meta);
   font: var(--ku-text-meta);
 }
@@ -8064,6 +8064,132 @@ button {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ── 频道授权（Channel Authorization）── */
+.channel-delegate-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: var(--ku-radius-badge);
+  background: var(--ku-color-delegate-badge-bg);
+  color: var(--ku-color-delegate-badge);
+  font: var(--ku-text-caption);
+  white-space: nowrap;
+}
+.channel-picker-item-name .channel-delegate-badge {
+  margin-left: 6px;
+}
+.channel-delegate-badge--inline {
+  margin-left: 8px;
+}
+.channel-collab-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ku-color-border);
+}
+.channel-collab-row:last-of-type {
+  border-bottom: none;
+}
+.channel-collab-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: var(--ku-text-body-sm);
+  font-weight: 600;
+  color: var(--ku-color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.channel-collab-owner {
+  flex-shrink: 0;
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-meta);
+}
+.channel-collab-status {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: var(--ku-radius-badge);
+  font: var(--ku-text-caption);
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-secondary);
+}
+.channel-collab-status--active {
+  background: var(--ku-color-delegate-badge-bg);
+  color: var(--ku-color-delegate-badge);
+}
+.channel-collab-status--revoked,
+.channel-collab-status--declined {
+  color: var(--ku-color-text-meta);
+}
+.channel-collab-revoke-btn {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ku-color-text-danger);
+  font: var(--ku-text-action-cta);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.channel-collab-invite-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ku-color-border);
+}
+.channel-collab-invite-row:last-of-type {
+  border-bottom: none;
+}
+.channel-collab-invite-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-primary);
+}
+.channel-collab-invite-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+.channel-collab-accept-btn,
+.channel-collab-decline-btn {
+  padding: 6px 12px;
+  border-radius: var(--ku-radius-badge);
+  font: var(--ku-text-action-cta);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.channel-collab-accept-btn {
+  border: none;
+  background: var(--ku-color-primary);
+  color: var(--ku-color-on-primary);
+}
+.channel-collab-decline-btn {
+  border: 1px solid var(--ku-color-border);
+  background: transparent;
+  color: var(--ku-color-text-secondary);
+}
+.channel-collab-group {
+  margin-bottom: 16px;
+}
+.channel-collab-group:last-child {
+  margin-bottom: 0;
+}
+.channel-collab-group-title {
+  display: block;
+  margin-bottom: 4px;
+  font: var(--ku-text-body-sm);
+  font-weight: 600;
+  color: var(--ku-color-text-primary);
+}
+.channel-collab-modal {
+  max-height: min(720px, 92vh);
+}
+
 .edit-profile-input--error {
   border-color: var(--ku-color-text-danger) !important;
 }
@@ -8821,8 +8947,8 @@ button {
 }
 
 .pb-info-asset-symbol-image--credibility {
-  width: var(--ku-asset-icon-size);
-  height: var(--ku-asset-icon-size);
+  width: var(--ku-asset-credibility-icon-size);
+  height: var(--ku-asset-credibility-icon-size);
   object-fit: contain;
 }
 
@@ -8839,13 +8965,15 @@ button {
 }
 
 .pb-info-asset-symbol--site-sup {
-  background: var(--ku-asset-site-sup-bg);
-  color: var(--ku-asset-site-sup);
+  background: transparent;
 }
 
 .pb-info-asset-symbol--merit {
-  background: var(--ku-asset-merit-bg);
-  color: var(--ku-asset-merit);
+  flex-basis: var(--ku-asset-icon-size);
+  width: var(--ku-asset-icon-size);
+  height: var(--ku-asset-icon-size);
+  background: var(--ku-asset-merit);
+  color: var(--ku-color-on-primary);
 }
 
 .pb-info-balance-action-btn {

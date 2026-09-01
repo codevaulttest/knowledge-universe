@@ -107,6 +107,9 @@ export type Post = {
   // 该频道下需订阅达到 channel.tiers[minTierIndex] 及以上档位才可见；频道帖子未设置时按免费档（tiers[0]）处理
   // "会员专属再付费"场景：已满足 minTierIndex 后，仍复用现有 stakeTier/visiblePercent 付费解锁机制，无需额外字段
   minTierIndex?: number;
+  // 代发帖署名覆盖：仅当帖子经由「频道授权」由代发人发布时设置，值为频道主名称。
+  // author 字段本身保持代发人身份不变，isOwn / 节点归属 / PB 扣款均不受影响，只影响署名展示。
+  displayAuthorName?: string;
   // 原帖已下架（作者删除/违规下架/账号注销等，UI 不区分具体原因）。
   // 下架后不出现在任何公开列表（feed / 他人主页转发列表），仅在转发者本人的「转发」列表里保留占位记录。
   deleted?: boolean;
@@ -363,6 +366,22 @@ export type AddressMigration = {
   completedAt?: number;
   /** 迁移提交后的确认弹窗是否已被用户关闭，用于避免重复进入主页时反复弹出 */
   reminderSeen?: boolean;
+};
+
+/** 频道授权：频道主授权他人钱包地址代为发帖，代发帖署名仍展示为频道主，需对方接受后生效，双方可随时撤销。 */
+export type ChannelAuthorizationStatus = 'pending' | 'active' | 'declined' | 'revoked';
+
+export type ChannelAuthorization = {
+  id: string;
+  channelId: string;
+  ownerName: string; // 发起授权的频道主（Channel.ownerName）
+  delegateAddress: string; // 被授权钱包地址，统一存小写
+  delegateName?: string; // 校验通过时解析出的已注册账户名，仅展示用
+  status: ChannelAuthorizationStatus;
+  createdAt: number;
+  respondedAt?: number; // 接受/婉拒时间
+  revokedAt?: number;
+  revokedBy?: 'owner' | 'delegate';
 };
 
 export type SupTransaction = {

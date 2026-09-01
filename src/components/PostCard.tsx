@@ -232,12 +232,12 @@ export function PostCard({
   const [actorsTab, setActorsTab] = useState<PostAction | 'link' | 'tip' | null>(null);
   const [showTip, setShowTip] = useState(false);
   const isOwn = post.author === CURRENT_USER;
-  const displayName = isOwn ? userProfile.nickname : post.author;
-  const avatarSeed = isOwn ? userProfile.avatarSeed : post.author;
+  const displayName = post.displayAuthorName ?? (isOwn ? userProfile.nickname : post.author);
+  const avatarSeed = post.displayAuthorName ?? (isOwn ? userProfile.avatarSeed : post.author);
   const hasActors = isOwn && !!POST_ACTORS[post.id];
   const heat = post.heat ?? derivedStat(post.id, 1, 300, 260000);
   const views = post.views ?? derivedStat(post.id, 2, 80, 4200);
-  const isFollowing = followedAuthors.has(post.author);
+  const isFollowing = followedAuthors.has(post.displayAuthorName ?? post.author);
   const totalImgs = post.imageCount ?? 3;
   const cert = knowledgeCerts.find(c => c.postId === post.id && c.status !== 'pending');
   const shopPriceFull = post.shop
@@ -282,7 +282,7 @@ export function PostCard({
       }}
       role={isUnavailableRepost ? undefined : 'button'}
       tabIndex={isUnavailableRepost ? undefined : 0}
-      aria-label={isUnavailableRepost ? undefined : t('查看帖子：{author} — {slice}', { author: post.author, slice: post.title.slice(0, 20) })}
+      aria-label={isUnavailableRepost ? undefined : t('查看帖子：{author} — {slice}', { author: displayName, slice: post.title.slice(0, 20) })}
     >
       {repostedBy && (
         <div
@@ -308,8 +308,8 @@ export function PostCard({
       ) : (
       <>
       <div className="author-row">
-        <Avatar index={index} seed={avatarSeed} avatarUrl={post.avatarUrl} onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} />
-        <div className="author-meta" onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.author }); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') navigate({ page: 'P6', authorName: post.author }); }}>
+        <Avatar index={index} seed={avatarSeed} avatarUrl={post.avatarUrl} onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }} />
+        <div className="author-meta" onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }}>
           <span className="post-author-name-row">
             <AuthorName name={displayName} as="h2" />
           </span>
@@ -399,8 +399,8 @@ export function PostCard({
           <button
             type="button"
             className={`follow-btn follow-btn--sm${isFollowing ? ' follow-btn--following' : ''}`}
-            onClick={(e) => { e.stopPropagation(); toggleFollow(post.author); }}
-            aria-label={isFollowing ? t('取消关注 {author}', { author: post.author }) : t('关注 {author}', { author: post.author })}
+            onClick={(e) => { e.stopPropagation(); toggleFollow(post.displayAuthorName ?? post.author); }}
+            aria-label={isFollowing ? t('取消关注 {author}', { author: displayName }) : t('关注 {author}', { author: displayName })}
           >
             {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注')}</span> : t('+ 关注')}
           </button>
