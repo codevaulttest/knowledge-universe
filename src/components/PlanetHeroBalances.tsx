@@ -86,10 +86,10 @@ export function PlanetHeroBalances() {
   if (!walletConnected) return null;
 
   // 折叠徽章只保留"创世 PB"这一种主力展示（用户在充值/提取里主动管理、日常互动感最强的一层）；
-  // 公信力、链上 PB、可提取 PB、站内 SUP、链上 SUP 五项不再参与求和，由"+5 种资产"提示承接，点开「我的资产」可看全部明细。
+  // 公信力、链上 PB、可提取 PB、站内 SUP、链上 SUP 五项不再参与求和，由"+5 种权益"提示承接，点开「我的权益」可看全部明细。
   const HIDDEN_ASSET_COUNT = 5;
   const pbAsset = { value: pbWallets.station, unit: t(PB_WALLETS.station.labelKey), ariaLabel: t(PB_WALLETS.station.labelKey) };
-  const assetAriaLabel = `${formatCompactBalance(pbAsset.value, language)} ${pbAsset.ariaLabel}，${t('+{count} 种资产', { count: HIDDEN_ASSET_COUNT })}，${t('查看资产余额')}`;
+  const assetAriaLabel = `${formatCompactBalance(pbAsset.value, language)} ${pbAsset.ariaLabel}，${t('+{count} 种权益', { count: HIDDEN_ASSET_COUNT })}，${t('查看权益余额')}`;
 
   return (
     <>
@@ -109,7 +109,7 @@ export function PlanetHeroBalances() {
             </span>
           </span>
           <span className="planet-hero-balances-row planet-hero-balances-row--secondary">
-            <span className="planet-hero-balances-overflow">{t('+{count} 种资产', { count: HIDDEN_ASSET_COUNT })}</span>
+            <span className="planet-hero-balances-overflow">{t('+{count} 种权益', { count: HIDDEN_ASSET_COUNT })}</span>
             <ChevronRight size={14} strokeWidth={2} className="planet-hero-balances-chevron" aria-hidden="true" />
           </span>
         </span>
@@ -124,7 +124,7 @@ export function PlanetHeroBalances() {
             onClick={e => e.stopPropagation()}
           >
             <div className="sheet-header">
-              <span className="sheet-title">{t('我的资产')}</span>
+              <span className="sheet-title">{t('我的权益')}</span>
               <button
                 className="back-btn"
                 style={{ marginLeft: 'auto' }}
@@ -137,7 +137,7 @@ export function PlanetHeroBalances() {
 
             <div className="pb-info-sheet-body">
               <div className="pb-info-section">
-                <span className="pb-info-group-title">{t('链上资产')}</span>
+                <span className="pb-info-group-title">{t('链上权益')}</span>
                 <div className="pb-info-group">
                 <div className="pb-info-balances">
                   {PB_WALLET_DISPLAY_ORDER.filter(wallet => wallet === 'onchain').map(wallet => {
@@ -186,7 +186,7 @@ export function PlanetHeroBalances() {
               </div>
 
               <div className="pb-info-section">
-                <span className="pb-info-group-title">{t('链下资产')}</span>
+                <span className="pb-info-group-title">{t('链下权益')}</span>
                 <div className="pb-info-group">
                 <div className="pb-info-balances">
                   {PB_WALLET_DISPLAY_ORDER.filter(wallet => wallet !== 'onchain').map(wallet => {

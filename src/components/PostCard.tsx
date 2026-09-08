@@ -433,6 +433,7 @@ export function PostCard({
             visiblePercent={channelLocked ? 0 : post.visiblePercent}
             lockActionLabel={channelLocked ? (post.visiblePercent < 100 ? channelLockLabelBare : channelLockLabel) : undefined}
             onVideoClick={() => (channelLocked ? openChannelGate() : openVideoPlayer(post))}
+            videoCoverLight={post.videoCoverLight}
           />
         </div>
       ) : (

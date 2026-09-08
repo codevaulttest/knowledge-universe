@@ -100,6 +100,8 @@ export type Post = {
   likes: number;
   dislikes?: number;
   videoUrl?: string;
+  // 视频封面走浅色插画变体（默认深色）；仅用于走查悬浮作者信息条在浅色画面下的可读性
+  videoCoverLight?: boolean;
   tipsReceived?: number; // 该帖累计收到的打赏（PB）
   heat?: number; // 热力值（综合热度，用于打赏入口的引导展示）；未设置=按 id 派生一个稳定的演示值
   views?: number; // 浏览量；未设置=按 id 派生一个稳定的演示值

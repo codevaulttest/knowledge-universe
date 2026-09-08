@@ -578,6 +578,7 @@ export function MediaPlaceholder({
   onArticleClick,
   onVideoClick,
   lockActionLabel,
+  videoCoverLight,
 }: {
   kind: Post['kind'];
   articleHasCover?: boolean;
@@ -593,6 +594,8 @@ export function MediaPlaceholder({
   onVideoClick?: () => void;
   /** 锁图角标动作文案覆盖，如频道门槛锁用"订阅"、按次付费锁用默认的"解锁" */
   lockActionLabel?: string;
+  /** 视频封面浅色插画变体：用于走查悬浮作者信息条在浅色画面下是否仍可读 */
+  videoCoverLight?: boolean;
 }) {
   const { t } = useApp();
   if (kind === 'text') return null;
@@ -642,7 +645,7 @@ export function MediaPlaceholder({
     const locked = visiblePercent < 100;
     return (
       <div
-        className={`media media-video${onVideoClick ? ' media-video--clickable' : ''}${locked ? ' media-video--locked' : ''}`}
+        className={`media media-video${videoCoverLight ? ' media-video--light' : ''}${onVideoClick ? ' media-video--clickable' : ''}${locked ? ' media-video--locked' : ''}`}
         data-layer="video-cover"
         onClick={onVideoClick ? (e) => { e.stopPropagation(); onVideoClick(); } : undefined}
         role={onVideoClick ? 'button' : undefined}
