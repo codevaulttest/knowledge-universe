@@ -18,6 +18,7 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
   const assetLabel = kind === 'airdrop' ? t('PB') : t('站内 SUP');
   const unit = kind === 'airdrop' ? 'PB' : 'SUP';
   const balance = kind === 'airdrop' ? pbWallets.airdrop : supWallets.site;
+  const onchainBalance = kind === 'airdrop' ? pbWallets.onchain : supWallets.onchain;
   const format = kind === 'airdrop' ? formatTokenAmount : formatSupAmount;
 
   const handleAmountChange = (value: string) => {
@@ -30,10 +31,11 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
   const amount = parseFloat(amountInput) || 0;
   const fee = amount > 0 ? pbOnchainFee(amount) : 0;
   const canWithdraw = amount > 0 && amount <= balance;
+  const canDeposit = amount > 0 && amount <= onchainBalance;
   const isDeposit = action === 'deposit';
 
   const handleConfirmDeposit = () => {
-    if (depositing || amount <= 0) return;
+    if (depositing || !canDeposit) return;
     setDepositing(true);
     setTimeout(() => {
       if (kind === 'airdrop') depositAirdropPb(amount);
@@ -67,8 +69,8 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
 
         <div className="sup-deposit-body">
           <div className="pb-info-balance-row">
-            <span className="pb-info-balance-label">{t('当前余额')}</span>
-            <span className="pb-info-balance-value">{format(balance)} {unit}</span>
+            <span className="pb-info-balance-label">{t(isDeposit ? '链上余额' : '当前余额')}</span>
+            <span className="pb-info-balance-value">{format(isDeposit ? onchainBalance : balance)} {unit}</span>
           </div>
 
           {isDeposit ? (
@@ -83,7 +85,7 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
               <div className="stake-code-row">
                 <div className="stake-code-input-wrap">
                   <input
-                    className="stake-code-input"
+                    className="stake-code-input stake-code-input--with-action"
                     type="text"
                     inputMode="decimal"
                     value={amountInput}
@@ -91,10 +93,19 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
                     placeholder={t('请输入到账数量')}
                     disabled={depositing}
                   />
-                  <span className="bsp-qty-unit">{unit}</span>
+                  <button
+                    type="button"
+                    className="pb-info-balance-action-btn asset-max-btn"
+                    onClick={() => setAmountInput(format(onchainBalance))}
+                    aria-label={t('到账最大额度')}
+                    disabled={depositing}
+                  >
+                    {t('最大')}
+                  </button>
                 </div>
+                <span className="bsp-qty-unit">{unit}</span>
               </div>
-              <button type="button" className="planet-confirm-btn" disabled={depositing || amount <= 0} onClick={handleConfirmDeposit}>
+              <button type="button" className="planet-confirm-btn" disabled={depositing || !canDeposit} onClick={handleConfirmDeposit}>
                 {depositing ? <span className="spinner" /> : t('确认到账')}
               </button>
             </>

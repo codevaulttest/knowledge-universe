@@ -8640,7 +8640,7 @@ button {
   flex-direction: column;
   gap: var(--ku-planet2-space-sm);
   width: 100%;
-  padding: var(--ku-planet2-space-sm);
+  padding: var(--ku-planet2-space-sm) 0;
   overflow: visible;
   background: var(--ku-color-bg-page);
 }
@@ -10655,7 +10655,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base);
+  padding: var(--ku-planet2-space-sm) 0;
   font-size: 14px;
   color: var(--ku-color-text-secondary);
 }
@@ -10703,7 +10703,7 @@ button {
   flex-direction: column;
   align-items: center;
   gap: var(--ku-planet2-space-sm);
-  padding: var(--ku-planet2-space-lg) var(--ku-planet2-space-base) var(--ku-planet2-space-xs);
+  padding: var(--ku-planet2-space-lg) 0 var(--ku-planet2-space-xs);
   text-align: center;
   color: var(--ku-color-text-meta);
 }
@@ -10729,7 +10729,7 @@ button {
 /* ── Transfer node picker sheet (选节点 → 进入转让流程) ── */
 
 .planet-transfer-picker-search-wrap {
-  padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base) 0;
+  padding: var(--ku-planet2-space-sm) 0 0;
 }
 
 .planet-transfer-picker-list {
@@ -10737,7 +10737,7 @@ button {
   flex-direction: column;
   max-height: 50vh;
   overflow-y: auto;
-  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-base) calc(var(--ku-planet2-space-base) + env(safe-area-inset-bottom, 0px));
+  padding: var(--ku-planet2-space-xs) 0 calc(var(--ku-planet2-space-base) + env(safe-area-inset-bottom, 0px));
 }
 
 .planet-transfer-picker-empty {
@@ -10846,7 +10846,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: var(--ku-planet2-space-sm);
-  padding: var(--ku-planet2-space-base) var(--ku-planet2-space-base) calc(var(--ku-planet2-space-base) + env(safe-area-inset-bottom, 0px));
+  padding: var(--ku-planet2-space-base) 0 calc(var(--ku-planet2-space-base) + env(safe-area-inset-bottom, 0px));
 }
 
 .sup-deposit-warning {

@@ -963,6 +963,8 @@ export const en: Record<string, string> = {
   '提取': 'Withdraw',
   '最大': 'Max',
   '提取最大额度': 'Withdraw maximum amount',
+  '链上余额': 'On-chain balance',
+  '到账最大额度': 'Deposit maximum amount',
   '从链上钱包向此地址转入 {asset}，到账后自动计入站内余额': 'Send {asset} from your on-chain account to this address — it credits your in-app balance once received',
   '请输入到账数量': 'Enter amount received',
   '确认到账': 'Confirm received',

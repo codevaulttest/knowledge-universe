@@ -1281,21 +1281,21 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
 
               <div className="create-confirm-card">
                 <span className="create-confirm-label">{t('费用明细2')}</span>
-                <div className="planet-upgrade-row" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                <div className="planet-upgrade-row">
                   <span className="planet-upgrade-row-label">
                     {createScaleMode === 'star'
                       ? t('将生成 {createCount} 个 · 目标 {createStars} 星', { createCount, createStars })
                       : t('将生成 {createCount} 个节点（1 星）', { createCount })}
                   </span>
                 </div>
-                <div className="planet-upgrade-row" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                <div className="planet-upgrade-row">
                   <span className="planet-upgrade-row-label">{t('所需 PB')}</span>
                   <div className="planet-upgrade-cost">
                     <span className="planet-upgrade-cost-num">{formatTokenAmount(pbCost)}</span>
                     <span className="planet-upgrade-cost-unit"> PB</span>
                   </div>
                 </div>
-                <div className="planet-upgrade-row" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                <div className="planet-upgrade-row">
                   <span className="planet-upgrade-row-label">{t('Gas 费')}</span>
                   <div className="planet-upgrade-cost">
                     <span className="planet-upgrade-cost-num">{Number(supCost.toFixed(4))}</span>
