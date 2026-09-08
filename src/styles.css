@@ -10868,8 +10868,8 @@ button {
 }
 
 .sup-deposit-hint {
-  font-size: 14px;
-  line-height: 1.6;
+  margin: 0;
+  font: var(--ku-text-meta);
   color: var(--ku-color-text-meta);
 }
 
@@ -10895,9 +10895,11 @@ button {
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
+  border-top: 0;
 }
 
 .sup-deposit-row--fee {
+  padding: 0;
   border-top: 0;
 }
 

@@ -436,7 +436,7 @@ export function PlanetHeroBalances() {
               </p>
               <p className="pb-info-sheet-para">
                 <strong className="pb-info-sheet-label">{t('核心用途：')}</strong>
-                {t('开通频道（含自己或代他人开通）、发帖、评论、解锁等节点相关操作。')}
+                {t('为本人开通频道、发帖、评论、解锁等节点相关操作。')}
               </p>
             </div>
           </div>

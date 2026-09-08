@@ -4,7 +4,6 @@ import { X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import { pbOnchainFee } from '../walletConfig';
-import { MOCK_WALLET_ADDRESS } from '../mockData';
 
 type AssetKind = 'airdrop' | 'sup';
 type AssetAction = 'deposit' | 'withdraw';
@@ -68,20 +67,22 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
         </div>
 
         <div className="sup-deposit-body">
-          <div className="pb-info-balance-row">
-            <span className="pb-info-balance-label">{t(isDeposit ? '链上余额' : '当前余额')}</span>
-            <span className="pb-info-balance-value">{format(isDeposit ? onchainBalance : balance)} {unit}</span>
-          </div>
+          {!isDeposit && (
+            <div className="sup-deposit-row sup-deposit-row--fee">
+              <span className="sup-deposit-label">{t('当前余额')}</span>
+              <span className="sup-deposit-value">{format(balance)} {unit}</span>
+            </div>
+          )}
 
           {isDeposit ? (
             <>
-              <div className="sup-deposit-row sup-deposit-row--address">
-                <span className="sup-deposit-label">{t('我的钱包地址')}</span>
-                <span className="sup-deposit-address">{MOCK_WALLET_ADDRESS}</span>
-              </div>
               <p className="sup-deposit-hint">
-                {t('从链上钱包向此地址转入 {asset}，到账后自动计入站内余额', { asset: assetLabel })}
+                {t('从链上账户转入 {asset}，到账后自动计入站内余额', { asset: assetLabel })}
               </p>
+              <div className="sup-deposit-row sup-deposit-row--fee">
+                <span className="sup-deposit-label">{t('链上余额')}</span>
+                <span className="sup-deposit-value">{format(onchainBalance)} {unit}</span>
+              </div>
               <div className="stake-code-row">
                 <div className="stake-code-input-wrap">
                   <input
@@ -106,7 +107,7 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
                 <span className="bsp-qty-unit">{unit}</span>
               </div>
               <button type="button" className="planet-confirm-btn" disabled={depositing || !canDeposit} onClick={handleConfirmDeposit}>
-                {depositing ? <span className="spinner" /> : t('确认到账')}
+                {depositing ? <span className="spinner" /> : t('确认充值')}
               </button>
             </>
           ) : (
