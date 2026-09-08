@@ -186,7 +186,7 @@ export function PlanetHeroBalances() {
               </div>
 
               <div className="pb-info-section">
-                <span className="pb-info-group-title">{t('链下权益')}</span>
+                <span className="pb-info-group-title">{t('站内权益')}</span>
                 <div className="pb-info-group">
                 <div className="pb-info-balances">
                   {PB_WALLET_DISPLAY_ORDER.filter(wallet => wallet !== 'onchain').map(wallet => {

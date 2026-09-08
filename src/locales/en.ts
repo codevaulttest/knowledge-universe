@@ -612,7 +612,7 @@ export const en: Record<string, string> = {
   '权益余额': 'Benefit Balances',
   '我的权益': 'My Benefits',
   '链上权益': 'On-chain benefits',
-  '链下权益': 'Off-chain benefits',
+  '站内权益': 'In-app benefits',
   '当前余额': 'Current Balance',
   '关于知识宇宙"PB"的定义与核心机制说明': 'About the Definition and Core Mechanism of "PB" in Wisverse',
   '在知识宇宙生态中，PB（全称 Public Belief，即"公信力积分"）是贯穿整个数贸与节点网络的核心资产。其核心定义与运行规则如下：': 'In the Wisverse ecosystem, PB (Public Belief) is the core asset running through the entire data-trade and node network. Its core definition and rules are as follows:',
