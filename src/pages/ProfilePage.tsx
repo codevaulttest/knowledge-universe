@@ -1321,12 +1321,13 @@ function ChannelCollaborationModal({
             <div key={auth.id} className="channel-collab-invite-row">
               <Avatar index={0} seed={auth.ownerName} />
               <span className="channel-collab-invite-text">
-                {t('{name} 邀请你协作频道：', { name: auth.ownerName })}
+                {t('{name} 邀请你协作频道', { name: auth.ownerName })}
                 <button
                   type="button"
                   className="channel-collab-channel-link"
                   onClick={() => { navigate({ page: 'P_CHANNEL', channelId: auth.channelId }); onClose(); }}
                 >
+                  <Radio size={14} strokeWidth={2.2} aria-hidden />
                   {channelName(auth.channelId)}
                 </button>
               </span>

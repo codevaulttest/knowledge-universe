@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import type { PbUse, PbWalletId } from '../types';
-import { PB_WALLETS, walletConsumesSup } from '../walletConfig';
+import { PB_WALLETS, STATION_PB_AVAILABLE, isWalletScopeAllowedForUse, walletConsumesSup } from '../walletConfig';
 import { formatTokenAmount } from '../stakeConfig';
 
 /**
@@ -102,8 +102,9 @@ export function PbWalletPicker({
               const meta = PB_WALLETS[wallet];
               const selectable = allowed && sufficient;
               const isSelected = value === wallet && selectable;
+              const notYetAvailable = wallet === 'station' && !STATION_PB_AVAILABLE && isWalletScopeAllowedForUse(wallet, use);
               const description = !allowed
-                ? t(meta.useSummaryKey)
+                ? (notYetAvailable ? t('9 月 10 日起可用于开通频道、发帖等操作') : t(meta.useSummaryKey))
                 : !sufficient
                   ? t('余额不足，还差 {amount} {unit}', { amount: formatTokenAmount(amount - pbWallets[wallet]), unit: t(meta.unitKey) })
                   : t(meta.sourceKey);

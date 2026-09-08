@@ -80,14 +80,15 @@ export function PlanetHeroBalances() {
   const [credibilityInfoOpen, setCredibilityInfoOpen] = useState(false);
   const [supInfoOpen, setSupInfoOpen] = useState(false);
   const [meritInfoOpen, setMeritInfoOpen] = useState(false);
+  const [stationInfoOpen, setStationInfoOpen] = useState(false);
   const [assetSheet, setAssetSheet] = useState<AssetSheetState | null>(null);
 
   if (!walletConnected) return null;
 
-  // 折叠徽章只保留"站内 PB"这一种主力展示（用户在充值/提取里主动管理、日常互动感最强的一层）；
+  // 折叠徽章只保留"创世 PB"这一种主力展示（用户在充值/提取里主动管理、日常互动感最强的一层）；
   // 公信力、链上 PB、可提取 PB、站内 SUP、链上 SUP 五项不再参与求和，由"+5 种资产"提示承接，点开「我的资产」可看全部明细。
   const HIDDEN_ASSET_COUNT = 5;
-  const pbAsset = { value: pbWallets.station, unit: t('站内 PB'), ariaLabel: t('站内 PB') };
+  const pbAsset = { value: pbWallets.station, unit: t(PB_WALLETS.station.labelKey), ariaLabel: t(PB_WALLETS.station.labelKey) };
   const assetAriaLabel = `${formatCompactBalance(pbAsset.value, language)} ${pbAsset.ariaLabel}，${t('+{count} 种资产', { count: HIDDEN_ASSET_COUNT })}，${t('查看资产余额')}`;
 
   return (
@@ -197,15 +198,17 @@ export function PlanetHeroBalances() {
                         <span className="pb-info-balance-label pb-info-balance-label--with-action">
                           <span className="pb-info-balance-asset">
                             <AssetSymbol kind={isCredibility ? 'credibility' : isDedicatedAccount ? 'account' : 'airdrop-pb'} />
-                            <span>{isDedicatedAccount ? t('专户 PB') : isCredibility ? t(meta.labelKey) : t('PB')}</span>
+                            <span>{t(meta.labelKey)}</span>
                           </span>
                           <button
                             type="button"
                             className="asset-overview-info-btn"
                             onClick={() => {
-                              if (isCredibility) setCredibilityInfoOpen(true); else setPbDetailOpen(true);
+                              if (isCredibility) setCredibilityInfoOpen(true);
+                              else if (isDedicatedAccount) setStationInfoOpen(true);
+                              else setPbDetailOpen(true);
                             }}
-                            aria-label={isCredibility ? t('查看公信力说明') : t('查看 PB 说明')}
+                            aria-label={isCredibility ? t('查看公信力说明') : isDedicatedAccount ? t('查看创世 PB 说明') : t('查看 PB 说明')}
                           >
                             <Info size={13} strokeWidth={2} />
                           </button>
@@ -407,6 +410,33 @@ export function PlanetHeroBalances() {
               <p className="pb-info-sheet-para">
                 <strong className="pb-info-sheet-label">{t('结算规则：')}</strong>
                 {t('优点结算将于 9 月 15 日首次发放。')}
+              </p>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {stationInfoOpen && createPortal(
+        <div className="sheet-backdrop" onClick={() => setStationInfoOpen(false)}>
+          <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+            <div className="sheet-header">
+              <span className="sheet-title">{t('创世 PB 说明')}</span>
+              <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={() => setStationInfoOpen(false)} aria-label={t('关闭')}>
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+            <div className="pb-info-sheet-body">
+              <p className="pb-info-sheet-para">
+                {t('在知识宇宙生态中，创世 PB 是创世节点、钻石节点持有者专属的站内权益。')}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('获取机制：')}</strong>
+                {t('兑换过创世节点、钻石节点的用户可分期领取创世 PB，共分 12 期发放。创世节点每月 8 日发放，每期 10000 PB（自 9 月 8 日起每期加赠 6000，合计 16000 PB）；钻石节点每月 18 日发放，每期 10000 PB。')}
+              </p>
+              <p className="pb-info-sheet-para">
+                <strong className="pb-info-sheet-label">{t('核心用途：')}</strong>
+                {t('开通频道（含自己或代他人开通）、发帖、评论、解锁等节点相关操作。')}
               </p>
             </div>
           </div>

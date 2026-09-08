@@ -810,6 +810,7 @@ export function PostContent({
   lockLabel,
   lockLabelBare,
   onUnlockOverride,
+  authorName,
 }: {
   post: Post;
   alwaysExpand?: boolean;
@@ -823,8 +824,10 @@ export function PostContent({
   lockLabelBare?: string;
   /** 解锁点击行为覆盖，如跳转频道订阅弹窗而非常规按次付费解锁 */
   onUnlockOverride?: () => void;
+  /** IG 式内联署名：紧贴正文前显示，仅 feed 卡片传入 */
+  authorName?: string;
 }) {
-  const { openLink, linkedPostIds, showToast, t } = useApp();
+  const { openLink, linkedPostIds, showToast, navigate, t } = useApp();
   // 频道锁与按次付费锁是两套独立机制：分别判断，叠加时两个入口都要展示，避免付了频道费才发现按次付费还没解锁
   const stakeLocked = post.visiblePercent < 100 && !alwaysExpand && !linkedPostIds.has(post.id);
   const stacked = forceLocked && stakeLocked;
@@ -851,6 +854,17 @@ export function PostContent({
         className={`post-title${forceLocked ? ' post-title--locked-teaser' : shouldClamp ? ' post-title--clamped' : ''}${collapseLines > 0 && !forceLocked ? ` post-title--max-${collapseLines}` : ''}`}
         style={shouldClamp && !forceLocked ? { '--clamp-lines': collapseLines } as React.CSSProperties : undefined}
       >
+        {authorName && (
+          <span
+            className="post-title-author"
+            role="button"
+            tabIndex={0}
+            onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName }); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); navigate({ page: 'P6', authorName }); } }}
+          >
+            {authorName}
+          </span>
+        )}
         {forceLocked ? lockedTeaser(post.title) : post.title}
       </p>
       {shouldClamp && overflowing && (

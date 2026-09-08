@@ -4,7 +4,6 @@ import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
 import type { Channel, Post, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
-import { GenesisBanner } from '../components/GenesisBanner';
 import { ChannelCard } from '../components/shared';
 import { DevPanel } from '../components/DevPanel';
 import { ShopFeed } from './ShopPage';
@@ -58,7 +57,6 @@ function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElemen
 
   return (
     <section className="feed" data-layer="feed">
-      <GenesisBanner />
       {entries.slice(0, shownCount).map((entry, i) => (
         <PostCard
           key={`${entry.post.id}-${entry.repostedBy?.name ?? 'orig'}`}

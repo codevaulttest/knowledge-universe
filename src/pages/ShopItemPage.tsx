@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bookmark, Check, ChevronLeft, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, Pencil, Phone, Plus, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
+import { Bookmark, Check, ChevronLeft, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, Pencil, Phone, Plus, Send, Share2, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
 import type { PbWalletId, ProfileContacts, ShippingAddress, ShopOrder } from '../types';
@@ -11,6 +11,7 @@ import { getShopMinPrice, getShopTotalStock, getShopVariant, getShopVariants, is
 import { Ios26Alert } from '../components/Overlays';
 import { RegionPicker } from '../components/RegionPicker';
 import { PbWalletPicker } from '../components/PbWalletPicker';
+import { ShopItemShareSheet } from '../components/ShopItemShareSheet';
 
 export const CONTACT_CHANNELS: { key: keyof ProfileContacts; label: string; icon: typeof MessageCircle }[] = [
   { key: 'wechat', label: '微信', icon: MessageCircle },
@@ -48,6 +49,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const [regionPickerOpen, setRegionPickerOpen] = useState(false);
   const [pendingDeleteAddrId, setPendingDeleteAddrId] = useState<string | null>(null);
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   if (!post || !post.shop) {
     return (
@@ -220,7 +222,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                     onClick={joinPartner}
                   >
                     <Users size={16} strokeWidth={2} aria-hidden="true" />
-                    {t('加入合伙人')}
+                    {t('合伙')}
                   </button>
                 )}
                 {contactEntries.length > 0 && !contactsExpanded && (
@@ -230,18 +232,35 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                     onClick={() => setContactsExpanded(true)}
                   >
                     <MessageCircle size={19} strokeWidth={2} aria-hidden="true" />
-                    {t('联系商家')}
+                    {t('联系')}
+                  </button>
+                )}
+                {!isOwn && (
+                  <button
+                    type="button"
+                    className="shop-item-icon-btn shop-item-dm"
+                    onClick={() => requireWallet(() => navigate({ page: 'P_DM_CHAT', peerId: post.author }))}
+                    aria-label={t('发私信')}
+                  >
+                    <Send size={16} strokeWidth={2} aria-hidden="true" />
                   </button>
                 )}
                 <button
                   type="button"
-                  className={`shop-item-save${saved ? ' shop-item-save--active' : ''}`}
+                  className={`shop-item-icon-btn shop-item-save${saved ? ' shop-item-save--active' : ''}`}
                   onClick={() => togglePostAction(post.id, 'save')}
                   aria-pressed={saved}
                   aria-label={saved ? t('取消收藏') : t('收藏')}
                 >
-                  <Bookmark size={19} strokeWidth={2} fill={saved ? 'currentColor' : 'none'} />
-                  {saved ? t('已收藏') : t('收藏')}
+                  <Bookmark size={17} strokeWidth={2} fill={saved ? 'currentColor' : 'none'} />
+                </button>
+                <button
+                  type="button"
+                  className="shop-item-icon-btn shop-item-share"
+                  onClick={() => setShareOpen(true)}
+                  aria-label={t('分享')}
+                >
+                  <Share2 size={16} strokeWidth={2} />
                 </button>
               </div>
             </div>
@@ -554,6 +573,8 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
           </div>
         </div>
       )}
+
+      {shareOpen && <ShopItemShareSheet post={post} onClose={() => setShareOpen(false)} />}
     </>
   );
 }

@@ -278,6 +278,16 @@
   --ku-media-carousel-overlay-bg:   var(--ku-genesis-overlay-chip);       /* 页码/待解锁角标底 */
   --ku-media-carousel-overlay-ring: var(--ku-genesis-overlay-chip-ring);  /* 角标描边 */
   --ku-media-carousel-overlay-text: #ffffff;                              /* 角标文字（深底上恒白） */
+  /* 视频帖：IG 式全宽视频 + 顶部悬浮作者信息条（叠在视频画面上）。
+     渐变在悬浮条覆盖高度内不早于 alpha 0.55 淡出，经校验对视频素材里最亮的高光色 rgb(39,255,242) 仍 ≥ 4.5:1，保证任意视频画面下白字都达标 */
+  --ku-video-header-scrim:      linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.62) 50%, transparent 100%);
+  --ku-video-header-text:       #ffffff;                         /* 悬浮条主文字（用户名、时间）恒白 */
+  --ku-video-header-text-soft:  rgba(255, 255, 255, 0.86);       /* 悬浮条次要文字（时间），加深透明度以保证对比度 */
+  --ku-video-header-icon-bg:    rgba(10, 11, 13, 0.55);          /* 更多按钮等图标底 */
+  --ku-video-header-follow-bg:      rgba(10, 11, 13, 0.55);      /* 关注按钮底（未关注态） */
+  --ku-video-header-follow-border:  rgba(255, 255, 255, 0.92);   /* 关注按钮描边 */
+  --ku-video-header-follow-following-bg: rgba(10, 11, 13, 0.4); /* 已关注态按钮底：仍需深色底保证白字对比度，用边框透明度区分未关注态 */
+  --ku-video-header-follow-following-border: rgba(255, 255, 255, 0.5); /* 已关注态描边转弱，视觉上与未关注态区分 */
   --ku-tabs-padding-top:       10px;
   --ku-layout-max-width:       480px;  /* 桌面端 phone-shell 居中限宽 */
   --ku-nav-bottom:             24px;

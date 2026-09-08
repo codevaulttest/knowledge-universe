@@ -15,6 +15,7 @@ export const MOCK_SELLER_CONTACTS: Record<string, ProfileContacts> = {
   '游牧开发者': { whatsapp: '+65 9123 4567' },
   '设计师刘然': { wechat: 'liuran_design' },
   '兜底走查': { wechat: 'daodi_qa' },
+  '极客前沿': { wechat: 'jikeqianyan_shop', phone: '139****8807' },
 };
 
 export const MOCK_WALLET_ADDRESS = '0x7a3fb8e2d1c94f6a5b3e0d9c8f2a7e1b4d6c3e8';
@@ -483,6 +484,22 @@ export function getChannelSubscribers(channel: Channel): ChannelSubscriber[] {
 }
 
 export const ALL_POSTS: Post[] = [
+  // ── 视频免费播放演示（首条：无频道锁、无按次付费锁，完整可播）──
+  {
+    id: 'video-free-demo', author: '游牧开发者', time: '3 小时前',
+    title: '30 分钟带你搭完一套 CI/CD 流水线\n从零配置到自动部署，全程录屏演示，无剪辑。',
+    kind: 'video', visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 16, links: 0, shares: 9, saves: 38, likes: 142,
+    videoUrl: '/mock-video-2.mp4',
+  },
+  {
+    id: 'p6', author: '极客前沿', time: '2 天前',
+    title: 'LLM Agent 实战：从零搭建能自动写代码的 AI 助手\n完整展示 tool-use 调用链路，含代码和 Demo 演示。',
+    kind: 'video', visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 24, links: 0, shares: 31, saves: 74, likes: 209,
+    videoUrl: '/mock-video.mp4',
+    channelId: 'channel-jike', minTierIndex: 2,
+  },
   // ── 多规格小黄车演示（首条：推荐流 + 商城 Tab 均置顶）──
   {
     id: 'shop-iphone', author: '极客前沿', time: '1 天前',
@@ -820,14 +837,6 @@ export const ALL_POSTS: Post[] = [
     title: 'Figma → 代码 全流程记录\n从组件规范到自动生成 design tokens，\n附插件清单与踩坑笔记。',
     kind: 'image', imageCount: 3, visiblePercent: 20, isNode: true, stakeTier: 10, nodeId: 'Vy6cT1',
     rating: 2, replies: 33, links: 18, shares: 14, saves: 61, likes: 128,
-  },
-  {
-    id: 'p6', author: '极客前沿', time: '2 天前',
-    title: 'LLM Agent 实战：从零搭建能自动写代码的 AI 助手\n完整展示 tool-use 调用链路，含代码和 Demo 演示。',
-    kind: 'video', visiblePercent: 100, isNode: false, stakeTier: 0,
-    rating: 0, replies: 24, links: 0, shares: 31, saves: 74, likes: 209,
-    videoUrl: '/mock-video.mp4',
-    channelId: 'channel-jike', minTierIndex: 2,
   },
   {
     id: 'p8', author: '阿May的研究笔记', time: '3 天前',

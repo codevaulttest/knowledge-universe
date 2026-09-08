@@ -732,6 +732,13 @@ button {
   color: var(--ku-color-text-primary);
 }
 
+/* IG 式内联署名：紧贴正文前，字重高于正文以区分身份与内容；可点击跳主页 */
+.post-title-author {
+  font-weight: 700;
+  margin-right: 6px;
+  cursor: pointer;
+}
+
 /* 付费帖：文字渐变淡出（mask-image 让字符本身透明，无白边截断感）*/
 .post-content-wrap.is-paid .post-title {
   margin-bottom: 0;
@@ -1254,6 +1261,39 @@ button {
 }
 .media-video--locked .img-lock-badge {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2;
+}
+
+/* ── 视频帖：IG 式全宽出血 + 顶部悬浮作者信息条 ── */
+.media-video-bleed {
+  position: relative;
+  width: calc(100% + var(--ku-feed-padding-x) * 2);
+  margin: 0 calc(var(--ku-feed-padding-x) * -1);
+}
+.media-video-bleed .media-video {
+  border-radius: 0;
+}
+.author-row--video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  margin-bottom: 0;
+  padding: 12px var(--ku-feed-padding-x) 34px;
+  background: var(--ku-video-header-scrim);
+}
+.author-row--video-overlay .author-meta h2,
+.author-row--video-overlay .author-name-text {
+  color: var(--ku-video-header-text);
+}
+.author-row--video-overlay .author-time {
+  color: var(--ku-video-header-text-soft);
+}
+.author-row--video-overlay .more {
+  color: var(--ku-video-header-text);
+  border-radius: var(--ku-radius-circle);
+  background: var(--ku-video-header-icon-bg);
+  padding: 3px;
 }
 
 /* ── GeminiNodeBadge（全宽信息条）── */
@@ -4472,6 +4512,18 @@ button {
 }
 .post .follow-btn--sm {
   font: var(--ku-text-action-cta-lg);
+}
+/* 视频悬浮条内的关注按钮：需盖过上面 .post .follow-btn--sm:not(.follow-btn--following) 的描边蓝字样式，
+   两条规则特异度打平（均 0,3,0），靠写在其后的源码顺序取胜，保证深底白字，避免蓝字叠在视频画面上看不清 */
+.post .author-row--video-overlay .follow-btn--sm:not(.follow-btn--following) {
+  color: var(--ku-video-header-text);
+  border-color: var(--ku-video-header-follow-border);
+  background: var(--ku-video-header-follow-bg);
+}
+.post .author-row--video-overlay .follow-btn--sm.follow-btn--following {
+  background: var(--ku-video-header-follow-following-bg);
+  border-color: var(--ku-video-header-follow-following-border);
+  color: var(--ku-video-header-text);
 }
 /* ── 频道信息条 ── */
 .channel-info-bar {
@@ -8192,14 +8244,17 @@ button {
   color: var(--ku-color-text-primary);
 }
 .channel-collab-channel-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ku-space-1);
+  margin-left: var(--ku-space-1);
   padding: 0;
   border: none;
   background: transparent;
   color: var(--ku-color-badge-text);
   font: inherit;
   font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: var(--ku-space-1);
+  text-decoration: none;
   cursor: pointer;
 }
 .channel-collab-invite-actions {
@@ -8900,15 +8955,13 @@ button {
   display: flex;
   flex-direction: column;
   gap: var(--ku-planet2-space-sm);
-  padding: 0 var(--ku-planet2-space-base) var(--ku-planet2-space-base);
+  padding: 0 0 var(--ku-planet2-space-base);
 }
 
 .pb-info-section {
   display: flex;
   flex-direction: column;
   gap: var(--ku-planet2-space-xs);
-  margin-left: calc(var(--ku-planet2-space-base) * -1);
-  margin-right: calc(var(--ku-planet2-space-base) * -1);
 }
 
 .pb-info-group {
@@ -12937,22 +12990,77 @@ html[lang="zh-TW"] .planet-hero-title {
 .shop-item-join-partner:disabled svg {
   color: var(--ku-color-text-secondary);
 }
-.shop-item-save {
+.shop-item-icon-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--ku-color-border-card);
   border-radius: var(--ku-radius-pill);
   background: var(--ku-color-bg-phone);
   color: var(--ku-color-text-secondary);
-  font: var(--ku-text-body-sm);
   cursor: pointer;
 }
-.shop-item-save--active {
+.shop-item-icon-btn:hover {
+  background: var(--ku-color-bg-subtle);
+}
+.shop-item-save--active,
+.shop-item-save--active:hover {
   border-color: var(--ku-color-shop-border);
   background: var(--ku-color-shop-bg);
   color: var(--ku-color-shop-strong);
+}
+.shop-share-sheet {
+  text-align: center;
+}
+.shop-share-title {
+  margin: 4px 0 16px;
+  font: 600 15px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
+.shop-share-qr-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  padding: 12px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-secondary);
+}
+.shop-share-qr-img {
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--ku-radius-card) - 6px);
+}
+.shop-share-hint {
+  margin: 16px 0 20px;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-meta);
+  line-height: 1.5;
+}
+.shop-share-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-shop-btn);
+  color: var(--ku-color-shop-btn-text);
+  font: 600 15px/1 var(--ku-font-family);
+  cursor: pointer;
+}
+.shop-share-save-btn:disabled {
+  cursor: default;
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-secondary);
 }
 .shop-item-contacts-reveal {
   display: grid;

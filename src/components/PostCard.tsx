@@ -271,6 +271,109 @@ export function PostCard({
     : totalImgs;
   // 原帖已下架：只在「转发」场景下出现（转发者本人的转发列表），渲染占位态，不展示原帖任何内容、不可点击进入详情
   const isUnavailableRepost = !!repostedBy && !!post.deleted;
+  // 视频帖参考 IG：作者信息条叠在视频画面顶部，而非画面外单独一行
+  const isVideoOverlay = post.kind === 'video';
+  const authorRow = (
+    <div className={`author-row${isVideoOverlay ? ' author-row--video-overlay' : ''}`}>
+      <Avatar index={index} seed={avatarSeed} avatarUrl={post.avatarUrl} onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }} />
+      <div className="author-meta" onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }}>
+        <span className="post-author-name-row">
+          <AuthorName name={displayName} as="h2" />
+        </span>
+        <div className="author-meta-row">
+          <span className="author-time">{localizeTime(post.time, language)}</span>
+          {channel && (
+            <span className="post-channel-badge" aria-label={t('归属频道《{name}》', { name: channel.name })}>
+              <Radio size={11} strokeWidth={2.2} />
+              {channel.name}
+            </span>
+          )}
+          {cert?.status === 'minted' && (
+            <button
+              type="button"
+              className="post-cert-badge"
+            aria-label={t('已确权 · 查看认证证书')}
+            onClick={e => { e.stopPropagation(); navigate({ page: 'P_CERT', certId: cert.id }); }}
+          >
+              <span className="post-cert-badge-mark" aria-hidden="true">
+                <BadgeCheck className="post-cert-badge-icon" aria-hidden="true" />
+                <Check className="post-cert-badge-check" strokeWidth={4.5} aria-hidden="true" />
+              </span>
+              <span className="post-cert-badge-text">{t('已确权')}</span>
+            </button>
+          )}
+          {cert?.status === 'burned' && (
+            <button
+              type="button"
+              className="post-cert-badge post-cert-badge--burned"
+              aria-label={t('已销毁')}
+              onClick={e => { e.stopPropagation(); navigate({ page: 'P_CERT', certId: cert.id }); }}
+            >
+              <span className="post-cert-badge-mark" aria-hidden="true">
+                <BadgeCheck className="post-cert-badge-icon" aria-hidden="true" />
+                <X className="post-cert-badge-check" strokeWidth={4.5} aria-hidden="true" />
+              </span>
+              <span className="post-cert-badge-text">{t('已销毁')}</span>
+            </button>
+          )}
+          {isOwn && requiredTier && (
+            <span className="post-tier-badge" aria-label={t('需订阅达到 {name} 及以上', { name: requiredTier.name })}>
+              <Gem size={11} strokeWidth={2.2} />
+              {requiredTier.name}
+            </span>
+          )}
+          {isOwn && post.isNode && (
+            <span className="post-visibility-badge">
+              {post.visiblePercent === 100
+                ? t('公开')
+                : post.visiblePercent === 0
+                  ? t('完全隐藏')
+                  : t('{visiblePercent}% 可见', { visiblePercent: post.visiblePercent })}
+            </span>
+          )}
+        </div>
+      </div>
+      {isOwn && (
+        <div className="more-menu-wrap" style={{ position: 'relative' }}>
+          <Ellipsis
+            className="more"
+            size={20}
+            strokeWidth={2}
+            role="button"
+            tabIndex={0}
+            onClick={(e) => { e.stopPropagation(); setMoreOpen(v => !v); }}
+          />
+          {moreOpen && (
+            <div className="more-dropdown" onClick={e => e.stopPropagation()}>
+              {hasActors && (
+                <button type="button" onClick={() => { setMoreOpen(false); setActorsTab('like'); }}>
+                  <Users size={14} strokeWidth={2.2} /> {t('查看互动')}
+                </button>
+              )}
+              {post.channelId && (
+                <button type="button" onClick={() => { setMoreOpen(false); openEditPost(post.id); }}>
+                  <Pencil size={14} strokeWidth={2.2} /> {t('编辑')}
+                </button>
+              )}
+              <button type="button" onClick={() => { setMoreOpen(false); requestDeletePost(post.id); }} className="more-dropdown__danger">
+                <Trash2 size={14} strokeWidth={2.2} /> {t('删除')}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      {!isOwn && !hideFollow && (
+        <button
+          type="button"
+          className={`follow-btn follow-btn--sm${isFollowing ? ' follow-btn--following' : ''}`}
+          onClick={(e) => { e.stopPropagation(); toggleFollow(post.displayAuthorName ?? post.author); }}
+          aria-label={isFollowing ? t('取消关注 {author}', { author: displayName }) : t('关注 {author}', { author: displayName })}
+        >
+          {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注')}</span> : t('+ 关注')}
+        </button>
+      )}
+    </div>
+  );
   return (
     <>
     <article
@@ -307,105 +410,7 @@ export function PostCard({
         </div>
       ) : (
       <>
-      <div className="author-row">
-        <Avatar index={index} seed={avatarSeed} avatarUrl={post.avatarUrl} onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }} />
-        <div className="author-meta" onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }}>
-          <span className="post-author-name-row">
-            <AuthorName name={displayName} as="h2" />
-          </span>
-          <div className="author-meta-row">
-            <span className="author-time">{localizeTime(post.time, language)}</span>
-            {channel && (
-              <span className="post-channel-badge" aria-label={t('归属频道《{name}》', { name: channel.name })}>
-                <Radio size={11} strokeWidth={2.2} />
-                {channel.name}
-              </span>
-            )}
-            {cert?.status === 'minted' && (
-              <button
-                type="button"
-                className="post-cert-badge"
-              aria-label={t('已确权 · 查看认证证书')}
-              onClick={e => { e.stopPropagation(); navigate({ page: 'P_CERT', certId: cert.id }); }}
-            >
-                <span className="post-cert-badge-mark" aria-hidden="true">
-                  <BadgeCheck className="post-cert-badge-icon" aria-hidden="true" />
-                  <Check className="post-cert-badge-check" strokeWidth={4.5} aria-hidden="true" />
-                </span>
-                <span className="post-cert-badge-text">{t('已确权')}</span>
-              </button>
-            )}
-            {cert?.status === 'burned' && (
-              <button
-                type="button"
-                className="post-cert-badge post-cert-badge--burned"
-                aria-label={t('已销毁')}
-                onClick={e => { e.stopPropagation(); navigate({ page: 'P_CERT', certId: cert.id }); }}
-              >
-                <span className="post-cert-badge-mark" aria-hidden="true">
-                  <BadgeCheck className="post-cert-badge-icon" aria-hidden="true" />
-                  <X className="post-cert-badge-check" strokeWidth={4.5} aria-hidden="true" />
-                </span>
-                <span className="post-cert-badge-text">{t('已销毁')}</span>
-              </button>
-            )}
-            {isOwn && requiredTier && (
-              <span className="post-tier-badge" aria-label={t('需订阅达到 {name} 及以上', { name: requiredTier.name })}>
-                <Gem size={11} strokeWidth={2.2} />
-                {requiredTier.name}
-              </span>
-            )}
-            {isOwn && post.isNode && (
-              <span className="post-visibility-badge">
-                {post.visiblePercent === 100
-                  ? t('公开')
-                  : post.visiblePercent === 0
-                    ? t('完全隐藏')
-                    : t('{visiblePercent}% 可见', { visiblePercent: post.visiblePercent })}
-              </span>
-            )}
-          </div>
-        </div>
-        {isOwn && (
-          <div className="more-menu-wrap" style={{ position: 'relative' }}>
-            <Ellipsis
-              className="more"
-              size={20}
-              strokeWidth={2}
-              role="button"
-              tabIndex={0}
-              onClick={(e) => { e.stopPropagation(); setMoreOpen(v => !v); }}
-            />
-            {moreOpen && (
-              <div className="more-dropdown" onClick={e => e.stopPropagation()}>
-                {hasActors && (
-                  <button type="button" onClick={() => { setMoreOpen(false); setActorsTab('like'); }}>
-                    <Users size={14} strokeWidth={2.2} /> {t('查看互动')}
-                  </button>
-                )}
-                {post.channelId && (
-                  <button type="button" onClick={() => { setMoreOpen(false); openEditPost(post.id); }}>
-                    <Pencil size={14} strokeWidth={2.2} /> {t('编辑')}
-                  </button>
-                )}
-                <button type="button" onClick={() => { setMoreOpen(false); requestDeletePost(post.id); }} className="more-dropdown__danger">
-                  <Trash2 size={14} strokeWidth={2.2} /> {t('删除')}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-        {!isOwn && !hideFollow && (
-          <button
-            type="button"
-            className={`follow-btn follow-btn--sm${isFollowing ? ' follow-btn--following' : ''}`}
-            onClick={(e) => { e.stopPropagation(); toggleFollow(post.displayAuthorName ?? post.author); }}
-            aria-label={isFollowing ? t('取消关注 {author}', { author: displayName }) : t('关注 {author}', { author: displayName })}
-          >
-            {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注')}</span> : t('+ 关注')}
-          </button>
-        )}
-      </div>
+      {!isVideoOverlay && authorRow}
       {post.kind === 'article' ? (
         <ArticleFeedCard
           post={post}
@@ -413,17 +418,9 @@ export function PostCard({
           locked={channelLocked}
           lockLabel={channelLockLabel}
         />
-      ) : (
-        <>
-          <PostContent
-            post={post}
-            collapseLines={4}
-            alwaysExpand={isOwn}
-            forceLocked={channelLocked}
-            lockLabel={channelLockLabel}
-            lockLabelBare={channelLockLabelBare}
-            onUnlockOverride={channelLocked ? openChannelGate : undefined}
-          />
+      ) : isVideoOverlay ? (
+        <div className="media-video-bleed">
+          {authorRow}
           <MediaPlaceholder
             kind={post.kind}
             articleHasCover={post.articleHasCover}
@@ -435,18 +432,31 @@ export function PostCard({
             visibleImgCount={visibleImgCount}
             visiblePercent={channelLocked ? 0 : post.visiblePercent}
             lockActionLabel={channelLocked ? (post.visiblePercent < 100 ? channelLockLabelBare : channelLockLabel) : undefined}
-            onImageClick={post.kind === 'image' ? (idx) => {
-              if (channelLocked) {
-                openChannelGate();
-              } else if (idx >= visibleImgCount) {
-                openLink(post.id, 'unlock');
-              } else {
-                openImageLightbox(post, idx, visibleImgCount);
-              }
-            } : undefined}
-            onVideoClick={post.kind === 'video' ? () => (channelLocked ? openChannelGate() : openVideoPlayer(post)) : undefined}
+            onVideoClick={() => (channelLocked ? openChannelGate() : openVideoPlayer(post))}
           />
-        </>
+        </div>
+      ) : (
+        <MediaPlaceholder
+          kind={post.kind}
+          articleHasCover={post.articleHasCover}
+          imageCount={totalImgs}
+          imageAspect={post.imageAspect}
+          imageRatio={post.imageRatio}
+          images={post.images}
+          imageRatios={post.imageRatios}
+          visibleImgCount={visibleImgCount}
+          visiblePercent={channelLocked ? 0 : post.visiblePercent}
+          lockActionLabel={channelLocked ? (post.visiblePercent < 100 ? channelLockLabelBare : channelLockLabel) : undefined}
+          onImageClick={post.kind === 'image' ? (idx) => {
+            if (channelLocked) {
+              openChannelGate();
+            } else if (idx >= visibleImgCount) {
+              openLink(post.id, 'unlock');
+            } else {
+              openImageLightbox(post, idx, visibleImgCount);
+            }
+          } : undefined}
+        />
       )}
       <div onClick={e => e.stopPropagation()}>
         <GeminiNodeBadge
@@ -518,6 +528,18 @@ export function PostCard({
           </span>
         )}
       />
+      {post.kind !== 'article' && (
+        <PostContent
+          post={post}
+          collapseLines={4}
+          alwaysExpand={isOwn}
+          forceLocked={channelLocked}
+          lockLabel={channelLockLabel}
+          lockLabelBare={channelLockLabelBare}
+          onUnlockOverride={channelLocked ? openChannelGate : undefined}
+          authorName={displayName}
+        />
+      )}
       </>
       )}
     </article>

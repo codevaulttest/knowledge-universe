@@ -22,7 +22,7 @@ export const PB_WALLETS: Record<PbWalletId, PbWalletMeta> = {
     id: 'onchain', labelKey: '链上 PB', sourceKey: '链上钱包持有', useSummaryKey: '适用于全部 PB 用途', supSource: 'onchain', unitKey: 'PB',
   },
   station: {
-    id: 'station', labelKey: '站内 PB', sourceKey: '创世、钻石节点每月发放', useSummaryKey: '可用于开通频道及节点内互动', supSource: 'site_first', unitKey: 'PB',
+    id: 'station', labelKey: '创世 PB', sourceKey: '创世、钻石节点每月发放', useSummaryKey: '可用于开通频道及节点内互动', supSource: 'site_first', unitKey: 'PB',
   },
   credibility: {
     id: 'credibility', labelKey: '公信力', sourceKey: '每日任务发放', useSummaryKey: '可用于开通频道、BSP 巨星投流、节点升级、转让节点', supSource: 'none', unitKey: '公信力',
@@ -35,6 +35,9 @@ export const PB_WALLETS: Record<PbWalletId, PbWalletMeta> = {
 export function walletConsumesSup(wallet: PbWalletId): boolean {
   return PB_WALLETS[wallet].supSource !== 'none';
 }
+
+/** 创世 PB 消费入口尚未开放；到 9 月 10 日改为 true 即可解除限制（原型不接入真实日期判断）。 */
+export const STATION_PB_AVAILABLE = false;
 
 /** 唯一的用途权限矩阵；新增用途会被 TypeScript 强制补齐。 */
 export const PB_USE_ALLOWED_WALLETS: Record<PbUse, readonly PbWalletId[]> = {
@@ -62,8 +65,14 @@ export function allowedWalletsForUse(use: PbUse): readonly PbWalletId[] {
   return PB_USE_ALLOWED_WALLETS[use];
 }
 
-export function isWalletAllowedForUse(wallet: PbWalletId, use: PbUse): boolean {
+/** 纯用途矩阵判断，不含创世 PB 的开放时间限制。 */
+export function isWalletScopeAllowedForUse(wallet: PbWalletId, use: PbUse): boolean {
   return PB_USE_ALLOWED_WALLETS[use].includes(wallet);
+}
+
+export function isWalletAllowedForUse(wallet: PbWalletId, use: PbUse): boolean {
+  if (wallet === 'station' && !STATION_PB_AVAILABLE) return false;
+  return isWalletScopeAllowedForUse(wallet, use);
 }
 
 export function supReasonForPbUse(use: PbUse): SupTransactionReason {
