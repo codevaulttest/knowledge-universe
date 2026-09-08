@@ -10895,6 +10895,7 @@ button {
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
+  padding: 0;
   border-top: 0;
 }
 
@@ -14163,4 +14164,36 @@ html[lang="zh-TW"] .planet-hero-title {
   .admin-bar,
   .admin-sidebar { width: var(--ku-layout-admin-sidebar-width); }
   .admin-sidebar { display: flex; }
+}
+
+/* ── Feedback Sheet ── */
+/* 反馈类型 2x2：图标+文字横排居中，比质押档位卡片矮一档（这里没有第二行说明文字） */
+.feedback-sheet .stake-tier-list--grid2 .stake-tier-option.feedback-kind-option {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ku-space-2);
+  min-height: 48px;
+  text-align: center;
+}
+.feedback-kind-icon {
+  flex-shrink: 0;
+  color: var(--ku-color-text-meta);
+}
+.stake-tier-option--active .feedback-kind-icon {
+  color: var(--ku-color-primary);
+}
+.stake-tier-option--active .stake-tier-option__amount {
+  color: var(--ku-color-primary);
+}
+/* 描述框要装下 500 字，覆盖节点码输入框那套固定 70px 高度 */
+.feedback-sheet .feedback-desc-input {
+  height: auto;
+  min-height: 108px;
+  max-height: 108px;
+  overflow-y: auto;
+}
+/* 联系方式是纯输入框，不带右侧动作按钮，收掉预留的右内边距 */
+.feedback-sheet .feedback-contact-input {
+  padding-right: var(--ku-planet2-space-base);
 }

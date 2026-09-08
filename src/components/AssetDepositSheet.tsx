@@ -4,13 +4,14 @@ import { X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { formatSupAmount, formatTokenAmount } from '../stakeConfig';
 import { pbOnchainFee } from '../walletConfig';
+import { MOCK_WALLET_ADDRESS } from '../mockData';
 
 type AssetKind = 'airdrop' | 'sup';
 type AssetAction = 'deposit' | 'withdraw';
 
 /** 可提取 PB / 站内 SUP 的单一充值或提取浮层。站内 PB 明确不可上链，不接入此组件。 */
 export function AssetDepositSheet({ action, kind, onClose }: { action: AssetAction; kind: AssetKind; onClose: () => void }) {
-  const { t, pbWallets, supWallets, depositAirdropPb, withdrawAirdropPb, depositSiteSup, withdrawSiteSup, showToast } = useApp();
+  const { t, pbWallets, supWallets, walletAddress, depositAirdropPb, withdrawAirdropPb, depositSiteSup, withdrawSiteSup, showToast } = useApp();
   const [amountInput, setAmountInput] = useState('');
   const [depositing, setDepositing] = useState(false);
 
@@ -67,13 +68,6 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
         </div>
 
         <div className="sup-deposit-body">
-          {!isDeposit && (
-            <div className="sup-deposit-row sup-deposit-row--fee">
-              <span className="sup-deposit-label">{t('当前余额')}</span>
-              <span className="sup-deposit-value">{format(balance)} {unit}</span>
-            </div>
-          )}
-
           {isDeposit ? (
             <>
               <p className="sup-deposit-hint">
@@ -112,6 +106,14 @@ export function AssetDepositSheet({ action, kind, onClose }: { action: AssetActi
             </>
           ) : (
             <>
+              <div className="sup-deposit-row sup-deposit-row--address">
+                <span className="sup-deposit-label">{t('到账地址')}</span>
+                <span className="sup-deposit-address">{walletAddress ?? MOCK_WALLET_ADDRESS}</span>
+              </div>
+              <div className="sup-deposit-row sup-deposit-row--fee">
+                <span className="sup-deposit-label">{t('当前余额')}</span>
+                <span className="sup-deposit-value">{format(balance)} {unit}</span>
+              </div>
               <div className="stake-code-row">
                 <div className="stake-code-input-wrap">
                   <input

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Award, BadgeCheck, Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
+import { AlertTriangle, Award, BadgeCheck, Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -10,6 +10,7 @@ import { DevPanel } from '../components/DevPanel';
 import { ConfirmDeleteDraftModal, Ios26Alert, TipModal } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelCard, ChannelMemberBadge, GenesisBadge, PageHeader } from '../components/shared';
 import { ImageWithFallback } from '../components/ImageWithFallback';
+import { FeedbackSheet } from '../components/FeedbackSheet';
 import { useChannelListSearch } from '../components/channelSearch';
 import { isPostVisible, formatScheduledAt } from '../dateUtils';
 import { isValidWalletAddress } from '../formatAddress';
@@ -69,6 +70,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     if (pendingMigration) setMigrationReminderId(pendingMigration.id);
   }, [pendingMigration?.id]);
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
+  const [showFeedbackSheet, setShowFeedbackSheet] = useState(false);
   const tabsScrollRef = useRef<HTMLElement | null>(null);
   const [tabsCanScrollLeft, setTabsCanScrollLeft] = useState(false);
   const [tabsCanScrollRight, setTabsCanScrollRight] = useState(false);
@@ -259,6 +261,14 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                 {unreadActivityCount > 0 && (
                   <span className="feed-bell-dot">{unreadActivityCount > 99 ? '99+' : unreadActivityCount}</span>
                 )}
+              </button>
+              <button
+                type="button"
+                className="profile-settings-btn"
+                onClick={() => setShowFeedbackSheet(true)}
+                aria-label={t('意见反馈')}
+              >
+                <Headset size={20} strokeWidth={1.8} />
               </button>
               <button
                 type="button"
@@ -608,6 +618,10 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
       {showLanguageSheet && (
         <LanguageSheet onClose={() => setShowLanguageSheet(false)} />
+      )}
+
+      {showFeedbackSheet && (
+        <FeedbackSheet onClose={() => setShowFeedbackSheet(false)} />
       )}
 
       {showEditProfile && (
