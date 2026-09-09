@@ -469,7 +469,6 @@ export const en: Record<string, string> = {
   '更换头像': 'Change avatar',
   '更换主页背景图': 'Change profile background',
   '更换背景图': 'Change background',
-  '恢复默认背景': 'Restore default background',
   '昵称': 'Nickname',
   '个人简介': 'Bio',
   '写一句话介绍自己': 'Write a one-line bio',

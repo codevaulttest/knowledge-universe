@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Award, BadgeCheck, Bookmark, Camera, Check, ChevronRight, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, RotateCcw, Search, ShoppingCart, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
+import { AlertTriangle, Award, BadgeCheck, Bookmark, Camera, Check, ChevronRight, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ShoppingCart, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -836,19 +836,6 @@ function EditProfileModal({
                   {t('更换背景图')}
                 </span>
               </button>
-              {headerBackgroundUrl && (
-                <button
-                  type="button"
-                  className="edit-profile-background-action edit-profile-background-action--reset"
-                  onClick={() => {
-                    setHeaderBackgroundUrl(undefined);
-                    if (headerBackgroundInputRef.current) headerBackgroundInputRef.current.value = '';
-                  }}
-                >
-                  <RotateCcw size={13} strokeWidth={2.3} aria-hidden="true" />
-                  {t('恢复默认背景')}
-                </button>
-              )}
             </div>
             <input
               ref={headerBackgroundInputRef}

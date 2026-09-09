@@ -8725,9 +8725,6 @@ button {
   gap: var(--ku-space-2);
   transform: translateX(-50%);
 }
-.edit-profile-background-action--reset {
-  color: var(--ku-color-text-secondary);
-}
 .edit-profile-background-action:hover {
   background: var(--ku-color-primary-alpha-06);
 }
