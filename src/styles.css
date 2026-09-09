@@ -8639,20 +8639,28 @@ button {
 }
 .edit-profile-avatar-upload--background {
   position: relative;
+  overflow: hidden;
   width: calc(100% + var(--ku-modal-content-padding) * 2);
   min-height: var(--ku-profile-editor-background-height);
   margin: calc(var(--ku-modal-content-padding) * -1) calc(var(--ku-modal-content-padding) * -1) 0;
   justify-content: center;
   padding: var(--ku-space-4) var(--ku-modal-content-padding);
   background-color: var(--ku-color-text-primary);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
 }
-.edit-profile-avatar-upload--contain {
-  background-size: contain;
+.edit-profile-background-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+.edit-profile-avatar-upload--contain .edit-profile-background-preview {
+  object-fit: contain;
 }
 .edit-profile-avatar-upload--background .edit-profile-avatar-preview {
+  z-index: 1;
   transform: translateY(calc(var(--ku-space-4) * -1));
 }
 .edit-profile-avatar-preview {

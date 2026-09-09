@@ -726,6 +726,7 @@ function EditProfileModal({
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(userProfile.avatarUrl);
   const [headerBackgroundUrl, setHeaderBackgroundUrl] = useState<string | undefined>(userProfile.headerBackgroundUrl);
   const [containBackgroundPreview, setContainBackgroundPreview] = useState(false);
+  const [backgroundPreviewInset, setBackgroundPreviewInset] = useState({ left: 0, right: 0 });
   const [contacts, setContacts] = useState<ProfileContacts>(userProfile.contacts ?? {});
   const [moreContactsOpen, setMoreContactsOpen] = useState(
     !!userProfile.contacts?.whatsapp?.trim()
@@ -747,8 +748,14 @@ function EditProfileModal({
       if (cancelled) return;
       const ratio = image.naturalWidth / image.naturalHeight;
       setContainBackgroundPreview(ratio < 0.8 || ratio > 2.5);
+      setBackgroundPreviewInset(getBackgroundContentInset(image));
     };
-    image.onerror = () => { if (!cancelled) setContainBackgroundPreview(false); };
+    image.onerror = () => {
+      if (!cancelled) {
+        setContainBackgroundPreview(false);
+        setBackgroundPreviewInset({ left: 0, right: 0 });
+      }
+    };
     image.src = backgroundPreviewUrl;
     return () => { cancelled = true; };
   }, [backgroundPreviewUrl]);
@@ -782,8 +789,16 @@ function EditProfileModal({
           {/* 头像上传 */}
           <div
             className={`edit-profile-avatar-upload edit-profile-avatar-upload--background${containBackgroundPreview ? ' edit-profile-avatar-upload--contain' : ''}`}
-            style={{ backgroundImage: `url(${backgroundPreviewUrl})` }}
           >
+            <img
+              className="edit-profile-background-preview"
+              src={backgroundPreviewUrl}
+              style={backgroundPreviewInset.left || backgroundPreviewInset.right
+                ? { clipPath: `inset(0 ${backgroundPreviewInset.right}% 0 ${backgroundPreviewInset.left}%)` }
+                : undefined}
+              alt=""
+              aria-hidden="true"
+            />
             <div
               className="edit-profile-avatar-preview"
               onClick={() => fileInputRef.current?.click()}
