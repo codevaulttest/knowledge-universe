@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Check, Search, X } from 'lucide-react';
+import { ArrowLeft, Check, ScanLine, Search, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { PostCard } from '../components/PostCard';
@@ -17,6 +17,7 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
     saveRecentSearch,
     removeRecentSearch,
     clearRecentSearches,
+    openScan,
     t,
   } = useApp();
   const [query, setQuery] = useState('');
@@ -116,6 +117,14 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
               </button>
             )}
           </div>
+          <button
+            type="button"
+            className="search-scan-btn"
+            onClick={() => openScan({ page: 'P_CHANNEL', channelId: 'channel-yanlei' })}
+            aria-label={t('扫一扫')}
+          >
+            <ScanLine size={18} strokeWidth={2} />
+          </button>
           <button type="button" className="search-submit-btn" onClick={doSearch}>
             {t('搜索')}
           </button>

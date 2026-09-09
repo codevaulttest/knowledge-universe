@@ -4776,6 +4776,10 @@ button {
 .channel-page-hero-owner:active {
   opacity: 0.7;
 }
+.channel-page-hero-share {
+  margin-left: auto;
+  align-self: center;
+}
 .channel-page-desc {
   margin: 8px var(--ku-feed-padding-x) 14px;
   font: var(--ku-text-body-sm);
@@ -6332,6 +6336,24 @@ button {
   white-space: nowrap;
 }
 
+.search-scan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--ku-radius-pill);
+  background: transparent;
+  color: var(--ku-color-text-secondary);
+  cursor: pointer;
+}
+.search-scan-btn:active {
+  background: var(--ku-color-primary-alpha-06);
+  color: var(--ku-color-text-primary);
+}
+
 .search-input-wrap {
   flex: 1;
   min-width: 0;
@@ -6499,8 +6521,14 @@ button {
   flex-direction: column;
 }
 
-.search-results-group .feed {
+.search-results-group .feed,
+.search-results-group .shop-grid {
   padding: 0;
+}
+
+.search-content:has(> .search-results-group > .shop-grid) {
+  padding-left: var(--ku-space-4);
+  padding-right: var(--ku-space-4);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -13251,6 +13279,112 @@ html[lang="zh-TW"] .planet-hero-title {
   background: var(--ku-color-shop-bg);
   color: var(--ku-color-shop-strong);
   border: 1px solid var(--ku-color-shop-border);
+}
+.channel-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-secondary);
+  cursor: pointer;
+}
+.channel-share-btn:hover {
+  background: var(--ku-color-bg-subtle);
+}
+.channel-share-sheet {
+  text-align: center;
+}
+.channel-share-title {
+  margin: 4px 0 16px;
+  font: 600 15px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+}
+.channel-share-link-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-secondary);
+}
+.channel-share-link-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ku-font-mono);
+  font-size: 13px;
+  color: var(--ku-color-text-primary);
+}
+.channel-share-qr-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-secondary);
+  text-align: left;
+}
+.channel-share-qr-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  flex-shrink: 0;
+  padding: 6px;
+  border-radius: calc(var(--ku-radius-card) - 4px);
+  background: var(--ku-color-bg-page);
+}
+.channel-share-qr-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: calc(var(--ku-radius-card) - 8px);
+}
+.channel-share-qr-hint {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-meta);
+  line-height: 1.5;
+}
+.channel-share-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 13px;
+  border: none;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-primary);
+  color: var(--ku-color-on-primary);
+  font: 600 15px/1 var(--ku-font-family);
+  cursor: pointer;
+}
+.channel-share-cta-btn:disabled {
+  cursor: default;
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-secondary);
+}
+.channel-share-cta-btn--secondary {
+  margin-bottom: 0;
+  background: var(--ku-color-primary-alpha-06);
+  color: var(--ku-color-primary-dark);
+  border: 1px solid var(--ku-color-border-card);
 }
 .shop-item-contacts-reveal {
   display: grid;

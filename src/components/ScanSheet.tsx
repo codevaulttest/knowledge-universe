@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react';
 import { CircleCheck, X } from 'lucide-react';
 import { useApp } from '../AppContext';
+import type { Route } from '../types';
 
-/** 扫一扫：模拟扫码识别商品二维码，不接入真实摄像头，固定时长后自动跳转到 demo 商品。 */
-export function ScanSheet({ onClose }: { onClose: () => void }) {
+/** 扫一扫：模拟扫码，不接入真实摄像头，固定时长后自动跳转到 target（未指定时默认跳 demo 商品）。 */
+export function ScanSheet({ onClose, target }: { onClose: () => void; target?: Route | null }) {
   const { t, navigate } = useApp();
   const [phase, setPhase] = useState<'scanning' | 'success'>('scanning');
+  const isChannel = target?.page === 'P_CHANNEL';
 
   useEffect(() => {
     const toSuccess = setTimeout(() => setPhase('success'), 1800);
     const toResult = setTimeout(() => {
-      navigate({ page: 'P_SHOP_ITEM', postId: 'shop-iphone' });
+      navigate(target ?? { page: 'P_SHOP_ITEM', postId: 'shop-iphone' });
       onClose();
     }, 2600);
     return () => { clearTimeout(toSuccess); clearTimeout(toResult); };
-  }, [navigate, onClose]);
+  }, [navigate, onClose, target]);
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -41,7 +43,7 @@ export function ScanSheet({ onClose }: { onClose: () => void }) {
         </div>
 
         <p className="scan-hint">
-          {phase === 'scanning' ? t('将二维码放入框内，即可自动扫描') : t('识别成功，正在跳转到商品')}
+          {phase === 'scanning' ? t('将二维码放入框内，即可自动扫描') : t(isChannel ? '识别成功，正在跳转到频道' : '识别成功，正在跳转到商品')}
         </p>
       </div>
     </div>

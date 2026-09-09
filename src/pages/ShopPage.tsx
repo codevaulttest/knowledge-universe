@@ -96,7 +96,7 @@ export function ShopFeed() {
           <button
             type="button"
             className="shop-mall-scan-btn"
-            onClick={openScan}
+            onClick={() => openScan()}
             aria-label={t('扫一扫')}
           >
             <ScanLine size={16} strokeWidth={2} />

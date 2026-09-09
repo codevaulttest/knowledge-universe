@@ -86,7 +86,11 @@ export default function App({ account, onLanguageChange }: {
   };
   const closeSearch = () => setSearchOpen(false);
   const [scanOpen, setScanOpen] = useState(false);
-  const openScan = () => setScanOpen(true);
+  const [scanTarget, setScanTarget] = useState<Route | null>(null);
+  const openScan = (target?: Route) => {
+    setScanTarget(target ?? null);
+    setScanOpen(true);
+  };
   const closeScan = () => setScanOpen(false);
   // 首页信息流下滑沉浸效果：顶部/底部导航渐隐；离开首页时复位
   const [navBarsHidden, setNavBarsHidden] = useState(false);
@@ -1513,7 +1517,7 @@ export default function App({ account, onLanguageChange }: {
         {searchOpen && <SearchPage onClose={closeSearch} initialShopOnly={searchShopOnly} />}
 
         {/* 扫一扫：模拟扫码识别商品二维码，全屏取景框覆盖层 */}
-        {scanOpen && <ScanSheet onClose={closeScan} />}
+        {scanOpen && <ScanSheet onClose={closeScan} target={scanTarget} />}
 
         {/* Toast */}
         {/* 覆盖层：连接钱包二次确认（游客触发需身份/资产/链上能力的操作时弹出） */}

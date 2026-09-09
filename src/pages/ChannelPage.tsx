@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ChevronRight, CircleCheck, Gem, Radio, RotateCcw, Settings } from 'lucide-react';
+import { ChevronRight, CircleCheck, Gem, Radio, RotateCcw, Settings, Share2 } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import { PostCard } from '../components/PostCard';
 import { Avatar, PageHeader } from '../components/shared';
 import { DevPanel } from '../components/DevPanel';
+import { ChannelShareSheet } from '../components/ChannelShareSheet';
 import { SubscriberListModal } from './ProfilePage';
 import { isPostVisible } from '../dateUtils';
 
@@ -16,6 +17,7 @@ export function ChannelPage({ channelId }: { channelId: string }) {
   const channel = channels.find(c => c.id === channelId);
   const [contentFilter, setContentFilter] = useState<'all' | 'sub'>('all');
   const [showSubscribers, setShowSubscribers] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   if (!channel) {
     return (
@@ -70,6 +72,14 @@ export function ChannelPage({ channelId }: { channelId: string }) {
               <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
             </button>
           </div>
+          <button
+            type="button"
+            className="channel-share-btn channel-page-hero-share"
+            onClick={() => setShareOpen(true)}
+            aria-label={t('分享频道')}
+          >
+            <Share2 size={16} strokeWidth={2} />
+          </button>
         </div>
 
         {channel.description && (
@@ -161,6 +171,13 @@ export function ChannelPage({ channelId }: { channelId: string }) {
         <SubscriberListModal
           channel={channel}
           onClose={() => setShowSubscribers(false)}
+        />
+      )}
+
+      {shareOpen && (
+        <ChannelShareSheet
+          channel={channel}
+          onClose={() => setShareOpen(false)}
         />
       )}
 

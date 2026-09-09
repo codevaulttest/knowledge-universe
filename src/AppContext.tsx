@@ -73,7 +73,7 @@ export type AppContextValue = {
   openSearch: (opts?: { shopOnly?: boolean }) => void;
   closeSearch: () => void;
   scanOpen: boolean;
-  openScan: () => void;
+  openScan: (target?: Route) => void;
   closeScan: () => void;
   drafts: Draft[];
   saveDraft: (draft: Omit<Draft, 'id' | 'savedAt'>) => void;
