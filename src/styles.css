@@ -12961,6 +12961,14 @@ html[lang="zh-TW"] .planet-hero-title {
   gap: 12px;
   padding: 12px 16px 24px;
 }
+/* Profile 页「小黄车」网格嵌在 .feed 里，用负 margin 抵消 .feed 的内边距，让边距与商城首页的 .shop-grid 一致 */
+.profile-shop-grid-wrap {
+  margin-left: calc(var(--ku-feed-padding-x) * -1);
+  margin-right: calc(var(--ku-feed-padding-x) * -1);
+}
+.profile-shop-grid-wrap--top-flush {
+  margin-top: calc(var(--ku-feed-padding-top) * -1);
+}
 .shop-card {
   display: flex;
   flex-direction: column;

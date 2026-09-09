@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Award, BadgeCheck, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
+import { AlertTriangle, Award, BadgeCheck, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ShoppingCart, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
 import type { UserListItem } from '../mockData';
 import type { AddressMigration, Channel, ChannelAuthorization, ChannelSubscriber, CertStatus, Draft, Language, OutgoingTip, ProfileContacts, RepostedBy, UserProfile } from '../types';
 import { PostCard } from '../components/PostCard';
+import { ShopProductGrid } from './ShopPage';
 import { DevPanel } from '../components/DevPanel';
 import { ConfirmDeleteDraftModal, Ios26Alert, TipModal } from '../components/Overlays';
 import { Avatar, AuthorName, ChannelCard, ChannelMemberBadge, GenesisBadge, PageHeader } from '../components/shared';
@@ -49,9 +50,9 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
   // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 打赏，4 = 收藏，5 = 赞过
   const [profileTab, setProfileTab] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
-  const [postCertFilter, setPostCertFilter] = useState<'all' | 'scheduled' | Exclude<CertStatus, 'pending'>>('all');
-  // 他人主页内容筛选：'all' | 'free' | 'sub'
-  const [contentFilter, setContentFilter] = useState<'all' | 'free' | 'sub'>('all');
+  const [postCertFilter, setPostCertFilter] = useState<'all' | 'scheduled' | 'shop' | Exclude<CertStatus, 'pending'>>('all');
+  // 他人主页内容筛选：'all' | 'free' | 'sub' | 'shop'
+  const [contentFilter, setContentFilter] = useState<'all' | 'free' | 'sub' | 'shop'>('all');
   const [followListType, setFollowListType] = useState<'following' | 'followers' | null>(null);
   const [confirmDeleteDraftId, setConfirmDeleteDraftId] = useState<string | null>(null);
   const [tipTarget, setTipTarget] = useState<{ context: 'post' | 'author'; postTitle?: string } | null>(null);
@@ -88,9 +89,11 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
   // 频道帖子从免费档起可见；付费内容需要达到对应的付费档位。
   const isChannelExclusive = (p: (typeof allPosts)[number]) => !!p.channelId && ownerChannels.some(c => c.id === p.channelId) && (p.minTierIndex ?? 0) > 0;
+  const shopPosts = myPosts.filter(p => !!p.shop);
   const filteredOtherPosts = (() => {
     if (contentFilter === 'free') return myPosts.filter(p => !isChannelExclusive(p));
     if (contentFilter === 'sub') return myPosts.filter(isChannelExclusive);
+    if (contentFilter === 'shop') return shopPosts;
     return myPosts;
   })();
 
@@ -190,15 +193,18 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     .map(cert => allPosts.find(p => p.id === cert.postId) ?? ALL_POSTS.find(p => p.id === cert.postId))
     .filter((p): p is (typeof allPosts)[number] => !!p);
   const scheduledPosts = isOwn ? myPosts.filter(p => !isPostVisible(p)) : [];
-  const postFilterTabs: { key: 'all' | 'scheduled' | Exclude<CertStatus, 'pending'>; label: string; count?: number }[] = [
+  const postFilterTabs: { key: 'all' | 'scheduled' | 'shop' | Exclude<CertStatus, 'pending'>; label: string; count?: number }[] = [
     { key: 'all', label: t('全部') },
     { key: 'minted', label: t('已确权'), count: mintedCertCount },
     { key: 'burned', label: t('已销毁'), count: burnedCertCount },
     { key: 'scheduled', label: t('定时'), count: scheduledPosts.length },
+    { key: 'shop', label: t('小黄车'), count: shopPosts.length },
   ];
+  // 自己主页/他人主页各自的「只看小黄车」入口都命中这里，统一渲染商品网格而非帖子信息流
+  const isShopView = (isOwn && profileTab === 0 && postCertFilter === 'shop') || (!isOwn && contentFilter === 'shop');
   const filteredPostEntries: { post: (typeof allPosts)[number]; repostedBy?: RepostedBy }[] = isOwn && profileTab === 0 && postCertFilter === 'scheduled'
     ? scheduledPosts.map(post => ({ post }))
-    : isOwn && profileTab === 0 && postCertFilter !== 'all' && postCertFilter !== 'scheduled'
+    : isOwn && profileTab === 0 && postCertFilter !== 'all' && postCertFilter !== 'scheduled' && postCertFilter !== 'shop'
     ? certPostsByStatus(postCertFilter).map(post => ({ post }))
     : displayedEntries;
   const filteredPosts = filteredPostEntries.map(entry => entry.post);
@@ -435,15 +441,18 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             ref={tabsScrollRef as React.RefObject<HTMLElement>}
             onScroll={updateTabsScrollState}
           >
-            {(['all', 'sub'] as const).map(f => (
+            {(['all', 'sub', 'shop'] as const).map(f => (
               <button
                 key={f}
                 type="button"
                 className={`profile-content-tab${contentFilter === f ? ' profile-content-tab--active' : ''}`}
                 onClick={() => setContentFilter(f)}
               >
-                {f === 'all' ? <LayoutGrid size={14} strokeWidth={2} /> : <Gem size={14} strokeWidth={2} />}
-                {f === 'all' ? t('全部') : t('会员')}
+                {f === 'all' ? <LayoutGrid size={14} strokeWidth={2} /> : f === 'sub' ? <Gem size={14} strokeWidth={2} /> : <ShoppingCart size={14} strokeWidth={2} />}
+                {f === 'all' ? t('全部') : f === 'sub' ? t('会员') : t('小黄车')}
+                {f === 'shop' && shopPosts.length > 0 && (
+                  <span className="activity-filter-tab-count" aria-label={t('{count} 篇', { count: shopPosts.length })}>{shopPosts.length}</span>
+                )}
               </button>
             ))}
           </nav>
@@ -508,6 +517,21 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               ))}
             </nav>
             )}
+            {isShopView ? (
+              shopPosts.length === 0 ? (
+                <div className="profile-empty-state">
+                  <ShoppingCart size={32} strokeWidth={1.2} className="profile-empty-icon" />
+                  <p className="profile-empty-title">{t('还没有带货的帖子')}</p>
+                  <p className="profile-empty-sub">{t('帖子挂上商品后，会出现在这里')}</p>
+                </div>
+              ) : (
+                // 抵消 .feed 自身的内边距，让网格边距与商城首页一致（水平始终抵消；顶部仅在网格前没有筛选 tab 时抵消，避免顶到 tab 上）
+                <div className={`profile-shop-grid-wrap${isOwn ? '' : ' profile-shop-grid-wrap--top-flush'}`}>
+                  <ShopProductGrid products={shopPosts} />
+                </div>
+              )
+            ) : (
+            <>
             {filteredPostEntries.map((entry, i) => (
               <React.Fragment key={`${entry.post.id}-${entry.repostedBy?.name ?? 'orig'}`}>
                 {isOwn && !isPostVisible(entry.post) && entry.post.scheduledAt && (
@@ -565,6 +589,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                   </>
                 )}
               </div>
+            )}
+            </>
             )}
           </section>
         )}
