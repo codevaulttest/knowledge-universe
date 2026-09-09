@@ -171,13 +171,13 @@ export function StarDisplay({ level, size = 44 }: { level: number; size?: number
 
 // 用户开通的每个频道都会同步产生一个来源为"频道开通"的 1000 PB 双子星节点（懒初始化，
 // 每次进入本页时依据最新 channels 状态按 channelId 重新推导，一个频道对应一个节点，避免遗漏或重复）
-function seedNodesWithChannel(channels: { ownerName: string; id: string; name: string; createdAt: string }[]): KnowledgeNode[] {
+function seedNodesWithChannel(channels: { ownerName: string; id: string; nodeCode?: string; name: string; createdAt: string }[]): KnowledgeNode[] {
   const ownChannels = channels.filter(c => c.ownerName === CURRENT_USER);
   if (ownChannels.length === 0) return INITIAL_NODES;
   const maxGenesisSerial = Math.max(...INITIAL_NODES.filter(n => n.origin === 'genesis').map(n => n.serialNo));
   const channelNodes: KnowledgeNode[] = ownChannels.map((channel, i) => ({
     id: `channel-node-${channel.id}`,
-    nodeCode: channel.id.slice(-6).toUpperCase(),
+    nodeCode: channel.nodeCode ?? channel.id.slice(-6).toUpperCase(),
     tier: 1000,
     stars: 1,
     childCount: 0,

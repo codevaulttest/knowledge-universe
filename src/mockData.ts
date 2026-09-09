@@ -340,14 +340,14 @@ export const MOCK_PLANET_ANNOUNCEMENT: PlanetAnnouncement = {
 /** 原型默认：当前用户已开通 5 个频道（DevPanel 可切到「未创建频道」） */
 export const MY_DEMO_CHANNELS: Channel[] = [
   {
-    id: 'channel-me-1', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道`,
+    id: 'channel-me-1', nodeCode: 'A1B2C3', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道`,
     description: '分享产品思考与日常灵感，不定期更新。',
     avatarSeed: CURRENT_USER, category: '综合',
     tiers: [],
     subscriberCount: 12, createdAt: '2026-02-18',
   },
   {
-    id: 'channel-me-2', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 2`,
+    id: 'channel-me-2', nodeCode: 'D4E5F6', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 2`,
     description: '会员专属短讯与幕后笔记。',
     avatarSeed: CURRENT_USER, category: '综合',
     tiers: [
@@ -356,7 +356,7 @@ export const MY_DEMO_CHANNELS: Channel[] = [
     subscriberCount: 38, createdAt: '2026-03-02',
   },
   {
-    id: 'channel-me-3', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 3`,
+    id: 'channel-me-3', nodeCode: 'G7H8I9', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 3`,
     description: '深度长文与专题合集。',
     avatarSeed: CURRENT_USER, category: '创作',
     tiers: [
@@ -366,7 +366,7 @@ export const MY_DEMO_CHANNELS: Channel[] = [
     subscriberCount: 64, createdAt: '2026-03-28',
   },
   {
-    id: 'channel-me-4', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 4`,
+    id: 'channel-me-4', nodeCode: 'J0K1L2', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 4`,
     description: '工具测评、工作流模板与实操演示。',
     avatarSeed: CURRENT_USER, category: '效率',
     tiers: [
@@ -377,7 +377,7 @@ export const MY_DEMO_CHANNELS: Channel[] = [
     subscriberCount: 91, createdAt: '2026-04-15',
   },
   {
-    id: 'channel-me-5', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 5`,
+    id: 'channel-me-5', nodeCode: 'M3N4O5', ownerName: CURRENT_USER, name: `${CURRENT_USER}的频道 5`,
     description: '问答、连载与社群活动预告。',
     avatarSeed: CURRENT_USER, category: '社群',
     tiers: [
@@ -390,7 +390,7 @@ export const MY_DEMO_CHANNELS: Channel[] = [
 
 export const ALL_CHANNELS: Channel[] = [
   {
-    id: 'channel-amay', ownerName: '阿May的研究笔记', name: '阿May的AI研究站',
+    id: 'channel-amay', nodeCode: 'P6Q7R8', ownerName: '阿May的研究笔记', name: '阿May的AI研究站',
     description: 'RAG、大模型应用与工程实践，每周更新深度拆解。',
     avatarSeed: '阿May的研究笔记', category: 'AI / 大模型',
     tiers: [
@@ -400,7 +400,7 @@ export const ALL_CHANNELS: Channel[] = [
     subscriberCount: 86, createdAt: '2026-05-10',
   },
   {
-    id: 'channel-yanlei', ownerName: '产品大叔严磊', name: '产品大叔的方法论频道',
+    id: 'channel-yanlei', nodeCode: 'S9T0U1', ownerName: '产品大叔严磊', name: '产品大叔的方法论频道',
     description: 'B 端产品与数据方法论，10 年一线经验复盘。',
     avatarSeed: '产品大叔严磊', category: '产品 / 运营',
     tiers: [
@@ -409,7 +409,7 @@ export const ALL_CHANNELS: Channel[] = [
     subscriberCount: 42, createdAt: '2026-06-01',
   },
   {
-    id: 'channel-jike', ownerName: '极客前沿', name: '极客前沿·深度追踪',
+    id: 'channel-jike', nodeCode: 'V2W3X4', ownerName: '极客前沿', name: '极客前沿·深度追踪',
     description: 'LLM / Agent 业界最前沿动态，独家一手信息。',
     avatarSeed: '极客前沿', category: '科技资讯',
     tiers: [
@@ -420,7 +420,7 @@ export const ALL_CHANNELS: Channel[] = [
     subscriberCount: 215, createdAt: '2026-04-22',
   },
   {
-    id: 'channel-aieff', ownerName: 'AI 效率研究所', name: 'AI 效率研究所·工具箱',
+    id: 'channel-aieff', nodeCode: 'Y5Z6A7', ownerName: 'AI 效率研究所', name: 'AI 效率研究所·工具箱',
     description: 'AI 工具评测、提示词模板与效率工作流，三档订阅覆盖轻度到深度用户。',
     avatarSeed: 'AI 效率研究所', category: 'AI / 大模型',
     tiers: [

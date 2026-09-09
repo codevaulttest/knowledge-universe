@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, Pencil, Radio, Repeat2, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, Users, X } from 'lucide-react';
+import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, PackageX, Pencil, Radio, Repeat2, RotateCcw, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, Users, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
@@ -227,7 +227,7 @@ export function PostCard({
   /** 透传给 GeminiNodeBadge：仅「我的主页」用空心链接按钮 */
   chainOutline?: boolean;
 }) {
-  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, requireWallet, knowledgeCerts } = useApp();
+  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, delistShopPost, relistShopPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, requireWallet, knowledgeCerts } = useApp();
   const [moreOpen, setMoreOpen] = useState(false);
   const [actorsTab, setActorsTab] = useState<PostAction | 'link' | 'tip' | null>(null);
   const [showTip, setShowTip] = useState(false);
@@ -331,6 +331,9 @@ export function PostCard({
                   : t('{visiblePercent}% 可见', { visiblePercent: post.visiblePercent })}
             </span>
           )}
+          {isOwn && post.shop?.delisted && (
+            <span className="shop-delisted-badge">{t('已下架')}</span>
+          )}
         </div>
       </div>
       {isOwn && (
@@ -350,14 +353,26 @@ export function PostCard({
                   <Users size={14} strokeWidth={2.2} /> {t('查看互动')}
                 </button>
               )}
-              {post.channelId && (
+              {(post.channelId || post.shop) && (
                 <button type="button" onClick={() => { setMoreOpen(false); openEditPost(post.id); }}>
                   <Pencil size={14} strokeWidth={2.2} /> {t('编辑')}
                 </button>
               )}
-              <button type="button" onClick={() => { setMoreOpen(false); requestDeletePost(post.id); }} className="more-dropdown__danger">
-                <Trash2 size={14} strokeWidth={2.2} /> {t('删除')}
-              </button>
+              {post.shop ? (
+                post.shop.delisted ? (
+                  <button type="button" onClick={() => { setMoreOpen(false); relistShopPost(post.id); }}>
+                    <RotateCcw size={14} strokeWidth={2.2} /> {t('重新上架')}
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => { setMoreOpen(false); delistShopPost(post.id); }}>
+                    <PackageX size={14} strokeWidth={2.2} /> {t('下架')}
+                  </button>
+                )
+              ) : (
+                <button type="button" onClick={() => { setMoreOpen(false); requestDeletePost(post.id); }} className="more-dropdown__danger">
+                  <Trash2 size={14} strokeWidth={2.2} /> {t('删除')}
+                </button>
+              )}
             </div>
           )}
         </div>

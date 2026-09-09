@@ -57,6 +57,9 @@ export function ShopProductGrid({ products }: { products: Post[] }) {
             )}
           </div>
           <div className="shop-card-body">
+            {p.shop?.delisted && (
+              <span className="shop-delisted-badge">{t('已下架')}</span>
+            )}
             <p className="shop-card-title">{p.title.split('\n')[0]}</p>
             <div className="shop-card-foot">
               <span className="shop-card-price">
@@ -74,7 +77,8 @@ export function ShopProductGrid({ products }: { products: Post[] }) {
 /** 商城内容（商品网格 + 我的订单入口）——供「商城」tab 与独立商城页复用 */
 export function ShopFeed() {
   const { posts, shopOrders, navigate, openSearch, openScan, t } = useApp();
-  const products = posts.filter(p => p.shop);
+  // 商城首页只展示在架商品，已下架商品仅在卖家自己的主页「小黄车」里可见
+  const products = posts.filter(p => p.shop && !p.shop.delisted);
   // 待处理：作为买家已发货待收货 + 作为卖家待发货
   const pendingOrderCount = shopOrders.filter(o =>
     (o.buyerName === CURRENT_USER && o.status === 'shipped')
@@ -103,31 +107,41 @@ export function ShopFeed() {
             <ScanLine size={16} strokeWidth={2} />
           </button>
         </div>
+      </div>
+      <div className="shop-quick-entries">
         <button
           type="button"
-          className="shop-orders-link"
+          className="shop-quick-entry"
           onClick={() => navigate({ page: 'P_ORDERS' })}
         >
-          <ClipboardList size={16} strokeWidth={2} />
-          {t('订单')}
-          {pendingOrderCount > 0 && (
-            <span className="shop-orders-link-badge" aria-label={t('{count} 笔待处理', { count: pendingOrderCount })}>
-              {pendingOrderCount}
-            </span>
-          )}
+          <span className="shop-quick-entry-icon">
+            <ClipboardList size={22} strokeWidth={2} />
+          </span>
+          <span className="shop-quick-entry-label">
+            {t('订单')}
+            {pendingOrderCount > 0 && (
+              <span className="shop-quick-entry-badge" aria-label={t('{count} 笔待处理', { count: pendingOrderCount })}>
+                {pendingOrderCount}
+              </span>
+            )}
+          </span>
         </button>
         <button
           type="button"
-          className="shop-messages-link"
+          className="shop-quick-entry"
           onClick={() => navigate({ page: 'P_DM' })}
-          aria-label={t('消息')}
         >
-          <MessageCircle size={18} strokeWidth={2} />
-          {unreadDmCount > 0 && (
-            <span className="shop-orders-link-badge shop-messages-link-badge">
-              {unreadDmCount > 9 ? '9+' : unreadDmCount}
-            </span>
-          )}
+          <span className="shop-quick-entry-icon">
+            <MessageCircle size={22} strokeWidth={2} />
+          </span>
+          <span className="shop-quick-entry-label">
+            {t('消息')}
+            {unreadDmCount > 0 && (
+              <span className="shop-quick-entry-badge">
+                {unreadDmCount > 9 ? '9+' : unreadDmCount}
+              </span>
+            )}
+          </span>
         </button>
       </div>
       <ShopProductGrid products={products} />

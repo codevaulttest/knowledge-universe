@@ -48,7 +48,7 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
   const matchedPosts = useMemo(() => {
     if (!debouncedQ && !shopOnly) return [];
     return posts.filter(post =>
-      (shopOnly ? !!post.shop : true) &&
+      (shopOnly ? !!post.shop && !post.shop.delisted : true) &&
       (!debouncedQ || post.title.toLowerCase().includes(debouncedQ) || post.author.toLowerCase().includes(debouncedQ)),
     );
   }, [debouncedQ, posts, shopOnly]);

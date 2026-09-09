@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bookmark, Check, ChevronLeft, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, Pencil, Phone, Plus, Send, Share2, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
+import { Bookmark, Check, ChevronLeft, ChevronRight, Circle, CircleCheck, Clock, Ellipsis, MapPin, MessageCircle, MessageCircleMore, Minus, Package, PackageX, Pencil, Phone, Plus, RotateCcw, Send, Share2, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
 import type { PbWalletId, ProfileContacts, ShippingAddress, ShopOrder } from '../types';
@@ -25,9 +25,11 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     shippingAddresses, defaultAddress, addShippingAddress, removeShippingAddress, setDefaultAddress, updateShippingAddress,
     placeShopOrder, showToast, openImageLightbox,
     savedPostIds, togglePostAction, userProfile, requestPostInteraction,
+    openEditPost, delistShopPost, relistShopPost,
   } = useApp();
 
   const post = posts.find(p => p.id === postId);
+  const isOwn = post?.author === CURRENT_USER;
   const multiVariant = post?.shop ? isMultiVariantShop(post.shop) : false;
   const variants = post?.shop ? getShopVariants(post.shop) : [];
   const defaultVariantId = variants.find(v => v.stock > 0)?.id ?? variants[0]?.id ?? null;
@@ -50,8 +52,10 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const [pendingDeleteAddrId, setPendingDeleteAddrId] = useState<string | null>(null);
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [shopMenuOpen, setShopMenuOpen] = useState(false);
 
-  if (!post || !post.shop) {
+  // 商品被卖家下架后，非卖家本人不可见；卖家本人仍可进详情页管理并重新上架
+  if (!post || !post.shop || (post.shop.delisted && !isOwn)) {
     return (
       <div className="sheet-backdrop" onClick={onClose}>
         <div className="payment-sheet shop-item-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
@@ -69,7 +73,6 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const activeVariant = getShopVariant(post.shop, multiVariant ? selectedVariantId ?? undefined : undefined);
   const price = activeVariant?.price ?? getShopMinPrice(post.shop);
   const stock = activeVariant?.stock ?? 0;
-  const isOwn = post.author === CURRENT_USER;
   const saved = savedPostIds.has(post.id);
   const sellerContacts = isOwn ? userProfile.contacts : MOCK_SELLER_CONTACTS[post.author];
   const contactEntries = CONTACT_CHANNELS.filter(({ key }) => sellerContacts?.[key]?.trim());
@@ -180,7 +183,39 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
         {/* 弹窗头：标题 + 关闭 */}
         <div className="sheet-header">
           <span className="sheet-title">{t('商品详情')}</span>
-          <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
+          <div className="shop-item-header-actions">
+            {isOwn && (
+              <div className="more-menu-wrap shop-item-header-menu">
+                <button
+                  type="button"
+                  className="back-btn"
+                  onClick={() => setShopMenuOpen(v => !v)}
+                  aria-label={t('商品管理')}
+                  aria-haspopup="menu"
+                  aria-expanded={shopMenuOpen}
+                >
+                  <Ellipsis size={20} strokeWidth={2} aria-hidden="true" />
+                </button>
+                {shopMenuOpen && (
+                  <div className="more-dropdown" role="menu">
+                    <button type="button" role="menuitem" onClick={() => { setShopMenuOpen(false); openEditPost(post.id); }}>
+                      <Pencil size={14} strokeWidth={2.2} /> {t('编辑')}
+                    </button>
+                    {post.shop.delisted ? (
+                      <button type="button" role="menuitem" onClick={() => { setShopMenuOpen(false); relistShopPost(post.id); }}>
+                        <RotateCcw size={14} strokeWidth={2.2} /> {t('重新上架')}
+                      </button>
+                    ) : (
+                      <button type="button" role="menuitem" onClick={() => { setShopMenuOpen(false); delistShopPost(post.id); }}>
+                        <PackageX size={14} strokeWidth={2.2} /> {t('下架')}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
+          </div>
         </div>
 
         {/* 商品图片：只显示首图，无图 / 全锁时回退为占位图 */}
@@ -202,6 +237,9 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
         {/* 正文 */}
         <div className="shop-item-body">
           <div className="shop-item-intro">
+            {isOwn && post.shop.delisted && (
+              <span className="shop-delisted-badge">{t('已下架')}</span>
+            )}
             <h2 className="shop-item-title">{post.title}</h2>
             <div className="shop-item-seller-block">
               <button
@@ -240,7 +278,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                     type="button"
                     className="shop-item-icon-btn shop-item-dm"
                     onClick={() => requireWallet(() => navigate({ page: 'P_DM_CHAT', peerId: post.author }))}
-                    aria-label={t('发私信')}
+                    aria-label={t('发消息')}
                   >
                     <Send size={16} strokeWidth={2} aria-hidden="true" />
                   </button>
@@ -358,62 +396,66 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
           </div>
 
           {/* 收货地址 */}
-          <button type="button" className="shop-item-addr" onClick={() => setPickerOpen(true)}>
-            <MapPin size={17} strokeWidth={2} className="shop-item-addr-icon" />
-            {selectedAddress ? (
-              <span className="shop-item-addr-text">
-                <span className="shop-item-addr-line1">{selectedAddress.name} · {selectedAddress.phone}</span>
-                <span className="shop-item-addr-line2">{fullAddr(selectedAddress)}</span>
-              </span>
-            ) : (
-              <span className="shop-item-addr-text shop-item-addr-empty">{t('请选择收货地址')}</span>
-            )}
-            <ChevronRight size={16} strokeWidth={2} />
-          </button>
-
-          <PbWalletPicker use="purchase" amount={totalPb} value={payWallet} onChange={setPayWallet} />
-
-          <div className="shop-item-info-cards">
-            <div className="shop-item-merit-card">
-              <Sparkles size={15} strokeWidth={2} aria-hidden="true" />
-              <div className="shop-item-merit-card-text">
-                <p>{t('本单预计赠送 {merit} 优点 (根据 PB 价值实时计算，可能略有误差)', { merit: formatMeritAmount(displayMerit) })}</p>
-                <p>{t('满 {per} 优点兑 1 张 ADN 抽奖券', { per: MERIT_PER_ADN })}</p>
-              </div>
-            </div>
-
-            {partnerRebatePercent > 0 && (
-              <button type="button" className="shop-item-partner-card" onClick={joinPartner}>
-                <div className="shop-item-partner-card-main">
-                  <Users size={16} strokeWidth={2} aria-hidden="true" />
-                  <p className="shop-item-partner-card-info">
-                    {t('合伙人共享 {merit} 优点(链接该贴自动成为合伙人)', { merit: formatMeritAmount(displayPartnerMerit) })}
-                  </p>
-                </div>
-                <span className="shop-item-partner-card-action">
-                  {t('立即链接')}
-                  <ChevronRight size={15} strokeWidth={2.4} aria-hidden="true" />
+          {!isOwn && (
+            <button type="button" className="shop-item-addr" onClick={() => setPickerOpen(true)}>
+              <MapPin size={17} strokeWidth={2} className="shop-item-addr-icon" />
+              {selectedAddress ? (
+                <span className="shop-item-addr-text">
+                  <span className="shop-item-addr-line1">{selectedAddress.name} · {selectedAddress.phone}</span>
+                  <span className="shop-item-addr-line2">{fullAddr(selectedAddress)}</span>
                 </span>
-              </button>
-            )}
-          </div>
+              ) : (
+                <span className="shop-item-addr-text shop-item-addr-empty">{t('请选择收货地址')}</span>
+              )}
+              <ChevronRight size={16} strokeWidth={2} />
+            </button>
+          )}
+
+          {!isOwn && <PbWalletPicker use="purchase" amount={totalPb} value={payWallet} onChange={setPayWallet} />}
+
+          {!isOwn && (
+            <div className="shop-item-info-cards">
+              <div className="shop-item-merit-card">
+                <Sparkles size={15} strokeWidth={2} aria-hidden="true" />
+                <div className="shop-item-merit-card-text">
+                  <p>{t('本单预计赠送 {merit} 优点 (根据 PB 价值实时计算，可能略有误差)', { merit: formatMeritAmount(displayMerit) })}</p>
+                  <p>{t('满 {per} 优点兑 1 张 ADN 抽奖券', { per: MERIT_PER_ADN })}</p>
+                </div>
+              </div>
+
+              {partnerRebatePercent > 0 && (
+                <button type="button" className="shop-item-partner-card" onClick={joinPartner}>
+                  <div className="shop-item-partner-card-main">
+                    <Users size={16} strokeWidth={2} aria-hidden="true" />
+                    <p className="shop-item-partner-card-info">
+                      {t('合伙人共享 {merit} 优点(链接该贴自动成为合伙人)', { merit: formatMeritAmount(displayPartnerMerit) })}
+                    </p>
+                  </div>
+                  <span className="shop-item-partner-card-action">
+                    {t('立即链接')}
+                    <ChevronRight size={15} strokeWidth={2.4} aria-hidden="true" />
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="shop-item-buybar shop-item-buybar--sheet">
-          <div className="shop-item-total">
-            <span className="shop-item-total-label">{t('合计')}</span>
-            <span className="shop-item-total-value">{formatTokenAmount(totalPb)} PB</span>
-            <span className="shop-item-total-gas">{t('Gas 费')} {formatShopFee(totalSup)} SUP</span>
+            <div className="shop-item-total">
+              <span className="shop-item-total-label">{t('合计')}</span>
+              <span className="shop-item-total-value">{formatTokenAmount(totalPb)} PB</span>
+              <span className="shop-item-total-gas">{t('Gas 费')} {formatShopFee(totalSup)} SUP</span>
+            </div>
+            <button
+              type="button"
+              className="shop-buy-btn"
+              onClick={buy}
+              disabled={isOwn || !canBuy || !payWallet}
+            >
+              {isOwn ? t('无法购买自己的商品') : soldOut ? t('已售罄') : variantSoldOut ? t('该规格已售罄') : t('立即购买')}
+            </button>
           </div>
-          <button
-            type="button"
-            className="shop-buy-btn"
-            onClick={buy}
-            disabled={!canBuy || !payWallet}
-          >
-            {soldOut ? t('已售罄') : variantSoldOut ? t('该规格已售罄') : t('立即购买')}
-          </button>
-        </div>
       </div>
     </div>
 

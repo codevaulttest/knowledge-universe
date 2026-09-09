@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, AddressMigration, Channel, ChannelAuthorization, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import type { ActivityGroup, AddressMigration, Channel, ChannelAuthorization, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import type { LotQuota, TaskCalendarMonth, TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
@@ -42,7 +42,9 @@ export type AppContextValue = {
   requestDeletePost: (postId: string, onAfterDelete?: () => void) => void;
   openEditPost: (postId: string) => void;
   // tierUpdate 传入即代表本次连带修改了频道可见档位（30 天冷却期由调用方校验后才允许传入）
-  updatePost: (postId: string, newTitle: string, tierUpdate?: { minTierIndex: number | undefined }) => void;
+  updatePost: (postId: string, newTitle: string, patch?: { minTierIndex?: number; shop?: ShopInfo; visiblePercent?: number }) => void;
+  delistShopPost: (postId: string) => void;
+  relistShopPost: (postId: string) => void;
   incrementReplies: (postId: string) => void;
   decrementReplies: (postId: string) => void;
   /** 付费互动（如加入合伙人）成功后追加的评论 */

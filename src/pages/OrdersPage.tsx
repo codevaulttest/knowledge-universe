@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ChevronRight, MessageCircle, PackageCheck, PackageOpen, Truck } from 'lucide-react';
+import { ChevronRight, Headset, MessageCircle, PackageCheck, PackageOpen, Phone, Truck } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
+import { SUPPORT_PEER } from './DmPage';
 import type { ShopOrder } from '../types';
 import { PageHeader } from '../components/shared';
 import { DevPanel } from '../components/DevPanel';
@@ -166,14 +167,26 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
 
                 {/* 操作区 */}
                 <div className="order-card-actions">
+                  <button
+                    type="button"
+                    className="order-action-btn"
+                    onClick={() => navigate({
+                      page: 'P_DM_CHAT',
+                      peerId: role === 'buyer' ? o.sellerName : o.buyerName,
+                      orderId: o.id,
+                    })}
+                  >
+                    <MessageCircle size={15} strokeWidth={2} />
+                    {role === 'buyer' ? t('联系卖家') : t('联系买家')}
+                  </button>
                   {role === 'buyer' && contactEntries.length > 0 && !contactsOpen && (
                     <button
                       type="button"
                       className="shop-item-contacts-toggle"
                       onClick={() => setExpandedContacts(prev => new Set(prev).add(o.id))}
                     >
-                      <MessageCircle size={15} strokeWidth={2} aria-hidden="true" />
-                      {t('联系商家')}
+                      <Phone size={15} strokeWidth={2} aria-hidden="true" />
+                      {t('其他联系方式')}
                     </button>
                   )}
                   {role === 'buyer' && o.status === 'shipped' && (
@@ -189,6 +202,16 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
                   {role === 'seller' && o.status === 'to_settle' && (
                     <button type="button" className="order-action-btn order-action-btn--ghost" onClick={() => simulateShopSettle(o.id)}>
                       {t('模拟结算到账')}
+                    </button>
+                  )}
+                  {o.status !== 'submitting' && o.status !== 'failed' && (
+                    <button
+                      type="button"
+                      className="order-action-btn order-action-btn--ghost"
+                      onClick={() => navigate({ page: 'P_DM_CHAT', peerId: SUPPORT_PEER, orderId: o.id })}
+                    >
+                      <Headset size={15} strokeWidth={2} />
+                      {t('客服介入')}
                     </button>
                   )}
                 </div>

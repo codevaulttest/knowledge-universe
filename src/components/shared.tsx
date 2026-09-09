@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, FileText, Gem, ImageOff, Link, Lock, Radio, RotateCcw, Settings, Star, Wallet } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, Check, ChevronRight, CircleCheck, Copy, FileText, Gem, ImageOff, Link, Lock, Radio, RotateCcw, Settings, Star, Wallet } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { isVerifiedAuthor } from '../mockData';
@@ -108,6 +108,7 @@ export function ChannelCard({
   onManage,
   showAvatar = true,
   showSubscribe = false,
+  showNodeCode = false,
 }: {
   channel: Channel;
   index: number;
@@ -120,8 +121,13 @@ export function ChannelCard({
   showAvatar?: boolean;
   /** 访客视角：在卡片右侧展示「订阅 / 已订阅」快捷入口 */
   showSubscribe?: boolean;
+  /** 在频道目录中展示由频道开通节点生成的节点码，并允许复制。 */
+  showNodeCode?: boolean;
 }) {
   const { t, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe } = useApp();
+  const [nodeCodeCopied, setNodeCodeCopied] = useState(false);
+  // 旧演示数据兜底由频道 ID 末六位推导；新频道在开通时会保存独立的节点码。
+  const nodeCode = channel.nodeCode ?? channel.id.slice(-6).toUpperCase();
   const subscribedTierIndex = subscribedChannelTiers[channel.id];
   const isExpired = expiredChannelIds.has(channel.id);
   const isSubscribed = subscribedTierIndex != null && !isExpired;
@@ -130,6 +136,32 @@ export function ChannelCard({
   const subscriptionStatus = subscribedTier
     ? (isExpired ? t('已过期 · {name}', { name: subscribedTier.name }) : t('已订阅 · {name}', { name: subscribedTier.name }))
     : undefined;
+  const copyNodeCode = async () => {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(nodeCode);
+      } else {
+        const fallback = document.createElement('textarea');
+        fallback.value = nodeCode;
+        document.body.appendChild(fallback);
+        fallback.select();
+        document.execCommand('copy');
+        fallback.remove();
+      }
+      setNodeCodeCopied(true);
+      window.setTimeout(() => setNodeCodeCopied(false), 1800);
+    } catch {
+      // 无法访问系统剪贴板时改用页面内复制，保证本地演示与旧浏览器可用。
+      const fallback = document.createElement('textarea');
+      fallback.value = nodeCode;
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+      setNodeCodeCopied(true);
+      window.setTimeout(() => setNodeCodeCopied(false), 1800);
+    }
+  };
   // 注：外层不能用 <button> 包 <button>（管理/订阅按钮）——嵌套交互元素是无效 HTML，
   // 部分浏览器（尤其 WebKit）会导致内层点击拿不到事件。改用 div+role="button" 承载整卡点击，
   // 右侧操作保留原生 <button>，两者是兄弟节点而非嵌套。
@@ -148,15 +180,29 @@ export function ChannelCard({
           {channel.name}
         </span>
         <span className="channel-discover-desc">{channel.description}</span>
-        <div className="channel-discover-meta">
-          <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
-          {subscriptionStatus && <>
-            <span className="channel-discover-meta-dot" aria-hidden="true">·</span>
+        {showNodeCode && (
+          <div className="channel-discover-node-code">
+            <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
+            <span className="channel-discover-node-code-separator" aria-hidden="true">·</span>
+            <span>{nodeCode}</span>
+            <button
+              type="button"
+              className={`channel-discover-node-copy${nodeCodeCopied ? ' channel-discover-node-copy--done' : ''}`}
+              onClick={e => { e.stopPropagation(); copyNodeCode(); }}
+              aria-label={t('复制节点编号')}
+              title={t('复制节点编号')}
+            >
+              {nodeCodeCopied ? <Check size={14} strokeWidth={2.5} /> : <Copy size={14} strokeWidth={2} />}
+            </button>
+          </div>
+        )}
+        {subscriptionStatus && (
+          <div className="channel-discover-meta">
             <span className={`channel-discover-access${!isExpired ? ' channel-discover-access--subscribed' : ' channel-discover-access--expired'}`}>
               {subscriptionStatus}
             </span>
-          </>}
-        </div>
+          </div>
+        )}
       </div>
       {onManage && (
         <button

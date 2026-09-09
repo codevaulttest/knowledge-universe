@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
-import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, HandCoins, Gift, Plus, Save, Wallet, Loader2, ShieldCheck, ShieldX } from 'lucide-react';
+import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Copy, HandCoins, Gift, Plus, Save, Wallet, Loader2, ShieldCheck, ShieldX } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER, findRegisteredUserByAddress } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
@@ -2139,6 +2139,8 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   const [description, setDescription] = useState(existingChannel?.description ?? '');
   const category = existingChannel?.category ?? DEFAULT_CHANNEL_CATEGORY;
   const isEdit = !!existingChannel;
+  const channelNodeCode = existingChannel?.nodeCode ?? existingChannel?.id.slice(-6).toUpperCase();
+  const [nodeCodeCopied, setNodeCodeCopied] = useState(false);
   // 开通频道（未 isEdit）只收集基本信息，不设会员档位——开通与定价拆成两步，
   // 避免用户在"要不要付钱开通"和"怎么设计收费档位"两件事上同时纠结
   const [tiers, setTiers] = useState<ChannelTier[]>(() =>
@@ -2205,6 +2207,31 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   const canSubmit = name.trim().length > 0
     && !tiers.some((_, idx) => isChannelTierPriceInvalid(tiers, idx))
     && (beneficiaryMode === 'self' || addressStatus === '3');
+
+  const copyNodeCode = async () => {
+    if (!channelNodeCode) return;
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(channelNodeCode);
+      } else {
+        const fallback = document.createElement('textarea');
+        fallback.value = channelNodeCode;
+        document.body.appendChild(fallback);
+        fallback.select();
+        document.execCommand('copy');
+        fallback.remove();
+      }
+    } catch {
+      const fallback = document.createElement('textarea');
+      fallback.value = channelNodeCode;
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+    }
+    setNodeCodeCopied(true);
+    window.setTimeout(() => setNodeCodeCopied(false), 1800);
+  };
 
   const handleSubmit = () => {
     if (!canSubmit || paying === 'loading') return;
@@ -2275,6 +2302,24 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
               autoComplete="off"
             />
           </div>
+
+          {isEdit && channelNodeCode && (
+            <div className="edit-profile-field channel-node-code-field">
+              <span className="edit-profile-label">{t('节点码')}</span>
+              <div className="channel-node-code-value">
+                <span>{channelNodeCode}</span>
+                <button
+                  type="button"
+                  className={`channel-node-code-copy${nodeCodeCopied ? ' channel-node-code-copy--done' : ''}`}
+                  onClick={copyNodeCode}
+                  aria-label={t('复制节点编号')}
+                  title={t('复制节点编号')}
+                >
+                  {nodeCodeCopied ? <Check size={16} strokeWidth={2.5} /> : <Copy size={16} strokeWidth={2} />}
+                </button>
+              </div>
+            </div>
+          )}
 
           {isEdit && (
           <div className="edit-profile-field">

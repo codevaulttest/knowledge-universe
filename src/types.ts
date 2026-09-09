@@ -16,6 +16,7 @@ export type ShopInfo = {
   price?: number;        // 单规格：商品单价（PB），必须 > 0
   stock?: number;        // 单规格：库存
   variants?: ShopVariant[]; // 多规格：非空时忽略 price/stock
+  delisted?: boolean;    // 卖家已下架：买家不可见/不可下单，卖家可随时重新上架
 };
 
 /** 买家收货地址 */
@@ -196,6 +197,8 @@ export type ChannelTier = {
 
 export type Channel = {
   id: string;
+  /** 开通频道时生成的六位节点码，用于识别和分享该频道对应的节点。 */
+  nodeCode?: string;
   ownerName: string;
   name: string;
   description: string;
@@ -454,6 +457,7 @@ export type UserProfile = {
   nickname: string;
   avatarSeed: string;
   avatarUrl?: string;
+  headerBackgroundUrl?: string;
   contacts?: ProfileContacts;
   bio?: string;
 };

@@ -8,6 +8,7 @@ import { CURRENT_USER } from '../mockData';
 import type { Draft, PbWalletId, Post, ShopInfo, StakeTier } from '../types';
 import { STAKE_TIERS, stakeTierDescription, stakeTierLabel, SUP_COST_BY_TIER } from '../stakeConfig';
 import { SHOP_MAX_REBATE_PERCENT, MERIT_PB_PER_POINT, MERIT_PER_ADN, computeShopFee, isRebateSplitValid } from '../shopConfig';
+import { isMultiVariantShop, getShopVariants } from '../shopUtils';
 import { isChinese } from '../i18n';
 import { formatScheduledAt } from '../dateUtils';
 import { ScheduleDateTimePicker } from '../components/ScheduleDateTimePicker';
@@ -59,14 +60,18 @@ export function ComposePage({
   const channelPicker = useChannelListSearch(pickerChannels);
   const selectedChannel = pickerChannels.find(c => c.id === selectedChannelId);
   const [minTierIndex, setMinTierIndex] = useState(0);
-  // 小黄车（仅 1000 PB 节点帖可挂载）
-  const [shopEnabled, setShopEnabled] = useState(false);
-  const [shopPrice, setShopPrice] = useState('');
-  const [shopRebate, setShopRebate] = useState(40);
-  const [shopPartnerRebate, setShopPartnerRebate] = useState(0);
-  const [shopStock, setShopStock] = useState('');
-  const [shopUseVariants, setShopUseVariants] = useState(false);
-  const [variantRows, setVariantRows] = useState<VariantDraft[]>([newVariantDraft()]);
+  // 小黄车（新建仅 1000 PB 节点帖可挂载；编辑模式下，已挂小黄车的帖子可修改商品信息）
+  const [shopEnabled, setShopEnabled] = useState(() => !!editPost?.shop);
+  const [shopPrice, setShopPrice] = useState(() => editPost?.shop && !isMultiVariantShop(editPost.shop) ? String(editPost.shop.price ?? '') : '');
+  const [shopRebate, setShopRebate] = useState(() => editPost?.shop?.rebatePercent ?? 40);
+  const [shopPartnerRebate, setShopPartnerRebate] = useState(() => editPost?.shop?.partnerRebatePercent ?? 0);
+  const [shopStock, setShopStock] = useState(() => editPost?.shop && !isMultiVariantShop(editPost.shop) ? String(editPost.shop.stock ?? '') : '');
+  const [shopUseVariants, setShopUseVariants] = useState(() => !!editPost?.shop && isMultiVariantShop(editPost.shop));
+  const [variantRows, setVariantRows] = useState<VariantDraft[]>(() =>
+    editPost?.shop && isMultiVariantShop(editPost.shop)
+      ? getShopVariants(editPost.shop).map(v => ({ id: v.id, label: v.label, price: String(v.price), stock: String(v.stock) }))
+      : [newVariantDraft()]
+  );
   const [rebateInfoOpen, setRebateInfoOpen] = useState(false);
   const [imgCount, setImgCount] = useState(draft?.imgCount ?? 0);
   // 用户通过系统相册/拍照选中的图片，生成本地预览用的 object URL（草稿里已有的旧图没有真实文件，仅按数量占位展示）
@@ -118,8 +123,8 @@ export function ComposePage({
   const overlengthFee = computeOverlengthFee(contentLength);
   const overlengthAffordable = hasAffordableOverlengthFeeWallet(pbWallets, overlengthFee);
 
-  // 小黄车仅在 1000 PB 节点档位可用；档位变化后自动收起，避免带着无效配置提交
-  const shopEligible = stakeTier === 1000;
+  // 新建帖子的小黄车仅在 1000 PB 节点档位可用；编辑模式下只要帖子已挂小黄车就允许继续维护商品信息
+  const shopEligible = isEditMode ? !!editPost?.shop : stakeTier === 1000;
   useEffect(() => {
     if (!shopEligible && shopEnabled) setShopEnabled(false);
   }, [shopEligible, shopEnabled]);
@@ -147,6 +152,22 @@ export function ComposePage({
         && shopStockNum >= 1
         && Number.isInteger(shopStockNum))
   );
+
+  // 按当前表单状态组装出的小黄车信息，创建和编辑保存时共用同一份组装逻辑
+  const currentShopValue: ShopInfo | undefined = shopEnabled
+    ? shopUseVariants
+      ? {
+          rebatePercent: shopRebate,
+          partnerRebatePercent: shopPartnerRebate,
+          variants: variantRows.map(row => ({
+            id: row.id,
+            label: row.label.trim(),
+            price: Number(row.price),
+            stock: Number(row.stock),
+          })),
+        }
+      : { price: shopPriceNum, rebatePercent: shopRebate, partnerRebatePercent: shopPartnerRebate, stock: shopStockNum }
+    : undefined;
 
   const scheduledAtMs = scheduledAtLocal ? new Date(scheduledAtLocal).getTime() : undefined;
   const scheduleValid = !scheduleEnabled || (scheduledAtMs !== undefined && !Number.isNaN(scheduledAtMs) && scheduledAtMs > Date.now());
@@ -240,9 +261,12 @@ export function ComposePage({
     ? articleTitle.trim().length > 0 || articleBodyHasContent || hasCover
     : text.trim().length > 0 || imgCount > 0 || hasVideo;
 
+  const shopFieldsChanged = isEditMode && shopEligible && JSON.stringify(currentShopValue) !== JSON.stringify(editPost?.shop);
+
   const hasEditChanges = isEditMode && (
     text.trim() !== (editPost?.title ?? '')
     || (!!editPostChannel && editMinTierIndex !== (editPost?.minTierIndex ?? 0))
+    || shopFieldsChanged
   );
 
   const handleCloseAttempt = useCallback(() => {
@@ -266,24 +290,18 @@ export function ComposePage({
   const proceedPublish = () => {
     if (isEditMode) {
       const tierChanged = editPostChannel && editMinTierIndex !== (editPost.minTierIndex ?? 0);
-      updatePost(editPost.id, text.trim(), tierChanged ? { minTierIndex: editMinTierIndex } : undefined);
+      const patch: { minTierIndex?: number; shop?: ShopInfo; visiblePercent?: number } = {};
+      if (tierChanged) patch.minTierIndex = editMinTierIndex;
+      if (shopEligible) {
+        patch.shop = currentShopValue;
+        // 商品需要对所有人可见，买家下单前才能看清商品信息
+        if (currentShopValue) patch.visiblePercent = 100;
+      }
+      updatePost(editPost.id, text.trim(), Object.keys(patch).length > 0 ? patch : undefined);
       return;
     }
     const joinNode = stakeTier > 0;
-    const shop: ShopInfo | undefined = shopEligible && shopEnabled
-      ? shopUseVariants
-        ? {
-            rebatePercent: shopRebate,
-            partnerRebatePercent: shopPartnerRebate,
-            variants: variantRows.map(row => ({
-              id: row.id,
-              label: row.label.trim(),
-              price: Number(row.price),
-              stock: Number(row.stock),
-            })),
-          }
-        : { price: shopPriceNum, rebatePercent: shopRebate, partnerRebatePercent: shopPartnerRebate, stock: shopStockNum }
-      : undefined;
+    const shop = currentShopValue;
     const postData = {
       title: (articleMode ? articleTitle : text).trim(),
       kind,
@@ -637,14 +655,14 @@ export function ComposePage({
             {/* 主编辑框 */}
             <div className="compose-input-wrap">
               <textarea
-                className={`compose-input${!overlengthAffordable ? ' compose-input--error' : ''}${isEditMode ? ' compose-input--readonly' : ''}`}
+                className={`compose-input${!overlengthAffordable ? ' compose-input--error' : ''}${isEditMode && !shopEligible ? ' compose-input--readonly' : ''}`}
                 placeholder={t('分享你的知识…')}
                 value={text}
-                onChange={e => { if (!isEditMode) setText(e.target.value); }}
-                readOnly={isEditMode}
+                onChange={e => { if (!isEditMode || shopEligible) setText(e.target.value); }}
+                readOnly={isEditMode && !shopEligible}
                 aria-label={t('帖子内容')}
               />
-              {isEditMode ? (
+              {isEditMode && !shopEligible ? (
                 <p className="compose-readonly-hint">
                   {t('已发布内容不可修改，仅支持调整可见档位')}
                 </p>
@@ -824,55 +842,66 @@ export function ComposePage({
           </div>
         )}
 
-        {/* 参与知识宇宙面额（编辑模式隐藏；长文 / 普通帖均可选择，非强制）*/}
-        {!isEditMode && (
+        {/* 参与知识宇宙面额（长文 / 普通帖均可选择，非强制）；编辑模式下仅当帖子已挂小黄车时，
+            复用同一张卡片展示商品信息编辑区，其余面额/档位设置不可回看编辑 */}
+        {(!isEditMode || shopEligible) && (
           <div className="compose-section compose-stake-section">
-            <div className="compose-stake-heading">
-              <KnowledgePlanetIcon width={16} height={16} />
-              <span>{t('参与知识宇宙')}</span>
-            </div>
-            <p className="compose-stake-hint">
-              {t('选择质押面额，创建可链接的知识宇宙节点；可选择不加入')}
-            </p>
-            <div className="stake-tier-list stake-tier-list--grid2" role="radiogroup" aria-label={t('知识宇宙面额')}>
-              {STAKE_TIERS.map(tier => {
-                const active = stakeTier === tier;
-                const zh = isChinese(language);
-                return (
-                  <button
-                    key={tier}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    className={`stake-tier-option${active ? ' stake-tier-option--active' : ''}`}
-                    onClick={() => setStakeTier(tier)}
-                  >
-                    <span className="stake-tier-option__amount">
-                      {stakeTierLabel(tier, zh)}
-                    </span>
-                    {tier === 0 && (
-                      <span className="stake-tier-option__desc">
-                        {stakeTierDescription(tier, zh)}
-                      </span>
-                    )}
-                    {tier === 1000 && (
-                      <span className="stake-tier-option__desc">
-                        {t('可参与小黄车')}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            {stakeTier > 0 && (
-              <div className="compose-stake-gas">
-                <span className="compose-stake-gas-label">{t('Gas 费')}</span>
-                <span className="compose-stake-gas-value">{SUP_COST_BY_TIER[stakeTier as Exclude<typeof stakeTier, 0>]} SUP</span>
-              </div>
+            {!isEditMode && (
+              <>
+                <div className="compose-stake-heading">
+                  <KnowledgePlanetIcon width={16} height={16} />
+                  <span>{t('参与知识宇宙')}</span>
+                </div>
+                <p className="compose-stake-hint">
+                  {t('选择质押面额，创建可链接的知识宇宙节点；可选择不加入')}
+                </p>
+                <div className="stake-tier-list stake-tier-list--grid2" role="radiogroup" aria-label={t('知识宇宙面额')}>
+                  {STAKE_TIERS.map(tier => {
+                    const active = stakeTier === tier;
+                    const zh = isChinese(language);
+                    return (
+                      <button
+                        key={tier}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        className={`stake-tier-option${active ? ' stake-tier-option--active' : ''}`}
+                        onClick={() => setStakeTier(tier)}
+                      >
+                        <span className="stake-tier-option__amount">
+                          {stakeTierLabel(tier, zh)}
+                        </span>
+                        {tier === 0 && (
+                          <span className="stake-tier-option__desc">
+                            {stakeTierDescription(tier, zh)}
+                          </span>
+                        )}
+                        {tier === 1000 && (
+                          <span className="stake-tier-option__desc">
+                            {t('可参与小黄车')}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {stakeTier > 0 && (
+                  <div className="compose-stake-gas">
+                    <span className="compose-stake-gas-label">{t('Gas 费')}</span>
+                    <span className="compose-stake-gas-value">{SUP_COST_BY_TIER[stakeTier as Exclude<typeof stakeTier, 0>]} SUP</span>
+                  </div>
+                )}
+              </>
             )}
 
             {/* 小黄车：仅 1000 PB 节点帖可挂载。内联在同一张卡片里而非独立 section，
                 这样选中 1000 PB 后开关就在原地展开，不会被推到折叠线以下 */}
+            {isEditMode && shopEligible && (
+              <div className="compose-stake-heading">
+                <ShoppingCart size={16} strokeWidth={2} />
+                <span>{t('小黄车')}</span>
+              </div>
+            )}
             {shopEligible && (
               <div className="compose-shop-section" ref={shopSectionRef}>
                 <button

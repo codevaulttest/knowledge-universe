@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Award, BadgeCheck, Bookmark, Camera, Check, ChevronRight, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ShoppingCart, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
+import { AlertTriangle, Award, BadgeCheck, Bookmark, Camera, Check, ChevronRight, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, RotateCcw, Search, ShoppingCart, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -89,11 +89,13 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
   // 频道帖子从免费档起可见；付费内容需要达到对应的付费档位。
   const isChannelExclusive = (p: (typeof allPosts)[number]) => !!p.channelId && ownerChannels.some(c => c.id === p.channelId) && (p.minTierIndex ?? 0) > 0;
+  // 自己主页看到全部小黄车帖子（含已下架，方便管理/重新上架）；他人主页只看到在架商品
   const shopPosts = myPosts.filter(p => !!p.shop);
+  const visibleShopPosts = shopPosts.filter(p => !p.shop!.delisted);
   const filteredOtherPosts = (() => {
     if (contentFilter === 'free') return myPosts.filter(p => !isChannelExclusive(p));
     if (contentFilter === 'sub') return myPosts.filter(isChannelExclusive);
-    if (contentFilter === 'shop') return shopPosts;
+    if (contentFilter === 'shop') return visibleShopPosts;
     return myPosts;
   })();
 
@@ -194,7 +196,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
       {!isOwn && <PageHeader onBack={canGoBack ? goBack : undefined} className="page-header--transparent" />}
       <div className="scroll-area">
         <div className={`profile-hero${!isOwn ? ' profile-hero--with-header' : ''}`}>
-        <img className="profile-header-bg" src="/img/genesis-bigbang.webp" alt="" aria-hidden="true" />
+        <img className="profile-header-bg" src={isOwn ? userProfile.headerBackgroundUrl ?? '/img/genesis-bigbang.webp' : '/img/genesis-bigbang.webp'} alt="" aria-hidden="true" />
         <div className="profile-header profile-header--hero">
           {/* 自己的主页视为底栏 Tab 根页面，不展示返回（即便从头像 navigate 进来也不出现） */}
           {isOwn ? (
@@ -321,15 +323,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               <HandCoins size={14} strokeWidth={2} />
               {t('打赏')}
             </button>
-            <button
-              type="button"
-              className="profile-dm-btn"
-              onClick={() => requireWallet(() => navigate({ page: 'P_DM_CHAT', peerId: authorName }))}
-              aria-label={t('发私信')}
-            >
-              <MessageCircle size={14} strokeWidth={2} />
-              {t('私信')}
-            </button>
           </div>
         )}
         </div>
@@ -425,8 +418,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               >
                 {f === 'all' ? <LayoutGrid size={14} strokeWidth={2} /> : f === 'sub' ? <Gem size={14} strokeWidth={2} /> : <ShoppingCart size={14} strokeWidth={2} />}
                 {f === 'all' ? t('全部') : f === 'sub' ? t('会员') : t('小黄车')}
-                {f === 'shop' && shopPosts.length > 0 && (
-                  <span className="activity-filter-tab-count" aria-label={t('{count} 篇', { count: shopPosts.length })}>{shopPosts.length}</span>
+                {f === 'shop' && visibleShopPosts.length > 0 && (
+                  <span className="activity-filter-tab-count" aria-label={t('{count} 篇', { count: visibleShopPosts.length })}>{visibleShopPosts.length}</span>
                 )}
               </button>
             ))}
@@ -493,7 +486,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             </nav>
             )}
             {isShopView ? (
-              shopPosts.length === 0 ? (
+              (isOwn ? shopPosts : visibleShopPosts).length === 0 ? (
                 <div className="profile-empty-state">
                   <ShoppingCart size={32} strokeWidth={1.2} className="profile-empty-icon" />
                   <p className="profile-empty-title">{t('还没有带货的帖子')}</p>
@@ -502,7 +495,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
               ) : (
                 // 抵消 .feed 自身的内边距，让网格边距与商城首页一致（水平始终抵消；顶部仅在网格前没有筛选 tab 时抵消，避免顶到 tab 上）
                 <div className={`profile-shop-grid-wrap${isOwn ? '' : ' profile-shop-grid-wrap--top-flush'}`}>
-                  <ShopProductGrid products={shopPosts} />
+                  <ShopProductGrid products={isOwn ? shopPosts : visibleShopPosts} />
                 </div>
               )
             ) : (
@@ -677,6 +670,7 @@ function EditProfileModal({
   const [nickname, setNickname] = useState(userProfile.nickname);
   const [bio, setBio] = useState(userProfile.bio ?? '');
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(userProfile.avatarUrl);
+  const [headerBackgroundUrl, setHeaderBackgroundUrl] = useState<string | undefined>(userProfile.headerBackgroundUrl);
   const [contacts, setContacts] = useState<ProfileContacts>(userProfile.contacts ?? {});
   const [moreContactsOpen, setMoreContactsOpen] = useState(
     !!userProfile.contacts?.whatsapp?.trim()
@@ -684,6 +678,7 @@ function EditProfileModal({
   const [migrationSheetOpen, setMigrationSheetOpen] = useState(false);
   const [migrationStatusOpen, setMigrationStatusOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const headerBackgroundInputRef = useRef<HTMLInputElement>(null);
   const trimmed = nickname.trim();
   const sourceAddress = walletAddress ?? MOCK_WALLET_ADDRESS;
   const maskedWallet = shortenWalletAddress(sourceAddress);
@@ -708,7 +703,7 @@ function EditProfileModal({
           <button
             type="button"
             className="edit-profile-save"
-            onClick={() => onSave({ nickname: trimmed, avatarSeed: userProfile.avatarSeed, avatarUrl, contacts, bio: bio.trim() || undefined })}
+            onClick={() => onSave({ nickname: trimmed, avatarSeed: userProfile.avatarSeed, avatarUrl, headerBackgroundUrl, contacts, bio: bio.trim() || undefined })}
           >
             {t('保存')}
           </button>
@@ -716,7 +711,10 @@ function EditProfileModal({
 
         <div className="edit-profile-body">
           {/* 头像上传 */}
-          <div className="edit-profile-avatar-upload">
+          <div
+            className="edit-profile-avatar-upload edit-profile-avatar-upload--background"
+            style={{ backgroundImage: `url(${headerBackgroundUrl ?? '/img/genesis-bigbang.webp'})` }}
+          >
             <div
               className="edit-profile-avatar-preview"
               onClick={() => fileInputRef.current?.click()}
@@ -741,6 +739,45 @@ function EditProfileModal({
               accept="image/*"
               style={{ display: 'none' }}
               onChange={handleFileChange}
+            />
+            <div className="edit-profile-background-actions">
+              <button
+                type="button"
+                className="edit-profile-background-action"
+                onClick={() => headerBackgroundInputRef.current?.click()}
+                aria-label={t('更换主页背景图')}
+              >
+                <span className="edit-profile-background-action-label">
+                  <Camera size={13} strokeWidth={2.3} aria-hidden="true" />
+                  {t('更换背景图')}
+                </span>
+              </button>
+              {headerBackgroundUrl && (
+                <button
+                  type="button"
+                  className="edit-profile-background-action edit-profile-background-action--reset"
+                  onClick={() => {
+                    setHeaderBackgroundUrl(undefined);
+                    if (headerBackgroundInputRef.current) headerBackgroundInputRef.current.value = '';
+                  }}
+                >
+                  <RotateCcw size={13} strokeWidth={2.3} aria-hidden="true" />
+                  {t('恢复默认背景')}
+                </button>
+              )}
+            </div>
+            <input
+              ref={headerBackgroundInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleFileChange => {
+                const file = handleFileChange.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = event => setHeaderBackgroundUrl(event.target?.result as string);
+                reader.readAsDataURL(file);
+              }}
             />
           </div>
 
@@ -1251,6 +1288,7 @@ function ChannelDirectoryModal({
               onManage={isOwn ? () => openManageChannel(c.id) : undefined}
               showSubscribe={!isOwn}
               showAvatar={false}
+              showNodeCode
             />
           ))}
           {channelListState.hasMore && (

@@ -5,7 +5,7 @@ import { withFreeTier } from './channelTiers';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_CHANNEL_AUTHORIZATIONS, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_KNOWLEDGE_CERTS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { formatScheduledAt } from './dateUtils';
 import { isValidWalletAddress } from './formatAddress';
-import type { AddressMigration, Channel, ChannelAuthorization, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import type { AddressMigration, Channel, ChannelAuthorization, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import { PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
@@ -805,9 +805,26 @@ export default function App({ account, onLanguageChange }: {
     requireWallet(() => setEditPostId(postId));
   };
 
-  const updatePost = (postId: string, newTitle: string, tierUpdate?: { minTierIndex: number | undefined }) => {
+  // 小黄车下架/重新上架：帖子本身保留，仅商品对买家隐藏/恢复可见，卖家随时可撤回
+  const delistShopPost = (postId: string) => {
+    setPosts(prev => prev.map(p => p.id === postId && p.shop ? { ...p, shop: { ...p.shop, delisted: true } } : p));
+    showToast(t('商品已下架'));
+  };
+
+  const relistShopPost = (postId: string) => {
+    setPosts(prev => prev.map(p => p.id === postId && p.shop ? { ...p, shop: { ...p.shop, delisted: false } } : p));
+    showToast(t('商品已重新上架'));
+  };
+
+  const updatePost = (postId: string, newTitle: string, patch?: { minTierIndex?: number; shop?: ShopInfo; visiblePercent?: number }) => {
     setPosts(prev => prev.map(p => p.id === postId
-      ? { ...p, title: newTitle, ...(tierUpdate ? { minTierIndex: tierUpdate.minTierIndex } : {}) }
+      ? {
+          ...p,
+          title: newTitle,
+          ...(patch && 'minTierIndex' in patch ? { minTierIndex: patch.minTierIndex } : {}),
+          ...(patch && 'shop' in patch ? { shop: patch.shop } : {}),
+          ...(patch && 'visiblePercent' in patch ? { visiblePercent: patch.visiblePercent } : {}),
+        }
       : p));
     setEditPostId(null);
     showToast(t('已保存'));
@@ -865,6 +882,7 @@ export default function App({ account, onLanguageChange }: {
     const beneficiary = data.beneficiaryAddress ? findRegisteredUserByAddress(data.beneficiaryAddress) : undefined;
     const newChannel: Channel = {
       id: channelId,
+      nodeCode: Math.random().toString(36).slice(2, 8).toUpperCase(),
       ownerName: beneficiary?.name ?? CURRENT_USER,
       name: data.name,
       description: data.description,
@@ -1256,7 +1274,7 @@ export default function App({ account, onLanguageChange }: {
     outgoingTips, recordOutgoingTip,
     requestPostInteraction, beginPaidInteraction,
     deletePost, requestDeletePost,
-    openEditPost, updatePost, incrementReplies, decrementReplies, appendPostReply, extraRepliesByPostId,
+    openEditPost, updatePost, delistShopPost, relistShopPost, incrementReplies, decrementReplies, appendPostReply, extraRepliesByPostId,
     stagePendingPost, publishPost,
     openArticleReader, openVideoPlayer,
     activityGroups, unreadActivityCount, markAllRead,
