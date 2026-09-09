@@ -12879,7 +12879,7 @@ html[lang="zh-TW"] .planet-hero-title {
   display: flex;
   align-items: center;
   gap: 4px;
-  height: 36px;
+  height: var(--ku-search-input-height);
   padding: 0 4px 0 12px;
   border: 1px solid var(--ku-color-border-card);
   border-radius: var(--ku-radius-nav-shell);
@@ -12906,7 +12906,7 @@ html[lang="zh-TW"] .planet-hero-title {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--ku-color-text-meta);
-  font: var(--ku-text-meta);
+  font: var(--ku-text-post-body);
 }
 .shop-mall-scan-btn {
   display: flex;
