@@ -6947,6 +6947,40 @@ button {
   font-weight: 600;
 }
 
+/* 会话归属的商品，让买卖双方一眼认出是哪一单 */
+.dm-item-context {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 3px;
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-meta);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dm-item-support-tag {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-shop-bg);
+  color: var(--ku-color-shop-strong);
+  font: 600 12px/1.5 var(--ku-font-family);
+}
+
+.dm-support-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: var(--ku-avatar-size);
+  height: var(--ku-avatar-size);
+  border-radius: var(--ku-radius-circle);
+  background: var(--ku-color-shop-bg);
+  color: var(--ku-color-shop-strong);
+}
+
 /* ─── 聊天页 ─── */
 .dm-chat-page {
   display: flex;
@@ -6989,6 +7023,44 @@ button {
 .dm-chat-peer-name {
   font: 600 15px/1.2 var(--ku-font-family);
   color: var(--ku-color-text-primary);
+}
+
+/* 会话固定归属一笔订单，顶部常驻上下文避免"在聊哪一单"要靠回忆 */
+.dm-order-context {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px var(--ku-feed-padding-x);
+  border: none;
+  border-bottom: 1px solid var(--ku-color-border-card);
+  background: var(--ku-color-shop-bg);
+  cursor: pointer;
+  text-align: left;
+}
+
+.dm-order-context-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-primary);
+}
+
+.dm-order-context-link {
+  flex-shrink: 0;
+  font: var(--ku-text-action-cta);
+  color: var(--ku-color-shop-strong);
+}
+
+.dm-support-note {
+  margin: 0;
+  padding: 8px var(--ku-feed-padding-x);
+  border-bottom: 1px solid var(--ku-color-border-card);
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-secondary);
 }
 
 .dm-chat-scroll {
@@ -12954,6 +13026,26 @@ html[lang="zh-TW"] .planet-hero-title {
   color: #fff;
   font: 700 12px/18px var(--ku-font-family);
   text-align: center;
+}
+/* 商城消息入口：与「订单」同组，图标形态让出宽度给搜索框 */
+.shop-messages-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--ku-color-shop-border);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-shop-bg);
+  color: var(--ku-color-shop-strong);
+  cursor: pointer;
+}
+.shop-messages-link-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
 }
 .shop-grid {
   display: grid;

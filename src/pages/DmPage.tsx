@@ -1,9 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Headset, Send } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, CURRENT_USER, DM_CONVERSATIONS } from '../mockData';
 import type { DmConversation, DmMessage } from '../types';
 import { Avatar, AuthorName, PageHeader } from '../components/shared';
+
+/** 客服工单的会话对象标识，与买卖双方的用户名区分开 */
+export const SUPPORT_PEER = '客服';
+
+/** 客服工单用平台图标，与买卖双方的头像区分开 */
+function ConversationAvatar({ conv }: { conv: DmConversation }) {
+  if (conv.kind === 'support') {
+    return (
+      <span className="dm-support-avatar" aria-hidden="true">
+        <Headset size={20} strokeWidth={2} />
+      </span>
+    );
+  }
+  return <Avatar index={conv.peerAvatarIdx} seed={conv.peer} />;
+}
 
 // ─── 会话列表 ────────────────────────────────────────────────────
 export function DmListPage() {
@@ -14,13 +29,13 @@ export function DmListPage() {
   return (
     <div className="page">
       <PageHeader
-        title={totalUnread > 0 ? t('私信 ({count})', { count: totalUnread }) : t('私信')}
+        title={totalUnread > 0 ? t('消息 ({count})', { count: totalUnread }) : t('消息')}
         onBack={canGoBack ? goBack : undefined}
       />
       <div className="scroll-area">
         {conversations.length === 0 ? (
           <div className="empty-state" style={{ paddingTop: 60 }}>
-            <p>{t('暂无私信')}</p>
+            <p>{t('暂无消息')}</p>
           </div>
         ) : (
           <div className="dm-list">
@@ -33,20 +48,32 @@ export function DmListPage() {
                   setConversations(prev =>
                     prev.map(c => c.id === conv.id ? { ...c, unread: 0 } : c)
                   );
-                  navigate({ page: 'P_DM_CHAT', peerId: conv.peer });
+                  navigate({ page: 'P_DM_CHAT', peerId: conv.peer, orderId: conv.orderId });
                 }}
               >
                 <div className="dm-item-avatar-wrap">
-                  <Avatar index={conv.peerAvatarIdx} seed={conv.peer} />
+                  <ConversationAvatar conv={conv} />
                   {conv.unread > 0 && (
                     <span className="dm-unread-dot">{conv.unread > 9 ? '9+' : conv.unread}</span>
                   )}
                 </div>
                 <div className="dm-item-body">
                   <div className="dm-item-top">
-                    <AuthorName name={conv.peer} className="dm-item-name" />
+                    {conv.kind === 'support' ? (
+                      <span className="dm-item-name">{t('客服')}</span>
+                    ) : (
+                      <AuthorName name={conv.peer} className="dm-item-name" />
+                    )}
                     <span className="dm-item-time">{conv.lastTime}</span>
                   </div>
+                  {conv.productTitle && (
+                    <p className="dm-item-context">
+                      {conv.kind === 'support' && (
+                        <span className="dm-item-support-tag">{t('客服介入')}</span>
+                      )}
+                      {conv.productTitle}
+                    </p>
+                  )}
                   <p className={`dm-item-preview${conv.unread > 0 ? ' dm-item-preview--unread' : ''}`}>
                     {conv.lastMessage}
                   </p>
@@ -66,19 +93,26 @@ function datePrefix(time: string): string {
 }
 
 // ─── 单个会话 ────────────────────────────────────────────────────
-export function DmChatPage({ peerId }: { peerId: string }) {
-  const { goBack, navigate, t, requireWallet } = useApp();
-  const found = DM_CONVERSATIONS.find(c => c.peer === peerId);
+export function DmChatPage({ peerId, orderId }: { peerId: string; orderId?: string }) {
+  const { goBack, navigate, t, requireWallet, shopOrders } = useApp();
+  const found = orderId
+    ? DM_CONVERSATIONS.find(c => c.peer === peerId && c.orderId === orderId)
+    : DM_CONVERSATIONS.find(c => c.peer === peerId);
   const firstPost = ALL_POSTS.find(p => p.author === peerId);
+  const linkedOrder = orderId ? shopOrders.find(o => o.id === orderId) : undefined;
   const conv: DmConversation = found ?? {
-    id: `dm-new-${peerId}`,
+    id: `dm-new-${peerId}${orderId ? `-${orderId}` : ''}`,
     peer: peerId,
     peerAvatarIdx: firstPost ? ALL_POSTS.indexOf(firstPost) % 3 : 0,
     lastMessage: '',
     lastTime: '',
     unread: 0,
     messages: [],
+    kind: peerId === SUPPORT_PEER ? 'support' : 'trade',
+    orderId,
+    productTitle: linkedOrder?.productTitle,
   };
+  const isSupport = conv.kind === 'support';
   const [messages, setMessages] = useState<DmMessage[]>(conv.messages);
   const [text, setText] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -103,7 +137,7 @@ export function DmChatPage({ peerId }: { peerId: string }) {
       setMessages(prev => [...prev, {
         id: `msg-${Date.now()}-r`,
         from: 'peer',
-        text: t('收到，稍后回复你 😊'),
+        text: isSupport ? t('已记录，处理专员会在 48 小时内答复你。') : t('收到，稍后回复你 😊'),
         time: '刚刚',
       }]);
     }, 1200);
@@ -115,11 +149,34 @@ export function DmChatPage({ peerId }: { peerId: string }) {
         <button type="button" className="dm-chat-back" onClick={goBack} aria-label={t('返回')}>
           <ArrowLeft size={20} strokeWidth={2} />
         </button>
-        <button type="button" className="dm-peer-profile-btn" onClick={() => navigate({ page: 'P6', authorName: conv.peer })} aria-label={t('查看主页')}>
-          <Avatar index={conv.peerAvatarIdx} seed={conv.peer} />
-        </button>
-        <AuthorName name={conv.peer} className="dm-chat-peer-name" />
+        {isSupport ? (
+          <>
+            <ConversationAvatar conv={conv} />
+            <span className="dm-chat-peer-name">{t('客服')}</span>
+          </>
+        ) : (
+          <>
+            <button type="button" className="dm-peer-profile-btn" onClick={() => navigate({ page: 'P6', authorName: conv.peer })} aria-label={t('查看主页')}>
+              <Avatar index={conv.peerAvatarIdx} seed={conv.peer} />
+            </button>
+            <AuthorName name={conv.peer} className="dm-chat-peer-name" />
+          </>
+        )}
       </div>
+
+      {conv.productTitle && (
+        <button
+          type="button"
+          className="dm-order-context"
+          onClick={() => navigate({ page: 'P_ORDERS' })}
+        >
+          <span className="dm-order-context-title">{conv.productTitle}</span>
+          <span className="dm-order-context-link">{t('查看订单')}</span>
+        </button>
+      )}
+      {isSupport && (
+        <p className="dm-support-note">{t('客服将分别与买卖双方沟通，并可查看本单的沟通记录与凭证作为处理依据。')}</p>
+      )}
 
       <div className="dm-chat-scroll">
         {messages.map((msg, i) => {
@@ -131,9 +188,13 @@ export function DmChatPage({ peerId }: { peerId: string }) {
               )}
               <div className={`dm-bubble-row${msg.from === 'me' ? ' dm-bubble-row--me' : ''}`}>
                 {msg.from === 'peer' ? (
-                  <button type="button" className="dm-peer-profile-btn" onClick={() => navigate({ page: 'P6', authorName: conv.peer })} aria-label={t('查看主页')}>
-                    <Avatar index={conv.peerAvatarIdx} seed={conv.peer} />
-                  </button>
+                  isSupport ? (
+                    <ConversationAvatar conv={conv} />
+                  ) : (
+                    <button type="button" className="dm-peer-profile-btn" onClick={() => navigate({ page: 'P6', authorName: conv.peer })} aria-label={t('查看主页')}>
+                      <Avatar index={conv.peerAvatarIdx} seed={conv.peer} />
+                    </button>
+                  )
                 ) : (
                   <button type="button" className="dm-peer-profile-btn" onClick={() => navigate({ page: 'P6', authorName: CURRENT_USER })} aria-label={t('查看主页')}>
                     <Avatar index={0} seed={CURRENT_USER} />

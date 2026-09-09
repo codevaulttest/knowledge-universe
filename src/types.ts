@@ -146,7 +146,7 @@ export type Route =
   | { page: 'P7' }
   | { page: 'P_PLANET'; searchNodeCode?: string; openBsp?: boolean }
   | { page: 'P_DM' }
-  | { page: 'P_DM_CHAT'; peerId: string }
+  | { page: 'P_DM_CHAT'; peerId: string; orderId?: string }
   | { page: 'P_SHOP' }
   | { page: 'P_SHOP_ITEM'; postId: string }
   | { page: 'P_ORDERS'; role?: 'buyer' | 'seller' }
@@ -235,6 +235,9 @@ export type DmMessage = {
   time: string;
 };
 
+/** trade＝买卖双方沟通；support＝客服介入纠纷的独立工单，客服只与单方对话 */
+export type DmConversationKind = 'trade' | 'support';
+
 export type DmConversation = {
   id: string;
   peer: string;
@@ -243,6 +246,9 @@ export type DmConversation = {
   lastTime: string;
   unread: number;
   messages: DmMessage[];
+  kind: DmConversationKind;
+  orderId?: string;
+  productTitle?: string;
 };
 
 export type ActivityType = 'like' | 'share' | 'save' | 'comment' | 'link' | 'tip' | 'subscribe';

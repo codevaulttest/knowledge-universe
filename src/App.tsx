@@ -1320,7 +1320,7 @@ export default function App({ account, onLanguageChange }: {
         {pageRoute.page === 'P7' && <ActivityPage />}
         {pageRoute.page === 'P_PLANET' && <KnowledgePlanetPage initialSearch={pageRoute.searchNodeCode} openBsp={pageRoute.openBsp} />}
         {pageRoute.page === 'P_DM' && <DmListPage />}
-        {pageRoute.page === 'P_DM_CHAT' && <DmChatPage peerId={pageRoute.peerId} />}
+        {pageRoute.page === 'P_DM_CHAT' && <DmChatPage peerId={pageRoute.peerId} orderId={pageRoute.orderId} />}
         {pageRoute.page === 'P_SHOP' && <ShopPage />}
         {pageRoute.page === 'P_ORDERS' && <OrdersPage initialRole={pageRoute.role} />}
         {pageRoute.page === 'P_CERTS' && <CertsPage />}

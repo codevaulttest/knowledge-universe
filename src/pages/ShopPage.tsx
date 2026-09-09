@@ -1,6 +1,6 @@
-import { ClipboardList, Package, ScanLine, Search } from 'lucide-react';
+import { ClipboardList, MessageCircle, Package, ScanLine, Search } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { CURRENT_USER } from '../mockData';
+import { CURRENT_USER, DM_CONVERSATIONS } from '../mockData';
 import { MediaPlaceholder, PageHeader } from '../components/shared';
 import { formatTokenAmount } from '../stakeConfig';
 import { getShopMinPrice } from '../shopUtils';
@@ -80,6 +80,7 @@ export function ShopFeed() {
     (o.buyerName === CURRENT_USER && o.status === 'shipped')
     || (o.sellerName === CURRENT_USER && o.status === 'to_ship')
   ).length;
+  const unreadDmCount = DM_CONVERSATIONS.reduce((s, c) => s + c.unread, 0);
 
   return (
     <>
@@ -112,6 +113,19 @@ export function ShopFeed() {
           {pendingOrderCount > 0 && (
             <span className="shop-orders-link-badge" aria-label={t('{count} 笔待处理', { count: pendingOrderCount })}>
               {pendingOrderCount}
+            </span>
+          )}
+        </button>
+        <button
+          type="button"
+          className="shop-messages-link"
+          onClick={() => navigate({ page: 'P_DM' })}
+          aria-label={t('消息')}
+        >
+          <MessageCircle size={18} strokeWidth={2} />
+          {unreadDmCount > 0 && (
+            <span className="shop-orders-link-badge shop-messages-link-badge">
+              {unreadDmCount > 9 ? '9+' : unreadDmCount}
             </span>
           )}
         </button>
