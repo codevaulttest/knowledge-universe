@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bookmark, Check, ChevronLeft, ChevronRight, Circle, CircleCheck, Clock, Ellipsis, MapPin, MessageCircle, MessageCircleMore, Minus, Package, PackageX, Pencil, Phone, Plus, RotateCcw, Send, Share2, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
+import { Bookmark, Check, ChevronLeft, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, PackageX, Pencil, Phone, Plus, RotateCcw, Send, Share2, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
 import type { PbWalletId, ProfileContacts, ShippingAddress, ShopOrder } from '../types';
@@ -52,7 +52,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const [pendingDeleteAddrId, setPendingDeleteAddrId] = useState<string | null>(null);
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
-  const [shopMenuOpen, setShopMenuOpen] = useState(false);
+  const [confirmDelist, setConfirmDelist] = useState(false);
 
   // 商品被卖家下架后，非卖家本人不可见；卖家本人仍可进详情页管理并重新上架
   if (!post || !post.shop || (post.shop.delisted && !isOwn)) {
@@ -183,63 +183,56 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
         {/* 弹窗头：标题 + 关闭 */}
         <div className="sheet-header">
           <span className="sheet-title">{t('商品详情')}</span>
-          <div className="shop-item-header-actions">
-            {isOwn && (
-              <div className="more-menu-wrap shop-item-header-menu">
-                <button
-                  type="button"
-                  className="back-btn"
-                  onClick={() => setShopMenuOpen(v => !v)}
-                  aria-label={t('商品管理')}
-                  aria-haspopup="menu"
-                  aria-expanded={shopMenuOpen}
-                >
-                  <Ellipsis size={20} strokeWidth={2} aria-hidden="true" />
-                </button>
-                {shopMenuOpen && (
-                  <div className="more-dropdown" role="menu">
-                    <button type="button" role="menuitem" onClick={() => { setShopMenuOpen(false); openEditPost(post.id); }}>
-                      <Pencil size={14} strokeWidth={2.2} /> {t('编辑')}
-                    </button>
-                    {post.shop.delisted ? (
-                      <button type="button" role="menuitem" onClick={() => { setShopMenuOpen(false); relistShopPost(post.id); }}>
-                        <RotateCcw size={14} strokeWidth={2.2} /> {t('重新上架')}
-                      </button>
-                    ) : (
-                      <button type="button" role="menuitem" onClick={() => { setShopMenuOpen(false); delistShopPost(post.id); }}>
-                        <PackageX size={14} strokeWidth={2.2} /> {t('下架')}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-            <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
-          </div>
+          <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
         </div>
 
+        {isOwn && (
+          <div className="shop-item-management-actions" role="group" aria-label={t('商品管理')}>
+            <button type="button" className="shop-item-management-btn" onClick={() => openEditPost(post.id)}>
+              <Pencil size={16} strokeWidth={2} aria-hidden="true" />
+              {t('编辑')}
+            </button>
+            {post.shop.delisted ? (
+              <button type="button" className="shop-item-management-btn shop-item-management-btn--relist" onClick={() => relistShopPost(post.id)}>
+                <RotateCcw size={16} strokeWidth={2} aria-hidden="true" />
+                {t('重新上架')}
+              </button>
+            ) : (
+              <button type="button" className="shop-item-management-btn shop-item-management-btn--delist" onClick={() => setConfirmDelist(true)}>
+                <PackageX size={16} strokeWidth={2} aria-hidden="true" />
+                {t('下架')}
+              </button>
+            )}
+          </div>
+        )}
+
         {/* 商品图片：只显示首图，无图 / 全锁时回退为占位图 */}
-        <div className="shop-item-cover" aria-hidden={shopCoverUsesPlaceholder(post) ? true : undefined}>
-          {shopCoverUsesPlaceholder(post) ? (
-            <Package size={54} strokeWidth={1.5} />
-          ) : (
-            <MediaPlaceholder
-              kind={post.kind}
-              articleHasCover={post.articleHasCover}
-              imageCount={post.imageCount}
-              imageAspect={post.imageAspect}
-              visibleImgCount={shopCoverVisibleImgCount(post)}
-              onImageClick={post.kind === 'image' ? (idx) => openImageLightbox(post, idx, shopCoverVisibleImgCount(post)) : undefined}
-            />
+        <div className="shop-item-cover-wrap">
+          <div className="shop-item-cover" aria-hidden={shopCoverUsesPlaceholder(post) ? true : undefined}>
+            {shopCoverUsesPlaceholder(post) ? (
+              <Package size={54} strokeWidth={1.5} />
+            ) : (
+              <MediaPlaceholder
+                kind={post.kind}
+                articleHasCover={post.articleHasCover}
+                imageCount={post.imageCount}
+                imageAspect={post.imageAspect}
+                visibleImgCount={shopCoverVisibleImgCount(post)}
+                onImageClick={post.kind === 'image' ? (idx) => openImageLightbox(post, idx, shopCoverVisibleImgCount(post)) : undefined}
+              />
+            )}
+          </div>
+          {isOwn && post.shop.delisted && (
+            <span className="shop-delisted-badge shop-delisted-badge--cover">
+              <PackageX size={14} strokeWidth={2.2} aria-hidden="true" />
+              {t('已下架')}
+            </span>
           )}
         </div>
 
         {/* 正文 */}
         <div className="shop-item-body">
           <div className="shop-item-intro">
-            {isOwn && post.shop.delisted && (
-              <span className="shop-delisted-badge">{t('已下架')}</span>
-            )}
             <h2 className="shop-item-title">{post.title}</h2>
             <div className="shop-item-seller-block">
               <button
@@ -277,7 +270,7 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                   <button
                     type="button"
                     className="shop-item-icon-btn shop-item-dm"
-                    onClick={() => requireWallet(() => navigate({ page: 'P_DM_CHAT', peerId: post.author }))}
+                    onClick={() => requireWallet(() => navigate({ page: 'P_DM_CHAT', peerId: post.author, productId: post.id }))}
                     aria-label={t('发消息')}
                   >
                     <Send size={16} strokeWidth={2} aria-hidden="true" />
@@ -587,6 +580,20 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
           onConfirm={() => {
             deleteAddress(pendingDeleteAddrId);
             setPendingDeleteAddrId(null);
+          }}
+        />
+      )}
+
+      {confirmDelist && (
+        <Ios26Alert
+          title={t('下架商品')}
+          message={t('下架后，商品会从小黄车中隐藏。')}
+          cancelLabel={t('取消')}
+          confirmLabel={t('下架')}
+          onCancel={() => setConfirmDelist(false)}
+          onConfirm={() => {
+            delistShopPost(post.id);
+            setConfirmDelist(false);
           }}
         />
       )}

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Headset, Send } from 'lucide-react';
+import { ArrowLeft, Headset, Package, Send } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, CURRENT_USER, DM_CONVERSATIONS } from '../mockData';
 import type { DmConversation, DmMessage } from '../types';
 import { Avatar, AuthorName, PageHeader } from '../components/shared';
+import { formatTokenAmount } from '../stakeConfig';
+import { getShopMinPrice } from '../shopUtils';
 
 /** 客服工单的会话对象标识，与买卖双方的用户名区分开 */
 export const SUPPORT_PEER = '客服';
@@ -48,7 +50,7 @@ export function DmListPage() {
                   setConversations(prev =>
                     prev.map(c => c.id === conv.id ? { ...c, unread: 0 } : c)
                   );
-                  navigate({ page: 'P_DM_CHAT', peerId: conv.peer, orderId: conv.orderId });
+                  navigate({ page: 'P_DM_CHAT', peerId: conv.peer, orderId: conv.orderId, productId: conv.productId });
                 }}
               >
                 <div className="dm-item-avatar-wrap">
@@ -93,13 +95,14 @@ function datePrefix(time: string): string {
 }
 
 // ─── 单个会话 ────────────────────────────────────────────────────
-export function DmChatPage({ peerId, orderId }: { peerId: string; orderId?: string }) {
+export function DmChatPage({ peerId, orderId, productId }: { peerId: string; orderId?: string; productId?: string }) {
   const { goBack, navigate, t, requireWallet, shopOrders } = useApp();
   const found = orderId
     ? DM_CONVERSATIONS.find(c => c.peer === peerId && c.orderId === orderId)
     : DM_CONVERSATIONS.find(c => c.peer === peerId);
   const firstPost = ALL_POSTS.find(p => p.author === peerId);
   const linkedOrder = orderId ? shopOrders.find(o => o.id === orderId) : undefined;
+  const linkedProduct = productId ? ALL_POSTS.find(p => p.id === productId) : undefined;
   const conv: DmConversation = found ?? {
     id: `dm-new-${peerId}${orderId ? `-${orderId}` : ''}`,
     peer: peerId,
@@ -113,9 +116,32 @@ export function DmChatPage({ peerId, orderId }: { peerId: string; orderId?: stri
     productTitle: linkedOrder?.productTitle,
   };
   const isSupport = conv.kind === 'support';
-  const [messages, setMessages] = useState<DmMessage[]>(conv.messages);
+  const [messages, setMessages] = useState<DmMessage[]>(() => [
+    ...conv.messages,
+    ...(linkedProduct ? [{
+      id: `product-${linkedProduct.id}-${Date.now()}`,
+      from: 'me' as const,
+      text: '',
+      time: '刚刚',
+      productId: linkedProduct.id,
+    }] : []),
+  ]);
   const [text, setText] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const lastSharedProductId = useRef(productId);
+
+  // 同一买卖双方的会话可连续从多件商品进入；每次入口都留下对应商品卡，而非替换旧上下文。
+  useEffect(() => {
+    if (!linkedProduct || productId === lastSharedProductId.current) return;
+    setMessages(prev => [...prev, {
+      id: `product-${linkedProduct.id}-${Date.now()}`,
+      from: 'me',
+      text: '',
+      time: '刚刚',
+      productId: linkedProduct.id,
+    }]);
+    lastSharedProductId.current = productId;
+  }, [linkedProduct, productId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -164,7 +190,7 @@ export function DmChatPage({ peerId, orderId }: { peerId: string; orderId?: stri
         )}
       </div>
 
-      {conv.productTitle && (
+      {orderId && conv.productTitle && (
         <button
           type="button"
           className="dm-order-context"
@@ -181,6 +207,7 @@ export function DmChatPage({ peerId, orderId }: { peerId: string; orderId?: stri
       <div className="dm-chat-scroll">
         {messages.map((msg, i) => {
           const showDivider = i === 0 || datePrefix(msg.time) !== datePrefix(messages[i - 1].time);
+          const sharedProduct = msg.productId ? ALL_POSTS.find(post => post.id === msg.productId) : undefined;
           return (
             <div key={msg.id}>
               {showDivider && (
@@ -200,9 +227,24 @@ export function DmChatPage({ peerId, orderId }: { peerId: string; orderId?: stri
                     <Avatar index={0} seed={CURRENT_USER} />
                   </button>
                 )}
-                <div className={`dm-bubble${msg.from === 'me' ? ' dm-bubble--me' : ''}`}>
-                  <p className="dm-bubble-text">{msg.text}</p>
-                </div>
+                {sharedProduct?.shop ? (
+                  <button
+                    type="button"
+                    className={`dm-product-message${msg.from === 'me' ? ' dm-product-message--me' : ''}`}
+                    onClick={() => navigate({ page: 'P_SHOP_ITEM', postId: sharedProduct.id })}
+                  >
+                    <span className="dm-product-message-cover" aria-hidden="true"><Package size={20} strokeWidth={1.8} /></span>
+                    <span className="dm-product-message-body">
+                      <span className="dm-product-message-label">{t('商品')}</span>
+                      <span className="dm-product-message-title">{sharedProduct.title.split('\n')[0]}</span>
+                      <span className="dm-product-message-price">{formatTokenAmount(getShopMinPrice(sharedProduct.shop))} PB</span>
+                    </span>
+                  </button>
+                ) : (
+                  <div className={`dm-bubble${msg.from === 'me' ? ' dm-bubble--me' : ''}`}>
+                    <p className="dm-bubble-text">{msg.text}</p>
+                  </div>
+                )}
               </div>
             </div>
           );

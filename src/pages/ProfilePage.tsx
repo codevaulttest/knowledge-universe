@@ -18,6 +18,50 @@ import { isValidWalletAddress } from '../formatAddress';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
+function getBackgroundContentInset(image: HTMLImageElement) {
+  const sampleWidth = 72;
+  const sampleHeight = 48;
+  const canvas = document.createElement('canvas');
+  canvas.width = sampleWidth;
+  canvas.height = sampleHeight;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) return { left: 0, right: 0 };
+
+  try {
+    context.drawImage(image, 0, 0, sampleWidth, sampleHeight);
+    const pixels = context.getImageData(0, 0, sampleWidth, sampleHeight).data;
+    const saturationByColumn = Array.from({ length: sampleWidth }, (_, x) => {
+      let total = 0;
+      for (let y = 0; y < sampleHeight; y += 1) {
+        const offset = (y * sampleWidth + x) * 4;
+        const red = pixels[offset];
+        const green = pixels[offset + 1];
+        const blue = pixels[offset + 2];
+        const maximum = Math.max(red, green, blue);
+        const minimum = Math.min(red, green, blue);
+        total += maximum === 0 ? 0 : (maximum - minimum) / maximum;
+      }
+      return total / sampleHeight;
+    });
+    const colorThreshold = 0.12;
+    const firstContentColumn = saturationByColumn.findIndex(value => value >= colorThreshold);
+    let lastContentColumn = -1;
+    for (let column = saturationByColumn.length - 1; column >= 0; column -= 1) {
+      if (saturationByColumn[column] >= colorThreshold) {
+        lastContentColumn = column;
+        break;
+      }
+    }
+    const hasNeutralSideBands = firstContentColumn >= 8 && lastContentColumn >= firstContentColumn && sampleWidth - lastContentColumn - 1 >= 8;
+
+    return hasNeutralSideBands
+      ? { left: (firstContentColumn / sampleWidth) * 100, right: ((sampleWidth - lastContentColumn - 1) / sampleWidth) * 100 }
+      : { left: 0, right: 0 };
+  } catch {
+    return { left: 0, right: 0 };
+  }
+}
+
 export function ProfilePage({ authorName }: { authorName: string }) {
   const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, knowledgeCerts, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, meritBalance, channelAuthorizations, delegatedChannels, pendingIncomingChannelAuthorizations, respondToChannelAuthorization, revokeChannelAuthorization } = useApp();
   const isOwn = authorName === CURRENT_USER;
@@ -57,6 +101,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const [confirmDeleteDraftId, setConfirmDeleteDraftId] = useState<string | null>(null);
   const [tipTarget, setTipTarget] = useState<{ context: 'post' | 'author'; postTitle?: string } | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [backgroundContentInset, setBackgroundContentInset] = useState({ left: 0, right: 0 });
   const [migrationReminderId, setMigrationReminderId] = useState<string | null>(null);
   useEffect(() => {
     if (isOwn && editProfileAutoOpen) {
@@ -196,7 +241,16 @@ export function ProfilePage({ authorName }: { authorName: string }) {
       {!isOwn && <PageHeader onBack={canGoBack ? goBack : undefined} className="page-header--transparent" />}
       <div className="scroll-area">
         <div className={`profile-hero${!isOwn ? ' profile-hero--with-header' : ''}`}>
-        <img className="profile-header-bg" src={isOwn ? userProfile.headerBackgroundUrl ?? '/img/genesis-bigbang.webp' : '/img/genesis-bigbang.webp'} alt="" aria-hidden="true" />
+        <img
+          className="profile-header-bg"
+          src={isOwn ? userProfile.headerBackgroundUrl ?? '/img/genesis-bigbang.webp' : '/img/genesis-bigbang.webp'}
+          onLoad={event => setBackgroundContentInset(getBackgroundContentInset(event.currentTarget))}
+          style={backgroundContentInset.left || backgroundContentInset.right
+            ? { clipPath: `inset(0 ${backgroundContentInset.right}% 0 ${backgroundContentInset.left}%)` }
+            : undefined}
+          alt=""
+          aria-hidden="true"
+        />
         <div className="profile-header profile-header--hero">
           {/* 自己的主页视为底栏 Tab 根页面，不展示返回（即便从头像 navigate 进来也不出现） */}
           {isOwn ? (
@@ -671,6 +725,7 @@ function EditProfileModal({
   const [bio, setBio] = useState(userProfile.bio ?? '');
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(userProfile.avatarUrl);
   const [headerBackgroundUrl, setHeaderBackgroundUrl] = useState<string | undefined>(userProfile.headerBackgroundUrl);
+  const [containBackgroundPreview, setContainBackgroundPreview] = useState(false);
   const [contacts, setContacts] = useState<ProfileContacts>(userProfile.contacts ?? {});
   const [moreContactsOpen, setMoreContactsOpen] = useState(
     !!userProfile.contacts?.whatsapp?.trim()
@@ -683,6 +738,20 @@ function EditProfileModal({
   const sourceAddress = walletAddress ?? MOCK_WALLET_ADDRESS;
   const maskedWallet = shortenWalletAddress(sourceAddress);
   const activeMigration = addressMigrations.find(migration => migration.status === 'pending' && migration.expiresAt > Date.now());
+  const backgroundPreviewUrl = headerBackgroundUrl ?? '/img/genesis-bigbang.webp';
+
+  useEffect(() => {
+    let cancelled = false;
+    const image = new Image();
+    image.onload = () => {
+      if (cancelled) return;
+      const ratio = image.naturalWidth / image.naturalHeight;
+      setContainBackgroundPreview(ratio < 0.8 || ratio > 2.5);
+    };
+    image.onerror = () => { if (!cancelled) setContainBackgroundPreview(false); };
+    image.src = backgroundPreviewUrl;
+    return () => { cancelled = true; };
+  }, [backgroundPreviewUrl]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -712,8 +781,8 @@ function EditProfileModal({
         <div className="edit-profile-body">
           {/* 头像上传 */}
           <div
-            className="edit-profile-avatar-upload edit-profile-avatar-upload--background"
-            style={{ backgroundImage: `url(${headerBackgroundUrl ?? '/img/genesis-bigbang.webp'})` }}
+            className={`edit-profile-avatar-upload edit-profile-avatar-upload--background${containBackgroundPreview ? ' edit-profile-avatar-upload--contain' : ''}`}
+            style={{ backgroundImage: `url(${backgroundPreviewUrl})` }}
           >
             <div
               className="edit-profile-avatar-preview"

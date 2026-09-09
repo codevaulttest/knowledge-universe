@@ -1,4 +1,4 @@
-import { ClipboardList, MessageCircle, Package, ScanLine, Search } from 'lucide-react';
+import { ClipboardList, MessageCircle, Package, PackageX, ScanLine, Search } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, DM_CONVERSATIONS } from '../mockData';
 import { MediaPlaceholder, PageHeader } from '../components/shared';
@@ -43,6 +43,12 @@ export function ShopProductGrid({ products }: { products: Post[] }) {
           className="shop-card"
           onClick={() => navigate({ page: 'P_SHOP_ITEM', postId: p.id })}
         >
+          {p.shop?.delisted && (
+            <span className="shop-delisted-badge shop-delisted-badge--cover">
+              <PackageX size={14} strokeWidth={2.2} aria-hidden="true" />
+              {t('已下架')}
+            </span>
+          )}
           <div className="shop-card-cover" aria-hidden="true">
             {shopCoverUsesPlaceholder(p) ? (
               <Package size={30} strokeWidth={1.5} />
@@ -57,9 +63,6 @@ export function ShopProductGrid({ products }: { products: Post[] }) {
             )}
           </div>
           <div className="shop-card-body">
-            {p.shop?.delisted && (
-              <span className="shop-delisted-badge">{t('已下架')}</span>
-            )}
             <p className="shop-card-title">{p.title.split('\n')[0]}</p>
             <div className="shop-card-foot">
               <span className="shop-card-price">
