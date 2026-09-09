@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Award, BadgeCheck, Bell, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
+import { AlertTriangle, Award, BadgeCheck, Bookmark, Camera, Check, ChevronRight, ClipboardList, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -18,7 +18,7 @@ import { isValidWalletAddress } from '../formatAddress';
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, unreadActivityCount, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, knowledgeCerts, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, meritBalance, channelAuthorizations, delegatedChannels, pendingIncomingChannelAuthorizations, respondToChannelAuthorization, revokeChannelAuthorization } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, shopOrders, knowledgeCerts, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, meritBalance, channelAuthorizations, delegatedChannels, pendingIncomingChannelAuthorizations, respondToChannelAuthorization, revokeChannelAuthorization } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
@@ -251,17 +251,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           </div>
           {isOwn ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
-              <button
-                type="button"
-                className="feed-bell-btn"
-                onClick={() => requireWallet(() => navigate({ page: 'P7' }))}
-                aria-label={t('互动通知')}
-              >
-                <Bell size={20} strokeWidth={1.8} />
-                {unreadActivityCount > 0 && (
-                  <span className="feed-bell-dot">{unreadActivityCount > 99 ? '99+' : unreadActivityCount}</span>
-                )}
-              </button>
               <button
                 type="button"
                 className="profile-settings-btn"
