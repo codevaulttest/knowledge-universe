@@ -4,6 +4,7 @@ import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { PostCard } from '../components/PostCard';
 import { Avatar, AuthorName, ChannelCard } from '../components/shared';
+import { ShopProductGrid } from './ShopPage';
 
 export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () => void; initialShopOnly?: boolean }) {
   const {
@@ -216,16 +217,20 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
                 <>
                   {visiblePosts.length > 0 && (
                     <section className="search-results-group">
-                      {tab !== 'posts' && <div className="search-section-label">{t('帖子')}</div>}
-                      <div className="feed">
-                        {visiblePosts.map((post, index) => (
-                          <PostCard
-                            key={post.id}
-                            post={post}
-                            index={index % 3}
-                          />
-                        ))}
-                      </div>
+                      {tab !== 'posts' && !shopOnly && <div className="search-section-label">{t('帖子')}</div>}
+                      {shopOnly ? (
+                        <ShopProductGrid products={visiblePosts} />
+                      ) : (
+                        <div className="feed">
+                          {visiblePosts.map((post, index) => (
+                            <PostCard
+                              key={post.id}
+                              post={post}
+                              index={index % 3}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </section>
                   )}
 

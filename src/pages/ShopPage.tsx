@@ -24,6 +24,53 @@ export function shopCoverVisibleImgCount(post: Post): number {
   return Math.max(1, Math.floor(post.visiblePercent / 100 * total));
 }
 
+/** 商品两列网格——供商城首页与「小黄车」搜索结果复用 */
+export function ShopProductGrid({ products }: { products: Post[] }) {
+  const { navigate, t } = useApp();
+  if (products.length === 0) {
+    return (
+      <div className="empty-state" style={{ paddingTop: 60 }}>
+        <p>{t('暂无上架商品')}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="shop-grid">
+      {products.map(p => (
+        <button
+          key={p.id}
+          type="button"
+          className="shop-card"
+          onClick={() => navigate({ page: 'P_SHOP_ITEM', postId: p.id })}
+        >
+          <div className="shop-card-cover" aria-hidden="true">
+            {shopCoverUsesPlaceholder(p) ? (
+              <Package size={30} strokeWidth={1.5} />
+            ) : (
+              <MediaPlaceholder
+                kind={p.kind}
+                articleHasCover={p.articleHasCover}
+                imageCount={p.kind === 'image' ? 1 : p.imageCount}
+                imageAspect={p.imageAspect}
+                visibleImgCount={shopCoverVisibleImgCount(p)}
+              />
+            )}
+          </div>
+          <div className="shop-card-body">
+            <p className="shop-card-title">{p.title.split('\n')[0]}</p>
+            <div className="shop-card-foot">
+              <span className="shop-card-price">
+                {formatTokenAmount(getShopMinPrice(p.shop!))} <span className="shop-card-price-unit">PB</span>
+              </span>
+              <span className="shop-card-seller">{p.author}</span>
+            </div>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** 商城内容（商品网格 + 我的订单入口）——供「商城」tab 与独立商城页复用 */
 export function ShopFeed() {
   const { posts, shopOrders, navigate, openSearch, openScan, t } = useApp();
@@ -69,45 +116,7 @@ export function ShopFeed() {
           )}
         </button>
       </div>
-      {products.length === 0 ? (
-        <div className="empty-state" style={{ paddingTop: 60 }}>
-          <p>{t('暂无上架商品')}</p>
-        </div>
-      ) : (
-        <div className="shop-grid">
-          {products.map(p => (
-            <button
-              key={p.id}
-              type="button"
-              className="shop-card"
-              onClick={() => navigate({ page: 'P_SHOP_ITEM', postId: p.id })}
-            >
-              <div className="shop-card-cover" aria-hidden="true">
-                {shopCoverUsesPlaceholder(p) ? (
-                  <Package size={30} strokeWidth={1.5} />
-                ) : (
-                  <MediaPlaceholder
-                    kind={p.kind}
-                    articleHasCover={p.articleHasCover}
-                    imageCount={p.kind === 'image' ? 1 : p.imageCount}
-                    imageAspect={p.imageAspect}
-                    visibleImgCount={shopCoverVisibleImgCount(p)}
-                  />
-                )}
-              </div>
-              <div className="shop-card-body">
-                <p className="shop-card-title">{p.title.split('\n')[0]}</p>
-                <div className="shop-card-foot">
-                  <span className="shop-card-price">
-                    {formatTokenAmount(getShopMinPrice(p.shop!))} <span className="shop-card-price-unit">PB</span>
-                  </span>
-                  <span className="shop-card-seller">{p.author}</span>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+      <ShopProductGrid products={products} />
     </>
   );
 }

@@ -49,7 +49,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
   // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 打赏，4 = 收藏，5 = 赞过
   const [profileTab, setProfileTab] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
-  const [postCertFilter, setPostCertFilter] = useState<'all' | Exclude<CertStatus, 'pending'>>('all');
+  const [postCertFilter, setPostCertFilter] = useState<'all' | 'scheduled' | Exclude<CertStatus, 'pending'>>('all');
   // 他人主页内容筛选：'all' | 'free' | 'sub'
   const [contentFilter, setContentFilter] = useState<'all' | 'free' | 'sub'>('all');
   const [followListType, setFollowListType] = useState<'following' | 'followers' | null>(null);
@@ -189,12 +189,16 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     .filter(cert => cert.status === status)
     .map(cert => allPosts.find(p => p.id === cert.postId) ?? ALL_POSTS.find(p => p.id === cert.postId))
     .filter((p): p is (typeof allPosts)[number] => !!p);
-  const postFilterTabs: { key: 'all' | Exclude<CertStatus, 'pending'>; label: string; count?: number }[] = [
+  const scheduledPosts = isOwn ? myPosts.filter(p => !isPostVisible(p)) : [];
+  const postFilterTabs: { key: 'all' | 'scheduled' | Exclude<CertStatus, 'pending'>; label: string; count?: number }[] = [
     { key: 'all', label: t('全部') },
     { key: 'minted', label: t('已确权'), count: mintedCertCount },
     { key: 'burned', label: t('已销毁'), count: burnedCertCount },
+    { key: 'scheduled', label: t('定时'), count: scheduledPosts.length },
   ];
-  const filteredPostEntries: { post: (typeof allPosts)[number]; repostedBy?: RepostedBy }[] = isOwn && profileTab === 0 && postCertFilter !== 'all'
+  const filteredPostEntries: { post: (typeof allPosts)[number]; repostedBy?: RepostedBy }[] = isOwn && profileTab === 0 && postCertFilter === 'scheduled'
+    ? scheduledPosts.map(post => ({ post }))
+    : isOwn && profileTab === 0 && postCertFilter !== 'all' && postCertFilter !== 'scheduled'
     ? certPostsByStatus(postCertFilter).map(post => ({ post }))
     : displayedEntries;
   const filteredPosts = filteredPostEntries.map(entry => entry.post);
@@ -523,7 +527,13 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             ))}
             {filteredPosts.length === 0 && (
               <div className="profile-empty-state">
-                {isOwn && profileTab === 0 && postCertFilter !== 'all' ? (
+                {isOwn && profileTab === 0 && postCertFilter === 'scheduled' ? (
+                  <>
+                    <Clock size={32} strokeWidth={1.2} className="profile-empty-icon" />
+                    <p className="profile-empty-title">{t('还没有定时发布的帖子')}</p>
+                    <p className="profile-empty-sub">{t('发布时选择定时，就能在这里看到了')}</p>
+                  </>
+                ) : isOwn && profileTab === 0 && postCertFilter !== 'all' ? (
                   <>
                     <BadgeCheck size={32} strokeWidth={1.2} className="profile-empty-icon" />
                     <p className="profile-empty-title">{t('还没有知识确权认证')}</p>
