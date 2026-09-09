@@ -299,7 +299,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
           <button
             type="button"
             className="feed-bell-btn"
-            onClick={openSearch}
+            onClick={() => openSearch()}
             aria-label={t('搜索')}
           >
             <Search size={22} strokeWidth={2} />

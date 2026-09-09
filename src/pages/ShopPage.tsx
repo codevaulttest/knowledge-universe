@@ -1,4 +1,4 @@
-import { ClipboardList, Package } from 'lucide-react';
+import { ClipboardList, Package, ScanLine, Search } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import { MediaPlaceholder, PageHeader } from '../components/shared';
@@ -26,7 +26,7 @@ export function shopCoverVisibleImgCount(post: Post): number {
 
 /** 商城内容（商品网格 + 我的订单入口）——供「商城」tab 与独立商城页复用 */
 export function ShopFeed() {
-  const { posts, shopOrders, navigate, t } = useApp();
+  const { posts, shopOrders, navigate, openSearch, openScan, t } = useApp();
   const products = posts.filter(p => p.shop);
   // 待处理：作为买家已发货待收货 + 作为卖家待发货
   const pendingOrderCount = shopOrders.filter(o =>
@@ -37,14 +37,31 @@ export function ShopFeed() {
   return (
     <>
       <div className="shop-mall-bar">
-        <p className="shop-mall-hint">{t('这里是全部上架商品，点商品即可下单购买')}</p>
+        <div className="shop-mall-search">
+          <button
+            type="button"
+            className="shop-mall-search-field"
+            onClick={() => openSearch({ shopOnly: true })}
+          >
+            <Search size={16} strokeWidth={2} className="shop-mall-search-icon" />
+            <span className="shop-mall-search-placeholder">{t('搜索商品')}</span>
+          </button>
+          <button
+            type="button"
+            className="shop-mall-scan-btn"
+            onClick={openScan}
+            aria-label={t('扫一扫')}
+          >
+            <ScanLine size={16} strokeWidth={2} />
+          </button>
+        </div>
         <button
           type="button"
           className="shop-orders-link"
           onClick={() => navigate({ page: 'P_ORDERS' })}
         >
           <ClipboardList size={16} strokeWidth={2} />
-          {t('我的订单')}
+          {t('订单')}
           {pendingOrderCount > 0 && (
             <span className="shop-orders-link-badge" aria-label={t('{count} 笔待处理', { count: pendingOrderCount })}>
               {pendingOrderCount}

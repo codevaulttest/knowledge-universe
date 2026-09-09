@@ -3627,6 +3627,10 @@ button {
   padding: 0;
   background: #000;
 }
+.sheet-backdrop:has(.scan-sheet) {
+  padding: 0;
+  background: #000;
+}
 .article-reader {
   width: 100%;
   height: 100vh;
@@ -4156,6 +4160,86 @@ button {
 .video-player-speed-opt--active {
   color: var(--ku-color-primary);
   font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ScanSheet — 扫一扫（模拟扫码）浮层
+   ═══════════════════════════════════════════════════════════════ */
+.scan-sheet {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+.scan-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+.scan-close {
+  top: 12px;
+  left: 12px;
+}
+.scan-viewfinder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scan-frame {
+  position: relative;
+  width: 240px;
+  height: 240px;
+}
+.scan-corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--ku-color-primary);
+}
+.scan-corner--tl { top: 0; left: 0; border-right: none; border-bottom: none; border-top-left-radius: 8px; }
+.scan-corner--tr { top: 0; right: 0; border-left: none; border-bottom: none; border-top-right-radius: 8px; }
+.scan-corner--bl { bottom: 0; left: 0; border-right: none; border-top: none; border-bottom-left-radius: 8px; }
+.scan-corner--br { bottom: 0; right: 0; border-left: none; border-top: none; border-bottom-right-radius: 8px; }
+.scan-frame--success .scan-corner { border-color: var(--ku-color-success-text); }
+.scan-line {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  height: 2px;
+  background: var(--ku-color-primary);
+  box-shadow: 0 0 8px var(--ku-color-primary);
+  animation: scan-line-move 1.8s ease-in-out infinite;
+}
+@keyframes scan-line-move {
+  0% { top: 4px; }
+  50% { top: calc(100% - 6px); }
+  100% { top: 4px; }
+}
+.scan-success {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scan-success svg {
+  width: 56px;
+  height: 56px;
+  padding: 8px;
+  border-radius: 50%;
+  background: var(--ku-color-success-bg);
+  color: var(--ku-color-success-text);
+}
+.scan-hint {
+  margin-top: 28px;
+  font-size: 14px;
+  color: #fff;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -6239,11 +6323,12 @@ button {
   flex-shrink: 0;
 }
 
-.search-close-btn {
+.search-submit-btn {
   min-height: var(--ku-search-input-height);
   padding: 0;
-  color: var(--ku-color-text-secondary);
+  color: var(--ku-color-primary);
   font: var(--ku-search-text);
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -12785,20 +12870,63 @@ html[lang="zh-TW"] .planet-hero-title {
 .shop-mall-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   padding: 12px 16px 4px;
 }
-.shop-mall-hint {
+.shop-mall-search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-nav-shell);
+  background: var(--ku-color-bg-root);
+}
+.shop-mall-search-field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  cursor: pointer;
+  text-align: left;
+}
+.shop-mall-search-icon {
+  color: var(--ku-color-text-secondary);
+  flex-shrink: 0;
+}
+.shop-mall-search-placeholder {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--ku-color-text-meta);
   font: var(--ku-text-meta);
+}
+.shop-mall-scan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--ku-radius-pill);
+  background: transparent;
+  color: var(--ku-color-text-secondary);
+  cursor: pointer;
 }
 .shop-orders-link {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   flex-shrink: 0;
-  height: 28px;
+  height: 36px;
   padding: 0 12px;
   border: 1px solid var(--ku-color-shop-border);
   border-radius: var(--ku-radius-pill);
@@ -13042,35 +13170,69 @@ html[lang="zh-TW"] .planet-hero-title {
   font: 600 15px/1.4 var(--ku-font-family);
   color: var(--ku-color-text-primary);
 }
-.shop-share-qr-card {
+.shop-share-link-card {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 200px;
-  height: 200px;
-  margin: 0 auto;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-secondary);
+}
+.shop-share-link-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ku-font-mono);
+  font-size: 13px;
+  color: var(--ku-color-text-primary);
+}
+.shop-share-qr-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
   padding: 12px;
   border: 1px solid var(--ku-color-border-card);
   border-radius: var(--ku-radius-card);
   background: var(--ku-color-bg-secondary);
+  text-align: left;
+}
+.shop-share-qr-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  flex-shrink: 0;
+  padding: 6px;
+  border-radius: calc(var(--ku-radius-card) - 4px);
+  background: var(--ku-color-bg-page);
 }
 .shop-share-qr-img {
   width: 100%;
-  height: 100%;
-  border-radius: calc(var(--ku-radius-card) - 6px);
+  height: auto;
+  display: block;
+  border-radius: calc(var(--ku-radius-card) - 8px);
 }
-.shop-share-hint {
-  margin: 16px 0 20px;
+.shop-share-qr-hint {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
   font: var(--ku-text-body-sm);
   color: var(--ku-color-text-meta);
   line-height: 1.5;
 }
-.shop-share-save-btn {
+.shop-share-cta-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   width: 100%;
+  margin-bottom: 20px;
   padding: 13px;
   border: none;
   border-radius: var(--ku-radius-card);
@@ -13079,10 +13241,16 @@ html[lang="zh-TW"] .planet-hero-title {
   font: 600 15px/1 var(--ku-font-family);
   cursor: pointer;
 }
-.shop-share-save-btn:disabled {
+.shop-share-cta-btn:disabled {
   cursor: default;
   background: var(--ku-color-bg-page);
   color: var(--ku-color-text-secondary);
+}
+.shop-share-cta-btn--secondary {
+  margin-bottom: 0;
+  background: var(--ku-color-shop-bg);
+  color: var(--ku-color-shop-strong);
+  border: 1px solid var(--ku-color-shop-border);
 }
 .shop-item-contacts-reveal {
   display: grid;

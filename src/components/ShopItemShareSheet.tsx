@@ -1,24 +1,61 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { Download, X } from 'lucide-react';
+import { Download, Link2, Share2, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import type { Post } from '../types';
 
-/** 分享商品的二维码原型：扫码跳转逻辑尚未实现，这里先落地生成二维码 + 保存到相册的交互。 */
+/** 分享商品：链接 + 二维码原型，同屏展示。扫码跳转逻辑尚未实现，链接调起系统分享面板（不支持时降级为复制），二维码支持保存到相册，两者指向同一个 mock 链接。 */
 export function ShopItemShareSheet({ post, onClose }: { post: Post; onClose: () => void }) {
   const { t, showToast } = useApp();
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
+  const shareLink = `https://wisverse.invalid/shop/${post.id}`;
+
   useEffect(() => {
     let cancelled = false;
     setQrDataUrl(null);
-    QRCode.toDataURL(`wisverse://shop/${post.id}`, {
-      width: 320,
+    const size = 320;
+    const captionHeight = 56;
+    QRCode.toDataURL(shareLink, {
+      width: size,
       margin: 1,
       color: { dark: '#1a1a1a', light: '#ffffff' },
-    }).then(url => { if (!cancelled) setQrDataUrl(url); });
+    }).then(rawUrl => {
+      const img = new Image();
+      img.onload = () => {
+        if (cancelled) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size + captionHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, size, size);
+        ctx.fillStyle = '#1a1a1a';
+        ctx.font = '600 20px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(t('用「知识宇宙」App 扫一扫'), size / 2, size + captionHeight / 2);
+        setQrDataUrl(canvas.toDataURL('image/png'));
+      };
+      img.src = rawUrl;
+    });
     return () => { cancelled = true; };
-  }, [post.id]);
+  }, [shareLink, t]);
+
+  const handleShareLink = async () => {
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: post.title, url: shareLink });
+        return;
+      } catch (err) {
+        if ((err as Error)?.name === 'AbortError') return;
+        // 系统分享面板不可用时降级为复制链接
+      }
+    }
+    navigator.clipboard.writeText(shareLink).then(() => showToast(t('链接已复制'))).catch(() => {});
+  };
 
   const handleSave = () => {
     if (!qrDataUrl) return;
@@ -41,15 +78,24 @@ export function ShopItemShareSheet({ post, onClose }: { post: Post; onClose: () 
 
         <p className="shop-share-title">{post.title}</p>
 
-        <div className="shop-share-qr-card">
-          {qrDataUrl && <img src={qrDataUrl} alt={t('商品二维码')} className="shop-share-qr-img" />}
+        <div className="shop-share-link-card">
+          <Link2 size={16} strokeWidth={2} aria-hidden="true" />
+          <span className="shop-share-link-text">{shareLink}</span>
         </div>
+        <button type="button" className="shop-share-cta-btn" onClick={handleShareLink}>
+          <Share2 size={16} strokeWidth={2} />
+          {t('分享链接')}
+        </button>
 
-        <p className="shop-share-hint">{t('使用「知识宇宙」App 扫一扫，识别二维码直达商品')}</p>
-
-        <button type="button" className="shop-share-save-btn" onClick={handleSave} disabled={!qrDataUrl}>
+        <div className="shop-share-qr-row">
+          <div className="shop-share-qr-card">
+            {qrDataUrl && <img src={qrDataUrl} alt={t('商品二维码')} className="shop-share-qr-img" />}
+          </div>
+          <p className="shop-share-qr-hint">{t('使用「知识宇宙」App 扫一扫，识别二维码直达商品')}</p>
+        </div>
+        <button type="button" className="shop-share-cta-btn shop-share-cta-btn--secondary" onClick={handleSave} disabled={!qrDataUrl}>
           <Download size={16} strokeWidth={2} />
-          {t('保存到相册')}
+          {t('保存二维码')}
         </button>
       </div>
     </div>

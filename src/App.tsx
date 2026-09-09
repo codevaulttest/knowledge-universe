@@ -27,6 +27,7 @@ import { ChannelPage } from './pages/ChannelPage';
 import { ActivityPage } from './pages/ActivityPage';
 import { DmListPage, DmChatPage } from './pages/DmPage';
 import { SearchPage } from './pages/SearchPage';
+import { ScanSheet } from './components/ScanSheet';
 import { ShopPage } from './pages/ShopPage';
 import { ShopItemPage } from './pages/ShopItemPage';
 import { OrdersPage } from './pages/OrdersPage';
@@ -78,8 +79,15 @@ export default function App({ account, onLanguageChange }: {
   const [interactionTaskOpen, setInteractionTaskOpen] = useState(false);
   const [lotTaskOpen, setLotTaskOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const openSearch = () => setSearchOpen(true);
+  const [searchShopOnly, setSearchShopOnly] = useState(false);
+  const openSearch = (opts?: { shopOnly?: boolean }) => {
+    setSearchShopOnly(!!opts?.shopOnly);
+    setSearchOpen(true);
+  };
   const closeSearch = () => setSearchOpen(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  const openScan = () => setScanOpen(true);
+  const closeScan = () => setScanOpen(false);
   // 首页信息流下滑沉浸效果：顶部/底部导航渐隐；离开首页时复位
   const [navBarsHidden, setNavBarsHidden] = useState(false);
 
@@ -1251,7 +1259,8 @@ export default function App({ account, onLanguageChange }: {
     interactionTaskOpen, openInteractionTask, interactionTaskAlert,
     lotTaskOpen, openLotTask, lotTaskAlert,
     recentSearches, saveRecentSearch, removeRecentSearch, clearRecentSearches,
-    searchOpen, openSearch, closeSearch,
+    searchOpen, searchShopOnly, openSearch, closeSearch,
+    scanOpen, openScan, closeScan,
     drafts, saveDraft, updateDraft, deleteDraft,
     userProfile, updateUserProfile,
     editProfileAutoOpen, setEditProfileAutoOpen, openEditProfileContacts,
@@ -1501,7 +1510,10 @@ export default function App({ account, onLanguageChange }: {
         )}
 
         {/* 搜索全页面：覆盖宿主内容，关闭后回到原信息流 */}
-        {searchOpen && <SearchPage onClose={closeSearch} />}
+        {searchOpen && <SearchPage onClose={closeSearch} initialShopOnly={searchShopOnly} />}
+
+        {/* 扫一扫：模拟扫码识别商品二维码，全屏取景框覆盖层 */}
+        {scanOpen && <ScanSheet onClose={closeScan} />}
 
         {/* Toast */}
         {/* 覆盖层：连接钱包二次确认（游客触发需身份/资产/链上能力的操作时弹出） */}

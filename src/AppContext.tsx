@@ -69,8 +69,12 @@ export type AppContextValue = {
   removeRecentSearch: (query: string) => void;
   clearRecentSearches: () => void;
   searchOpen: boolean;
-  openSearch: () => void;
+  searchShopOnly: boolean;
+  openSearch: (opts?: { shopOnly?: boolean }) => void;
   closeSearch: () => void;
+  scanOpen: boolean;
+  openScan: () => void;
+  closeScan: () => void;
   drafts: Draft[];
   saveDraft: (draft: Omit<Draft, 'id' | 'savedAt'>) => void;
   updateDraft: (draftId: string, draft: Omit<Draft, 'id' | 'savedAt'>) => void;

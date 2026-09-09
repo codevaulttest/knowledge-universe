@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Search, X } from 'lucide-react';
+import { ArrowLeft, Check, Search, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { PostCard } from '../components/PostCard';
 import { Avatar, AuthorName, ChannelCard } from '../components/shared';
 
-export function SearchPage({ onClose }: { onClose: () => void }) {
+export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () => void; initialShopOnly?: boolean }) {
   const {
     navigate,
     posts,
@@ -22,7 +22,7 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
   const [debouncedQ, setDebouncedQ] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [tab, setTab] = useState<'posts' | 'users' | 'channels'>('posts');
-  const [shopOnly, setShopOnly] = useState(false);
+  const [shopOnly, setShopOnly] = useState(initialShopOnly);
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -76,6 +76,13 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
   const hasResults = visiblePosts.length > 0 || visibleUsers.length > 0 || visibleChannels.length > 0;
 
   const applyQuery = (nextQuery: string) => setQuery(nextQuery);
+  const doSearch = () => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    setDebouncedQ(trimmed.toLowerCase());
+    setIsSearching(false);
+    saveRecentSearch(trimmed);
+  };
   const goToProfile = (authorName: string) => {
     navigate({ page: 'P6', authorName });
   };
@@ -84,13 +91,17 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
     <div className="search-page" role="main" aria-label={t('搜索')}>
       <div className="search-page-shell">
         <div className="search-header">
+          <button type="button" className="back-btn" onClick={onClose} aria-label={t('返回')}>
+            <ArrowLeft size={22} strokeWidth={2} />
+          </button>
           <div className="search-input-wrap">
             <Search size={16} strokeWidth={2} className="search-input-icon" />
             <input
               className="search-input"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder={t('搜索帖子、创作者、话题')}
+              onKeyDown={e => { if (e.key === 'Enter') doSearch(); }}
+              placeholder={initialShopOnly ? t('搜索商品') : t('搜索帖子、创作者、话题')}
               autoFocus
             />
             {query && (
@@ -104,8 +115,8 @@ export function SearchPage({ onClose }: { onClose: () => void }) {
               </button>
             )}
           </div>
-          <button type="button" className="modal-close search-close-btn" onClick={onClose}>
-            {t('取消')}
+          <button type="button" className="search-submit-btn" onClick={doSearch}>
+            {t('搜索')}
           </button>
         </div>
 
