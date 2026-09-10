@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Headset, Package, Send } from 'lucide-react';
+import { ArrowLeft, Headset, Package, Send, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, CURRENT_USER, DM_CONVERSATIONS } from '../mockData';
 import type { DmConversation, DmMessage } from '../types';
@@ -102,7 +102,6 @@ export function DmChatPage({ peerId, orderId, productId }: { peerId: string; ord
     : DM_CONVERSATIONS.find(c => c.peer === peerId);
   const firstPost = ALL_POSTS.find(p => p.author === peerId);
   const linkedOrder = orderId ? shopOrders.find(o => o.id === orderId) : undefined;
-  const linkedProduct = productId ? ALL_POSTS.find(p => p.id === productId) : undefined;
   const conv: DmConversation = found ?? {
     id: `dm-new-${peerId}${orderId ? `-${orderId}` : ''}`,
     peer: peerId,
@@ -116,48 +115,44 @@ export function DmChatPage({ peerId, orderId, productId }: { peerId: string; ord
     productTitle: linkedOrder?.productTitle,
   };
   const isSupport = conv.kind === 'support';
-  const [messages, setMessages] = useState<DmMessage[]>(() => [
-    ...conv.messages,
-    ...(linkedProduct ? [{
-      id: `product-${linkedProduct.id}-${Date.now()}`,
-      from: 'me' as const,
-      text: '',
-      time: '刚刚',
-      productId: linkedProduct.id,
-    }] : []),
-  ]);
+  const [messages, setMessages] = useState<DmMessage[]>(conv.messages);
   const [text, setText] = useState('');
+  const [pendingProductId, setPendingProductId] = useState(productId);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const lastSharedProductId = useRef(productId);
+  const pendingProduct = pendingProductId ? ALL_POSTS.find(post => post.id === pendingProductId) : undefined;
 
-  // 同一买卖双方的会话可连续从多件商品进入；每次入口都留下对应商品卡，而非替换旧上下文。
+  // 从另一件商品进入同一会话时，替换待发送项；已发出的商品消息保持在历史中。
   useEffect(() => {
-    if (!linkedProduct || productId === lastSharedProductId.current) return;
-    setMessages(prev => [...prev, {
-      id: `product-${linkedProduct.id}-${Date.now()}`,
-      from: 'me',
-      text: '',
-      time: '刚刚',
-      productId: linkedProduct.id,
-    }]);
-    lastSharedProductId.current = productId;
-  }, [linkedProduct, productId]);
+    if (productId) setPendingProductId(productId);
+  }, [productId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const send = () => {
+  const send = (includePendingProduct = false) => {
     const trimmed = text.trim();
-    if (!trimmed) return;
-    const msg: DmMessage = {
-      id: `msg-${Date.now()}`,
-      from: 'me',
-      text: trimmed,
-      time: '刚刚',
-    };
-    setMessages(prev => [...prev, msg]);
+    const productToSend = includePendingProduct ? pendingProduct : undefined;
+    if (!trimmed && !productToSend) return;
+    const sentAt = Date.now();
+    const outgoing: DmMessage[] = [
+      ...(productToSend ? [{
+        id: `product-${productToSend.id}-${sentAt}`,
+        from: 'me' as const,
+        text: '',
+        time: '刚刚',
+        productId: productToSend.id,
+      }] : []),
+      ...(trimmed ? [{
+        id: `msg-${sentAt}`,
+        from: 'me' as const,
+        text: trimmed,
+        time: '刚刚',
+      }] : []),
+    ];
+    setMessages(prev => [...prev, ...outgoing]);
     setText('');
+    if (productToSend) setPendingProductId(undefined);
 
     setTimeout(() => {
       setMessages(prev => [...prev, {
@@ -252,23 +247,52 @@ export function DmChatPage({ peerId, orderId, productId }: { peerId: string; ord
         <div ref={bottomRef} />
       </div>
 
-      <div className="dm-chat-composer">
-        <input
-          className="dm-chat-input"
-          placeholder={t('发送消息…')}
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') requireWallet(send); }}
-        />
-        <button
-          type="button"
-          className="dm-chat-send"
-          onClick={() => requireWallet(send)}
-          disabled={!text.trim()}
-          aria-label={t('发送')}
-        >
-          <Send size={18} strokeWidth={2} />
-        </button>
+      <div className="dm-chat-composer-wrap">
+        {pendingProduct?.shop && (
+          <div className="dm-product-pending">
+            <span className="dm-product-message-cover" aria-hidden="true"><Package size={20} strokeWidth={1.8} /></span>
+            <span className="dm-product-message-body">
+              <span className="dm-product-message-label">{t('商品')}</span>
+              <span className="dm-product-message-title">{pendingProduct.title.split('\n')[0]}</span>
+              <span className="dm-product-message-price">{formatTokenAmount(getShopMinPrice(pendingProduct.shop))} PB</span>
+            </span>
+            <span className="dm-product-pending-actions">
+              <button
+                type="button"
+                className="dm-product-pending-remove"
+                onClick={() => setPendingProductId(undefined)}
+                aria-label={t('取消待发送商品')}
+              >
+                <X size={16} strokeWidth={2} />
+              </button>
+              <button
+                type="button"
+                className="dm-product-pending-send"
+                onClick={() => requireWallet(() => send(true))}
+              >
+                {t('发送')}
+              </button>
+            </span>
+          </div>
+        )}
+        <div className="dm-chat-composer">
+          <input
+            className="dm-chat-input"
+            placeholder={t('发送消息…')}
+            value={text}
+            onChange={e => setText(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') requireWallet(send); }}
+          />
+          <button
+            type="button"
+            className="dm-chat-send"
+            onClick={() => requireWallet(send)}
+            disabled={!text.trim()}
+            aria-label={t('发送')}
+          >
+            <Send size={18} strokeWidth={2} />
+          </button>
+        </div>
       </div>
     </div>
   );

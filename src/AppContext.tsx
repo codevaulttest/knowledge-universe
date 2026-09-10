@@ -211,6 +211,8 @@ export type AppContextValue = {
   confirmShopReceipt: (orderId: string) => void;
   /** 开发工具：模拟 T+15 月结到账（待结算 → 已结算） */
   simulateShopSettle: (orderId: string) => void;
+  /** 买家申请退款：订单仍为「待发货」时可发起，退回商品款并恢复库存 */
+  requestShopRefund: (orderId: string) => void;
   /** 知识确权认证：文章满 100 赞后由 cron 铸造的链上 NFT 凭证列表 */
   knowledgeCerts: KnowledgeCert[];
   /** 开发工具：模拟 cron 完成铸造（pending → minted） */

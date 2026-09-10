@@ -1,22 +1,24 @@
 import { useState } from 'react';
-import { ChevronRight, Headset, MessageCircle, PackageCheck, PackageOpen, Phone, Truck } from 'lucide-react';
+import { ChevronRight, Headset, MessageCircle, PackageCheck, PackageOpen, Phone, Truck, Undo2 } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
 import { SUPPORT_PEER } from './DmPage';
 import type { ShopOrder } from '../types';
 import { PageHeader } from '../components/shared';
 import { DevPanel } from '../components/DevPanel';
+import { Ios26Alert } from '../components/Overlays';
 import { isChinese } from '../i18n';
 import { formatTokenAmount } from '../stakeConfig';
 import { shopOrderStatusLabel, formatShopFee } from '../shopConfig';
 import { CONTACT_CHANNELS } from './ShopItemPage';
 
 export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }) {
-  const { shopOrders, goBack, canGoBack, navigate, t, language, shipShopOrder, confirmShopReceipt, simulateShopSettle, userProfile, showToast } = useApp();
+  const { shopOrders, goBack, canGoBack, navigate, t, language, shipShopOrder, confirmShopReceipt, simulateShopSettle, requestShopRefund, userProfile, showToast } = useApp();
   const [role, setRole] = useState<'buyer' | 'seller'>(initialRole ?? 'buyer');
   const [shipping, setShipping] = useState<ShopOrder | null>(null);
   const [carrier, setCarrier] = useState('');
   const [trackingNo, setTrackingNo] = useState('');
+  const [pendingRefundOrderId, setPendingRefundOrderId] = useState<string | null>(null);
   // 开发工具：模拟订单空态（不改动种子数据）
   const [demoEmpty, setDemoEmpty] = useState(false);
   const [expandedContacts, setExpandedContacts] = useState<Set<string>>(new Set());
@@ -134,6 +136,14 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
                   <p className="order-card-settle-note">{t('已完成，货款将于次月 15 日结算')}</p>
                 )}
 
+                {o.status === 'refunded' && (
+                  <p className="order-card-settle-note">
+                    {role === 'buyer'
+                      ? t('已退款，商品款已退回钱包')
+                      : t('买家已退款，无需发货')}
+                  </p>
+                )}
+
                 {contactEntries.length > 0 && (
                   <div className={`shop-item-contacts-reveal${contactsOpen ? ' shop-item-contacts-reveal--open' : ''}`}>
                     <div className="shop-item-contacts-reveal-inner">
@@ -194,6 +204,11 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
                       <PackageCheck size={15} strokeWidth={2} />{t('确认收货')}
                     </button>
                   )}
+                  {role === 'buyer' && o.status === 'to_ship' && (
+                    <button type="button" className="order-action-btn order-action-btn--ghost" onClick={() => setPendingRefundOrderId(o.id)}>
+                      <Undo2 size={15} strokeWidth={2} />{t('申请退款')}
+                    </button>
+                  )}
                   {role === 'seller' && o.status === 'to_ship' && (
                     <button type="button" className="order-action-btn" onClick={() => setShipping(o)}>
                       <Truck size={15} strokeWidth={2} />{t('填单号发货')}
@@ -238,6 +253,21 @@ export function OrdersPage({ initialRole }: { initialRole?: 'buyer' | 'seller' }
             </div>
           </div>
         </div>
+      )}
+
+      {/* 申请退款二次确认 */}
+      {pendingRefundOrderId && (
+        <Ios26Alert
+          title={t('申请退款')}
+          message={t('退款将退回商品款到你的 PB 钱包，商品恢复库存')}
+          cancelLabel={t('取消')}
+          confirmLabel={t('确认退款')}
+          onCancel={() => setPendingRefundOrderId(null)}
+          onConfirm={() => {
+            requestShopRefund(pendingRefundOrderId);
+            setPendingRefundOrderId(null);
+          }}
+        />
       )}
 
       <DevPanel>

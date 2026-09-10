@@ -1028,6 +1028,37 @@ export default function App({ account, onLanguageChange }: {
     showToast(t('订单确认失败，商品款未扣除'));
   };
 
+  // 买家申请退款：仅当订单仍处于「待发货」时可申请——退回商品款
+  // （unitPrice*quantity），已消耗的 SUP Gas 费不退；库存按 confirmShopOrder
+  // 扣减时的逻辑对称加回，订单转「已退款」
+  const requestShopRefund = (orderId: string) => {
+    const order = shopOrders.find(o => o.id === orderId);
+    if (!order || order.status !== 'to_ship') return;
+    const refundPb = order.unitPrice * order.quantity;
+    const wallet = order.payWallet ?? 'airdrop';
+    setPbWallets(prev => ({ ...prev, [wallet]: prev[wallet] + refundPb }));
+    setPosts(ps => ps.map(p => {
+      if (p.id !== order.postId || !p.shop) return p;
+      const shop = p.shop;
+      if (order.variantId && shop.variants?.length) {
+        return {
+          ...p,
+          shop: {
+            ...shop,
+            variants: shop.variants.map(v =>
+              v.id === order.variantId ? { ...v, stock: v.stock + order.quantity } : v
+            ),
+          },
+        };
+      }
+      return { ...p, shop: { ...shop, stock: (shop.stock ?? 0) + order.quantity } };
+    }));
+    setShopOrders(prev => prev.map(o =>
+      o.id === orderId && o.status === 'to_ship' ? { ...o, status: 'refunded' } : o
+    ));
+    showToast(t('已退款 {pb} PB', { pb: formatTokenAmount(refundPb) }));
+  };
+
   // 买家下单：先创建「确认中」订单（不扣款、不减库存）并立即返回，
   // 链上确认在后台异步完成——计时器挂在 App 层，用户关闭商品页/离开也不中断。
   const placeShopOrder = (postId: string, quantity: number, address: ShippingAddress, variantId?: string, payWallet?: PbWalletId) => {
@@ -1310,7 +1341,7 @@ export default function App({ account, onLanguageChange }: {
     favoriteNodeIds, toggleFavoriteNode,
     shopOrders, shippingAddresses, defaultAddress,
     addShippingAddress, setDefaultAddress, removeShippingAddress, updateShippingAddress,
-    placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle,
+    placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle, requestShopRefund,
     knowledgeCerts, simulateCertMint, simulateCertBurn,
     navBarsHidden, setNavBarsHidden,
   };

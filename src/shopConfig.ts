@@ -60,6 +60,7 @@ export function shopOrderStatusLabel(status: ShopOrderStatus, zh: boolean): stri
     submitting: ['确认中', 'Confirming'],
     failed:     ['已取消', 'Cancelled'],
     to_ship:   ['待发货', 'To ship'],
+    refunded:  ['已退款', 'Refunded'],
     shipped:   ['已发货', 'Shipped'],
     completed: ['已完成', 'Completed'],
     to_settle: ['待结算', 'Awaiting settlement'],
