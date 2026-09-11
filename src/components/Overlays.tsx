@@ -363,8 +363,8 @@ export function GeminiStakeModal({
         <p className="gemini-stake-lead">
           {isPartner
             ? (hasPresetComment
-              ? t('选择面额成为合伙人：以后买家下单，你按 {percent}% 的比例获得优点分账；也可以仅发表评论，不加入分账', { percent: partnerPercent })
-              : t('选择面额并评论，链接该帖成为合伙人：以后买家下单，你按 {percent}% 的比例获得优点分账', { percent: partnerPercent }))
+              ? t('选择面额成为合伙人：该商品推广分账比例为 {percent}%，买家下单后产生的优点由已链接的合伙人共享；也可以仅发表评论，不加入分账', { percent: partnerPercent })
+              : t('选择面额并评论，链接该帖成为合伙人：该商品推广分账比例为 {percent}%，买家下单后产生的优点由已链接的合伙人共享', { percent: partnerPercent }))
             : t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点')}
         </p>
 
