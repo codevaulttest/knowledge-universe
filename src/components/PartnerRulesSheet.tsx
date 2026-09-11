@@ -17,23 +17,13 @@ export function PartnerRulesSheet({ onClose }: { onClose: () => void }) {
 
         <div className="pb-info-sheet-body">
           <p className="pb-info-sheet-para">
-            <strong className="pb-info-sheet-label">{t('分享二维码：')}</strong>
-            {t('在商品页点击「分享」保存的二维码，别人通过该二维码成交时，分享者独享本单分账优点的 80%。')}
-          </p>
-
-          <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('合伙人分账：')}</strong>
-            {t('其余 20%，由本商品已链接的合伙人按节点面额共享。')}
-          </p>
-
-          <p className="pb-info-sheet-para">
-            <strong className="pb-info-sheet-label">{t('直接成交：')}</strong>
-            {t('未通过二维码成交的订单，这部分不进入合伙人共享池。')}
+            {t('本商品已链接的合伙人，按节点面额比例共享该商品的合伙人分账优点。')}
           </p>
 
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('分配示例：')}</strong>
-            {t('假设本单形成 430 优点分账池，二维码分享者获得 344 优点；剩余 86 优点按合伙人质押面额占比分配。若本商品共有 1 位 1000 PB、3 位 100 PB、50 位 10 PB 合伙人，则每位约得 47.78、4.78、0.48 优点——10 PB 合伙人人数越多，他们合计拿到的份额也会相应变大。')}
+            {t('假设本商品合伙人分账池为 1110 优点，若本商品共有 1 位 1000 PB、1 位 100 PB、1 位 10 PB 合伙人，则三位合伙人分别得 1000、100、10 优点。')}
           </p>
         </div>
       </div>

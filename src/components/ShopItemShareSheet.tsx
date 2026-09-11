@@ -79,6 +79,17 @@ export function ShopItemShareSheet({ post, onClose }: { post: Post; onClose: () 
           <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
         </div>
 
+        <button
+          type="button"
+          className="bsp-rules-entry task-panel-rules-entry--neutral"
+          onClick={() => setRulesOpen(true)}
+          aria-label={t('了解分享人分账规则')}
+        >
+          <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
+          <span className="bsp-rules-entry-text">{t('了解分享人分账规则')}</span>
+          <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
+        </button>
+
         <p className="shop-share-title">{post.title}</p>
 
         <div className="shop-share-link-card">
@@ -99,17 +110,6 @@ export function ShopItemShareSheet({ post, onClose }: { post: Post; onClose: () 
         <button type="button" className="shop-share-cta-btn shop-share-cta-btn--secondary" onClick={handleSave} disabled={!qrDataUrl}>
           <Download size={16} strokeWidth={2} />
           {t('保存二维码')}
-        </button>
-
-        <button
-          type="button"
-          className="bsp-rules-entry task-panel-rules-entry--neutral"
-          onClick={() => setRulesOpen(true)}
-          aria-label={t('了解分享人分账规则')}
-        >
-          <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
-          <span className="bsp-rules-entry-text">{t('了解分享人分账规则')}</span>
-          <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
         </button>
       </div>
     </div>
