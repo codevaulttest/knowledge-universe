@@ -13,7 +13,15 @@ type AssetSheetState = {
   kind: 'airdrop' | 'sup';
 };
 
-function AssetSymbol({ kind }: { kind: 'onchain-pb' | 'onchain-sup' | 'credibility' | 'account' | 'airdrop-pb' | 'site-sup' | 'merit' }) {
+function AssetSymbol({ kind }: { kind: 'onchain-pb' | 'onchain-sup' | 'credibility' | 'account' | 'airdrop-pb' | 'site-sup' | 'merit' | 'adn' }) {
+  if (kind === 'adn') {
+    return (
+      <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>
+        <img className="pb-info-asset-symbol-image pb-info-asset-symbol-image--adn" src="/img/ADN.svg" alt="" aria-hidden="true" />
+      </span>
+    );
+  }
+
   if (kind === 'onchain-pb') {
     return (
       <span className={`pb-info-asset-symbol pb-info-asset-symbol--${kind}`}>
@@ -72,6 +80,8 @@ function AssetSymbol({ kind }: { kind: 'onchain-pb' | 'onchain-sup' | 'credibili
   );
 }
 
+const ADN_BALANCE = 116;
+
 /** 页顶 hero 资产摘要：最多展示三种高频资产；后续类型以 +N 保持入口高度不变。 */
 export function PlanetHeroBalances() {
   const { t, language, walletConnected, pbWallets, supWallets, meritBalance, navigate } = useApp();
@@ -80,6 +90,7 @@ export function PlanetHeroBalances() {
   const [credibilityInfoOpen, setCredibilityInfoOpen] = useState(false);
   const [supInfoOpen, setSupInfoOpen] = useState(false);
   const [meritInfoOpen, setMeritInfoOpen] = useState(false);
+  const [adnInfoOpen, setAdnInfoOpen] = useState(false);
   const [stationInfoOpen, setStationInfoOpen] = useState(false);
   const [assetSheet, setAssetSheet] = useState<AssetSheetState | null>(null);
 
@@ -302,7 +313,42 @@ export function PlanetHeroBalances() {
                         <Info size={13} strokeWidth={2} />
                       </button>
                     </span>
-                    <span className="pb-info-balance-value">{meritBalance} <span className="pb-info-balance-unit">{t('优点')}</span></span>
+                    <span className="pb-info-balance-value">
+                      {meritBalance} <span className="pb-info-balance-unit">{t('优点')}</span>
+                    </span>
+                  </div>
+                  <div
+                    className="pb-info-balance-row pb-info-balance-row--link"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { setPbInfoOpen(false); navigate({ page: 'P_ADN' }); }}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setPbInfoOpen(false);
+                        navigate({ page: 'P_ADN' });
+                      }
+                    }}
+                    aria-label={t('查看我的 ADN')}
+                  >
+                    <span className="pb-info-balance-label pb-info-balance-label--with-action">
+                      <span className="pb-info-balance-asset">
+                        <AssetSymbol kind="adn" />
+                        <span>ADN</span>
+                      </span>
+                      <button
+                        type="button"
+                        className="asset-overview-info-btn"
+                        onClick={event => { event.stopPropagation(); setAdnInfoOpen(true); }}
+                        aria-label={t('查看 ADN 说明')}
+                      >
+                        <Info size={13} strokeWidth={2} />
+                      </button>
+                    </span>
+                    <span className="pb-info-balance-value pb-info-balance-value--link">
+                      {ADN_BALANCE} <span className="pb-info-balance-unit">ADN</span>
+                      <ChevronRight size={14} strokeWidth={2} className="pb-info-balance-row-chevron" aria-hidden="true" />
+                    </span>
                   </div>
                 </div>
                 </div>
@@ -424,6 +470,23 @@ export function PlanetHeroBalances() {
                 <strong className="pb-info-sheet-label">{t('结算规则：')}</strong>
                 {t('优点结算将于 9 月 15 日首次发放。')}
               </p>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {adnInfoOpen && createPortal(
+        <div className="sheet-backdrop" onClick={() => setAdnInfoOpen(false)}>
+          <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+            <div className="sheet-header">
+              <span className="sheet-title">{t('ADN 持仓')}</span>
+              <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={() => setAdnInfoOpen(false)} aria-label={t('关闭')}>
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+            <div className="pb-info-sheet-body">
+              <p className="pb-info-sheet-para">{t('about_adn_holding_description')}</p>
             </div>
           </div>
         </div>,

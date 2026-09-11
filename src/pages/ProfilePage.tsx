@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Award, BadgeCheck, Bookmark, Camera, Check, ChevronRight, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ShoppingCart, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, Bookmark, Camera, Check, ChevronRight, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ShoppingCart, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
@@ -63,7 +63,7 @@ function getBackgroundContentInset(image: HTMLImageElement) {
 }
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, knowledgeCerts, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, meritBalance, channelAuthorizations, delegatedChannels, pendingIncomingChannelAuthorizations, respondToChannelAuthorization, revokeChannelAuthorization } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, knowledgeCerts, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, channelAuthorizations, delegatedChannels, pendingIncomingChannelAuthorizations, respondToChannelAuthorization, revokeChannelAuthorization } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
@@ -161,7 +161,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const channelTotalSubscribers = ownerChannels.reduce((sum, c) => sum + c.subscriberCount, 0);
   const channelSection = ownerChannels.length > 0 ? (
     <button type="button" className={`channel-summary-entry${isOwn ? ' channel-summary-entry--half' : ''}`} onClick={() => setChannelDirectoryOpen(true)}>
-      <Radio size={14} strokeWidth={2.2} className="channel-summary-entry-icon" />
+      <Radio size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-channel)' }} />
       <span className="channel-summary-entry-text">
         <span className="channel-summary-entry-label">
           {isOwn ? <>{t('我的频道')}<span className="channel-summary-entry-count">{ownerChannels.length}</span></> : t('{count} 个频道 · 共 {total} 人已订阅', { count: ownerChannels.length, total: channelTotalSubscribers })}
@@ -178,21 +178,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     <button type="button" className="channel-create-entry channel-create-entry--subtle" onClick={openCreateChannel}>
       <Radio size={14} strokeWidth={2.2} />
       {t('开通频道 · 发布专属内容')}
-    </button>
-  ) : null;
-
-  const meritSection = isOwn ? (
-    <button
-      type="button"
-      className="channel-summary-entry"
-      onClick={() => navigate({ page: 'P_ADN' })}
-    >
-      <Award size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-shop)' }} />
-      <span className="channel-summary-entry-text">
-        <span className="channel-summary-entry-label">{t('我的 ADN')}</span>
-        <span className="channel-summary-entry-sub">{t('{count} 优点', { count: meritBalance })}</span>
-      </span>
-      <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" className="channel-summary-entry-chevron" />
     </button>
   ) : null;
 
@@ -349,7 +334,6 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             {collabSection}
           </div>
         ) : channelSection}
-        {isOwn && meritSection}
 
         {/* 关注/打赏/私信操作行延伸进头部视觉区块，与背景插画同属一体 */}
         {!isOwn && (
@@ -1359,6 +1343,7 @@ function ChannelDirectoryModal({
               onManage={isOwn ? () => openManageChannel(c.id) : undefined}
               showSubscribe={!isOwn}
               showAvatar={false}
+              showLink={!isOwn}
             />
           ))}
           {channelListState.hasMore && (

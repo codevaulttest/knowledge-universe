@@ -95,6 +95,9 @@
   --ku-color-shop-btn-text:      #3a2600;  /* 购买按钮文字（深棕，压在黄底上达标）*/
   --ku-color-shop-text-on-tint:  #8a5c00;  /* 浅黄底（--ku-color-shop-bg）上的琥珀色文字/图标，比 shop-strong 更深以达标 4.5:1，同色系而非近黑 */
 
+  /* 频道——独立于品牌青绿的紫色系，用于频道相关入口图标/强调 */
+  --ku-color-channel:            #7c3aed;  /* 频道专属紫，白底文字/图标对比度约 5.7:1，达标 AA */
+
   /* ═══════════════════════════════════════════════════
      背景色 (Surface)
      ═══════════════════════════════════════════════════ */
@@ -514,8 +517,8 @@
   --adn-color-text-secondary:   #4a685a;
   --adn-color-accent:           #3A9D55;  /* 与兄弟项目 ue/adn 生产环境浅色主题同色号，白字按钮对比度约 3.4:1（用户确认接受，低于本文件其余文字的 4.5:1 红线） */
   --adn-color-accent-strong:    #2E7E44;
-  --adn-color-accent-tint:      #c9ebd3;
   --adn-color-progress-track:   #b4dcc0;
+  --adn-color-neutral-tint:     #e6e6e6;
   --adn-color-border:           #c6e4d0;
   --adn-color-focus:            #075c28;
   --adn-color-overlay:          rgba(18, 54, 41, 0.38);
@@ -525,6 +528,7 @@
   --adn-text-label-lg:          600 14px/19px var(--adn-font-family);
   --adn-text-label:             600 13px/18px var(--adn-font-family);
   --adn-text-caption:           400 12px/17px var(--adn-font-family);
+  --adn-text-body:              400 14px/20px var(--adn-font-family);
   --adn-text-number:            700 44px/1 var(--adn-font-mono);
   --adn-text-amount:            700 30px/36px var(--adn-font-mono);
   --adn-space-1:                4px;

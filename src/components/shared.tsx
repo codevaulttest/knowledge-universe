@@ -108,6 +108,7 @@ export function ChannelCard({
   onManage,
   showAvatar = true,
   showSubscribe = false,
+  showLink = true,
 }: {
   channel: Channel;
   index: number;
@@ -120,6 +121,8 @@ export function ChannelCard({
   showAvatar?: boolean;
   /** 访客视角：在卡片右侧展示「订阅 / 已订阅」快捷入口 */
   showSubscribe?: boolean;
+  /** 「链接」快捷入口（Gemini Chain 跨平台链接）——频道主查看自己的频道列表时不需要，传 false 隐藏 */
+  showLink?: boolean;
 }) {
   const { t, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, openChannelLink, linkedChannelIds } = useApp();
   const subscribedTierIndex = subscribedChannelTiers[channel.id];
@@ -195,7 +198,7 @@ export function ChannelCard({
                 )}
               </button>
             )}
-            {isLinked ? (
+            {showLink && (isLinked ? (
               <div className="gemini-chain gemini-chain--linked channel-discover-link-btn" aria-label={t('已链接')}>
                 <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
                 {t('已链接')}
@@ -209,7 +212,7 @@ export function ChannelCard({
                 <Link size={13} strokeWidth={2.2} aria-hidden="true" />
                 {t('链接')}
               </button>
-            )}
+            ))}
           </div>
         )}
       </div>
