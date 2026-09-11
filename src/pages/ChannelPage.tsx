@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { ChevronRight, CircleCheck, Gem, Link, Radio, RotateCcw, Settings, Share2 } from 'lucide-react';
+import { ChevronRight, CircleCheck, Gem, Radio, RotateCcw, Settings, Share2 } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { CURRENT_USER } from '../mockData';
+import { CURRENT_USER, NODE_STARS_BY_CODE } from '../mockData';
 import { PostCard } from '../components/PostCard';
-import { Avatar, PageHeader } from '../components/shared';
+import { Avatar, PageHeader, Rating } from '../components/shared';
 import { DevPanel } from '../components/DevPanel';
 import { ChannelShareSheet } from '../components/ChannelShareSheet';
 import { SubscriberListModal } from './ProfilePage';
@@ -35,6 +35,8 @@ export function ChannelPage({ channelId }: { channelId: string }) {
   }
 
   const isOwn = channel.ownerName === CURRENT_USER;
+  const channelNodeCode = channel.nodeCode ?? channel.id.slice(-6).toUpperCase();
+  const channelNodeStars = NODE_STARS_BY_CODE[channelNodeCode] ?? 1;
   const isSubExpired = expiredChannelIds.has(channel.id);
   const mySubscribedTierIndex = subscribedChannelTiers[channel.id];
   const channelPosts = posts.filter(p => p.channelId === channel.id && !p.deleted && (isOwn || isPostVisible(p)));
@@ -108,7 +110,18 @@ export function ChannelPage({ channelId }: { channelId: string }) {
               )}
             </div>
             <div className="channel-info-bar-actions">
-              {linkedChannelIds.has(channel.id) ? (
+              {isOwn ? (
+                <button
+                  type="button"
+                  className="channel-info-bar-node-code-plain"
+                  onClick={() => openChannelLink(channel.id)}
+                  aria-label={t('查看节点码 {code} 并链接', { code: channelNodeCode })}
+                >
+                  <Rating value={channelNodeStars} size={26} />
+                  {channelNodeCode}
+                  <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
+                </button>
+              ) : linkedChannelIds.has(channel.id) ? (
                 <div className="gemini-chain gemini-chain--linked channel-info-bar-link" aria-label={t('已链接')}>
                   <CircleCheck size={14} strokeWidth={2.2} aria-hidden="true" />
                   {t('已链接')}
@@ -116,11 +129,13 @@ export function ChannelPage({ channelId }: { channelId: string }) {
               ) : (
                 <button
                   type="button"
-                  className="channel-manage-btn channel-info-bar-link"
+                  className="channel-info-bar-node-code-plain"
                   onClick={() => openChannelLink(channel.id)}
+                  aria-label={t('查看节点码 {code} 并链接', { code: channelNodeCode })}
                 >
-                  <Link size={13} strokeWidth={2.2} aria-hidden="true" />
-                  {t('链接')}
+                  <Rating value={channelNodeStars} size={26} />
+                  {channelNodeCode}
+                  <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
                 </button>
               )}
               {isOwn ? (

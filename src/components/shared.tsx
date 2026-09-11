@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, FileText, Gem, ImageOff, Link, Lock, Radio, RotateCcw, Settings, Star, Wallet } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
-import { isVerifiedAuthor } from '../mockData';
+import { NODE_STARS_BY_CODE, isVerifiedAuthor } from '../mockData';
 import type { Channel, Post } from '../types';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 import { ImageWithFallback } from './ImageWithFallback';
@@ -134,6 +134,8 @@ export function ChannelCard({
   const subscriptionStatus = subscribedTier
     ? (isExpired ? t('已过期 · {name}', { name: subscribedTier.name }) : t('已订阅 · {name}', { name: subscribedTier.name }))
     : undefined;
+  const channelNodeCode = channel.nodeCode ?? channel.id.slice(-6).toUpperCase();
+  const channelNodeStars = NODE_STARS_BY_CODE[channelNodeCode] ?? 1;
   // 注：外层不能用 <button> 包 <button>（管理/订阅按钮）——嵌套交互元素是无效 HTML，
   // 部分浏览器（尤其 WebKit）会导致内层点击拿不到事件。改用 div+role="button" 承载整卡点击，
   // 右侧操作保留原生 <button>，两者是兄弟节点而非嵌套。
@@ -153,7 +155,40 @@ export function ChannelCard({
             {channel.name}
           </span>
           <span className="channel-discover-desc">{channel.description}</span>
-          <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
+          <span className="channel-discover-subs-row">
+            <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
+            {onManage ? (
+              <button
+                type="button"
+                className="channel-discover-node-code"
+                onClick={e => { e.stopPropagation(); openChannelLink(channel.id); }}
+                aria-label={t('查看节点码 {code} 并链接', { code: channelNodeCode })}
+              >
+                <Rating value={channelNodeStars} size={24} />
+                {channelNodeCode}
+                <ChevronRight size={12} strokeWidth={2.2} aria-hidden="true" />
+              </button>
+            ) : showLink ? (
+              isLinked ? (
+                <span className="channel-discover-node-code channel-discover-node-code--linked" aria-label={t('已链接')}>
+                  <Rating value={channelNodeStars} size={24} />
+                  {channelNodeCode}
+                  <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="channel-discover-node-code"
+                  onClick={e => { e.stopPropagation(); openChannelLink(channel.id); }}
+                  aria-label={t('查看节点码 {code} 并链接', { code: channelNodeCode })}
+                >
+                  <Rating value={channelNodeStars} size={24} />
+                  {channelNodeCode}
+                  <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
+                </button>
+              )
+            ) : null}
+          </span>
           {subscriptionStatus && (
             <div className="channel-discover-meta">
               <span className={`channel-discover-access${!isExpired ? ' channel-discover-access--subscribed' : ' channel-discover-access--expired'}`}>
@@ -198,21 +233,6 @@ export function ChannelCard({
                 )}
               </button>
             )}
-            {showLink && (isLinked ? (
-              <div className="gemini-chain gemini-chain--linked channel-discover-link-btn" aria-label={t('已链接')}>
-                <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
-                {t('已链接')}
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="gemini-chain gemini-chain--outline channel-discover-link-btn"
-                onClick={e => { e.stopPropagation(); openChannelLink(channel.id); }}
-              >
-                <Link size={13} strokeWidth={2.2} aria-hidden="true" />
-                {t('链接')}
-              </button>
-            ))}
           </div>
         )}
       </div>

@@ -151,6 +151,19 @@ export function getAirdropBreakdown(totalPb: number): { key: AirdropBreakdownKey
 /** 演示用户名下直连的五星节点数，驱动「公信力任务」每日配额（0 个仍保底 1 组，≥1 个按 ×9 递增）。 */
 export const MOCK_FIVE_STAR_NODE_COUNT = 3;
 
+/** 节点码 → 星级，与知识宇宙页节点列表的星级数据保持一致，供频道卡片/详情页展示节点星标 */
+export const NODE_STARS_BY_CODE: Record<string, number> = {
+  A1B2C3: 5,
+  D4E5F6: 4,
+  G7H8I9: 3,
+  J0K1L2: 2,
+  M3N4O5: 1,
+  P6Q7R8: 1,
+  S9T0U1: 1,
+  V2W3X4: 1,
+  Y5Z6A7: 1,
+};
+
 const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
 
 /** 正式逻辑：北京时间当天 22:00 截止 */

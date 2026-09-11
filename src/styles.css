@@ -327,6 +327,34 @@ button {
   font: var(--ku-text-caption);
   color: var(--ku-color-text-secondary);
 }
+.channel-discover-subs-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-space-2);
+}
+.channel-discover-node-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-caption);
+  font-weight: 600;
+}
+.channel-discover-node-code svg:last-child {
+  opacity: 0.7;
+}
+.channel-discover-node-code:active {
+  opacity: 0.72;
+}
+.channel-discover-node-code--linked {
+  color: var(--ku-color-text-secondary);
+  cursor: default;
+}
 .channel-discover-meta-dot {
   font: var(--ku-text-caption);
   color: var(--ku-color-text-secondary);
@@ -5113,6 +5141,23 @@ button {
 .channel-info-bar-sub--btn:active {
   opacity: 0.72;
 }
+.channel-info-bar-node-code-plain {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-caption);
+}
+.channel-info-bar-node-code-plain svg:last-child {
+  opacity: 0.7;
+}
+.channel-info-bar-node-code-plain:active {
+  opacity: 0.72;
+}
 .channel-manage-btn {
   flex-shrink: 0;
   display: inline-flex;
@@ -5176,11 +5221,6 @@ button {
   color: var(--ku-color-primary-dark);
   border: 1px solid var(--ku-color-border-control);
 }
-.channel-discover-link-btn {
-  justify-content: center;
-  white-space: nowrap;
-}
-
 /* ── 频道详情页（按 channelId 独立访问）── */
 .channel-page-hero {
   display: flex;
