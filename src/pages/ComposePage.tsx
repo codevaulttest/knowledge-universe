@@ -1057,7 +1057,7 @@ export function ComposePage({
                     <div className="compose-shop-field">
                       <span className="compose-shop-field__label compose-shop-field__label--row">
                         <span className="compose-shop-field__label-main">
-                          <span>{t('兑换方赠送比例')}</span>
+                          <span>{t('促销回馈比例')}</span>
                           <button
                             type="button"
                             className="compose-shop-info-btn"
@@ -1083,7 +1083,7 @@ export function ComposePage({
                         }}
                       />
                       <span className="compose-shop-field__hint">
-                        {t('兑换方按此比例获赠优点')}
+                        {t('兑换方按此比例获得优点回馈')}
                       </span>
                     </div>
                     )}
@@ -1091,7 +1091,7 @@ export function ComposePage({
                     {!isEditMode && (
                     <div className="compose-shop-field">
                       <span className="compose-shop-field__label compose-shop-field__label--row">
-                        <span className="compose-shop-field__label-main">{t('合伙人赠送比例')}</span>
+                        <span className="compose-shop-field__label-main">{t('推广分账比例')}</span>
                         <span className="compose-shop-field__label-value">{shopPartnerRebate}%</span>
                       </span>
                       <input
@@ -1108,7 +1108,7 @@ export function ComposePage({
                         }}
                       />
                       <span className="compose-shop-field__hint">
-                        {t('合伙人按此比例获赠优点')}
+                        {t('合伙人按此比例获得优点分账')}
                       </span>
                     </div>
                     )}
@@ -1212,7 +1212,7 @@ export function ComposePage({
         <div className="sheet-backdrop" onClick={() => setRebateInfoOpen(false)}>
           <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
             <div className="sheet-header">
-              <span className="sheet-title">{t('兑换方赠送比例')}</span>
+              <span className="sheet-title">{t('促销回馈比例')}</span>
               <button type="button" className="modal-close" onClick={() => setRebateInfoOpen(false)} aria-label={t('关闭')}>
                 <X size={18} strokeWidth={2} />
               </button>

@@ -758,13 +758,6 @@ button {
   color: var(--ku-color-text-primary);
 }
 
-/* IG 式内联署名：紧贴正文前，字重高于正文以区分身份与内容；可点击跳主页 */
-.post-title-author {
-  font-weight: 700;
-  margin-right: 6px;
-  cursor: pointer;
-}
-
 /* 付费帖：文字渐变淡出（mask-image 让字符本身透明，无白边截断感）*/
 .post-content-wrap.is-paid .post-title {
   margin-bottom: 0;
@@ -860,6 +853,18 @@ button {
   width: 100%;
   overflow: hidden;
   border-radius: var(--ku-radius-media);
+}
+
+/* 图片（含多图）、视频出血到屏幕边缘，无左右边距，增强沉浸感；文章封面走独立卡片样式，不受影响 */
+.post-media-bleed {
+  width: calc(100% + var(--ku-feed-padding-x) * 2);
+  margin: 0 calc(var(--ku-feed-padding-x) * -1);
+}
+.post-media-bleed .media,
+.post-media-bleed .img-grid-cell,
+.post-media-bleed .media-carousel,
+.post-media-bleed .media-carousel-slide {
+  border-radius: 0;
 }
 
 /* 文章封面（单张横幅图）*/
@@ -1306,39 +1311,6 @@ button {
 }
 .media-video--locked .img-lock-badge {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2;
-}
-
-/* ── 视频帖：IG 式全宽出血 + 顶部悬浮作者信息条 ── */
-.media-video-bleed {
-  position: relative;
-  width: calc(100% + var(--ku-feed-padding-x) * 2);
-  margin: 0 calc(var(--ku-feed-padding-x) * -1);
-}
-.media-video-bleed .media-video {
-  border-radius: 0;
-}
-.author-row--video-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-  margin-bottom: 0;
-  padding: 12px var(--ku-feed-padding-x) 34px;
-  background: var(--ku-video-header-scrim);
-}
-.author-row--video-overlay .author-meta h2,
-.author-row--video-overlay .author-name-text {
-  color: var(--ku-video-header-text);
-}
-.author-row--video-overlay .author-time {
-  color: var(--ku-video-header-text-soft);
-}
-.author-row--video-overlay .more {
-  color: var(--ku-video-header-text);
-  border-radius: var(--ku-radius-circle);
-  background: var(--ku-video-header-icon-bg);
-  padding: 3px;
 }
 
 /* ── GeminiNodeBadge（全宽信息条）── */
@@ -4661,18 +4633,6 @@ button {
 }
 .post .follow-btn--sm {
   font: var(--ku-text-action-cta-lg);
-}
-/* 视频悬浮条内的关注按钮：需盖过上面 .post .follow-btn--sm:not(.follow-btn--following) 的描边蓝字样式，
-   两条规则特异度打平（均 0,3,0），靠写在其后的源码顺序取胜，保证深底白字，避免蓝字叠在视频画面上看不清 */
-.post .author-row--video-overlay .follow-btn--sm:not(.follow-btn--following) {
-  color: var(--ku-video-header-text);
-  border-color: var(--ku-video-header-follow-border);
-  background: var(--ku-video-header-follow-bg);
-}
-.post .author-row--video-overlay .follow-btn--sm.follow-btn--following {
-  background: var(--ku-video-header-follow-following-bg);
-  border-color: var(--ku-video-header-follow-following-border);
-  color: var(--ku-video-header-text);
 }
 /* ── 频道信息条 ── */
 .channel-info-bar {

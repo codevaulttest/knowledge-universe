@@ -484,23 +484,6 @@ export function getChannelSubscribers(channel: Channel): ChannelSubscriber[] {
 }
 
 export const ALL_POSTS: Post[] = [
-  // ── 视频免费播放演示（首条：无频道锁、无按次付费锁，完整可播）──
-  {
-    id: 'video-free-demo', author: '游牧开发者', time: '3 小时前',
-    title: '30 分钟带你搭完一套 CI/CD 流水线\n从零配置到自动部署，全程录屏演示，无剪辑。',
-    kind: 'video', visiblePercent: 100, isNode: false, stakeTier: 0,
-    rating: 0, replies: 16, links: 0, shares: 9, saves: 38, likes: 142,
-    videoUrl: '/mock-video-2.mp4',
-  },
-  // ── 浅色视频封面走查（第二条）：验证悬浮作者信息条（头像/用户名/关注按钮）在浅底画面下的对比度 ──
-  {
-    id: 'video-light-cover-demo', author: '设计师刘然', time: '刚刚',
-    title: '浅色封面走查：悬浮作者信息条在浅底视频画面下的可读性测试。',
-    kind: 'video', visiblePercent: 100, isNode: false, stakeTier: 0,
-    rating: 0, replies: 3, links: 0, shares: 1, saves: 5, likes: 12,
-    videoUrl: '/mock-video.mp4',
-    videoCoverLight: true,
-  },
   {
     id: 'p6', author: '极客前沿', time: '2 天前',
     title: 'LLM Agent 实战：从零搭建能自动写代码的 AI 助手\n完整展示 tool-use 调用链路，含代码和 Demo 演示。',
@@ -938,7 +921,23 @@ export const ALL_POSTS: Post[] = [
     kind: 'article', visiblePercent: 100, isNode: true, stakeTier: 100, nodeId: 'Ef6nQ1',
     rating: 2, replies: 15, links: 5, shares: 8, saves: 33, likes: 145,
   },
-
+  // ── 视频免费播放演示：无频道锁、无按次付费锁，完整可播 ──
+  {
+    id: 'video-free-demo', author: '游牧开发者', time: '3 小时前',
+    title: '30 分钟带你搭完一套 CI/CD 流水线\n从零配置到自动部署，全程录屏演示，无剪辑。',
+    kind: 'video', visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 16, links: 0, shares: 9, saves: 38, likes: 142,
+    videoUrl: '/mock-video-2.mp4',
+  },
+  // ── 浅色视频封面走查：验证浅底视频画面下的可读性 ──
+  {
+    id: 'video-light-cover-demo', author: '设计师刘然', time: '刚刚',
+    title: '浅色封面走查：悬浮作者信息条在浅底视频画面下的可读性测试。',
+    kind: 'video', visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 3, links: 0, shares: 1, saves: 5, likes: 12,
+    videoUrl: '/mock-video.mp4',
+    videoCoverLight: true,
+  },
 ];
 
 

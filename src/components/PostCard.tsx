@@ -3,7 +3,7 @@ import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, Mess
 import { useApp } from '../AppContext';
 import { CURRENT_USER, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
-import { ArticleFeedCard, AuthorName, Avatar, GeminiNodeBadge, MediaPlaceholder, PostContent } from './shared';
+import { ArticleFeedCard, AuthorName, Avatar, clampFrameRatio, GeminiNodeBadge, MediaPlaceholder, PostContent } from './shared';
 import { TipModal, Ios26Alert } from './Overlays';
 import { isChinese, localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
@@ -271,10 +271,12 @@ export function PostCard({
     : totalImgs;
   // 原帖已下架：只在「转发」场景下出现（转发者本人的转发列表），渲染占位态，不展示原帖任何内容、不可点击进入详情
   const isUnavailableRepost = !!repostedBy && !!post.deleted;
-  // 视频帖参考 IG：作者信息条叠在视频画面顶部，而非画面外单独一行
-  const isVideoOverlay = post.kind === 'video';
+  // 单张竖图按设计意图居左收窄、右侧留白（见 shared.tsx frameCapWidth），不适合出血到满宽——
+  // 出血后留白从"贴边小条"变成"贴中大片"，反而显得图没铺满；竖图维持原有带边距的居中布局
+  const isTallSingleImage = post.kind === 'image' && totalImgs < 2
+    && clampFrameRatio(post.imageRatio ?? (post.imageAspect === 'tall' ? 9 / 16 : 16 / 9)) < 1;
   const authorRow = (
-    <div className={`author-row${isVideoOverlay ? ' author-row--video-overlay' : ''}`}>
+    <div className="author-row">
       <Avatar index={index} seed={avatarSeed} avatarUrl={post.avatarUrl} onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }} />
       <div className="author-meta" onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }}>
         <span className="post-author-name-row">
@@ -425,7 +427,18 @@ export function PostCard({
         </div>
       ) : (
       <>
-      {!isVideoOverlay && authorRow}
+      {authorRow}
+      {post.kind !== 'article' && (
+        <PostContent
+          post={post}
+          collapseLines={4}
+          alwaysExpand={isOwn}
+          forceLocked={channelLocked}
+          lockLabel={channelLockLabel}
+          lockLabelBare={channelLockLabelBare}
+          onUnlockOverride={channelLocked ? openChannelGate : undefined}
+        />
+      )}
       {post.kind === 'article' ? (
         <ArticleFeedCard
           post={post}
@@ -433,9 +446,8 @@ export function PostCard({
           locked={channelLocked}
           lockLabel={channelLockLabel}
         />
-      ) : isVideoOverlay ? (
-        <div className="media-video-bleed">
-          {authorRow}
+      ) : (
+        <div className={isTallSingleImage ? undefined : 'post-media-bleed'}>
           <MediaPlaceholder
             kind={post.kind}
             articleHasCover={post.articleHasCover}
@@ -447,32 +459,19 @@ export function PostCard({
             visibleImgCount={visibleImgCount}
             visiblePercent={channelLocked ? 0 : post.visiblePercent}
             lockActionLabel={channelLocked ? (post.visiblePercent < 100 ? channelLockLabelBare : channelLockLabel) : undefined}
-            onVideoClick={() => (channelLocked ? openChannelGate() : openVideoPlayer(post))}
+            onVideoClick={post.kind === 'video' ? () => (channelLocked ? openChannelGate() : openVideoPlayer(post)) : undefined}
             videoCoverLight={post.videoCoverLight}
+            onImageClick={post.kind === 'image' ? (idx) => {
+              if (channelLocked) {
+                openChannelGate();
+              } else if (idx >= visibleImgCount) {
+                openLink(post.id, 'unlock');
+              } else {
+                openImageLightbox(post, idx, visibleImgCount);
+              }
+            } : undefined}
           />
         </div>
-      ) : (
-        <MediaPlaceholder
-          kind={post.kind}
-          articleHasCover={post.articleHasCover}
-          imageCount={totalImgs}
-          imageAspect={post.imageAspect}
-          imageRatio={post.imageRatio}
-          images={post.images}
-          imageRatios={post.imageRatios}
-          visibleImgCount={visibleImgCount}
-          visiblePercent={channelLocked ? 0 : post.visiblePercent}
-          lockActionLabel={channelLocked ? (post.visiblePercent < 100 ? channelLockLabelBare : channelLockLabel) : undefined}
-          onImageClick={post.kind === 'image' ? (idx) => {
-            if (channelLocked) {
-              openChannelGate();
-            } else if (idx >= visibleImgCount) {
-              openLink(post.id, 'unlock');
-            } else {
-              openImageLightbox(post, idx, visibleImgCount);
-            }
-          } : undefined}
-        />
       )}
       <div onClick={e => e.stopPropagation()}>
         <GeminiNodeBadge
@@ -544,18 +543,6 @@ export function PostCard({
           </span>
         )}
       />
-      {post.kind !== 'article' && (
-        <PostContent
-          post={post}
-          collapseLines={4}
-          alwaysExpand={isOwn}
-          forceLocked={channelLocked}
-          lockLabel={channelLockLabel}
-          lockLabelBare={channelLockLabelBare}
-          onUnlockOverride={channelLocked ? openChannelGate : undefined}
-          authorName={displayName}
-        />
-      )}
       </>
       )}
     </article>
