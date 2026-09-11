@@ -1,7 +1,9 @@
-import { ClipboardList, MessageCircle, Package, PackageX, ScanLine, Search } from 'lucide-react';
+import { useState } from 'react';
+import { ClipboardList, Ellipsis, MessageCircle, Package, PackageX, Pencil, RotateCcw, ScanLine, Search } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, DM_CONVERSATIONS } from '../mockData';
 import { MediaPlaceholder, PageHeader } from '../components/shared';
+import { Ios26Alert } from '../components/Overlays';
 import { formatTokenAmount } from '../stakeConfig';
 import { getShopMinPrice } from '../shopUtils';
 import type { Post } from '../types';
@@ -26,7 +28,9 @@ export function shopCoverVisibleImgCount(post: Post): number {
 
 /** 商品两列网格——供商城首页与「小黄车」搜索结果复用 */
 export function ShopProductGrid({ products }: { products: Post[] }) {
-  const { navigate, t } = useApp();
+  const { navigate, t, openEditPost, delistShopPost, relistShopPost } = useApp();
+  const [moreOpenId, setMoreOpenId] = useState<string | null>(null);
+  const [confirmDelistId, setConfirmDelistId] = useState<string | null>(null);
   if (products.length === 0) {
     return (
       <div className="empty-state" style={{ paddingTop: 60 }}>
@@ -35,45 +39,101 @@ export function ShopProductGrid({ products }: { products: Post[] }) {
     );
   }
   return (
-    <div className="shop-grid">
-      {products.map(p => (
-        <button
-          key={p.id}
-          type="button"
-          className="shop-card"
-          onClick={() => navigate({ page: 'P_SHOP_ITEM', postId: p.id })}
-        >
-          {p.shop?.delisted && (
-            <span className="shop-delisted-badge shop-delisted-badge--cover">
-              <PackageX size={14} strokeWidth={2.2} aria-hidden="true" />
-              {t('已下架')}
-            </span>
-          )}
-          <div className="shop-card-cover" aria-hidden="true">
-            {shopCoverUsesPlaceholder(p) ? (
-              <Package size={30} strokeWidth={1.5} />
-            ) : (
-              <MediaPlaceholder
-                kind={p.kind}
-                articleHasCover={p.articleHasCover}
-                imageCount={p.kind === 'image' ? 1 : p.imageCount}
-                imageAspect={p.imageAspect}
-                visibleImgCount={shopCoverVisibleImgCount(p)}
-              />
-            )}
-          </div>
-          <div className="shop-card-body">
-            <p className="shop-card-title">{p.title.split('\n')[0]}</p>
-            <div className="shop-card-foot">
-              <span className="shop-card-price">
-                {formatTokenAmount(getShopMinPrice(p.shop!))} <span className="shop-card-price-unit">PB</span>
-              </span>
-              <span className="shop-card-seller">{p.author}</span>
+    <>
+      <div className="shop-grid" onClick={() => moreOpenId && setMoreOpenId(null)}>
+        {products.map(p => {
+          const isOwn = p.author === CURRENT_USER;
+          return (
+            // 注：外层不能用 <button> 包 <button>（管理按钮）——嵌套交互元素是无效 HTML，
+            // 部分浏览器（尤其 WebKit）会导致内层点击拿不到事件。改用 div+role="button" 承载整卡点击，
+            // 右侧操作保留原生 <button>，两者是兄弟节点而非嵌套。
+            <div
+              key={p.id}
+              className="shop-card"
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate({ page: 'P_SHOP_ITEM', postId: p.id })}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate({ page: 'P_SHOP_ITEM', postId: p.id });
+                }
+              }}
+            >
+              {p.shop?.delisted && (
+                <span className="shop-delisted-badge shop-delisted-badge--cover">
+                  <PackageX size={14} strokeWidth={2.2} aria-hidden="true" />
+                  {t('已下架')}
+                </span>
+              )}
+              {isOwn && (
+                <div className="shop-card-more-wrap" onClick={e => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    className="shop-card-more-trigger"
+                    aria-label={t('商品管理')}
+                    aria-haspopup="true"
+                    aria-expanded={moreOpenId === p.id}
+                    onClick={() => setMoreOpenId(v => (v === p.id ? null : p.id))}
+                  >
+                    <Ellipsis size={16} strokeWidth={2} aria-hidden="true" />
+                  </button>
+                  {moreOpenId === p.id && (
+                    <div className="more-dropdown more-dropdown--shop-card">
+                      <button type="button" onClick={() => { setMoreOpenId(null); openEditPost(p.id); }}>
+                        <Pencil size={14} strokeWidth={2.2} /> {t('编辑')}
+                      </button>
+                      {p.shop?.delisted ? (
+                        <button type="button" onClick={() => { setMoreOpenId(null); relistShopPost(p.id); }}>
+                          <RotateCcw size={14} strokeWidth={2.2} /> {t('重新上架')}
+                        </button>
+                      ) : (
+                        <button type="button" onClick={() => { setMoreOpenId(null); setConfirmDelistId(p.id); }}>
+                          <PackageX size={14} strokeWidth={2.2} /> {t('下架')}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="shop-card-cover" aria-hidden="true">
+                {shopCoverUsesPlaceholder(p) ? (
+                  <Package size={30} strokeWidth={1.5} />
+                ) : (
+                  <MediaPlaceholder
+                    kind={p.kind}
+                    articleHasCover={p.articleHasCover}
+                    imageCount={p.kind === 'image' ? 1 : p.imageCount}
+                    imageAspect={p.imageAspect}
+                    visibleImgCount={shopCoverVisibleImgCount(p)}
+                  />
+                )}
+              </div>
+              <div className="shop-card-body">
+                <p className="shop-card-title">{p.title.split('\n')[0]}</p>
+                <div className="shop-card-foot">
+                  <span className="shop-card-price">
+                    {formatTokenAmount(getShopMinPrice(p.shop!))} <span className="shop-card-price-unit">PB</span>
+                  </span>
+                  <span className="shop-card-seller">{p.author}</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </button>
-      ))}
-    </div>
+          );
+        })}
+      </div>
+
+      {confirmDelistId && (
+        <Ios26Alert
+          title={t('下架商品')}
+          message={t('下架后，商品会从小黄车中隐藏。')}
+          cancelLabel={t('取消')}
+          confirmLabel={t('下架')}
+          onCancel={() => setConfirmDelistId(null)}
+          onConfirm={() => { delistShopPost(confirmDelistId); setConfirmDelistId(null); }}
+        />
+      )}
+    </>
   );
 }
 

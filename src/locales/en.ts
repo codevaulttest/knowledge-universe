@@ -1064,6 +1064,7 @@ export const en: Record<string, string> = {
   '商品已下架': 'Product delisted',
   '商品已重新上架': 'Product relisted',
   '无法购买自己的商品': 'Can\'t purchase your own product',
+  '商品管理': 'Manage product',
   '商品详情': 'Product',
   '查看商品': 'View product',
   '取消待发送商品': 'Remove pending product',

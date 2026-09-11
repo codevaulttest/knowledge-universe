@@ -1409,7 +1409,7 @@ export default function App({ account, onLanguageChange }: {
           const editPost = posts.find(p => p.id === editPostId);
           return editPost ? (
             <div className="sheet-backdrop" onClick={() => editComposeCloseHandler.current()}>
-              <div className="compose-modal" role="dialog" aria-modal="true" aria-label={t('编辑帖子')} onClick={e => e.stopPropagation()}>
+              <div className={`compose-modal${editPost.shop ? ' compose-modal--compact' : ''}`} role="dialog" aria-modal="true" aria-label={t('编辑帖子')} onClick={e => e.stopPropagation()}>
                 <ComposePage
                   onClose={() => setEditPostId(null)}
                   onRegisterCloseHandler={handler => { editComposeCloseHandler.current = handler; }}

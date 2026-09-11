@@ -165,8 +165,12 @@ export function ComposePage({
             price: Number(row.price),
             stock: Number(row.stock),
           })),
+          ...(isEditMode && editPost?.shop?.delisted ? { delisted: true } : {}),
         }
-      : { price: shopPriceNum, rebatePercent: shopRebate, partnerRebatePercent: shopPartnerRebate, stock: shopStockNum }
+      : {
+          price: shopPriceNum, rebatePercent: shopRebate, partnerRebatePercent: shopPartnerRebate, stock: shopStockNum,
+          ...(isEditMode && editPost?.shop?.delisted ? { delisted: true } : {}),
+        }
     : undefined;
 
   const scheduledAtMs = scheduledAtLocal ? new Date(scheduledAtLocal).getTime() : undefined;
@@ -652,41 +656,43 @@ export function ComposePage({
         {/* —— 非长文模式 —— */}
         {!articleMode && (
           <>
-            {/* 主编辑框 */}
-            <div className="compose-input-wrap">
-              <textarea
-                className={`compose-input${!overlengthAffordable ? ' compose-input--error' : ''}${isEditMode && !shopEligible ? ' compose-input--readonly' : ''}`}
-                placeholder={t('分享你的知识…')}
-                value={text}
-                onChange={e => { if (!isEditMode || shopEligible) setText(e.target.value); }}
-                readOnly={isEditMode && !shopEligible}
-                aria-label={t('帖子内容')}
-              />
-              {isEditMode && !shopEligible ? (
-                <p className="compose-readonly-hint">
-                  {t('已发布内容不可修改，仅支持调整可见档位')}
-                </p>
-              ) : (
-                <>
-                  <div className={`compose-char-count${!overlengthAffordable ? ' compose-char-count--error' : ''}`}>
-                    <span>{text.length}</span>
-                    <span className="compose-char-sep">/</span>
-                    <span>{POST_FREE_CHARS}</span>
-                  </div>
-                  {overlengthFee > 0 && (
-                    overlengthAffordable ? (
-                      <p className="compose-char-fee-hint">
-                        {t('超出免费额度 {count} 字，发布时将收取 {fee} PB 超长费', { count: text.length - POST_FREE_CHARS, fee: overlengthFee })}
-                      </p>
-                    ) : (
-                      <p className="compose-char-error">
-                        {t('超长费余额不足，请减少字数或先充值')}
-                      </p>
-                    )
-                  )}
-                </>
-              )}
-            </div>
+            {/* 主编辑框：编辑态下若是小黄车帖，正文与价格无关，直接不展示，避免和唯一可编辑的单价混在一起 */}
+            {!(isEditMode && shopEligible) && (
+              <div className="compose-input-wrap">
+                <textarea
+                  className={`compose-input${!overlengthAffordable ? ' compose-input--error' : ''}${isEditMode ? ' compose-input--readonly' : ''}`}
+                  placeholder={t('分享你的知识…')}
+                  value={text}
+                  onChange={e => { if (!isEditMode) setText(e.target.value); }}
+                  readOnly={isEditMode}
+                  aria-label={t('帖子内容')}
+                />
+                {isEditMode ? (
+                  <p className="compose-readonly-hint">
+                    {t('已发布内容不可修改，仅支持调整可见档位')}
+                  </p>
+                ) : (
+                  <>
+                    <div className={`compose-char-count${!overlengthAffordable ? ' compose-char-count--error' : ''}`}>
+                      <span>{text.length}</span>
+                      <span className="compose-char-sep">/</span>
+                      <span>{POST_FREE_CHARS}</span>
+                    </div>
+                    {overlengthFee > 0 && (
+                      overlengthAffordable ? (
+                        <p className="compose-char-fee-hint">
+                          {t('超出免费额度 {count} 字，发布时将收取 {fee} PB 超长费', { count: text.length - POST_FREE_CHARS, fee: overlengthFee })}
+                        </p>
+                      ) : (
+                        <p className="compose-char-error">
+                          {t('超长费余额不足，请减少字数或先充值')}
+                        </p>
+                      )
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             {/* 图片添加 & 已选图片（编辑模式隐藏）*/}
             {!isEditMode && !hasVideo && (
@@ -845,7 +851,7 @@ export function ComposePage({
         {/* 参与知识宇宙面额（长文 / 普通帖均可选择，非强制）；编辑模式下仅当帖子已挂小黄车时，
             复用同一张卡片展示商品信息编辑区，其余面额/档位设置不可回看编辑 */}
         {(!isEditMode || shopEligible) && (
-          <div className="compose-section compose-stake-section">
+          <div className={`compose-section compose-stake-section${isEditMode && shopEligible ? ' compose-stake-section--no-divider' : ''}`}>
             {!isEditMode && (
               <>
                 <div className="compose-stake-heading">
@@ -896,32 +902,30 @@ export function ComposePage({
 
             {/* 小黄车：仅 1000 PB 节点帖可挂载。内联在同一张卡片里而非独立 section，
                 这样选中 1000 PB 后开关就在原地展开，不会被推到折叠线以下 */}
-            {isEditMode && shopEligible && (
-              <div className="compose-stake-heading">
-                <ShoppingCart size={16} strokeWidth={2} />
-                <span>{t('小黄车')}</span>
-              </div>
-            )}
             {shopEligible && (
               <div className="compose-shop-section" ref={shopSectionRef}>
-                <button
-                  type="button"
-                  className="compose-shop-toggle"
-                  role="switch"
-                  aria-checked={shopEnabled}
-                  onClick={() => setShopEnabled(v => !v)}
-                >
-                  <span className="compose-shop-toggle__label">
-                    <ShoppingCart size={16} strokeWidth={2} />
-                    {t('参与小黄车')}
-                  </span>
-                  <span className={`compose-shop-switch${shopEnabled ? ' compose-shop-switch--on' : ''}`} aria-hidden="true">
-                    <span className="compose-shop-switch__dot" />
-                  </span>
-                </button>
-                <p className="compose-stake-hint">
-                  {t('开启后，读者能直接下单买走你的商品')}
-                </p>
+                {!isEditMode && (
+                  <>
+                    <button
+                      type="button"
+                      className="compose-shop-toggle"
+                      role="switch"
+                      aria-checked={shopEnabled}
+                      onClick={() => setShopEnabled(v => !v)}
+                    >
+                      <span className="compose-shop-toggle__label">
+                        <ShoppingCart size={16} strokeWidth={2} />
+                        {t('参与小黄车')}
+                      </span>
+                      <span className={`compose-shop-switch${shopEnabled ? ' compose-shop-switch--on' : ''}`} aria-hidden="true">
+                        <span className="compose-shop-switch__dot" />
+                      </span>
+                    </button>
+                    <p className="compose-stake-hint">
+                      {t('开启后，读者能直接下单买走你的商品')}
+                    </p>
+                  </>
+                )}
 
                 {shopEnabled && !hasContacts && (
                   <div className="compose-shop-contacts-nudge">
@@ -934,24 +938,26 @@ export function ComposePage({
 
                 {shopEnabled && (
                   <div className="compose-shop-fields">
-                    <button
-                      type="button"
-                      className="compose-shop-toggle compose-shop-variant-mode"
-                      role="switch"
-                      aria-checked={shopUseVariants}
-                      onClick={() => {
-                        setShopUseVariants(v => {
-                          const next = !v;
-                          if (next && variantRows.length === 0) setVariantRows([newVariantDraft()]);
-                          return next;
-                        });
-                      }}
-                    >
-                      <span className="compose-shop-toggle__label">{t('添加规格')}</span>
-                      <span className={`compose-shop-switch${shopUseVariants ? ' compose-shop-switch--on' : ''}`} aria-hidden="true">
-                        <span className="compose-shop-switch__dot" />
-                      </span>
-                    </button>
+                    {!isEditMode && (
+                      <button
+                        type="button"
+                        className="compose-shop-toggle compose-shop-variant-mode"
+                        role="switch"
+                        aria-checked={shopUseVariants}
+                        onClick={() => {
+                          setShopUseVariants(v => {
+                            const next = !v;
+                            if (next && variantRows.length === 0) setVariantRows([newVariantDraft()]);
+                            return next;
+                          });
+                        }}
+                      >
+                        <span className="compose-shop-toggle__label">{t('添加规格')}</span>
+                        <span className={`compose-shop-switch${shopUseVariants ? ' compose-shop-switch--on' : ''}`} aria-hidden="true">
+                          <span className="compose-shop-switch__dot" />
+                        </span>
+                      </button>
+                    )}
 
                     {shopUseVariants ? (
                       <div className="compose-shop-variants">
@@ -962,7 +968,7 @@ export function ComposePage({
                               <button
                                 type="button"
                                 className="compose-shop-variant-remove"
-                                disabled={variantRows.length <= 1}
+                                disabled={isEditMode || variantRows.length <= 1}
                                 onClick={() => setVariantRows(rows => rows.filter((_, i) => i !== idx))}
                                 aria-label={t('删除')}
                               >
@@ -975,6 +981,7 @@ export function ComposePage({
                               placeholder={t('如 128G · 白色')}
                               value={row.label}
                               onChange={e => setVariantRows(rows => rows.map((r, i) => i === idx ? { ...r, label: e.target.value } : r))}
+                              readOnly={isEditMode}
                             />
                             <div className="compose-shop-variant-row__nums">
                               <label className="compose-shop-field">
@@ -987,27 +994,31 @@ export function ComposePage({
                                   onChange={e => setVariantRows(rows => rows.map((r, i) => i === idx ? { ...r, price: e.target.value } : r))}
                                 />
                               </label>
-                              <label className="compose-shop-field">
-                                <span className="compose-shop-field__label">{t('库存')}</span>
-                                <input
-                                  type="number" inputMode="numeric" min={1} step={1}
-                                  className="compose-shop-input"
-                                  placeholder={t('如 50')}
-                                  value={row.stock}
-                                  onChange={e => setVariantRows(rows => rows.map((r, i) => i === idx ? { ...r, stock: e.target.value } : r))}
-                                />
-                              </label>
+                              {!isEditMode && (
+                                <label className="compose-shop-field">
+                                  <span className="compose-shop-field__label">{t('库存')}</span>
+                                  <input
+                                    type="number" inputMode="numeric" min={1} step={1}
+                                    className="compose-shop-input"
+                                    placeholder={t('如 50')}
+                                    value={row.stock}
+                                    onChange={e => setVariantRows(rows => rows.map((r, i) => i === idx ? { ...r, stock: e.target.value } : r))}
+                                  />
+                                </label>
+                              )}
                             </div>
                           </div>
                         ))}
-                        <button
-                          type="button"
-                          className="compose-shop-variant-add"
-                          onClick={() => setVariantRows(rows => [...rows, newVariantDraft()])}
-                        >
-                          <Plus size={16} strokeWidth={2} />
-                          {t('添加规格')}
-                        </button>
+                        {!isEditMode && (
+                          <button
+                            type="button"
+                            className="compose-shop-variant-add"
+                            onClick={() => setVariantRows(rows => [...rows, newVariantDraft()])}
+                          >
+                            <Plus size={16} strokeWidth={2} />
+                            {t('添加规格')}
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <>
@@ -1020,26 +1031,29 @@ export function ComposePage({
                             value={shopPrice}
                             onChange={e => setShopPrice(e.target.value)}
                           />
-                          {shopPriceNum > 0 && (
+                          {!isEditMode && shopPriceNum > 0 && (
                             <span className="compose-shop-field__hint">
                               {t('下单另收 {fee} SUP/件手续费', { fee: computeShopFee(shopPriceNum) })}
                             </span>
                           )}
                         </label>
 
-                        <label className="compose-shop-field">
-                          <span className="compose-shop-field__label">{t('库存')}</span>
-                          <input
-                            type="number" inputMode="numeric" min={1} step={1}
-                            className="compose-shop-input"
-                            placeholder={t('如 50')}
-                            value={shopStock}
-                            onChange={e => setShopStock(e.target.value)}
-                          />
-                        </label>
+                        {!isEditMode && (
+                          <label className="compose-shop-field">
+                            <span className="compose-shop-field__label">{t('库存')}</span>
+                            <input
+                              type="number" inputMode="numeric" min={1} step={1}
+                              className="compose-shop-input"
+                              placeholder={t('如 50')}
+                              value={shopStock}
+                              onChange={e => setShopStock(e.target.value)}
+                            />
+                          </label>
+                        )}
                       </>
                     )}
 
+                    {!isEditMode && (
                     <div className="compose-shop-field">
                       <span className="compose-shop-field__label compose-shop-field__label--row">
                         <span className="compose-shop-field__label-main">
@@ -1072,7 +1086,9 @@ export function ComposePage({
                         {t('兑换方按此比例获赠优点')}
                       </span>
                     </div>
+                    )}
 
+                    {!isEditMode && (
                     <div className="compose-shop-field">
                       <span className="compose-shop-field__label compose-shop-field__label--row">
                         <span className="compose-shop-field__label-main">{t('合伙人赠送比例')}</span>
@@ -1095,6 +1111,7 @@ export function ComposePage({
                         {t('合伙人按此比例获赠优点')}
                       </span>
                     </div>
+                    )}
                   </div>
                 )}
               </div>

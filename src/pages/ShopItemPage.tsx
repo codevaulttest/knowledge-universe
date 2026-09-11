@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bookmark, Check, ChevronLeft, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, PackageX, Pencil, Phone, Plus, RotateCcw, Send, Share2, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
+import { Bookmark, Check, ChevronLeft, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, PackageX, Pencil, Phone, Plus, Send, Share2, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
 import type { PbWalletId, ProfileContacts, ShippingAddress, ShopOrder } from '../types';
@@ -25,7 +25,6 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
     shippingAddresses, defaultAddress, addShippingAddress, removeShippingAddress, setDefaultAddress, updateShippingAddress,
     placeShopOrder, showToast, openImageLightbox,
     savedPostIds, togglePostAction, userProfile, requestPostInteraction,
-    openEditPost, delistShopPost, relistShopPost,
   } = useApp();
 
   const post = posts.find(p => p.id === postId);
@@ -52,7 +51,6 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   const [pendingDeleteAddrId, setPendingDeleteAddrId] = useState<string | null>(null);
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
-  const [confirmDelist, setConfirmDelist] = useState(false);
 
   // 商品被卖家下架后，非卖家本人不可见；卖家本人仍可进详情页管理并重新上架
   if (!post || !post.shop || (post.shop.delisted && !isOwn)) {
@@ -185,26 +183,6 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
           <span className="sheet-title">{t('商品详情')}</span>
           <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
         </div>
-
-        {isOwn && (
-          <div className="shop-item-management-actions" role="group" aria-label={t('商品管理')}>
-            <button type="button" className="shop-item-management-btn" onClick={() => openEditPost(post.id)}>
-              <Pencil size={16} strokeWidth={2} aria-hidden="true" />
-              {t('编辑')}
-            </button>
-            {post.shop.delisted ? (
-              <button type="button" className="shop-item-management-btn shop-item-management-btn--relist" onClick={() => relistShopPost(post.id)}>
-                <RotateCcw size={16} strokeWidth={2} aria-hidden="true" />
-                {t('重新上架')}
-              </button>
-            ) : (
-              <button type="button" className="shop-item-management-btn shop-item-management-btn--delist" onClick={() => setConfirmDelist(true)}>
-                <PackageX size={16} strokeWidth={2} aria-hidden="true" />
-                {t('下架')}
-              </button>
-            )}
-          </div>
-        )}
 
         {/* 商品图片：只显示首图，无图 / 全锁时回退为占位图 */}
         <div className="shop-item-cover-wrap">
@@ -580,20 +558,6 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
           onConfirm={() => {
             deleteAddress(pendingDeleteAddrId);
             setPendingDeleteAddrId(null);
-          }}
-        />
-      )}
-
-      {confirmDelist && (
-        <Ios26Alert
-          title={t('下架商品')}
-          message={t('下架后，商品会从小黄车中隐藏。')}
-          cancelLabel={t('取消')}
-          confirmLabel={t('下架')}
-          onCancel={() => setConfirmDelist(false)}
-          onConfirm={() => {
-            delistShopPost(post.id);
-            setConfirmDelist(false);
           }}
         />
       )}
