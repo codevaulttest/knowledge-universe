@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BadgeCheck, Check, ChevronRight, CircleCheck, Copy, FileText, Gem, ImageOff, Link, Lock, Radio, RotateCcw, Settings, Star, Wallet } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, FileText, Gem, ImageOff, Link, Lock, Radio, RotateCcw, Settings, Star, Wallet } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { isVerifiedAuthor } from '../mockData';
@@ -108,7 +108,6 @@ export function ChannelCard({
   onManage,
   showAvatar = true,
   showSubscribe = false,
-  showNodeCode = false,
 }: {
   channel: Channel;
   index: number;
@@ -121,125 +120,100 @@ export function ChannelCard({
   showAvatar?: boolean;
   /** 访客视角：在卡片右侧展示「订阅 / 已订阅」快捷入口 */
   showSubscribe?: boolean;
-  /** 在频道目录中展示由频道开通节点生成的节点码，并允许复制。 */
-  showNodeCode?: boolean;
 }) {
-  const { t, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe } = useApp();
-  const [nodeCodeCopied, setNodeCodeCopied] = useState(false);
-  // 旧演示数据兜底由频道 ID 末六位推导；新频道在开通时会保存独立的节点码。
-  const nodeCode = channel.nodeCode ?? channel.id.slice(-6).toUpperCase();
+  const { t, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, openChannelLink, linkedChannelIds } = useApp();
   const subscribedTierIndex = subscribedChannelTiers[channel.id];
   const isExpired = expiredChannelIds.has(channel.id);
   const isSubscribed = subscribedTierIndex != null && !isExpired;
+  const isLinked = linkedChannelIds.has(channel.id);
   const canSubscribe = isSubscribed || isExpired || channel.tiers.some(tr => !tr.archived);
   const subscribedTier = subscribedTierIndex != null ? channel.tiers[subscribedTierIndex] : undefined;
   const subscriptionStatus = subscribedTier
     ? (isExpired ? t('已过期 · {name}', { name: subscribedTier.name }) : t('已订阅 · {name}', { name: subscribedTier.name }))
     : undefined;
-  const copyNodeCode = async () => {
-    try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(nodeCode);
-      } else {
-        const fallback = document.createElement('textarea');
-        fallback.value = nodeCode;
-        document.body.appendChild(fallback);
-        fallback.select();
-        document.execCommand('copy');
-        fallback.remove();
-      }
-      setNodeCodeCopied(true);
-      window.setTimeout(() => setNodeCodeCopied(false), 1800);
-    } catch {
-      // 无法访问系统剪贴板时改用页面内复制，保证本地演示与旧浏览器可用。
-      const fallback = document.createElement('textarea');
-      fallback.value = nodeCode;
-      document.body.appendChild(fallback);
-      fallback.select();
-      document.execCommand('copy');
-      fallback.remove();
-      setNodeCodeCopied(true);
-      window.setTimeout(() => setNodeCodeCopied(false), 1800);
-    }
-  };
   // 注：外层不能用 <button> 包 <button>（管理/订阅按钮）——嵌套交互元素是无效 HTML，
   // 部分浏览器（尤其 WebKit）会导致内层点击拿不到事件。改用 div+role="button" 承载整卡点击，
   // 右侧操作保留原生 <button>，两者是兄弟节点而非嵌套。
   return (
-    <div
-      className="channel-discover-card"
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
-    >
-      {showAvatar && <Avatar index={index} seed={channel.avatarSeed} />}
-      <div className="channel-discover-info">
-        <span className="channel-discover-name">
-          <Radio size={13} strokeWidth={2.2} />
-          {channel.name}
-        </span>
-        <span className="channel-discover-desc">{channel.description}</span>
-        {showNodeCode && (
-          <div className="channel-discover-node-code">
-            <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
-            <span className="channel-discover-node-code-separator" aria-hidden="true">·</span>
-            <span>{nodeCode}</span>
-            <button
-              type="button"
-              className={`channel-discover-node-copy${nodeCodeCopied ? ' channel-discover-node-copy--done' : ''}`}
-              onClick={e => { e.stopPropagation(); copyNodeCode(); }}
-              aria-label={t('复制节点编号')}
-              title={t('复制节点编号')}
-            >
-              {nodeCodeCopied ? <Check size={14} strokeWidth={2.5} /> : <Copy size={14} strokeWidth={2} />}
-            </button>
-          </div>
-        )}
-        {subscriptionStatus && (
-          <div className="channel-discover-meta">
-            <span className={`channel-discover-access${!isExpired ? ' channel-discover-access--subscribed' : ' channel-discover-access--expired'}`}>
-              {subscriptionStatus}
-            </span>
+    <>
+      <div
+        className="channel-discover-card"
+        role="button"
+        tabIndex={0}
+        onClick={onClick}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
+      >
+        {showAvatar && <Avatar index={index} seed={channel.avatarSeed} />}
+        <div className="channel-discover-info">
+          <span className="channel-discover-name">
+            <Radio size={13} strokeWidth={2.2} />
+            {channel.name}
+          </span>
+          <span className="channel-discover-desc">{channel.description}</span>
+          <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
+          {subscriptionStatus && (
+            <div className="channel-discover-meta">
+              <span className={`channel-discover-access${!isExpired ? ' channel-discover-access--subscribed' : ' channel-discover-access--expired'}`}>
+                {subscriptionStatus}
+              </span>
+            </div>
+          )}
+        </div>
+        {(onManage || (showSubscribe && canSubscribe)) && (
+          <div className="channel-discover-actions">
+            {onManage ? (
+              <button
+                type="button"
+                className="channel-manage-btn channel-discover-manage-btn"
+                onClick={e => { e.stopPropagation(); onManage(); }}
+                aria-label={t('管理频道2')}
+                title={t('管理频道2')}
+              >
+                <Settings size={16} strokeWidth={2.2} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={`channel-manage-btn channel-discover-subscribe-btn${isSubscribed ? ' channel-manage-btn--subscribed' : ''}`}
+                onClick={e => { e.stopPropagation(); openChannelSubscribe(channel.id); }}
+              >
+                {isExpired ? (
+                  <>
+                    <RotateCcw size={13} strokeWidth={2.2} aria-hidden="true" />
+                    {t('续费')}
+                  </>
+                ) : isSubscribed ? (
+                  <>
+                    <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
+                    {t('已订阅')}
+                  </>
+                ) : (
+                  <>
+                    <Gem size={13} strokeWidth={2.2} aria-hidden="true" />
+                    {t('订阅')}
+                  </>
+                )}
+              </button>
+            )}
+            {isLinked ? (
+              <div className="gemini-chain gemini-chain--linked channel-discover-link-btn" aria-label={t('已链接')}>
+                <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
+                {t('已链接')}
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="gemini-chain gemini-chain--outline channel-discover-link-btn"
+                onClick={e => { e.stopPropagation(); openChannelLink(channel.id); }}
+              >
+                <Link size={13} strokeWidth={2.2} aria-hidden="true" />
+                {t('链接')}
+              </button>
+            )}
           </div>
         )}
       </div>
-      {onManage && (
-        <button
-          type="button"
-          className="channel-manage-btn channel-discover-manage-btn"
-          onClick={e => { e.stopPropagation(); onManage(); }}
-          aria-label={t('管理频道2')}
-          title={t('管理频道2')}
-        >
-          <Settings size={16} strokeWidth={2.2} />
-        </button>
-      )}
-      {showSubscribe && !onManage && canSubscribe && (
-        <button
-          type="button"
-          className={`channel-manage-btn channel-discover-subscribe-btn${isSubscribed ? ' channel-manage-btn--subscribed' : ''}`}
-          onClick={e => { e.stopPropagation(); openChannelSubscribe(channel.id); }}
-        >
-          {isExpired ? (
-            <>
-              <RotateCcw size={13} strokeWidth={2.2} aria-hidden="true" />
-              {t('续费')}
-            </>
-          ) : isSubscribed ? (
-            <>
-              <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
-              {t('已订阅')}
-            </>
-          ) : (
-            <>
-              <Gem size={13} strokeWidth={2.2} aria-hidden="true" />
-              {t('订阅')}
-            </>
-          )}
-        </button>
-      )}
-    </div>
+    </>
   );
 }
 

@@ -34,6 +34,7 @@ import { OrdersPage } from './pages/OrdersPage';
 import { CertsPage } from './pages/CertsPage';
 import { CertDetailPage } from './pages/CertDetailPage';
 import { NodeDetailPage } from './pages/NodeDetailPage';
+import { AdnPage } from './pages/AdnPage';
 import { accountDisplayName, type AdminAccount } from './adminAccounts';
 
 
@@ -51,6 +52,7 @@ export default function App({ account, onLanguageChange }: {
   const editComposeCloseHandler = useRef<() => void>(() => {});
   // shop-notebook 预置为已加入合伙人，演示「合伙人绑商品不绑人」：同一卖家的新品 shop-mug 需重新加入才享分成
   const [linkedPostIds, setLinkedPostIds] = useState<Set<string>>(new Set(['shop-notebook']));
+  const [linkedChannelIds, setLinkedChannelIds] = useState<Set<string>>(new Set());
   const [followedAuthors, setFollowedAuthors] = useState<Set<string>>(new Set(['阿May的研究笔记']));
   const [repostedPostIds, setRepostedPostIds] = useState<Set<string>>(new Set(['p1', 'p4', 'p6']));
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
@@ -61,6 +63,7 @@ export default function App({ account, onLanguageChange }: {
   const [paySheet, setPaySheet] = useState<PayCtx | null>(null);
   const [stakeModal, setStakeModal] = useState<StakeModalRequest | null>(null);
   const [linkSheet, setLinkSheet] = useState<{ postId: string; mode: 'link' | 'unlock' } | null>(null);
+  const [channelLinkSheet, setChannelLinkSheet] = useState<string | null>(null);
   const pendingPaySuccessRef = useRef<(() => void) | null>(null);
   const pendingPartnerCommentRef = useRef<{ postId: string; text: string } | null>(null);
   const pendingWalletActionRef = useRef<(() => void) | null>(null);
@@ -101,6 +104,7 @@ export default function App({ account, onLanguageChange }: {
   // 知识宇宙页用的钱包地址态，与 walletConnected 同步维护，供该页头部的钱包 chip 展示
   const [walletAddress, setWalletAddress] = useState<string | null>(account?.address ?? MOCK_WALLET_ADDRESS);
   const [walletConnecting, setWalletConnecting] = useState(false);
+  const [adnWithdrawableFec, setAdnWithdrawableFec] = useState(15345);
 
   // 显式的"连接钱包"入口（顶部快捷按钮、主页引导按钮）直接连接，无需二次确认；
   // 若是从确认弹窗触发（携带被拦截的原操作），连接后继续执行该操作
@@ -128,6 +132,12 @@ export default function App({ account, onLanguageChange }: {
     if (walletConnected) { action(); return; }
     pendingWalletActionRef.current = action;
     setShowConnectWallet(true);
+  };
+
+  const withdrawAdnFec = () => {
+    if (adnWithdrawableFec <= 0) return false;
+    setAdnWithdrawableFec(0);
+    return true;
   };
 
   // ── 知识宇宙页：PB 余额 / 邀请绑定 / 周期性空投 ──────────────────
@@ -659,6 +669,16 @@ export default function App({ account, onLanguageChange }: {
       const post = posts.find(p => p.id === postId);
       if (!post?.isNode) return;
       setLinkSheet({ postId, mode });
+    });
+  };
+
+  const openChannelLink = (channelId: string) => {
+    requireWallet(() => {
+      if (linkedChannelIds.has(channelId)) {
+        showToast(t('已链接，无需重复操作'));
+        return;
+      }
+      setChannelLinkSheet(channelId);
     });
   };
 
@@ -1298,8 +1318,8 @@ export default function App({ account, onLanguageChange }: {
   };
 
   const ctx: AppContextValue = {
-    navigate, navigateRoot, goBack, canGoBack: stack.length > 1, openCompose, openComposeWithDraft, showToast, openLink, openPay, openImageLightbox,
-    linkedPostIds, followedAuthors, toggleFollow,
+    navigate, navigateRoot, goBack, canGoBack: stack.length > 1, openCompose, openComposeWithDraft, showToast, openLink, openChannelLink, openPay, openImageLightbox,
+    linkedPostIds, linkedChannelIds, followedAuthors, toggleFollow,
     language, setLanguage, t,
     posts, homeFeedRefreshNonce, refreshHomeFeed, repostedPostIds, likedPostIds, savedPostIds, dislikedPostIds, togglePostAction,
     outgoingTips, recordOutgoingTip,
@@ -1324,7 +1344,7 @@ export default function App({ account, onLanguageChange }: {
     openCreateChannel, createChannelOpen, closeCreateChannel,
     openManageChannel, closeManageChannel,
     demoHideOwnChannels, toggleDemoHideOwnChannels,
-    supWallets, supBalance, supHistory, deductSup, meritBalance: MOCK_MERIT_BALANCE,
+    supWallets, supBalance, supHistory, deductSup, meritBalance: MOCK_MERIT_BALANCE, adnWithdrawableFec, withdrawAdnFec,
     depositAirdropPb, withdrawAirdropPb, depositSiteSup, withdrawSiteSup,
     walletConnected, connectWallet, requireWallet,
     walletAddress, walletConnecting, disconnectWallet,
@@ -1373,6 +1393,7 @@ export default function App({ account, onLanguageChange }: {
         {pageRoute.page === 'P_SHOP' && <ShopPage />}
         {pageRoute.page === 'P_ORDERS' && <OrdersPage initialRole={pageRoute.role} />}
         {pageRoute.page === 'P_CERTS' && <CertsPage />}
+        {pageRoute.page === 'P_ADN' && <AdnPage />}
 
         {/* 码库全局底部导航（知识宇宙内始终保持同一套宿主导航）*/}
         {showBottomNav && <BottomNav route={pageRoute} setTab={setTab} />}
@@ -1514,6 +1535,28 @@ export default function App({ account, onLanguageChange }: {
                 performLink(id);
               }}
               onClose={() => setLinkSheet(null)}
+            />
+          );
+        })()}
+
+        {channelLinkSheet && (() => {
+          const channel = visibleChannels.find(item => item.id === channelLinkSheet);
+          if (!channel) return null;
+          return (
+            <LinkSheet
+              post={{
+                id: channel.id,
+                nodeId: channel.nodeCode ?? channel.id.slice(-6).toUpperCase(),
+                rating: 1,
+                visiblePercent: 100,
+                author: channel.ownerName,
+              }}
+              onSuccess={() => {
+                setLinkedChannelIds(ids => new Set(ids).add(channel.id));
+                setChannelLinkSheet(null);
+                showToast(t('链接成功！子节点已创建'));
+              }}
+              onClose={() => setChannelLinkSheet(null)}
             />
           );
         })()}

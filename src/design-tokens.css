@@ -184,6 +184,9 @@
   --ku-space-5:                20px;
   --ku-space-6:                24px;
   --ku-control-height-sm:      36px;
+  --ku-channel-action-width:   72px;
+  --ku-channel-action-height:  32px;
+  --ku-shadow-control-outline: inset 0 0 0 1px var(--ku-color-primary);
   --ku-profile-editor-background-height: 200px;
 
   /* ═══════════════════════════════════════════════════
@@ -500,6 +503,51 @@
 
   /* 认证徽章金属渐变高光色，与 --ku-cert-gold / --ku-cert-gold-strong 搭配形成金属光泽扫面 */
   --ku-cert-gold-shine:         #F0DBA8;
+
+  /* ═══════════════════════════════════════════════════
+     ADN（独立于知识宇宙主品牌）
+     ═══════════════════════════════════════════════════ */
+  --adn-color-page:             #e9f7ed;
+  --adn-color-surface:          #ffffff;
+  --adn-color-surface-tint:     #ecf8f1;  /* 调浅以保证 --adn-color-accent-strong 文字（如"+1,580 FEC"）在此底色上达到 4.5:1 */
+  --adn-color-text-primary:     #173629;
+  --adn-color-text-secondary:   #4a685a;
+  --adn-color-accent:           #3A9D55;  /* 与兄弟项目 ue/adn 生产环境浅色主题同色号，白字按钮对比度约 3.4:1（用户确认接受，低于本文件其余文字的 4.5:1 红线） */
+  --adn-color-accent-strong:    #2E7E44;
+  --adn-color-accent-tint:      #c9ebd3;
+  --adn-color-progress-track:   #b4dcc0;
+  --adn-color-border:           #c6e4d0;
+  --adn-color-focus:            #075c28;
+  --adn-color-overlay:          rgba(18, 54, 41, 0.38);
+  --adn-font-family:            -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --adn-font-mono:              "SF Mono", "Menlo", ui-monospace, monospace;
+  --adn-text-title:             700 17px/22px var(--adn-font-family);
+  --adn-text-label-lg:          600 14px/19px var(--adn-font-family);
+  --adn-text-label:             600 13px/18px var(--adn-font-family);
+  --adn-text-caption:           400 12px/17px var(--adn-font-family);
+  --adn-text-number:            700 44px/1 var(--adn-font-mono);
+  --adn-text-amount:            700 30px/36px var(--adn-font-mono);
+  --adn-space-1:                4px;
+  --adn-space-2:                8px;
+  --adn-space-3:                12px;
+  --adn-space-4:                16px;
+  --adn-space-5:                20px;
+  --adn-space-6:                24px;
+  --adn-page-padding:           20px;
+  --adn-page-max-width:         390px;
+  --adn-header-height:          52px;
+  --adn-control-height:         46px;
+  --adn-tab-height:             38px;
+  --adn-progress-height:        10px;
+  --adn-holding-progress-size:  64px;
+  --adn-press-offset:           2px;
+  --adn-border-width:           1px;
+  --adn-radius-card:            20px;
+  --adn-radius-control:         14px;
+  --adn-radius-pill:            999px;
+  --adn-shadow-card:            0 10px 24px rgba(34, 104, 60, 0.10);
+  --adn-shadow-button:          0 6px 14px rgba(19, 122, 54, 0.22);
+  --adn-shadow-sheet:           0 20px 56px rgba(18, 54, 41, 0.24);
 
 }
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, CircleCheck, Gem, Radio, RotateCcw, Settings, Share2 } from 'lucide-react';
+import { ChevronRight, CircleCheck, Gem, Link, Radio, RotateCcw, Settings, Share2 } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER } from '../mockData';
 import { PostCard } from '../components/PostCard';
@@ -12,7 +12,7 @@ import { isPostVisible } from '../dateUtils';
 export function ChannelPage({ channelId }: { channelId: string }) {
   const {
     goBack, canGoBack, navigate, channels, posts, subscribedChannelTiers, expiredChannelIds,
-    openChannelSubscribe, openManageChannel, resetChannelTierCooldown, t,
+    openChannelSubscribe, openManageChannel, resetChannelTierCooldown, openChannelLink, linkedChannelIds, t,
   } = useApp();
   const channel = channels.find(c => c.id === channelId);
   const [contentFilter, setContentFilter] = useState<'all' | 'sub'>('all');
@@ -72,14 +72,16 @@ export function ChannelPage({ channelId }: { channelId: string }) {
               <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
             </button>
           </div>
-          <button
-            type="button"
-            className="channel-share-btn channel-page-hero-share"
-            onClick={() => setShareOpen(true)}
-            aria-label={t('分享频道')}
-          >
-            <Share2 size={16} strokeWidth={2} />
-          </button>
+          <div className="channel-page-hero-actions">
+            <button
+              type="button"
+              className="channel-share-btn"
+              onClick={() => setShareOpen(true)}
+              aria-label={t('分享频道')}
+            >
+              <Share2 size={16} strokeWidth={2} />
+            </button>
+          </div>
         </div>
 
         {channel.description && (
@@ -105,7 +107,23 @@ export function ChannelPage({ channelId }: { channelId: string }) {
                 </span>
               )}
             </div>
-            {isOwn ? (
+            <div className="channel-info-bar-actions">
+              {linkedChannelIds.has(channel.id) ? (
+                <div className="gemini-chain gemini-chain--linked channel-info-bar-link" aria-label={t('已链接')}>
+                  <CircleCheck size={14} strokeWidth={2.2} aria-hidden="true" />
+                  {t('已链接')}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="channel-manage-btn channel-info-bar-link"
+                  onClick={() => openChannelLink(channel.id)}
+                >
+                  <Link size={13} strokeWidth={2.2} aria-hidden="true" />
+                  {t('链接')}
+                </button>
+              )}
+              {isOwn ? (
               <button type="button" className="channel-manage-btn" onClick={() => openManageChannel(channel.id)}>
                 <Settings size={13} strokeWidth={2.2} />
                 {t('管理频道2')}
@@ -133,7 +151,8 @@ export function ChannelPage({ channelId }: { channelId: string }) {
                   </>
                 )}
               </button>
-            ) : null}
+              ) : null}
+            </div>
           </div>
         </div>
 

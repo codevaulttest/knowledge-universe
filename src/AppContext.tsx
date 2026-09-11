@@ -14,6 +14,8 @@ export type AppContextValue = {
   openLink: (postId: string, mode?: 'link' | 'unlock') => void;
   openPay: (context: PayCtx) => void;
   linkedPostIds: Set<string>;
+  openChannelLink: (channelId: string) => void;
+  linkedChannelIds: Set<string>;
   followedAuthors: Set<string>;
   toggleFollow: (author: string) => void;
   language: Language;
@@ -123,6 +125,9 @@ export type AppContextValue = {
   withdrawSiteSup: (amount: number) => boolean;
   /** 优点（182）：只读展示资产，不进任何支付选择器。 */
   meritBalance: number;
+  /** ADN 简易页的本地演示余额；仅支持整笔提取。 */
+  adnWithdrawableFec: number;
+  withdrawAdnFec: () => boolean;
   // 游客模式：未连接钱包时可浏览，涉及身份/资产/链上操作需先连接钱包
   walletConnected: boolean;
   connectWallet: () => void;

@@ -74,7 +74,7 @@ function AssetSymbol({ kind }: { kind: 'onchain-pb' | 'onchain-sup' | 'credibili
 
 /** 页顶 hero 资产摘要：最多展示三种高频资产；后续类型以 +N 保持入口高度不变。 */
 export function PlanetHeroBalances() {
-  const { t, language, walletConnected, pbWallets, supWallets, meritBalance } = useApp();
+  const { t, language, walletConnected, pbWallets, supWallets, meritBalance, navigate } = useApp();
   const [pbInfoOpen, setPbInfoOpen] = useState(false);
   const [pbDetailOpen, setPbDetailOpen] = useState(false);
   const [credibilityInfoOpen, setCredibilityInfoOpen] = useState(false);
@@ -274,7 +274,20 @@ export function PlanetHeroBalances() {
                       </button>
                     </span>
                   </div>
-                  <div className="pb-info-balance-row">
+                  <div
+                    className="pb-info-balance-row pb-info-balance-row--link"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { setPbInfoOpen(false); navigate({ page: 'P_ADN' }); }}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setPbInfoOpen(false);
+                        navigate({ page: 'P_ADN' });
+                      }
+                    }}
+                    aria-label={t('查看我的 ADN')}
+                  >
                     <span className="pb-info-balance-label pb-info-balance-label--with-action">
                       <span className="pb-info-balance-asset">
                         <AssetSymbol kind="merit" />
@@ -283,7 +296,7 @@ export function PlanetHeroBalances() {
                       <button
                         type="button"
                         className="asset-overview-info-btn"
-                        onClick={() => setMeritInfoOpen(true)}
+                        onClick={event => { event.stopPropagation(); setMeritInfoOpen(true); }}
                         aria-label={t('查看优点说明')}
                       >
                         <Info size={13} strokeWidth={2} />

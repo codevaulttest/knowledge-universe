@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bookmark, Check, ChevronLeft, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, PackageX, Pencil, Phone, Plus, Send, Share2, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
+import { Bookmark, Check, ChevronLeft, ChevronRight, Circle, CircleCheck, Clock, MapPin, MessageCircle, MessageCircleMore, Minus, Package, PackageX, Pencil, Phone, Plus, Share2, Sparkles, Store, Trash2, Users, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, MOCK_SELLER_CONTACTS } from '../mockData';
 import type { PbWalletId, ProfileContacts, ShippingAddress, ShopOrder } from '../types';
@@ -242,16 +242,6 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
                   >
                     <MessageCircle size={19} strokeWidth={2} aria-hidden="true" />
                     {t('联系')}
-                  </button>
-                )}
-                {!isOwn && (
-                  <button
-                    type="button"
-                    className="shop-item-icon-btn shop-item-dm"
-                    onClick={() => requireWallet(() => navigate({ page: 'P_DM_CHAT', peerId: post.author, productId: post.id }))}
-                    aria-label={t('发消息')}
-                  >
-                    <Send size={16} strokeWidth={2} aria-hidden="true" />
                   </button>
                 )}
                 <button

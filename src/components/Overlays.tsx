@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
-import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Copy, HandCoins, Gift, Plus, Save, Wallet, Loader2, ShieldCheck, ShieldX } from 'lucide-react';
+import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Copy, HandCoins, Gift, Plus, Save, Wallet, Loader2, ShieldCheck, ShieldX, Info } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER, findRegisteredUserByAddress } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
@@ -15,6 +15,7 @@ import type { StakeTier } from '../types';
 import { PbWalletPicker } from './PbWalletPicker';
 import { CHANNEL_OPEN_PB_COST, walletConsumesSup } from '../walletConfig';
 import { shortenAddress } from '../formatAddress';
+import { PartnerRulesSheet } from './PartnerRulesSheet';
 
 
 // Lightbox photo backgrounds — local SVG illustrations, same order as img-grid-cell nth-child
@@ -346,11 +347,12 @@ export function GeminiStakeModal({
   const hasPresetComment = Boolean(presetComment?.trim());
   const [selected, setSelected] = useState<Exclude<StakeTier, 0>>(10);
   const [commentText, setCommentText] = useState('');
+  const [rulesOpen, setRulesOpen] = useState(false);
   const tiers: Exclude<StakeTier, 0>[] = [10, 100, 1000];
   const canConfirm = !isPartner || hasPresetComment || commentText.trim().length > 0;
-  const partnerPercent = post.shop?.partnerRebatePercent ?? 0;
 
   return (
+    <>
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="gemini-stake-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
@@ -360,13 +362,22 @@ export function GeminiStakeModal({
           </button>
         </div>
 
-        <p className="gemini-stake-lead">
-          {isPartner
-            ? (hasPresetComment
-              ? t('选择面额成为合伙人：该商品推广分账比例为 {percent}%，买家下单后产生的优点由已链接的合伙人共享；也可以仅发表评论，不加入分账', { percent: partnerPercent })
-              : t('选择面额并评论，链接该帖成为合伙人：该商品推广分账比例为 {percent}%，买家下单后产生的优点由已链接的合伙人共享', { percent: partnerPercent }))
-            : t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点')}
-        </p>
+        {isPartner ? (
+          <button
+            type="button"
+            className="bsp-rules-entry task-panel-rules-entry--neutral"
+            onClick={() => setRulesOpen(true)}
+            aria-label={t('了解合伙人分账规则')}
+          >
+            <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
+            <span className="bsp-rules-entry-text">{t('了解合伙人分账规则')}</span>
+            <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
+          </button>
+        ) : (
+          <p className="gemini-stake-lead">
+            {t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点')}
+          </p>
+        )}
 
         <div className="stake-tier-list stake-tier-list--row" style={{ marginBottom: 8 }}>
           {tiers.map(tier => (
@@ -421,6 +432,8 @@ export function GeminiStakeModal({
         )}
       </div>
     </div>
+    {rulesOpen && <PartnerRulesSheet onClose={() => setRulesOpen(false)} />}
+    </>
   );
 }
 
@@ -598,8 +611,10 @@ function PaymentConfirmPage({
 // ═══════════════════════════════════════════════════════════════
 // LinkSheet — 链接面额选择 + 支付
 // ═══════════════════════════════════════════════════════════════
+export type LinkTarget = Pick<Post, 'id' | 'nodeId' | 'rating' | 'visiblePercent' | 'channelId' | 'minTierIndex' | 'author'>;
+
 export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
-  post: Post;
+  post: LinkTarget;
   mode?: 'link' | 'unlock';
   onSuccess: (tier: Exclude<StakeTier, 0>) => void;
   onClose: () => void;
@@ -610,6 +625,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done' | 'failed'>('select');
   const [failReason, setFailReason] = useState('');
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
+  const [nodeCodeCopied, setNodeCodeCopied] = useState(false);
 
   const tiers: Exclude<StakeTier, 0>[] = [10, 100, 1000];
   const superAmount = SUPER_BY_TIER[selected];
@@ -638,6 +654,31 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
         onSuccess(selected);
       }, 800);
     }, 1300);
+  };
+
+  const copyNodeCode = async () => {
+    if (!post.nodeId) return;
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(post.nodeId);
+      } else {
+        const fallback = document.createElement('textarea');
+        fallback.value = post.nodeId;
+        document.body.appendChild(fallback);
+        fallback.select();
+        document.execCommand('copy');
+        fallback.remove();
+      }
+    } catch {
+      const fallback = document.createElement('textarea');
+      fallback.value = post.nodeId;
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+    }
+    setNodeCodeCopied(true);
+    window.setTimeout(() => setNodeCodeCopied(false), 1800);
   };
 
   // Full-page confirm/paying/done/failed
@@ -675,12 +716,18 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
         {post.nodeId && (
           <div className="link-modal-post">
             <div className="gemini-left">
-              <KnowledgePlanetIcon className="gemini-icon" />
-              <span className="gemini-label">{t('知识宇宙')}</span>
-              <span className="gemini-sep">·</span>
               <Rating value={post.rating} />
               <span className="gemini-sep">·</span>
               <span className="gemini-id">{post.nodeId}</span>
+              <button
+                type="button"
+                className={`link-modal-node-copy${nodeCodeCopied ? ' link-modal-node-copy--done' : ''}`}
+                onClick={copyNodeCode}
+                aria-label={t('复制节点编号')}
+                title={t('复制节点编号')}
+              >
+                {nodeCodeCopied ? <Check size={14} strokeWidth={2.5} /> : <Copy size={14} strokeWidth={2} />}
+              </button>
             </div>
           </div>
         )}

@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { Download, Link2, Share2, X } from 'lucide-react';
+import { ChevronRight, Download, Info, Link2, Share2, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import type { Post } from '../types';
+import { ShareRulesSheet } from './ShareRulesSheet';
 
 /** 分享商品：链接 + 二维码原型，同屏展示。扫码跳转逻辑尚未实现，链接调起系统分享面板（不支持时降级为复制），二维码支持保存到相册，两者指向同一个 mock 链接。 */
 export function ShopItemShareSheet({ post, onClose }: { post: Post; onClose: () => void }) {
   const { t, showToast } = useApp();
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   const shareLink = `https://wisverse.invalid/shop/${post.id}`;
 
@@ -69,6 +71,7 @@ export function ShopItemShareSheet({ post, onClose }: { post: Post; onClose: () 
   };
 
   return (
+    <>
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="payment-sheet shop-share-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
@@ -97,7 +100,20 @@ export function ShopItemShareSheet({ post, onClose }: { post: Post; onClose: () 
           <Download size={16} strokeWidth={2} />
           {t('保存二维码')}
         </button>
+
+        <button
+          type="button"
+          className="bsp-rules-entry task-panel-rules-entry--neutral"
+          onClick={() => setRulesOpen(true)}
+          aria-label={t('了解分享人分账规则')}
+        >
+          <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
+          <span className="bsp-rules-entry-text">{t('了解分享人分账规则')}</span>
+          <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
+        </button>
       </div>
     </div>
+    {rulesOpen && <ShareRulesSheet onClose={() => setRulesOpen(false)} />}
+    </>
   );
 }

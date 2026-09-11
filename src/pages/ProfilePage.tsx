@@ -185,7 +185,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     <button
       type="button"
       className="channel-summary-entry"
-      onClick={() => showToast(t('该功能暂未开放，敬请期待'))}
+      onClick={() => navigate({ page: 'P_ADN' })}
     >
       <Award size={14} strokeWidth={2.2} className="channel-summary-entry-icon" style={{ color: 'var(--ku-color-shop)' }} />
       <span className="channel-summary-entry-text">
@@ -1359,7 +1359,6 @@ function ChannelDirectoryModal({
               onManage={isOwn ? () => openManageChannel(c.id) : undefined}
               showSubscribe={!isOwn}
               showAvatar={false}
-              showNodeCode
             />
           ))}
           {channelListState.hasMore && (
