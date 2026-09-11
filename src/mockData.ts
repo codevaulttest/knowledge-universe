@@ -647,6 +647,21 @@ export const ALL_POSTS: Post[] = [
     shop: { price: 12000, rebatePercent: 20, partnerRebatePercent: 10, stock: 5 },
   },
   {
+    id: 'shop-mine-variants', author: CURRENT_USER, time: '2 天前',
+    title: '我的手工陶瓷杯（多规格 · 三色可选）。原矿泥料手拉坯，柴烧出窑，每只略有色差纹理，独一无二。',
+    kind: 'image', imageCount: 3, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Cp8mR4',
+    rating: 5, replies: 6, links: 2, shares: 1, saves: 23, likes: 77,
+    shop: {
+      rebatePercent: 20,
+      partnerRebatePercent: 10,
+      variants: [
+        { id: 'cm-blue', label: '天青蓝', price: 168, stock: 15 },
+        { id: 'cm-white', label: '象牙白', price: 168, stock: 20 },
+        { id: 'cm-black', label: '墨黑', price: 188, stock: 8 },
+      ],
+    },
+  },
+  {
     id: 'shop-notebook', author: '拾光杂货铺', time: '6 小时前',
     title: '手账本 A5 · 牛皮纸封面。内页 80g 道林纸，无酸墨水不洇墨。附赠 3 支彩墨钢笔一套。',
     kind: 'image', imageCount: 4, visiblePercent: 100, isNode: true, stakeTier: 1000, nodeId: 'Nb4rT6',

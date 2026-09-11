@@ -88,7 +88,7 @@ export function ShopProductGrid({ products }: { products: Post[] }) {
                           <RotateCcw size={14} strokeWidth={2.2} /> {t('重新上架')}
                         </button>
                       ) : (
-                        <button type="button" onClick={() => { setMoreOpenId(null); setConfirmDelistId(p.id); }}>
+                        <button type="button" className="more-dropdown__danger" onClick={() => { setMoreOpenId(null); setConfirmDelistId(p.id); }}>
                           <PackageX size={14} strokeWidth={2.2} /> {t('下架')}
                         </button>
                       )}

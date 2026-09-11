@@ -348,6 +348,7 @@ export function GeminiStakeModal({
   const [commentText, setCommentText] = useState('');
   const tiers: Exclude<StakeTier, 0>[] = [10, 100, 1000];
   const canConfirm = !isPartner || hasPresetComment || commentText.trim().length > 0;
+  const partnerPercent = post.shop?.partnerRebatePercent ?? 0;
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -362,8 +363,8 @@ export function GeminiStakeModal({
         <p className="gemini-stake-lead">
           {isPartner
             ? (hasPresetComment
-              ? t('选择面额成为合伙人，或仅发表评论')
-              : t('选择面额并评论，链接该帖成为合伙人'))
+              ? t('选择面额成为合伙人：以后买家下单，你按 {percent}% 的比例获得优点分账；也可以仅发表评论，不加入分账', { percent: partnerPercent })
+              : t('选择面额并评论，链接该帖成为合伙人：以后买家下单，你按 {percent}% 的比例获得优点分账', { percent: partnerPercent }))
             : t('该帖子已参与知识宇宙，选择面额后同步链接创建子节点')}
         </p>
 

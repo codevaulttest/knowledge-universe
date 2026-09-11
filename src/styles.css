@@ -2068,6 +2068,7 @@ button {
 }
 .compose-modal--compact .compose-modal-body {
   flex: none;
+  padding-bottom: 24px;
 }
 .compose-modal-header {
   display: grid;
@@ -2209,10 +2210,8 @@ button {
   cursor: default;
 }
 .compose-input--readonly:focus { border-color: var(--ku-color-border-card); }
-.compose-readonly-hint {
-  margin: 6px 0 0;
-  font: var(--ku-text-meta);
-  color: var(--ku-color-text-meta);
+.compose-input--readonly-compact {
+  min-height: 66px;
 }
 /* Attached images */
 .compose-img-grid { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -2634,6 +2633,10 @@ button {
   padding-top: 14px;
 }
 .compose-stake-section--no-divider {
+  border-top: none;
+  padding-top: 0;
+}
+.compose-shop-section.compose-shop-section--no-divider {
   border-top: none;
   padding-top: 0;
 }
