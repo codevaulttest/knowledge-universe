@@ -18,7 +18,7 @@ export function ShareRulesSheet({ onClose }: { onClose: () => void }) {
         <div className="pb-info-sheet-body">
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('分享二维码：')}</strong>
-            {t('通过你保存的二维码成交时，你独享本单分账优点的 80%。')}
+            {t('通过你保存的二维码成交时，你独享本单分账优点的 80%，另外 20% 由本商品已链接的合伙人共享。')}
           </p>
 
           <p className="pb-info-sheet-para">

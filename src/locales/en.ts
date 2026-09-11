@@ -1116,7 +1116,7 @@ export const en: Record<string, string> = {
   '了解分享人分账规则': 'How sharer payouts work',
   '分享人分账规则': 'Sharer payout rules',
   '分享二维码：': 'Share your QR code:',
-  '通过你保存的二维码成交时，你独享本单分账优点的 80%。': "When an order comes through your saved QR code, you keep 80% of that order's payout merit.",
+  '通过你保存的二维码成交时，你独享本单分账优点的 80%，另外 20% 由本商品已链接的合伙人共享。': "When an order comes through your saved QR code, you keep 80% of that order's payout merit; the other 20% is shared among this product's linked partners.",
   '假设本单形成 100 优点分账池，通过你的二维码成交，你将获得其中 80 优点。': 'Say an order generates a 100-merit payout pool — if it comes through your QR code, you get 80 of that merit.',
   '仅评论': 'Maybe later',
   '合计': 'Total',
