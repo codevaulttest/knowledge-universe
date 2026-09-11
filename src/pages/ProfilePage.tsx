@@ -210,7 +210,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
     { key: 'minted', label: t('已确权'), count: mintedCertCount },
     { key: 'burned', label: t('已销毁'), count: burnedCertCount },
     { key: 'scheduled', label: t('定时'), count: scheduledPosts.length },
-    { key: 'shop', label: t('小黄车'), count: shopPosts.length },
+    { key: 'shop', label: t('小黄车') },
   ];
   // 自己主页/他人主页各自的「只看小黄车」入口都命中这里，统一渲染商品网格而非帖子信息流
   const isShopView = (isOwn && profileTab === 0 && postCertFilter === 'shop') || (!isOwn && contentFilter === 'shop');
