@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronRight, CircleCheck, Gem, Radio, X } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { getChannelSubscribers } from '../mockData';
+import { getMutualSubscriberCount } from '../mockData';
 import { Avatar } from './shared';
 
 const BATCH_SIZE = 4;
@@ -19,7 +19,7 @@ export function SuggestedChannelsCard() {
     })
     .map(channel => ({
       channel,
-      mutualCount: getChannelSubscribers(channel).filter(s => followedAuthors.has(s.name)).length,
+      mutualCount: getMutualSubscriberCount(channel, followedAuthors),
     }))
     .sort((a, b) => b.mutualCount - a.mutualCount);
   if (pool.length === 0) return null;

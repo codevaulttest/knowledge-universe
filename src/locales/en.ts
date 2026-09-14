@@ -807,6 +807,7 @@ export const en: Record<string, string> = {
   '查看全部推荐频道': 'View all suggested channels',
   '不感兴趣': 'Not interested',
   '还没有订阅任何频道': 'You haven\'t subscribed to any channels yet',
+  '已经订阅了全部频道': 'You\'ve subscribed to every channel',
   '去"发现"里看看有没有喜欢的频道': 'Check out "Discover" to find channels you like',
   '签到': 'Check in',
   '推荐': 'For You',

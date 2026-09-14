@@ -496,6 +496,11 @@ export function getChannelSubscribers(channel: Channel): ChannelSubscriber[] {
   return byId ?? [];
 }
 
+/** 频道推荐信号：与当前用户共同订阅的人越多，频道越值得推荐 */
+export function getMutualSubscriberCount(channel: Channel, followedAuthors: Set<string>): number {
+  return getChannelSubscribers(channel).filter(s => followedAuthors.has(s.name)).length;
+}
+
 export const ALL_POSTS: Post[] = [
   {
     id: 'p6', author: '极客前沿', time: '2 天前',

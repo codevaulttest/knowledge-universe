@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ScanLine, Search, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
+import { ALL_USERS_MOCK, BATCH_SIZE, getMutualSubscriberCount } from '../mockData';
 import type { Channel, Post, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { ChannelCard } from '../components/shared';
@@ -111,10 +111,8 @@ function FollowFeed({ followedAuthors }: { followedAuthors: Set<string> }) {
 }
 
 // ── ChannelDiscoverFeed（频道发现：类似 YouTube 频道推荐）──────────
-const CHANNEL_DISCOVER_BATCH = 3;
-
 function ChannelDiscoverFeed() {
-  const { channels, subscribedChannelTiers, navigate, t, channelDiscoverAutoOpen, setChannelDiscoverAutoOpen } = useApp();
+  const { channels, subscribedChannelTiers, expiredChannelIds, followedAuthors, navigate, t, channelDiscoverAutoOpen, setChannelDiscoverAutoOpen } = useApp();
   const [scope, setScope] = useState<'all' | 'subscribed'>('subscribed');
 
   useEffect(() => {
@@ -127,9 +125,20 @@ function ChannelDiscoverFeed() {
     () => channels.filter(c => subscribedChannelTiers[c.id] != null),
     [channels, subscribedChannelTiers],
   );
+  // 发现：排除已订阅频道，按与当前用户共同订阅的人数排序，而非原始列表顺序
+  const discoverChannels = useMemo(() => {
+    return channels
+      .filter(c => {
+        const subscribedTierIndex = subscribedChannelTiers[c.id];
+        const isSubscribed = subscribedTierIndex != null && !expiredChannelIds.has(c.id);
+        return !isSubscribed;
+      })
+      .map(channel => ({ channel, mutualCount: getMutualSubscriberCount(channel, followedAuthors) }))
+      .sort((a, b) => b.mutualCount - a.mutualCount);
+  }, [channels, subscribedChannelTiers, expiredChannelIds, followedAuthors]);
   const displayedChannels = scope === 'subscribed'
-    ? subscribedChannels
-    : channels.slice(0, CHANNEL_DISCOVER_BATCH);
+    ? subscribedChannels.map(channel => ({ channel, mutualCount: 0 }))
+    : discoverChannels;
 
   if (channels.length === 0) {
     return (
@@ -160,17 +169,24 @@ function ChannelDiscoverFeed() {
       </nav>
 
       {displayedChannels.length === 0 ? (
-        <div className="empty-state">
-          <p>{t('还没有订阅任何频道')}</p>
-          <p className="empty-sub">{t('去"发现"里看看有没有喜欢的频道')}</p>
-        </div>
-      ) : displayedChannels.map((channel, i) => (
+        scope === 'subscribed' ? (
+          <div className="empty-state">
+            <p>{t('还没有订阅任何频道')}</p>
+            <p className="empty-sub">{t('去"发现"里看看有没有喜欢的频道')}</p>
+          </div>
+        ) : (
+          <div className="empty-state">
+            <p>{t('已经订阅了全部频道')}</p>
+          </div>
+        )
+      ) : displayedChannels.map(({ channel, mutualCount }, i) => (
         <ChannelCard
           key={channel.id}
           channel={channel}
           index={i % 3}
           onClick={() => navigate({ page: 'P_CHANNEL', channelId: channel.id })}
           showSubscribe
+          mutualCount={scope === 'all' ? mutualCount : undefined}
         />
       ))}
     </section>
