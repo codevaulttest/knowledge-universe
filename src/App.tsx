@@ -616,6 +616,12 @@ export default function App({ account, onLanguageChange }: {
   };
   const goBack = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
   const setTab = (t: 0 | 1 | 2) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
+  // 跳转到频道 tab 并自动切到「发现」子标签（用于「为你推荐的频道」卡片的「查看全部」）
+  const [channelDiscoverAutoOpen, setChannelDiscoverAutoOpen] = useState(false);
+  const openChannelDiscover = () => {
+    setTab(2);
+    setChannelDiscoverAutoOpen(true);
+  };
 
   useEffect(() => {
     if (pageRoute.page !== 'P0' && navBarsHidden) setNavBarsHidden(false);
@@ -1338,6 +1344,7 @@ export default function App({ account, onLanguageChange }: {
     userProfile, updateUserProfile,
     editProfileAutoOpen, setEditProfileAutoOpen, openEditProfileContacts,
     nodeTransferAutoOpenId, setNodeTransferAutoOpenId,
+    channelDiscoverAutoOpen, setChannelDiscoverAutoOpen, openChannelDiscover,
     channels: visibleChannels, subscribedChannelTiers, expiredChannelIds,
     openChannelSubscribe, subscribeToChannelTier,
     createChannel, updateChannel, resetChannelTierCooldown,

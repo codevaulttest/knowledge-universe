@@ -93,6 +93,11 @@ export type AppContextValue = {
   setNodeTransferAutoOpenId: Dispatch<SetStateAction<string | null>>;
   /** 跳转到自己的主页并自动展开「账户与资料」 */
   openEditProfileContacts: () => void;
+  /** 跳转频道 tab 后是否自动切到「发现」子标签的单次标记（消费后需自行置回 false） */
+  channelDiscoverAutoOpen: boolean;
+  setChannelDiscoverAutoOpen: Dispatch<SetStateAction<boolean>>;
+  /** 跳转到频道 tab 并自动切到「发现」子标签 */
+  openChannelDiscover: () => void;
   channels: Channel[];
   // 频道 id → 当前订阅的档位下标（未订阅则不在此 map 中；到期后仍保留，用于「续费」时回显原档位）
   subscribedChannelTiers: Record<string, number>;

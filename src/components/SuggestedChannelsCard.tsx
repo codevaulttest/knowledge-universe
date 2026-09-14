@@ -1,30 +1,16 @@
 import React, { useState } from 'react';
-import { CircleCheck, Gem, Radio, RefreshCw, X } from 'lucide-react';
+import { ChevronRight, CircleCheck, Gem, Radio, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { getChannelSubscribers } from '../mockData';
-import type { Channel } from '../types';
 import { Avatar } from './shared';
 
 const BATCH_SIZE = 4;
 
-type ChannelWithMutual = { channel: Channel; mutualCount: number };
-
-function pickBatch(pool: ChannelWithMutual[], batchIndex: number): ChannelWithMutual[] {
-  if (pool.length <= BATCH_SIZE) return pool;
-  const start = (batchIndex * BATCH_SIZE) % pool.length;
-  const batch: ChannelWithMutual[] = [];
-  for (let i = 0; i < BATCH_SIZE; i++) {
-    batch.push(pool[(start + i) % pool.length]);
-  }
-  return batch;
-}
-
 export function SuggestedChannelsCard() {
-  const { channels, subscribedChannelTiers, expiredChannelIds, followedAuthors, openChannelSubscribe, navigate, t } = useApp();
+  const { channels, subscribedChannelTiers, expiredChannelIds, followedAuthors, openChannelSubscribe, navigate, openChannelDiscover, t } = useApp();
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [batchIndex, setBatchIndex] = useState(0);
 
-  // 有共同订阅的频道更值得推荐，排在前面；换一批时也保持这个优先级
+  // 有共同订阅的频道更值得推荐，排在前面
   const pool = channels
     .filter(c => {
       const subscribedTierIndex = subscribedChannelTiers[c.id];
@@ -38,24 +24,21 @@ export function SuggestedChannelsCard() {
     .sort((a, b) => b.mutualCount - a.mutualCount);
   if (pool.length === 0) return null;
 
-  const canRefresh = pool.length > BATCH_SIZE;
-  const batch = pickBatch(pool, batchIndex);
+  const batch = pool.slice(0, BATCH_SIZE);
 
   return (
     <section className="suggested-users-card">
       <div className="suggested-users-head">
         <span className="suggested-users-label">{t('为你推荐的频道')}</span>
-        {canRefresh && (
-          <button
-            type="button"
-            className="channel-refresh-btn"
-            onClick={() => setBatchIndex(i => i + 1)}
-            aria-label={t('换一批推荐频道')}
-          >
-            <RefreshCw size={13} strokeWidth={2.2} />
-            {t('换一批')}
-          </button>
-        )}
+        <button
+          type="button"
+          className="channel-refresh-btn"
+          onClick={openChannelDiscover}
+          aria-label={t('查看全部推荐频道')}
+        >
+          {t('查看全部')}
+          <ChevronRight size={13} strokeWidth={2.2} />
+        </button>
       </div>
       <div className="suggested-users-row">
         {batch.map(({ channel, mutualCount }, i) => {

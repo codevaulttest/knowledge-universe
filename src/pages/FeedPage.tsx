@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { RefreshCw, ScanLine, Search, Wallet } from 'lucide-react';
+import { ScanLine, Search, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
 import type { Channel, Post, RepostedBy } from '../types';
@@ -113,28 +113,23 @@ function FollowFeed({ followedAuthors }: { followedAuthors: Set<string> }) {
 // ── ChannelDiscoverFeed（频道发现：类似 YouTube 频道推荐）──────────
 const CHANNEL_DISCOVER_BATCH = 3;
 
-function pickDiscoverBatch(pool: Channel[], batchIndex: number): Channel[] {
-  if (pool.length <= CHANNEL_DISCOVER_BATCH) return pool;
-  const start = (batchIndex * CHANNEL_DISCOVER_BATCH) % pool.length;
-  const batch: Channel[] = [];
-  for (let i = 0; i < CHANNEL_DISCOVER_BATCH; i++) {
-    batch.push(pool[(start + i) % pool.length]);
-  }
-  return batch;
-}
-
 function ChannelDiscoverFeed() {
-  const { channels, subscribedChannelTiers, navigate, t } = useApp();
+  const { channels, subscribedChannelTiers, navigate, t, channelDiscoverAutoOpen, setChannelDiscoverAutoOpen } = useApp();
   const [scope, setScope] = useState<'all' | 'subscribed'>('subscribed');
-  const [batchIndex, setBatchIndex] = useState(0);
+
+  useEffect(() => {
+    if (channelDiscoverAutoOpen) {
+      setScope('all');
+      setChannelDiscoverAutoOpen(false);
+    }
+  }, [channelDiscoverAutoOpen, setChannelDiscoverAutoOpen]);
   const subscribedChannels = useMemo(
     () => channels.filter(c => subscribedChannelTiers[c.id] != null),
     [channels, subscribedChannelTiers],
   );
   const displayedChannels = scope === 'subscribed'
     ? subscribedChannels
-    : pickDiscoverBatch(channels, batchIndex);
-  const canRefresh = scope === 'all' && channels.length > CHANNEL_DISCOVER_BATCH;
+    : channels.slice(0, CHANNEL_DISCOVER_BATCH);
 
   if (channels.length === 0) {
     return (
@@ -164,24 +159,6 @@ function ChannelDiscoverFeed() {
         </button>
       </nav>
 
-      {displayedChannels.length > 0 && (
-        <div className="channel-discover-section-head">
-          <span className="channel-discover-section-label">
-            {scope === 'all' ? t('为你推荐') : t('我的订阅')}
-          </span>
-          {canRefresh && (
-            <button
-              type="button"
-              className="channel-refresh-btn"
-              onClick={() => setBatchIndex(i => i + 1)}
-              aria-label={t('换一批频道推荐')}
-            >
-              <RefreshCw size={13} strokeWidth={2.2} />
-              {t('换一批')}
-            </button>
-          )}
-        </div>
-      )}
       {displayedChannels.length === 0 ? (
         <div className="empty-state">
           <p>{t('还没有订阅任何频道')}</p>
