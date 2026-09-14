@@ -5,11 +5,14 @@ import { ALL_USERS_MOCK, BATCH_SIZE } from '../mockData';
 import type { Channel, Post, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
 import { ChannelCard } from '../components/shared';
+import { SuggestedChannelsCard } from '../components/SuggestedChannelsCard';
 import { DevPanel } from '../components/DevPanel';
 import { ShopFeed } from './ShopPage';
 import { isPostVisible } from '../dateUtils';
 
-type FeedEntry = { post: Post; repostedBy?: RepostedBy };
+type FeedEntry =
+  | { kind: 'post'; post: Post; repostedBy?: RepostedBy }
+  | { kind: 'suggested-users' };
 
 // feed 第二条 mock 帖子固定演示为「转发」样式
 const DEMO_REPOST_INDEX = 1;
@@ -18,6 +21,9 @@ const DEMO_REPOSTER: RepostedBy = {
   avatarIdx: ALL_USERS_MOCK.find(u => u.name === '游牧开发者')?.avatarIdx ?? 2,
 };
 
+// 「为你推荐的人」卡片插入位置：第 N 篇帖子之后（避开上面的转发演示位）
+const SUGGESTED_USERS_INSERT_INDEX = 3;
+
 function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElement | null> }) {
   const { posts, t } = useApp();
   const [shownCount, setShownCount] = useState(BATCH_SIZE);
@@ -25,9 +31,19 @@ function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElemen
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // 下架的原帖 / 定时发布未到时间的帖子不出现在公共 feed 里
-  const entries: FeedEntry[] = posts
-    .filter(post => !post.deleted && isPostVisible(post))
-    .map((post, i) => (i === DEMO_REPOST_INDEX ? { post, repostedBy: DEMO_REPOSTER } : { post }));
+  const entries: FeedEntry[] = useMemo(() => {
+    const postEntries: FeedEntry[] = posts
+      .filter(post => !post.deleted && isPostVisible(post))
+      .map((post, i) => (i === DEMO_REPOST_INDEX ? { kind: 'post', post, repostedBy: DEMO_REPOSTER } : { kind: 'post', post }));
+    if (postEntries.length > SUGGESTED_USERS_INSERT_INDEX) {
+      return [
+        ...postEntries.slice(0, SUGGESTED_USERS_INSERT_INDEX),
+        { kind: 'suggested-users' },
+        ...postEntries.slice(SUGGESTED_USERS_INSERT_INDEX),
+      ];
+    }
+    return postEntries;
+  }, [posts]);
   const hasMore = shownCount < entries.length;
 
   useEffect(() => {
@@ -58,12 +74,16 @@ function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElemen
   return (
     <section className="feed" data-layer="feed">
       {entries.slice(0, shownCount).map((entry, i) => (
-        <PostCard
-          key={`${entry.post.id}-${entry.repostedBy?.name ?? 'orig'}`}
-          post={entry.post}
-          index={i % 3}
-          repostedBy={entry.repostedBy}
-        />
+        entry.kind === 'suggested-users' ? (
+          <SuggestedChannelsCard key="suggested-users" />
+        ) : (
+          <PostCard
+            key={`${entry.post.id}-${entry.repostedBy?.name ?? 'orig'}`}
+            post={entry.post}
+            index={i % 3}
+            repostedBy={entry.repostedBy}
+          />
+        )
       ))}
       {loading && <div className="feed-loading"><span className="spinner" /></div>}
       {!hasMore && !loading && <div className="feed-end">— {t('已经到底了')} —</div>}

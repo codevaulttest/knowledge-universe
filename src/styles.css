@@ -528,6 +528,92 @@ button {
   pointer-events: none;
 }
 
+/* ── Suggested Users Card（信息流内插的「为你推荐的人」横向卡片）── */
+.suggested-users-card {
+  /* 前一个 .post 没有 margin-bottom，衔接它时靠自己补足与「两篇帖子之间」一致的间距 */
+  margin: calc(var(--ku-post-gap) * 2) 0 var(--ku-post-gap);
+}
+.suggested-users-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.suggested-users-label {
+  font: 600 12px/1 var(--ku-font-family);
+  color: var(--ku-color-text-meta);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.suggested-users-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 10px var(--ku-feed-padding-x) 2px 0;
+}
+.suggested-users-row::-webkit-scrollbar { display: none; }
+.suggested-user-card {
+  position: relative;
+  flex: 0 0 128px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px 10px;
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  border: 1px solid var(--ku-color-border-card);
+  text-align: center;
+  --ku-avatar-size: 56px;
+}
+.suggested-user-dismiss {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ku-radius-circle);
+  background: var(--ku-color-bg-page);
+  color: var(--ku-color-text-secondary);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.suggested-user-name {
+  font: 600 13px/1.3 var(--ku-font-family);
+  color: var(--ku-color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.suggested-user-name svg { flex-shrink: 0; }
+.suggested-user-name .author-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.suggested-user-meta {
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-meta);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.suggested-user-card .channel-manage-btn {
+  margin-top: 4px;
+  width: 100%;
+  padding: 7px 10px;
+}
+
 /* ── Repost Banner（转发标识，展示在帖子卡片顶部）── */
 .repost-banner {
   display: flex;

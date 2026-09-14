@@ -1,18 +1,49 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Check, Search, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, CURRENT_USER } from '../mockData';
 import { PostCard } from '../components/PostCard';
 import { Avatar, AuthorName, ChannelCard } from '../components/shared';
 import { ShopProductGrid } from './ShopPage';
+import { isPostVisible } from '../dateUtils';
+import type { UserListItem } from '../mockData';
+
+const RECOMMEND_CHANNEL_BATCH = 3;
+const RECOMMEND_USER_COUNT = 3;
+const RECOMMEND_POST_COUNT = 3;
+
+function UserRow({ user, onOpen }: { user: UserListItem; onOpen: (name: string) => void }) {
+  const { followedAuthors, toggleFollow, t } = useApp();
+  const isFollowing = followedAuthors.has(user.name);
+  const isSelf = user.name === CURRENT_USER;
+  return (
+    <div className="follow-list-item" onClick={() => onOpen(user.name)}>
+      <Avatar index={user.avatarIdx} seed={user.name} />
+      <div className="follow-item-info">
+        <AuthorName name={user.name} className="follow-item-name" />
+        <div className="follow-item-desc">{user.desc}</div>
+      </div>
+      {!isSelf && (
+        <button
+          type="button"
+          className={`follow-btn follow-btn--sm${isFollowing ? ' follow-btn--following' : ''}`}
+          onClick={event => {
+            event.stopPropagation();
+            toggleFollow(user.name);
+          }}
+        >
+          {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注')}</span> : t('关注')}
+        </button>
+      )}
+    </div>
+  );
+}
 
 export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () => void; initialShopOnly?: boolean }) {
   const {
     navigate,
     posts,
     channels,
-    followedAuthors,
-    toggleFollow,
     recentSearches,
     saveRecentSearch,
     removeRecentSearch,
@@ -24,6 +55,15 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
   const [isSearching, setIsSearching] = useState(false);
   const [tab, setTab] = useState<'posts' | 'users' | 'channels'>('posts');
   const [shopOnly, setShopOnly] = useState(initialShopOnly);
+  const [inputFocused, setInputFocused] = useState(true);
+  const blurTimerRef = useRef<number | undefined>(undefined);
+
+  // channels/navigate 来自 context，每次渲染都是新引用；不能放进下面 effect 的依赖数组，
+  // 否则每次父组件重渲染都会重置防抖计时器，导致搜索永远无法触发。用 ref 存最新值即可。
+  const channelsRef = useRef(channels);
+  channelsRef.current = channels;
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -34,6 +74,13 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
     }
     setIsSearching(true);
     const timerId = window.setTimeout(() => {
+      const code = trimmed.toUpperCase();
+      const codeMatch = channelsRef.current.find(c => (c.nodeCode ?? c.id.slice(-6).toUpperCase()) === code);
+      if (codeMatch) {
+        saveRecentSearch(trimmed);
+        navigateRef.current({ page: 'P_CHANNEL', channelId: codeMatch.id });
+        return;
+      }
       setDebouncedQ(trimmed.toLowerCase());
       setIsSearching(false);
       saveRecentSearch(trimmed);
@@ -76,10 +123,50 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
   const hasQuery = query.trim().length > 0 || shopOnly;
   const hasResults = visiblePosts.length > 0 || visibleUsers.length > 0 || visibleChannels.length > 0;
 
+  const recommendedChannels = useMemo(
+    () => [...channels].sort((a, b) => b.subscriberCount - a.subscriberCount).slice(0, RECOMMEND_CHANNEL_BATCH),
+    [channels],
+  );
+
+  // 博主没有独立的"热度"字段，用其名下帖子的热力值总和作为热门信号
+  const recommendedUsers = useMemo(() => {
+    const heatByAuthor = new Map<string, number>();
+    for (const post of posts) {
+      if (post.deleted) continue;
+      heatByAuthor.set(post.author, (heatByAuthor.get(post.author) ?? 0) + (post.heat ?? 0));
+    }
+    return ALL_USERS_MOCK
+      .filter(u => u.name !== CURRENT_USER)
+      .slice()
+      .sort((a, b) => (heatByAuthor.get(b.name) ?? 0) - (heatByAuthor.get(a.name) ?? 0))
+      .slice(0, RECOMMEND_USER_COUNT);
+  }, [posts]);
+
+  const recommendedPosts = useMemo(
+    () => posts
+      .filter(p => !p.deleted && isPostVisible(p))
+      .slice()
+      .sort((a, b) => (b.heat ?? 0) - (a.heat ?? 0))
+      .slice(0, RECOMMEND_POST_COUNT),
+    [posts],
+  );
+
+  const findChannelByNodeCode = (raw: string) => {
+    const code = raw.trim().toUpperCase();
+    if (!code) return undefined;
+    return channels.find(c => (c.nodeCode ?? c.id.slice(-6).toUpperCase()) === code);
+  };
+
   const applyQuery = (nextQuery: string) => setQuery(nextQuery);
   const doSearch = () => {
     const trimmed = query.trim();
     if (!trimmed) return;
+    const codeMatch = findChannelByNodeCode(trimmed);
+    if (codeMatch) {
+      saveRecentSearch(trimmed);
+      navigate({ page: 'P_CHANNEL', channelId: codeMatch.id });
+      return;
+    }
     setDebouncedQ(trimmed.toLowerCase());
     setIsSearching(false);
     saveRecentSearch(trimmed);
@@ -87,6 +174,55 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
   const goToProfile = (authorName: string) => {
     navigate({ page: 'P6', authorName });
   };
+
+  const hotAndRecommendSections = (
+    <>
+      {recommendedChannels.length > 0 && (
+        <section className="search-section">
+          <div className="search-section-head">
+            <div className="search-section-label">{t('热门频道')}</div>
+          </div>
+          <div className="channel-discover-list">
+            {recommendedChannels.map((channel, index) => (
+              <ChannelCard
+                key={channel.id}
+                channel={channel}
+                index={index}
+                onClick={() => navigate({ page: 'P_CHANNEL', channelId: channel.id })}
+                showSubscribe
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {recommendedUsers.length > 0 && (
+        <section className="search-section">
+          <div className="search-section-head">
+            <div className="search-section-label">{t('热门博主')}</div>
+          </div>
+          <div className="search-user-list">
+            {recommendedUsers.map(user => (
+              <UserRow key={user.name} user={user} onOpen={goToProfile} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {recommendedPosts.length > 0 && (
+        <section className="search-section">
+          <div className="search-section-head">
+            <div className="search-section-label">{t('热门帖子')}</div>
+          </div>
+          <div className="feed">
+            {recommendedPosts.map((post, index) => (
+              <PostCard key={post.id} post={post} index={index % 3} />
+            ))}
+          </div>
+        </section>
+      )}
+    </>
+  );
 
   return (
     <div className="search-page" role="main" aria-label={t('搜索')}>
@@ -102,7 +238,14 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') doSearch(); }}
-              placeholder={initialShopOnly ? t('搜索商品') : t('搜索帖子、创作者、话题')}
+              onFocus={() => {
+                window.clearTimeout(blurTimerRef.current);
+                setInputFocused(true);
+              }}
+              onBlur={() => {
+                blurTimerRef.current = window.setTimeout(() => setInputFocused(false), 150);
+              }}
+              placeholder={initialShopOnly ? t('搜索商品') : t('搜索帖子、用户、频道、商品')}
               autoFocus
             />
             {query && (
@@ -124,7 +267,7 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
         <div className="search-page-scroll">
         {!hasQuery ? (
           <div className="search-content">
-            {recentSearches.length > 0 && (
+            {inputFocused && recentSearches.length > 0 ? (
               <section className="search-section">
                 <div className="search-section-head">
                   <div className="search-section-label">{t('最近搜索')}</div>
@@ -150,8 +293,9 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
                   ))}
                 </div>
               </section>
+            ) : (
+              hotAndRecommendSections
             )}
-
           </div>
         ) : isSearching ? (
           <div className="search-content">
@@ -208,11 +352,14 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
 
             <div className="search-content">
               {!hasResults ? (
-                <div className="profile-empty-state">
-                  <Search size={32} strokeWidth={1.3} className="profile-empty-icon" />
-                  <p className="profile-empty-title">{t('没有找到相关内容')}</p>
-                  <p className="profile-empty-sub">{t('换个关键词试试，或试试热门话题')}</p>
-                </div>
+                <>
+                  <div className="profile-empty-state">
+                    <Search size={32} strokeWidth={1.3} className="profile-empty-icon" />
+                    <p className="profile-empty-title">{t('没有找到相关内容')}</p>
+                    <p className="profile-empty-sub">{t('换个关键词试试，或试试热门话题')}</p>
+                  </div>
+                  {hotAndRecommendSections}
+                </>
               ) : (
                 <>
                   {visiblePosts.length > 0 && (
@@ -238,35 +385,9 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
                     <section className="search-results-group">
                       {tab !== 'users' && <div className="search-section-label">{t('用户')}</div>}
                       <div className="search-user-list">
-                        {visibleUsers.map(user => {
-                          const isFollowing = followedAuthors.has(user.name);
-                          const isSelf = user.name === CURRENT_USER;
-                          return (
-                            <div
-                              key={user.name}
-                              className="follow-list-item"
-                              onClick={() => goToProfile(user.name)}
-                            >
-                              <Avatar index={user.avatarIdx} seed={user.name} />
-                              <div className="follow-item-info">
-                                <AuthorName name={user.name} className="follow-item-name" />
-                                <div className="follow-item-desc">{user.desc}</div>
-                              </div>
-                              {!isSelf && (
-                                <button
-                                  type="button"
-                                  className={`follow-btn follow-btn--sm${isFollowing ? ' follow-btn--following' : ''}`}
-                                  onClick={event => {
-                                    event.stopPropagation();
-                                    toggleFollow(user.name);
-                                  }}
-                                >
-                                  {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注')}</span> : t('关注')}
-                                </button>
-                              )}
-                            </div>
-                          );
-                        })}
+                        {visibleUsers.map(user => (
+                          <UserRow key={user.name} user={user} onOpen={goToProfile} />
+                        ))}
                       </div>
                     </section>
                   )}
