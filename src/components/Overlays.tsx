@@ -1,7 +1,7 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
 import { Lock, X, ArrowLeft, Play, Pause, ChevronDown, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Copy, HandCoins, Gift, Plus, Wallet, Loader2, ShieldCheck, ShieldX, Info, Minus, Star } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER, findRegisteredUserByAddress, MOCK_WALLET_ADDRESS } from '../mockData';
+import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER, findRegisteredUserByAddress, MOCK_WALLET_ADDRESS, NODE_STARS_BY_CODE } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 import { withFreeTier } from '../channelTiers';
 import { ChannelTierName } from './ChannelTierMedal';
@@ -635,6 +635,12 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
   const [nodeCodeCopied, setNodeCodeCopied] = useState(false);
 
   const isChannelPromotion = !!promotionTarget;
+  const promotionTargetNodeCode = promotionTarget?.nodeCode ?? post.nodeId ?? '';
+  const promotionTargetNodeStars = NODE_STARS_BY_CODE[promotionTargetNodeCode] ?? 1;
+  const promotionChannelNodeInfo = (item: Channel) => {
+    const code = item.nodeCode ?? item.id.slice(-6).toUpperCase();
+    return { code, stars: NODE_STARS_BY_CODE[code] ?? 1 };
+  };
   const promotionChannels = isChannelPromotion
     ? channels.filter(item => item.ownerName === CURRENT_USER)
     : [];
@@ -731,14 +737,24 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
   return (
     <div className={`sheet-backdrop${isChannelPromotion ? ' full-page-flow' : ''}`} onClick={onClose}>
       <div className={`gemini-stake-modal${isChannelPromotion ? ' gemini-stake-modal--full-page' : ''}`} role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
-        <div className="sheet-header">
-          <span className="sheet-title">
-            {isChannelPromotion ? t('博主互推') : mode === 'unlock' ? t('解锁全部内容') : t('创建子节点并链接')}
-          </span>
-          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
-            <X size={18} strokeWidth={2} />
-          </button>
-        </div>
+        {isChannelPromotion ? (
+          <div className="sheet-header sheet-header--centered">
+            <button type="button" className="sheet-header-back" onClick={onClose} aria-label={t('返回')}>
+              <ArrowLeft size={18} strokeWidth={2} />
+            </button>
+            <span className="sheet-title sheet-title--centered">{t('博主互推')}</span>
+            <div className="sheet-header-spacer" aria-hidden />
+          </div>
+        ) : (
+          <div className="sheet-header">
+            <span className="sheet-title">
+              {mode === 'unlock' ? t('解锁全部内容') : t('创建子节点并链接')}
+            </span>
+            <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
+              <X size={18} strokeWidth={2} />
+            </button>
+          </div>
+        )}
 
         <p className="gemini-stake-lead">
           {isChannelPromotion
@@ -751,13 +767,18 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
         {isChannelPromotion && promotionTarget ? (
           <div className="mutual-promotion-target">
             <span className="mutual-promotion-target__label">{t('目标频道')}</span>
-            <strong className="mutual-promotion-target__name">{promotionTarget.name}</strong>
-            <span className="mutual-promotion-target__meta">
-              {t('节点码 {code} · {count} 人订阅', {
-                code: promotionTarget.nodeCode ?? post.nodeId ?? '',
-                count: promotionTarget.subscriberCount,
-              })}
-            </span>
+            <div className="mutual-promotion-target__row">
+              <Avatar index={0} seed={promotionTarget.avatarSeed} avatarUrl={promotionTarget.avatarUrl} />
+              <div className="mutual-promotion-target__body">
+                <strong className="mutual-promotion-target__name">{promotionTarget.name}</strong>
+                <span className="mutual-promotion-target__meta">
+                  <span>{t('{count} 人订阅', { count: promotionTarget.subscriberCount })}</span>
+                  <span aria-hidden="true">·</span>
+                  <Rating value={promotionTargetNodeStars} size={24} />
+                  <span>{promotionTargetNodeCode}</span>
+                </span>
+              </div>
+            </div>
           </div>
         ) : post.nodeId && (
           <div className="link-modal-post">
@@ -789,16 +810,23 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
                   aria-expanded={promotionPickerOpen}
                   onClick={() => setPromotionPickerOpen(open => !open)}
                 >
+                  <Avatar index={0} seed={promotedChannel.avatarSeed} avatarUrl={promotedChannel.avatarUrl} />
                   <span className="mutual-promotion-channel__body">
                     <span className="mutual-promotion-channel__name">{promotedChannel.name}</span>
-                    <span className="mutual-promotion-channel__meta">{t('{count} 人订阅', { count: promotedChannel.subscriberCount })}</span>
+                    <span className="mutual-promotion-channel__meta">
+                      <span>{t('{count} 人订阅', { count: promotedChannel.subscriberCount })}</span>
+                      <span aria-hidden="true">·</span>
+                      <Rating value={promotionChannelNodeInfo(promotedChannel).stars} size={24} />
+                      <span>{promotionChannelNodeInfo(promotedChannel).code}</span>
+                    </span>
                   </span>
                   <ChevronDown size={18} strokeWidth={2.2} aria-hidden="true" />
                 </button>
                 {promotionPickerOpen && (
                   <div className="mutual-promotion-options" role="listbox" aria-label={t('选择要推荐的频道')}>
-                    {promotionChannels.map(channelOption => {
+                    {promotionChannels.map((channelOption, optionIndex) => {
                       const selected = channelOption.id === promotedChannelId;
+                      const nodeInfo = promotionChannelNodeInfo(channelOption);
                       return (
                         <button
                           key={channelOption.id}
@@ -811,9 +839,15 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
                             setPromotionPickerOpen(false);
                           }}
                         >
+                          <Avatar index={optionIndex} seed={channelOption.avatarSeed} avatarUrl={channelOption.avatarUrl} />
                           <span className="mutual-promotion-channel__body">
                             <span className="mutual-promotion-channel__name">{channelOption.name}</span>
-                            <span className="mutual-promotion-channel__meta">{t('{count} 人订阅', { count: channelOption.subscriberCount })}</span>
+                            <span className="mutual-promotion-channel__meta">
+                              <span>{t('{count} 人订阅', { count: channelOption.subscriberCount })}</span>
+                              <span aria-hidden="true">·</span>
+                              <Rating value={nodeInfo.stars} size={24} />
+                              <span>{nodeInfo.code}</span>
+                            </span>
                           </span>
                           {selected && <Check size={18} strokeWidth={2.5} aria-hidden="true" />}
                         </button>
