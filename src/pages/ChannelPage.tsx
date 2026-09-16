@@ -48,123 +48,134 @@ export function ChannelPage({ channelId }: { channelId: string }) {
   return (
     <div className="page">
       <PageHeader
-        title={(
-          <>
-            <Radio size={16} strokeWidth={2.2} aria-hidden="true" />
-            {channel.name}
-          </>
-        )}
         onBack={canGoBack ? goBack : undefined}
+        className="page-header--transparent"
       />
       <div className="scroll-area">
-        {channel.headerBackgroundUrl && (
-          <div className="channel-page-cover">
-            <img src={channel.headerBackgroundUrl} alt="" aria-hidden="true" />
-          </div>
-        )}
         <div className="channel-page-hero">
-          <Avatar
-            index={0}
-            seed={channel.avatarSeed}
-            avatarUrl={channel.avatarUrl}
-            onClick={() => navigate({ page: 'P6', authorName: channel.ownerName })}
+          <img
+            className="channel-page-hero-bg"
+            src={channel.headerBackgroundUrl ?? '/img/genesis-bigbang.webp'}
+            alt=""
+            aria-hidden="true"
           />
-          <div className="channel-page-hero-info">
-            <span className="channel-page-hero-name">{channel.name}</span>
-          </div>
-          <div className="channel-page-hero-actions">
-            <button
-              type="button"
-              className="channel-share-btn"
-              onClick={() => setShareOpen(true)}
-              aria-label={t('分享频道')}
-            >
-              <Share2 size={16} strokeWidth={2} />
-            </button>
-          </div>
-        </div>
-
-        {channel.description && (
-          <p className="channel-page-desc">{channel.description}</p>
-        )}
-
-        <div className="channel-info-bar">
-          <div className="channel-info-bar-top">
-            <div className="channel-info-bar-left">
-              {isOwn ? (
-                <button
-                  type="button"
-                  className="channel-info-bar-sub channel-info-bar-sub--btn"
-                  onClick={() => setShowSubscribers(true)}
-                  aria-label={t('查看 {subscriberCount} 位订阅用户', { subscriberCount: channel.subscriberCount })}
-                >
-                  {t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}
-                  <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
-                </button>
-              ) : (
-                <span className="channel-info-bar-sub">
-                  {t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}
-                </span>
-              )}
+          <div className="channel-page-hero-top">
+            <Avatar
+              index={0}
+              seed={channel.avatarSeed}
+              avatarUrl={channel.avatarUrl}
+              onClick={() => navigate({ page: 'P6', authorName: channel.ownerName })}
+            />
+            <div className="channel-page-hero-info">
+              <span className="channel-page-hero-name">{channel.name}</span>
             </div>
-            <div className="channel-info-bar-actions">
-              {isOwn ? (
-                <button
-                  type="button"
-                  className="channel-info-bar-node-code-plain"
-                  onClick={() => openChannelLink(channel.id)}
-                  aria-label={t('查看节点码 {code} 并链接', { code: channelNodeCode })}
-                >
-                  <Rating value={channelNodeStars} size={26} />
-                  {channelNodeCode}
-                  <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
-                </button>
-              ) : linkedChannelIds.has(channel.id) ? (
-                <div className="gemini-chain gemini-chain--linked channel-info-bar-link" aria-label={t('已链接')}>
-                  <CircleCheck size={14} strokeWidth={2.2} aria-hidden="true" />
-                  {t('已链接')}
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  className="channel-info-bar-node-code-plain"
-                  onClick={() => openChannelLink(channel.id)}
-                  aria-label={t('查看节点码 {code} 并链接', { code: channelNodeCode })}
-                >
-                  <Rating value={channelNodeStars} size={26} />
-                  {channelNodeCode}
-                  <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
-                </button>
-              )}
-              {isOwn ? (
-              <button type="button" className="channel-manage-btn" onClick={() => openManageChannel(channel.id)}>
-                <Settings size={13} strokeWidth={2.2} />
-                {t('管理频道2')}
-              </button>
-            ) : (mySubscribedTierIndex != null || channel.tiers.some(tr => !tr.archived)) ? (
+            <div className="channel-page-hero-actions">
               <button
                 type="button"
-                className={`channel-manage-btn${mySubscribedTierIndex != null && !isSubExpired ? ' channel-manage-btn--subscribed' : ''}`}
-                onClick={() => openChannelSubscribe(channel.id)}
+                className="channel-share-btn"
+                onClick={() => setShareOpen(true)}
+                aria-label={t('分享频道')}
               >
-                {isSubExpired ? (
-                  <>
-                    <RotateCcw size={13} strokeWidth={2.2} aria-hidden="true" />
-                    {t('续费')}
-                  </>
-                ) : mySubscribedTierIndex != null ? (
-                  <>
-                    <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
-                    {t('已订阅 · {name}', { name: channel.tiers[mySubscribedTierIndex].name })}
-                  </>
-                ) : (
-                  <>
-                    <Gem size={13} strokeWidth={2.2} aria-hidden="true" />
-                    {t('订阅')}
-                  </>
-                )}
+                <Share2 size={16} strokeWidth={2} />
               </button>
-              ) : null}
+            </div>
+          </div>
+
+          {channel.description && (
+            <p className="channel-page-desc">{channel.description}</p>
+          )}
+
+          <div className="channel-info-bar">
+            <div className="channel-info-bar-top">
+              <div className="channel-info-bar-left">
+                {isOwn ? (
+                  <button
+                    type="button"
+                    className="channel-info-bar-sub channel-info-bar-sub--btn"
+                    onClick={() => setShowSubscribers(true)}
+                    aria-label={t('查看 {subscriberCount} 位订阅用户', { subscriberCount: channel.subscriberCount })}
+                  >
+                    {t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}
+                    <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <span className="channel-info-bar-sub">
+                    {t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}
+                  </span>
+                )}
+              </div>
+              <div className="channel-info-bar-actions">
+                {isOwn ? (
+                  <button
+                    type="button"
+                    className="channel-info-bar-node-code-plain"
+                    onClick={() => openChannelLink(channel.id)}
+                    aria-label={t('查看节点码 {code} 并链接', { code: channelNodeCode })}
+                  >
+                    <Rating value={channelNodeStars} size={26} />
+                    {channelNodeCode}
+                    <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <div className="channel-info-bar-link-group">
+                    {linkedChannelIds.has(channel.id) ? (
+                      <span
+                        className="channel-info-bar-node-code-plain channel-info-bar-node-code-plain--linked"
+                        aria-label={t('节点码 {code}', { code: channelNodeCode })}
+                      >
+                        <Rating value={channelNodeStars} size={26} />
+                        {channelNodeCode}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="channel-info-bar-node-code-plain"
+                        onClick={() => openChannelLink(channel.id)}
+                        aria-label={t('查看节点码 {code} 并链接', { code: channelNodeCode })}
+                      >
+                        <Rating value={channelNodeStars} size={26} />
+                        {channelNodeCode}
+                        <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
+                      </button>
+                    )}
+                    {linkedChannelIds.has(channel.id) && (
+                      <div className="gemini-chain gemini-chain--linked channel-info-bar-link" aria-label={t('已链接')}>
+                        <CircleCheck size={14} strokeWidth={2.2} aria-hidden="true" />
+                        {t('已链接')}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {isOwn ? (
+                <button type="button" className="channel-manage-btn" onClick={() => openManageChannel(channel.id)}>
+                  <Settings size={13} strokeWidth={2.2} />
+                  {t('管理频道2')}
+                </button>
+              ) : (mySubscribedTierIndex != null || channel.tiers.some(tr => !tr.archived)) ? (
+                <button
+                  type="button"
+                  className={`channel-manage-btn${mySubscribedTierIndex != null && !isSubExpired ? ' channel-manage-btn--subscribed' : ''}`}
+                  onClick={() => openChannelSubscribe(channel.id)}
+                >
+                  {isSubExpired ? (
+                    <>
+                      <RotateCcw size={13} strokeWidth={2.2} aria-hidden="true" />
+                      {t('续费')}
+                    </>
+                  ) : mySubscribedTierIndex != null ? (
+                    <>
+                      <CircleCheck size={13} strokeWidth={2.2} aria-hidden="true" />
+                      {t('已订阅 · {name}', { name: channel.tiers[mySubscribedTierIndex].name })}
+                    </>
+                  ) : (
+                    <>
+                      <Gem size={13} strokeWidth={2.2} aria-hidden="true" />
+                      {t('订阅')}
+                    </>
+                  )}
+                </button>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>

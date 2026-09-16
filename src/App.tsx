@@ -1558,10 +1558,14 @@ export default function App({ account, onLanguageChange }: {
                 visiblePercent: 100,
                 author: channel.ownerName,
               }}
-              onSuccess={() => {
+              promotionTarget={channel}
+              onSuccess={(_, promotedChannelId) => {
+                const promotedChannel = channels.find(item => item.id === promotedChannelId);
                 setLinkedChannelIds(ids => new Set(ids).add(channel.id));
                 setChannelLinkSheet(null);
-                showToast(t('链接成功！子节点已创建'));
+                showToast(promotedChannel
+                  ? t('已获得向《{target}》订阅用户推荐《{channel}》的权限', { target: channel.name, channel: promotedChannel.name })
+                  : t('已获得互推推荐权限'));
               }}
               onClose={() => setChannelLinkSheet(null)}
             />

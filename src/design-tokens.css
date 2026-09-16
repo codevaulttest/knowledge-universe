@@ -166,6 +166,7 @@
   --ku-text-metric-value:      400 13px/1 var(--ku-font-family);     /* 指标数值 */
   --ku-text-node-head:         600 12px/1 var(--ku-font-family);     /* 节点卡头部 */
   --ku-text-action:            400 13px/1 var(--ku-font-family);     /* 操作栏数字 */
+  --ku-text-menu-action:       400 14px/1 var(--ku-font-family);     /* 更多菜单操作 */
   --ku-text-action-cta:        600 12px/1 var(--ku-font-family);    /* 操作栏 CTA 按钮文字 */
   --ku-text-action-cta-lg:     600 13px/1 var(--ku-font-family);    /* 操作栏 CTA 按钮文字 — 大号（Feed 关注按钮 / 热力赞助行） */
   --ku-text-badge:             600 12px/1 var(--ku-font-family);     /* 徽章 */
@@ -187,11 +188,13 @@
   --ku-space-5:                20px;
   --ku-space-6:                24px;
   --ku-control-height-sm:      36px;
+  --ku-control-height-md:      44px;
+  --ku-focus-ring-width:       2px;
+  --ku-focus-ring-offset:      2px;
   --ku-channel-action-width:   72px;
   --ku-channel-action-height:  32px;
   --ku-shadow-control-outline: inset 0 0 0 1px var(--ku-color-primary);
   --ku-profile-editor-background-height: 200px;
-  --ku-channel-cover-height:   120px;
 
   /* ═══════════════════════════════════════════════════
      圆角 (Border Radius)

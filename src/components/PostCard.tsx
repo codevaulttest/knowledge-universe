@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, PackageX, Pencil, Radio, Repeat2, RotateCcw, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, Users, X } from 'lucide-react';
+import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, PackageX, Pencil, Radio, Repeat2, RotateCcw, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, UserMinus, UserPlus, Users, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
@@ -275,21 +275,23 @@ export function PostCard({
   // 出血后留白从"贴边小条"变成"贴中大片"，反而显得图没铺满；竖图维持原有带边距的居中布局
   const isTallSingleImage = post.kind === 'image' && totalImgs < 2
     && clampFrameRatio(post.imageRatio ?? (post.imageAspect === 'tall' ? 9 / 16 : 16 / 9)) < 1;
+  // 帖子归属频道时，身份展示改用频道名顶替博主名（不并列展示两个名字）；点击整行统一跳到该身份的主页
+  const goToIdentity = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+    if (channel) navigate({ page: 'P_CHANNEL', channelId: channel.id });
+    else navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author });
+  };
+  const identityName = channel ? channel.name : displayName;
   const authorRow = (
     <div className="author-row">
-      <Avatar index={index} seed={avatarSeed} avatarUrl={post.avatarUrl} onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }} />
-      <div className="author-meta" onClick={(e) => { e.stopPropagation(); navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author }); }}>
+      <Avatar index={index} seed={avatarSeed} avatarUrl={post.avatarUrl} onClick={goToIdentity} />
+      <div className="author-meta" onClick={goToIdentity} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') goToIdentity(e); }}>
         <span className="post-author-name-row">
-          <AuthorName name={displayName} as="h2" />
+          {channel && <Radio className="post-channel-identity-icon" size={13} strokeWidth={2.2} aria-hidden="true" />}
+          <AuthorName name={identityName} as="h2" />
         </span>
         <div className="author-meta-row">
           <span className="author-time">{localizeTime(post.time, language)}</span>
-          {channel && (
-            <span className="post-channel-badge" aria-label={t('归属频道《{name}》', { name: channel.name })}>
-              <Radio size={11} strokeWidth={2.2} />
-              {channel.name}
-            </span>
-          )}
           {cert?.status === 'minted' && (
             <button
               type="button"
@@ -338,56 +340,63 @@ export function PostCard({
           )}
         </div>
       </div>
-      {isOwn && (
-        <div className="more-menu-wrap" style={{ position: 'relative' }}>
-          <Ellipsis
-            className="more"
-            size={20}
-            strokeWidth={2}
-            role="button"
-            tabIndex={0}
+      {(!hideFollow || isOwn) && (
+        <div className="more-menu-wrap post-more-menu-wrap">
+          <button
+            type="button"
+            className="post-more-trigger"
+            aria-label={t('更多操作')}
+            aria-haspopup="menu"
+            aria-expanded={moreOpen}
             onClick={(e) => { e.stopPropagation(); setMoreOpen(v => !v); }}
-          />
+          >
+            <Ellipsis size={20} strokeWidth={2} aria-hidden="true" />
+          </button>
           {moreOpen && (
-            <div className="more-dropdown" onClick={e => e.stopPropagation()}>
-              {hasActors && (
-                <button type="button" onClick={() => { setMoreOpen(false); setActorsTab('like'); }}>
+            <div className="more-dropdown" role="menu" onClick={e => e.stopPropagation()}>
+              {!isOwn && !hideFollow && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    toggleFollow(post.displayAuthorName ?? post.author);
+                  }}
+                >
+                  {isFollowing
+                    ? <UserMinus size={14} strokeWidth={2.2} />
+                    : <UserPlus size={14} strokeWidth={2.2} />}
+                  {isFollowing ? t('取消关注') : t('关注')}
+                </button>
+              )}
+              {isOwn && hasActors && (
+                <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); setActorsTab('like'); }}>
                   <Users size={14} strokeWidth={2.2} /> {t('查看互动')}
                 </button>
               )}
-              {(post.channelId || post.shop) && (
-                <button type="button" onClick={() => { setMoreOpen(false); openEditPost(post.id); }}>
+              {isOwn && (post.channelId || post.shop) && (
+                <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); openEditPost(post.id); }}>
                   <Pencil size={14} strokeWidth={2.2} /> {t('编辑')}
                 </button>
               )}
-              {post.shop ? (
+              {isOwn && (post.shop ? (
                 post.shop.delisted ? (
-                  <button type="button" onClick={() => { setMoreOpen(false); relistShopPost(post.id); }}>
+                  <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); relistShopPost(post.id); }}>
                     <RotateCcw size={14} strokeWidth={2.2} /> {t('重新上架')}
                   </button>
                 ) : (
-                  <button type="button" onClick={() => { setMoreOpen(false); delistShopPost(post.id); }}>
+                  <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); delistShopPost(post.id); }}>
                     <PackageX size={14} strokeWidth={2.2} /> {t('下架')}
                   </button>
                 )
               ) : (
-                <button type="button" onClick={() => { setMoreOpen(false); requestDeletePost(post.id); }} className="more-dropdown__danger">
+                <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); requestDeletePost(post.id); }} className="more-dropdown__danger">
                   <Trash2 size={14} strokeWidth={2.2} /> {t('删除')}
                 </button>
-              )}
+              ))}
             </div>
           )}
         </div>
-      )}
-      {!isOwn && !hideFollow && (
-        <button
-          type="button"
-          className={`follow-btn follow-btn--sm${isFollowing ? ' follow-btn--following' : ''}`}
-          onClick={(e) => { e.stopPropagation(); toggleFollow(post.displayAuthorName ?? post.author); }}
-          aria-label={isFollowing ? t('取消关注 {author}', { author: displayName }) : t('关注 {author}', { author: displayName })}
-        >
-          {isFollowing ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={12} strokeWidth={2.5} />{t('已关注')}</span> : t('+ 关注')}
-        </button>
       )}
     </div>
   );

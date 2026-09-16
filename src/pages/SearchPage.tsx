@@ -196,19 +196,6 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
         </section>
       )}
 
-      {recommendedUsers.length > 0 && (
-        <section className="search-section">
-          <div className="search-section-head">
-            <div className="search-section-label">{t('热门博主')}</div>
-          </div>
-          <div className="search-user-list">
-            {recommendedUsers.map(user => (
-              <UserRow key={user.name} user={user} onOpen={goToProfile} />
-            ))}
-          </div>
-        </section>
-      )}
-
       {recommendedPosts.length > 0 && (
         <section className="search-section">
           <div className="search-section-head">
@@ -267,7 +254,7 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
         <div className="search-page-scroll">
         {!hasQuery ? (
           <div className="search-content">
-            {inputFocused && recentSearches.length > 0 ? (
+            {inputFocused && recentSearches.length > 0 && (
               <section className="search-section">
                 <div className="search-section-head">
                   <div className="search-section-label">{t('最近搜索')}</div>
@@ -293,9 +280,8 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
                   ))}
                 </div>
               </section>
-            ) : (
-              hotAndRecommendSections
             )}
+            {hotAndRecommendSections}
           </div>
         ) : isSearching ? (
           <div className="search-content">

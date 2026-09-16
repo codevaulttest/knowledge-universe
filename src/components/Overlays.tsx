@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
-import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Copy, HandCoins, Gift, Plus, Wallet, Loader2, ShieldCheck, ShieldX, Info, Minus, Star } from 'lucide-react';
+import { Lock, X, ArrowLeft, Play, Pause, ChevronDown, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Copy, HandCoins, Gift, Plus, Wallet, Loader2, ShieldCheck, ShieldX, Info, Minus, Star } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER, findRegisteredUserByAddress, MOCK_WALLET_ADDRESS } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
@@ -7,7 +7,7 @@ import { withFreeTier } from '../channelTiers';
 import { ChannelTierName } from './ChannelTierMedal';
 import { Avatar, AuthorName, Rating, GeminiNodeBadge } from './shared';
 import { Actions } from './PostCard';
-import { isChinese, localizeTime } from '../i18n';
+import { localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
 import type { Channel, ChannelTier, InteractionAction, PayCtx, PbUse, PbWalletId, Post, PostAction, SupTransactionReason } from '../types';
 import { formatSuperAmount, formatSupAmount, stakeTierDescription, SUPER_BY_TIER, SUP_COST_BY_TIER } from '../stakeConfig';
@@ -469,6 +469,8 @@ function PaymentConfirmPage({
   gasFee,
   walletId,
   failReason,
+  successTitle,
+  successDescription,
   onConfirm,
   onRetry,
   onBack,
@@ -483,6 +485,8 @@ function PaymentConfirmPage({
   gasFee?: string;
   walletId?: PbWalletId | null;
   failReason?: string;
+  successTitle?: string;
+  successDescription?: string;
   onConfirm: () => void;
   onRetry: () => void;
   onBack: () => void;
@@ -589,7 +593,8 @@ function PaymentConfirmPage({
           <div className="pay-page-result-icon pay-page-result-icon--success">
             <Check size={32} strokeWidth={2.5} />
           </div>
-          <span className="pay-page-result-title">{t('支付成功')}</span>
+          <span className="pay-page-result-title">{successTitle ?? t('支付成功')}</span>
+          {successDescription && <p className="pay-page-result-desc">{successDescription}</p>}
         </div>
       )}
 
@@ -609,26 +614,34 @@ function PaymentConfirmPage({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LinkSheet — 链接面额选择 + 支付
+// LinkSheet — 固定面额链接 + 支付
 // ═══════════════════════════════════════════════════════════════
 export type LinkTarget = Pick<Post, 'id' | 'nodeId' | 'rating' | 'visiblePercent' | 'channelId' | 'minTierIndex' | 'author'>;
 
-export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
+const LINK_TIER: Exclude<StakeTier, 0> = 1000;
+
+export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onClose }: {
   post: LinkTarget;
   mode?: 'link' | 'unlock';
-  onSuccess: (tier: Exclude<StakeTier, 0>) => void;
+  /** 仅频道节点码入口传入：互推面向目标频道的订阅用户，不影响帖子链接流程。 */
+  promotionTarget?: Channel;
+  onSuccess: (tier: Exclude<StakeTier, 0>, promotedChannelId?: string) => void;
   onClose: () => void;
 }) {
-  const { t, language, channels, subscribedChannelTiers, expiredChannelIds, payPb, recordTaskInteraction } = useApp();
-  const zh = isChinese(language);
-  const [selected, setSelected] = useState<Exclude<StakeTier, 0>>(10);
+  const { t, channels, subscribedChannelTiers, expiredChannelIds, payPb, recordTaskInteraction } = useApp();
   const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done' | 'failed'>('select');
   const [failReason, setFailReason] = useState('');
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
   const [nodeCodeCopied, setNodeCodeCopied] = useState(false);
 
-  const tiers: Exclude<StakeTier, 0>[] = [10, 100, 1000];
-  const superAmount = SUPER_BY_TIER[selected];
+  const isChannelPromotion = !!promotionTarget;
+  const promotionChannels = isChannelPromotion
+    ? channels.filter(item => item.ownerName === CURRENT_USER)
+    : [];
+  const [promotedChannelId, setPromotedChannelId] = useState<string | null>(() => promotionChannels[0]?.id ?? null);
+  const [promotionPickerOpen, setPromotionPickerOpen] = useState(false);
+  const promotedChannel = promotionChannels.find(item => item.id === promotedChannelId);
+  const superAmount = SUPER_BY_TIER[LINK_TIER];
   const hasHiddenContent = post.visiblePercent < 100;
 
   // 频道会员门槛：未达标时链接不会解锁内容，不展示「解锁」相关文案（与 PostCard 一致）
@@ -641,7 +654,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
   const showUnlockCopy = hasHiddenContent && !channelLocked;
 
   const pay = () => {
-    if (!payWallet || !payPb({ amount: selected, use: 'unlock', wallet: payWallet, supCost: SUP_COST_BY_TIER[selected] })) {
+    if (!payWallet || (isChannelPromotion && !promotedChannel) || !payPb({ amount: LINK_TIER, use: 'unlock', wallet: payWallet, supCost: SUP_COST_BY_TIER[LINK_TIER] })) {
       setFailReason(t('所选钱包余额不足或不适用于此操作'));
       setStep('failed');
       return;
@@ -651,7 +664,7 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
       setStep('done');
       setTimeout(() => {
         if (mode === 'unlock') recordTaskInteraction(post.id);
-        onSuccess(selected);
+        onSuccess(LINK_TIER, promotedChannel?.id);
       }, 800);
     }, 1300);
   };
@@ -687,13 +700,27 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
       <PaymentConfirmPage
         pageStep={step}
         icon={<div className="pay-page-brand-icon"><KnowledgePlanetIcon style={{ width: 30, height: 30 }} /></div>}
-        productName={t('知识宇宙')}
-        remark={post.nodeId ? `节点 ${post.nodeId}` : t('知识宇宙')}
-        amountText={`${selected} PB`}
-        networkFee={`${formatSuperAmount(superAmount)} PB`}
-        tokenFee={`${selected} PB`}
+        productName={isChannelPromotion ? t('博主互推') : t('知识宇宙')}
+        remark={isChannelPromotion && promotionTarget && promotedChannel
+          ? t('向《{target}》的 {count} 位订阅用户推荐《{channel}》', {
+              target: promotionTarget.name,
+              count: promotionTarget.subscriberCount,
+              channel: promotedChannel.name,
+            })
+          : post.nodeId ? `节点 ${post.nodeId}` : t('知识宇宙')}
+        amountText={`${LINK_TIER} PB`}
+        networkFee={isChannelPromotion ? `${SUP_COST_BY_TIER[LINK_TIER]} SUP` : `${formatSuperAmount(superAmount)} PB`}
+        tokenFee={`${LINK_TIER} PB`}
         walletId={payWallet}
         failReason={failReason}
+        successTitle={isChannelPromotion ? t('已获得互推推荐权限') : undefined}
+        successDescription={isChannelPromotion && promotionTarget && promotedChannel
+          ? t('向《{target}》的 {count} 位订阅用户推荐《{channel}》', {
+              target: promotionTarget.name,
+              count: promotionTarget.subscriberCount,
+              channel: promotedChannel.name,
+            })
+          : undefined}
         onConfirm={pay}
         onRetry={() => setStep('confirm')}
         onBack={() => setStep('select')}
@@ -702,18 +729,37 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
   }
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className="gemini-stake-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+    <div className={`sheet-backdrop${isChannelPromotion ? ' full-page-flow' : ''}`} onClick={onClose}>
+      <div className={`gemini-stake-modal${isChannelPromotion ? ' gemini-stake-modal--full-page' : ''}`} role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">
-            {mode === 'unlock' ? t('解锁全部内容') : t('创建子节点并链接')}
+            {isChannelPromotion ? t('博主互推') : mode === 'unlock' ? t('解锁全部内容') : t('创建子节点并链接')}
           </span>
           <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
 
-        {post.nodeId && (
+        <p className="gemini-stake-lead">
+          {isChannelPromotion
+            ? t('在目标频道创建推荐位，将你选择的频道推荐给其订阅用户。')
+            : mode === 'unlock'
+            ? t('消耗 1000 PB 创建知识宇宙子节点，同步解锁全部内容')
+            : t('消耗 1000 PB，在此节点下生成子节点并加入空投激励网络')}
+        </p>
+
+        {isChannelPromotion && promotionTarget ? (
+          <div className="mutual-promotion-target">
+            <span className="mutual-promotion-target__label">{t('目标频道')}</span>
+            <strong className="mutual-promotion-target__name">{promotionTarget.name}</strong>
+            <span className="mutual-promotion-target__meta">
+              {t('节点码 {code} · {count} 人订阅', {
+                code: promotionTarget.nodeCode ?? post.nodeId ?? '',
+                count: promotionTarget.subscriberCount,
+              })}
+            </span>
+          </div>
+        ) : post.nodeId && (
           <div className="link-modal-post">
             <div className="gemini-left">
               <Rating value={post.rating} />
@@ -732,43 +778,80 @@ export function LinkSheet({ post, mode = 'link', onSuccess, onClose }: {
           </div>
         )}
 
-        <p className="gemini-stake-lead">
-          {mode === 'unlock'
-            ? t('选择面额创建知识宇宙子节点，同步解锁全部内容')
-            : t('选择链接面额，在此节点下生成子节点并加入空投激励网络')}
-        </p>
+        {isChannelPromotion && (
+          <fieldset className="mutual-promotion-picker">
+            <legend>{t('选择要推荐的频道')}</legend>
+            {promotedChannel ? (
+              <>
+                <button
+                  type="button"
+                  className="mutual-promotion-channel mutual-promotion-channel--selected"
+                  aria-expanded={promotionPickerOpen}
+                  onClick={() => setPromotionPickerOpen(open => !open)}
+                >
+                  <span className="mutual-promotion-channel__body">
+                    <span className="mutual-promotion-channel__name">{promotedChannel.name}</span>
+                    <span className="mutual-promotion-channel__meta">{t('{count} 人订阅', { count: promotedChannel.subscriberCount })}</span>
+                  </span>
+                  <ChevronDown size={18} strokeWidth={2.2} aria-hidden="true" />
+                </button>
+                {promotionPickerOpen && (
+                  <div className="mutual-promotion-options" role="listbox" aria-label={t('选择要推荐的频道')}>
+                    {promotionChannels.map(channelOption => {
+                      const selected = channelOption.id === promotedChannelId;
+                      return (
+                        <button
+                          key={channelOption.id}
+                          type="button"
+                          role="option"
+                          aria-selected={selected}
+                          className={`mutual-promotion-option${selected ? ' mutual-promotion-option--selected' : ''}`}
+                          onClick={() => {
+                            setPromotedChannelId(channelOption.id);
+                            setPromotionPickerOpen(false);
+                          }}
+                        >
+                          <span className="mutual-promotion-channel__body">
+                            <span className="mutual-promotion-channel__name">{channelOption.name}</span>
+                            <span className="mutual-promotion-channel__meta">{t('{count} 人订阅', { count: channelOption.subscriberCount })}</span>
+                          </span>
+                          {selected && <Check size={18} strokeWidth={2.5} aria-hidden="true" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="mutual-promotion-empty">{t('还没有可推荐的频道')}</p>
+            )}
+          </fieldset>
+        )}
         {mode === 'link' && showUnlockCopy && (
           <p className="link-modal-unlock-hint">
             <Check size={14} className="link-modal-unlock-hint__icon" />
             {t('链接后同步解锁本帖全部内容')}
           </p>
         )}
-        <div className="stake-tier-list stake-tier-list--row" style={{ marginBottom: 8 }}>
-          {tiers.map(tier => (
-            <button
-              key={tier}
-              type="button"
-              className={`stake-tier-option${selected === tier ? ' stake-tier-option--active' : ''}`}
-              onClick={() => setSelected(tier)}
-            >
-              <span className="stake-tier-option__amount">
-                <span className="stake-tier-option__value">{tier}</span>
-                <span className="stake-tier-option__unit">PB</span>
-              </span>
-            </button>
-          ))}
+        <div className="pay-combo-breakdown">
+          <div className="pay-combo-row">
+            <span className="pay-combo-label">{t('PB 消耗')}</span>
+            <span className="pay-combo-value">{formatSuperAmount(LINK_TIER)} PB</span>
+          </div>
+          <div className="pay-combo-row">
+            <span className="pay-combo-label">{t('SUP 消耗')}</span>
+            <span className="pay-combo-value">{formatSupAmount(SUP_COST_BY_TIER[LINK_TIER])} SUP</span>
+          </div>
         </div>
-        <div className="compose-stake-gas" style={{ marginBottom: 16 }}>
-          <span className="compose-stake-gas-label">{t('Gas 费')}</span>
-          <span className="compose-stake-gas-value">{SUP_COST_BY_TIER[selected]} SUP</span>
-        </div>
-        <PbWalletPicker use="unlock" amount={selected} value={payWallet} onChange={setPayWallet} />
-        <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" onClick={() => setStep('confirm')}>
-          {mode === 'unlock'
-            ? t('解锁并创建子节点 · {selected} PB', { selected })
+        <PbWalletPicker use="unlock" amount={LINK_TIER} value={payWallet} onChange={setPayWallet} />
+        <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" disabled={isChannelPromotion && !promotedChannel} onClick={() => setStep('confirm')}>
+          {isChannelPromotion
+            ? t('获得互推推荐权限 · 1000 PB')
+            : mode === 'unlock'
+            ? t('解锁并创建子节点 · {selected} PB', { selected: LINK_TIER })
             : showUnlockCopy
-              ? t('解锁全文并链接 · {selected} PB', { selected })
-              : t('创建子节点并链接 · {selected} PB', { selected })}
+              ? t('解锁全文并链接 · {selected} PB', { selected: LINK_TIER })
+              : t('创建子节点并链接 · {selected} PB', { selected: LINK_TIER })}
         </button>
       </div>
     </div>

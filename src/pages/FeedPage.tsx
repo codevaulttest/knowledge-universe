@@ -99,7 +99,7 @@ function FollowFeed({ followedAuthors }: { followedAuthors: Set<string> }) {
     return (
       <div className="empty-state">
         <p>{t('还没有关注的人')}</p>
-        <p className="empty-sub">{t('去发现感兴趣的创作者，点击帖子右上角「+ 关注」即可')}</p>
+        <p className="empty-sub">{t('去发现感兴趣的创作者，点击帖子右上角「更多」即可关注')}</p>
       </div>
     );
   }

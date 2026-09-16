@@ -328,12 +328,12 @@ export function ProfilePage({ authorName }: { authorName: string }) {
             </>
           )}
         </div>
-        {isOwn ? (
+        {isOwn && (
           <div className="channel-summary-row">
             {channelSection}
             {collabSection}
           </div>
-        ) : channelSection}
+        )}
 
         {/* 关注/打赏/私信操作行延伸进头部视觉区块，与背景插画同属一体 */}
         {!isOwn && (

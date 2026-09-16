@@ -205,21 +205,16 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
           <Avatar
             index={0}
             seed={post.displayAuthorName ?? (isOwn ? userProfile.avatarSeed : post.author)}
-            onClick={() => navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author })}
+            onClick={() => channel ? navigate({ page: 'P_CHANNEL', channelId: channel.id }) : navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author })}
           />
           <div className="author-meta">
             <span className="post-author-name-row">
-              <AuthorName name={displayName} as="h2" />
-              {getGenesisTier(post.author) && <GenesisBadge tier={getGenesisTier(post.author)!} />}
+              {channel && <Radio className="post-channel-identity-icon" size={13} strokeWidth={2.2} aria-hidden="true" />}
+              <AuthorName name={channel ? channel.name : displayName} as="h2" />
+              {!channel && getGenesisTier(post.author) && <GenesisBadge tier={getGenesisTier(post.author)!} />}
             </span>
             <div className="author-meta-row">
               <span className="author-time">{localizeTime(post.time, language)}</span>
-              {channel && (
-                <span className="post-channel-badge" aria-label={t('归属频道《{name}》', { name: channel.name })}>
-                  <Radio size={11} strokeWidth={2.2} />
-                  {channel.name}
-                </span>
-              )}
               {isOwn && requiredTier && (
                 <span className="post-tier-badge" aria-label={t('需订阅达到 {name} 及以上', { name: requiredTier.name })}>
                   <Gem size={11} strokeWidth={2.2} />

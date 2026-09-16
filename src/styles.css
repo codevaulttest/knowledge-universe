@@ -3363,9 +3363,14 @@ button {
   align-items: stretch;
   background: var(--ku-color-bg-phone);
 }
+/* 博主互推为频道页的全页面子流程：宽屏外侧延续父级页面底色，中央内容区仍由子页白底承载。 */
+.sheet-backdrop.full-page-flow:has(.gemini-stake-modal--full-page) {
+  background: var(--ku-color-bg-page);
+}
 .sheet-backdrop.full-page-flow > .payment-sheet,
 .sheet-backdrop.full-page-flow > .edit-profile-sheet,
-.sheet-backdrop.full-page-flow > .follow-list-modal {
+.sheet-backdrop.full-page-flow > .follow-list-modal,
+.sheet-backdrop.full-page-flow > .gemini-stake-modal--full-page {
   width: 100%;
   max-width: var(--ku-layout-max-width);
   max-height: none;
@@ -3377,7 +3382,8 @@ button {
 @media (min-width: 600px) {
   .sheet-backdrop.full-page-flow > .payment-sheet,
   .sheet-backdrop.full-page-flow > .edit-profile-sheet,
-  .sheet-backdrop.full-page-flow > .follow-list-modal {
+  .sheet-backdrop.full-page-flow > .follow-list-modal,
+  .sheet-backdrop.full-page-flow > .gemini-stake-modal--full-page {
     box-shadow: var(--ku-shadow-phone);
   }
 }
@@ -4101,6 +4107,29 @@ button {
 .repost-popover button:hover { background: var(--ku-color-primary-alpha-06); }
 
 /* ── 更多菜单（删除等）── */
+.post-more-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.post-more-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ku-control-height-sm);
+  height: var(--ku-control-height-sm);
+  border-radius: var(--ku-radius-circle);
+  color: var(--ku-color-text-secondary);
+  transition: color var(--ku-motion-fast), background var(--ku-motion-fast);
+}
+.post-more-trigger:hover,
+.post-more-trigger[aria-expanded='true'] {
+  color: var(--ku-color-text-primary);
+  background: var(--ku-color-primary-alpha-06);
+}
+.post-more-trigger:focus-visible {
+  outline: var(--ku-focus-ring-width) solid var(--ku-color-primary-dark);
+  outline-offset: var(--ku-focus-ring-offset);
+}
 .more-dropdown {
   position: absolute;
   top: 28px;
@@ -4120,7 +4149,7 @@ button {
   width: 100%;
   padding: 10px 16px;
   text-align: left;
-  font: 400 13px/1 var(--ku-font-family);
+  font: var(--ku-text-menu-action);
   color: var(--ku-color-text-primary);
   transition: background 0.1s;
 }
@@ -4974,6 +5003,98 @@ button {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   letter-spacing: 0.04em;
 }
+.mutual-promotion-target {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-2);
+  margin-bottom: var(--ku-space-4);
+  padding: var(--ku-space-4);
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-root);
+}
+.mutual-promotion-target__label,
+.mutual-promotion-target__meta,
+.mutual-promotion-channel__meta,
+.mutual-promotion-empty {
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-meta);
+}
+.mutual-promotion-target__name,
+.mutual-promotion-channel__name {
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-primary);
+}
+.mutual-promotion-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-2);
+  min-width: 0;
+  margin: 0 0 var(--ku-space-4);
+  padding: 0;
+  border: 0;
+}
+.mutual-promotion-picker legend {
+  margin-bottom: var(--ku-space-2);
+  padding: 0;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-primary);
+}
+.mutual-promotion-channel {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-space-3);
+  width: 100%;
+  min-height: var(--ku-control-height-md);
+  padding: var(--ku-space-3);
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-primary);
+  text-align: left;
+}
+.mutual-promotion-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-2);
+}
+.mutual-promotion-option {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-space-3);
+  width: 100%;
+  min-height: var(--ku-control-height-md);
+  padding: var(--ku-space-3);
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-primary);
+  text-align: left;
+}
+.mutual-promotion-option--selected {
+  color: var(--ku-color-primary-dark);
+}
+.mutual-promotion-channel--selected {
+  border-color: var(--ku-color-primary);
+  background: var(--ku-color-primary-alpha-06);
+  color: var(--ku-color-primary-dark);
+}
+.mutual-promotion-channel__body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--ku-space-1);
+}
+.pay-page-result-desc {
+  max-width: var(--ku-modal-width);
+  margin: var(--ku-space-3) 0 0;
+  padding: 0 var(--ku-space-6);
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-secondary);
+  line-height: 1.5;
+  text-align: center;
+}
 .link-modal-node-copy {
   display: inline-flex;
   align-items: center;
@@ -5187,6 +5308,10 @@ button {
 }
 .profile-name-row { display: flex; align-items: center; gap: 6px; }
 .post-author-name-row { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.post-channel-identity-icon {
+  flex-shrink: 0;
+  color: var(--ku-color-channel);
+}
 .follow-btn {
   flex-shrink: 0;
   padding: 7px 18px;
@@ -5235,6 +5360,12 @@ button {
 }
 .channel-info-bar-actions {
   display: flex;
+  align-items: center;
+  gap: var(--ku-space-2);
+  flex-shrink: 0;
+}
+.channel-info-bar-link-group {
+  display: inline-flex;
   align-items: center;
   gap: var(--ku-space-2);
   flex-shrink: 0;
@@ -5299,6 +5430,13 @@ button {
 .channel-info-bar-node-code-plain:active {
   opacity: 0.72;
 }
+.channel-info-bar-node-code-plain--linked {
+  cursor: default;
+  flex-shrink: 0;
+}
+.channel-info-bar-node-code-plain--linked svg:last-child {
+  opacity: 1;
+}
 .channel-manage-btn {
   flex-shrink: 0;
   display: inline-flex;
@@ -5362,23 +5500,34 @@ button {
   color: var(--ku-color-primary-dark);
   border: 1px solid var(--ku-color-border-control);
 }
-/* ── 频道详情页（按 channelId 独立访问）── */
-.channel-page-cover {
-  width: 100%;
-  height: var(--ku-channel-cover-height);
+/* ── 频道详情页（按 channelId 独立访问）：背景图沉浸式 hero，覆盖身份行 + 简介 + 频道信息条，
+   需保证浅色文字/图标对比度，样式呼应 .profile-hero 的创世大爆炸插画处理 ── */
+.channel-page-hero {
+  position: relative;
   overflow: hidden;
+  background: var(--ku-color-text-primary);
+  padding: 56px var(--ku-feed-padding-x) 0;
 }
-.channel-page-cover img {
+.channel-page-hero-bg {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
+  z-index: 0;
 }
-.channel-page-hero {
+.channel-page-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 10, 20, 0.55) 0%, rgba(6, 10, 20, 0.4) 55%, rgba(6, 10, 20, 0.6) 100%);
+  z-index: 0;
+}
+.channel-page-hero > *:not(.channel-page-hero-bg) { position: relative; z-index: 1; }
+.channel-page-hero-top {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px var(--ku-feed-padding-x) 4px;
 }
 .channel-page-hero-info {
   display: flex;
@@ -5388,7 +5537,7 @@ button {
 }
 .channel-page-hero-name {
   font: 700 18px/1.3 var(--ku-font-family);
-  color: var(--ku-color-text-primary);
+  color: var(--ku-color-on-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -5404,11 +5553,27 @@ button {
   justify-content: center;
   white-space: nowrap;
 }
+.channel-page-hero .channel-share-btn {
+  border-color: var(--ku-genesis-overlay-chip-ring);
+  background: var(--ku-genesis-overlay-chip);
+  color: var(--ku-color-on-primary);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.channel-page-hero .channel-share-btn:hover {
+  background: var(--ku-genesis-overlay-chip-active);
+  color: var(--ku-color-on-primary);
+}
 .channel-page-desc {
-  margin: 8px var(--ku-feed-padding-x) 14px;
+  margin: 8px 0 14px;
   font: var(--ku-text-body-sm);
-  color: var(--ku-color-text-secondary);
+  color: var(--ku-color-on-primary-muted);
   line-height: 1.5;
+}
+.channel-page-hero .channel-info-bar {
+  /* 下方标签栏上叠一个 space-3；保留等量的可见分隔，避免圆角相撞。 */
+  margin: 0 0 var(--ku-space-6);
+  background: var(--ku-color-on-primary);
 }
 
 /* ── 频道摘要入口（主页固定高度的一行，点开才是完整目录弹层，

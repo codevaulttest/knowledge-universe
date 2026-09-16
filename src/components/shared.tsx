@@ -561,7 +561,6 @@ function MediaCarousel({
     <div
       className="media-carousel"
       data-layer="image-cover"
-      style={{ width: frameCapWidth(frameRatio) }}
       onPointerDown={handleDown}
       onClick={(e) => e.stopPropagation()}
     >
