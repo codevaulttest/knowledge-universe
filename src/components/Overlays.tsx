@@ -1,7 +1,7 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
-import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Copy, HandCoins, Gift, Plus, Save, Wallet, Loader2, ShieldCheck, ShieldX, Info } from 'lucide-react';
+import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Copy, HandCoins, Gift, Plus, Wallet, Loader2, ShieldCheck, ShieldX, Info, Minus, Star } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER, findRegisteredUserByAddress } from '../mockData';
+import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER, findRegisteredUserByAddress, MOCK_WALLET_ADDRESS } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 import { withFreeTier } from '../channelTiers';
 import { ChannelTierName } from './ChannelTierMedal';
@@ -1950,14 +1950,22 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
 // CreateChannelModal — 开通频道 / 管理会员档位
 // ═══════════════════════════════════════════════════════════════
 
-const MAX_CHANNEL_TIERS = 3;
-const DEFAULT_CHANNEL_CATEGORY = 'AI / 大模型';
+export const MAX_CHANNEL_TIERS = 3;
+export const DEFAULT_CHANNEL_CATEGORY = 'AI / 大模型';
 const DEFAULT_TIER_PRICES = [100, 500, 2000] as const;
+const CHANNEL_STAR_PACKS = [
+  { level: 5, qty: 63 },
+  { level: 4, qty: 31 },
+  { level: 3, qty: 15 },
+  { level: 2, qty: 7 },
+  { level: 1, qty: 3 },
+] as const;
+const CHANNEL_OPEN_QTY_MAX = 10;
 // 档位名不可自定义，按档位顺序固定分配
 const DEFAULT_TIER_NAMES = ['铜牌', '银牌', '金牌'] as const;
 
 // 仅对预设范围内、未下架的付费档位重新赋名；免费档（恒为 tiers[0]）与已下架档位保留原名不动
-function normalizeTierNames(tiers: ChannelTier[]): ChannelTier[] {
+export function normalizeTierNames(tiers: ChannelTier[]): ChannelTier[] {
   return tiers.map((tier, index) => {
     if (tier.free || tier.archived) return tier;
     const preset = DEFAULT_TIER_NAMES[index - 1];
@@ -1969,13 +1977,13 @@ function defaultTierPreset(index: number): number {
   return DEFAULT_TIER_PRICES[index] ?? DEFAULT_TIER_PRICES[DEFAULT_TIER_PRICES.length - 1];
 }
 
-function defaultTierPrice(index: number, tiers: ChannelTier[]): number {
+export function defaultTierPrice(index: number, tiers: ChannelTier[]): number {
   const preset = defaultTierPreset(index);
   if (index === 0) return preset;
   return Math.max(preset, tiers[index - 1].price + 1);
 }
 
-function sanitizeTierPrices(tiers: ChannelTier[]): ChannelTier[] {
+export function sanitizeTierPrices(tiers: ChannelTier[]): ChannelTier[] {
   return tiers.map((tier, index) => tier.free ? tier : ({
     ...tier,
     price: tier.price > 0 ? tier.price : defaultTierPreset(index - 1),
@@ -1990,7 +1998,7 @@ function lastActivePrice(tiers: ChannelTier[], beforeIdx: number): number | null
   return null;
 }
 
-function isChannelTierPriceInvalid(tiers: ChannelTier[], idx: number): boolean {
+export function isChannelTierPriceInvalid(tiers: ChannelTier[], idx: number): boolean {
   if (tiers[idx].free || tiers[idx].archived) return false;
   const price = tiers[idx].price;
   if (price <= 0) return true;
@@ -1998,7 +2006,7 @@ function isChannelTierPriceInvalid(tiers: ChannelTier[], idx: number): boolean {
   return prevPrice != null && price <= prevPrice;
 }
 
-function channelTierPriceError(
+export function channelTierPriceError(
   tiers: ChannelTier[],
   idx: number,
   t: (key: string, params?: Record<string, string | number>) => string,
@@ -2015,7 +2023,7 @@ function channelTierPriceError(
   return null;
 }
 
-function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
+export function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
   const { t, showToast, channelAuthorizations, requestChannelAuthorization, revokeChannelAuthorization } = useApp();
   const [formOpen, setFormOpen] = useState(false);
   const [addressInput, setAddressInput] = useState('');
@@ -2137,21 +2145,25 @@ function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
   );
 }
 
-export function CreateChannelModal({ existingChannel, onClose }: { existingChannel?: Channel; onClose: () => void }) {
-  const { t, createChannel, updateChannel, userProfile, payPb, showToast, channels } = useApp();
+export function CreateChannelModal({ onClose }: { onClose: () => void }) {
+  const { t, createChannel, userProfile, payPb, channels, walletAddress } = useApp();
+  const myAddress = walletAddress ?? MOCK_WALLET_ADDRESS;
   // 一个人可以开多个频道，默认名称如果都叫「{nickname}的频道」会难以区分——
-  // 撞名时依次追加编号（2/3/4…），直到不与本人现有频道重名
-  const baseChannelName = t('{nickname}的频道', { nickname: userProfile.nickname });
-  const defaultChannelName = (() => {
-    const myChannelNames = new Set(channels.filter(c => c.ownerName === CURRENT_USER).map(c => c.name));
-    if (!myChannelNames.has(baseChannelName)) return baseChannelName;
+  // 撞名时依次追加编号（2/3/4…），直到不与该归属人现有频道重名
+  const computeDefaultChannelName = (ownerDisplayName: string, ownerKeyName: string) => {
+    const base = t('{nickname}的频道', { nickname: ownerDisplayName });
+    const existingNames = new Set(channels.filter(c => c.ownerName === ownerKeyName).map(c => c.name));
+    if (!existingNames.has(base)) return base;
     let suffix = 2;
-    while (myChannelNames.has(`${baseChannelName} ${suffix}`)) suffix++;
-    return `${baseChannelName} ${suffix}`;
-  })();
+    while (existingNames.has(`${base} ${suffix}`)) suffix++;
+    return `${base} ${suffix}`;
+  };
   const [paying, setPaying] = useState<'idle' | 'loading' | 'failed'>('idle');
   const [failReason, setFailReason] = useState('');
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
+  const [scaleMode, setScaleMode] = useState<'qty' | 'star'>('qty');
+  const [quantity, setQuantity] = useState(1);
+  const [starLevel, setStarLevel] = useState<1 | 2 | 3 | 4 | 5>(1);
   // 代开通频道：输入他人地址校验通过后，频道归属受益人，用自己的钱包付款
   const [beneficiaryMode, setBeneficiaryMode] = useState<'self' | 'other'>('self');
   const [addressInput, setAddressInput] = useState('');
@@ -2181,115 +2193,39 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
       setAddressStatus('1');
     }
   };
-  const channelSupCost = SUP_COST_BY_TIER[1000];
+  const selectedStarPack = CHANNEL_STAR_PACKS.find(pack => pack.level === starLevel) ?? CHANNEL_STAR_PACKS[CHANNEL_STAR_PACKS.length - 1];
+  const channelCount = scaleMode === 'star' ? selectedStarPack.qty : quantity;
+  const channelSupCost = SUP_COST_BY_TIER[1000] * channelCount;
+  const channelPbCost = CHANNEL_OPEN_PB_COST * channelCount;
   const channelWalletNeedsSup = !payWallet || walletConsumesSup(payWallet);
-  const [name, setName] = useState(existingChannel?.name ?? defaultChannelName);
-  const [description, setDescription] = useState(existingChannel?.description ?? '');
-  const category = existingChannel?.category ?? DEFAULT_CHANNEL_CATEGORY;
-  const isEdit = !!existingChannel;
-  const channelNodeCode = existingChannel?.nodeCode ?? existingChannel?.id.slice(-6).toUpperCase();
-  const [nodeCodeCopied, setNodeCodeCopied] = useState(false);
-  // 开通频道（未 isEdit）只收集基本信息，不设会员档位——开通与定价拆成两步，
+  const [name, setName] = useState(() => computeDefaultChannelName(userProfile.nickname, CURRENT_USER));
+  // 名称默认值随「开通对象」联动（自己/受益人昵称）；用户一旦手动改过名称，就不再被联动覆盖
+  const [nameAutoSynced, setNameAutoSynced] = useState(true);
+  const [description, setDescription] = useState('');
+  const category = DEFAULT_CHANNEL_CATEGORY;
+  // 开通频道只收集基本信息，不设会员档位——开通与定价拆成两步，
   // 避免用户在"要不要付钱开通"和"怎么设计收费档位"两件事上同时纠结
-  const [tiers, setTiers] = useState<ChannelTier[]>(() =>
-    isEdit ? withFreeTier(normalizeTierNames(sanitizeTierPrices(existingChannel?.tiers ?? []))) : [],
-  );
+  const tiers: ChannelTier[] = [];
 
-  // 档位设置（涨价/降价/新增/下架）30 天内只能改一次；单纯改名称/简介不受此限制
-  const TIER_SETTINGS_COOLDOWN_DAYS = 30;
-  const tierSettingsCooldownRemainingDays = (() => {
-    if (!existingChannel?.tiersChangedAt) return 0;
-    const elapsedDays = (Date.now() - existingChannel.tiersChangedAt) / (24 * 60 * 60 * 1000);
-    return Math.max(0, Math.ceil(TIER_SETTINGS_COOLDOWN_DAYS - elapsedDays));
-  })();
-  const canEditTierSettings = tierSettingsCooldownRemainingDays <= 0;
-  const notifyTierSettingsLocked = () => {
-    showToast(t('档位设置 30 天内只能修改一次，请稍后再试'));
-  };
+  useEffect(() => {
+    if (!nameAutoSynced) return;
+    const ownerDisplayName = beneficiaryMode === 'other' && beneficiary ? beneficiary.name : userProfile.nickname;
+    const ownerKeyName = beneficiaryMode === 'other' && beneficiary ? beneficiary.name : CURRENT_USER;
+    setName(computeDefaultChannelName(ownerDisplayName, ownerKeyName));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [beneficiaryMode, beneficiary?.name, nameAutoSynced]);
 
-  // 免费档不计入档位数量上限。铜／银／金三个付费档始终占用各自名额，
-  // 下架仅暂停订阅，不会释放新增名额。
-  const activeTierCount = tiers.filter(tr => !tr.free && !tr.archived).length;
-  const paidTierCount = tiers.filter(tr => !tr.free).length;
-
-  const addTier = () => {
-    if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
-    if (paidTierCount >= MAX_CHANNEL_TIERS) return;
-    setTiers(prev => {
-      const paidTiers = prev.filter(tr => !tr.free);
-      return normalizeTierNames([
-        ...prev,
-        {
-          id: `tier-${Date.now()}`,
-          name: '',
-          price: defaultTierPrice(paidTiers.length, paidTiers),
-        },
-      ]);
-    });
-  };
-  const updateTierPrice = (idx: number, price: number) => {
-    if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
-    setTiers(prev => prev.map((tr, i) => (i === idx && !tr.free) ? { ...tr, price } : tr));
-  };
-  // 下架而非删除：已保存过的档位一旦存在，就不能真的从数组里移除，
-  // 否则会导致 minTierIndex / 订阅记录里存的下标错位、指向别的档位。
-  // 本次编辑中新增、还没保存过的档位（existingChannel 里没有）可以直接移除。免费档不可下架/移除。
-  const removeTier = (idx: number) => {
-    if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
-    if (tiers[idx]?.free) return;
-    setTiers(prev => {
-      const tier = prev[idx];
-      const wasPersisted = existingChannel?.tiers.some(t => t.id === tier.id) ?? false;
-      if (wasPersisted) {
-        return prev.map((tr, i) => i === idx ? { ...tr, archived: true } : tr);
-      }
-      return normalizeTierNames(prev.filter((_, i) => i !== idx));
-    });
-  };
-  const unarchiveTier = (idx: number) => {
-    if (!canEditTierSettings) { notifyTierSettingsLocked(); return; }
-    if (activeTierCount >= MAX_CHANNEL_TIERS) return;
-    setTiers(prev => prev.map((tr, i) => i === idx ? { ...tr, archived: false } : tr));
+  const handleNameChange = (value: string) => {
+    setNameAutoSynced(false);
+    setName(value);
   };
 
   const canSubmit = name.trim().length > 0
-    && !tiers.some((_, idx) => isChannelTierPriceInvalid(tiers, idx))
     && (beneficiaryMode === 'self' || addressStatus === '3');
-
-  const copyNodeCode = async () => {
-    if (!channelNodeCode) return;
-    try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(channelNodeCode);
-      } else {
-        const fallback = document.createElement('textarea');
-        fallback.value = channelNodeCode;
-        document.body.appendChild(fallback);
-        fallback.select();
-        document.execCommand('copy');
-        fallback.remove();
-      }
-    } catch {
-      const fallback = document.createElement('textarea');
-      fallback.value = channelNodeCode;
-      document.body.appendChild(fallback);
-      fallback.select();
-      document.execCommand('copy');
-      fallback.remove();
-    }
-    setNodeCodeCopied(true);
-    window.setTimeout(() => setNodeCodeCopied(false), 1800);
-  };
 
   const handleSubmit = () => {
     if (!canSubmit || paying === 'loading') return;
-    const normalizedTiers = normalizeTierNames(tiers);
-    if (isEdit && existingChannel) {
-      updateChannel(existingChannel.id, { name: name.trim(), description: description.trim(), category, tiers: normalizedTiers });
-      onClose();
-      return;
-    }
-    if (!payWallet || !payPb({ amount: CHANNEL_OPEN_PB_COST, use: 'channel_open', wallet: payWallet, supCost: channelSupCost })) {
+    if (!payWallet || !payPb({ amount: channelPbCost, use: 'channel_open', wallet: payWallet, supCost: channelSupCost })) {
       setFailReason(t('所选钱包余额不足或不适用于此操作'));
       setPaying('failed');
       return;
@@ -2297,10 +2233,11 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
     // 一步完成：同一屏内直接跑支付动画，成功后立即建号，不再跳到独立的支付弹窗
     setPaying('loading');
     setTimeout(() => {
-      createChannel({
-        name: name.trim(), description: description.trim(), category, tiers,
+      Array.from({ length: channelCount }, (_, index) => createChannel({
+        name: index === 0 ? name.trim() : `${name.trim()}-${index + 1}`,
+        description: description.trim(), category, tiers,
         beneficiaryAddress: beneficiaryMode === 'other' ? addressInput.trim() : undefined,
-      });
+      }));
       onClose();
     }, 1300);
   };
@@ -2308,174 +2245,18 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
   const closeIfIdle = () => { if (paying !== 'loading') onClose(); };
 
   return (
-    <div className="sheet-backdrop" onClick={closeIfIdle}>
-      <div className={`edit-profile-sheet${!isEdit ? ' edit-profile-sheet--channel' : ''}`} role="dialog" aria-label={t('开通频道')} onClick={e => e.stopPropagation()}>
+    <div className="sheet-backdrop full-page-flow" onClick={closeIfIdle}>
+      <div className="edit-profile-sheet edit-profile-sheet--channel" role="dialog" aria-label={t('开通频道')} onClick={e => e.stopPropagation()}>
         <div className="edit-profile-header">
           <button type="button" className="edit-profile-close" onClick={closeIfIdle} disabled={paying === 'loading'} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
-          <span className="edit-profile-title">{isEdit ? t('管理频道') : t('开通频道')}</span>
-          {isEdit ? (
-            <button
-              type="button"
-              className="edit-profile-save edit-profile-save--icon"
-              disabled={!canSubmit || paying === 'loading'}
-              onClick={handleSubmit}
-              aria-label={t('保存')}
-            >
-              <Save size={16} strokeWidth={2.25} aria-hidden />
-              {t('保存')}
-            </button>
-          ) : (
-            <div className="edit-profile-header-spacer" aria-hidden />
-          )}
+          <span className="edit-profile-title">{t('开通频道')}</span>
+          <div className="edit-profile-header-spacer" aria-hidden />
         </div>
 
         <div className="edit-profile-body">
           <div className="edit-profile-field">
-            <label className="edit-profile-label" htmlFor="channel-name">{t('频道名称')}</label>
-            <input
-              id="channel-name" className="edit-profile-input" value={name} maxLength={24}
-              onChange={e => setName(e.target.value)}
-              placeholder={t('给频道起个名字')}
-              autoComplete="off"
-            />
-          </div>
-          <div className="edit-profile-field">
-            <label className="edit-profile-label" htmlFor="channel-desc">{t('简介')}</label>
-            <input
-              id="channel-desc" className="edit-profile-input" value={description} maxLength={60}
-              onChange={e => setDescription(e.target.value)}
-              placeholder={t('一句话介绍频道内容')}
-              autoComplete="off"
-            />
-          </div>
-
-          {isEdit && channelNodeCode && (
-            <div className="edit-profile-field channel-node-code-field">
-              <span className="edit-profile-label">{t('节点码')}</span>
-              <div className="channel-node-code-value">
-                <span>{channelNodeCode}</span>
-                <button
-                  type="button"
-                  className={`channel-node-code-copy${nodeCodeCopied ? ' channel-node-code-copy--done' : ''}`}
-                  onClick={copyNodeCode}
-                  aria-label={t('复制节点编号')}
-                  title={t('复制节点编号')}
-                >
-                  {nodeCodeCopied ? <Check size={16} strokeWidth={2.5} /> : <Copy size={16} strokeWidth={2} />}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {isEdit && (
-          <div className="edit-profile-field">
-            <span className="edit-profile-label">
-              {t('会员档位（另可加最多 {MAX_CHANNEL_TIERS} 个付费档位）', { MAX_CHANNEL_TIERS })}
-            </span>
-            <p className="channel-tier-section-hint">
-              {t('免费档所有人可加入；新增付费档位可为频道内容设置订阅门槛')}
-            </p>
-            <div className="channel-tier-row channel-tier-row--head" aria-hidden>
-              <span className="channel-tier-col-label">{t('档位')}</span>
-              <span className="channel-tier-col-label channel-tier-col-label--price">{t('月订阅费')}</span>
-              <span className="channel-tier-col-label channel-tier-col-label--action" />
-            </div>
-            {tiers.map((tier, idx) => {
-              if (tier.free) {
-                return (
-                  <div key={tier.id} className="channel-tier-block channel-tier-block--free">
-                    <div className="channel-tier-row">
-                      <ChannelTierName name={tier.name} tierIndex={idx} className="channel-tier-name-label" />
-                      <span className="channel-tier-archived-price">{t('免费')}</span>
-                    </div>
-                  </div>
-                );
-              }
-              return null;
-            })}
-            {tiers.map((tier, idx) => {
-              if (tier.free) return null;
-              if (tier.archived) {
-                return (
-                  <div key={tier.id} className="channel-tier-block channel-tier-block--archived">
-                    <div className="channel-tier-row">
-                      <ChannelTierName name={tier.name} tierIndex={idx} className="channel-tier-name-label" />
-                      <span className="channel-tier-archived-price">{tier.price} PB/{t('月')}</span>
-                      <span className="channel-tier-archived-badge">{t('已下架')}</span>
-                    </div>
-                    <div className="channel-tier-archived-footer">
-                      <p className="channel-tier-archived-hint">
-                        {t('不再接受新订阅，已订阅用户保留原价与权限')}
-                      </p>
-                      {activeTierCount < MAX_CHANNEL_TIERS && (
-                        <button
-                          type="button"
-                          className="channel-tier-relist-btn"
-                          onClick={() => unarchiveTier(idx)}
-                        >
-                          {t('重新上架')}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              }
-              const priceError = channelTierPriceError(tiers, idx, t);
-              return (
-                <div key={tier.id} className="channel-tier-block">
-                  <div className="channel-tier-row">
-                    <ChannelTierName name={tier.name} tierIndex={idx} className="channel-tier-name-label" />
-                    <div className="channel-tier-price-wrap">
-                      <input
-                        className={`edit-profile-input channel-tier-price-input${priceError ? ' edit-profile-input--error' : ''}${!canEditTierSettings ? ' channel-tier-price-input--locked' : ''}`}
-                        type="number" min={1}
-                        value={tier.price}
-                        readOnly={!canEditTierSettings}
-                        onMouseDown={() => { if (!canEditTierSettings) notifyTierSettingsLocked(); }}
-                        onChange={e => {
-                          const raw = Number(e.target.value);
-                          updateTierPrice(idx, Number.isFinite(raw) ? Math.max(0, raw) : 0);
-                        }}
-                        placeholder={t('月费')}
-                        aria-label={t('{name} 月订阅费（PB）', { name: tier.name })}
-                        aria-invalid={priceError ? true : undefined}
-                      />
-                      <span className="channel-tier-price-unit">PB/{t('月')}</span>
-                    </div>
-                    <button
-                      type="button"
-                      className={`draft-item-delete channel-tier-delete${!canEditTierSettings ? ' channel-tier-delete--locked' : ''}`}
-                      onClick={() => removeTier(idx)}
-                      aria-label={t('下架档位')}
-                    >
-                      <X size={14} strokeWidth={2} />
-                    </button>
-                  </div>
-                  {priceError && (
-                    <p className="channel-tier-error" role="alert">{priceError}</p>
-                  )}
-                </div>
-              );
-            })}
-            {paidTierCount < MAX_CHANNEL_TIERS && (
-              <button
-                type="button"
-                className={`channel-tier-add-btn${!canEditTierSettings ? ' channel-tier-add-btn--locked' : ''}`}
-                onClick={addTier}
-              >
-                <Plus size={16} strokeWidth={2.5} aria-hidden />
-                {t('新增档位')}
-              </button>
-            )}
-          </div>
-          )}
-
-          {isEdit && existingChannel && <ChannelCollaboratorsSection channel={existingChannel} />}
-
-          {!isEdit && (
-            <div className="edit-profile-field">
               <span className="edit-profile-label">{t('开通对象')}</span>
               <div className="create-scale-toggle">
                 <button
@@ -2493,7 +2274,12 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                   {t('为他人代开通')}
                 </button>
               </div>
-              {beneficiaryMode === 'other' && (
+              {beneficiaryMode === 'self' ? (
+                <div className="planet-upgrade-row planet-upgrade-row--address">
+                  <span className="planet-upgrade-row-label">{t('我的钱包地址')}</span>
+                  <span className="planet-upgrade-row-value bsp-self-address">{myAddress}</span>
+                </div>
+              ) : (
                 <div className="stake-code-block">
                   <div className="stake-code-row">
                     <div className="stake-code-input-wrap">
@@ -2529,33 +2315,95 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
                 </div>
               )}
             </div>
-          )}
 
-          {!isEdit && (
-            <div className="edit-profile-field">
+          <div className="edit-profile-field">
+            <label className="edit-profile-label" htmlFor="channel-name">{t('频道名称')}</label>
+            <input
+              id="channel-name" className="edit-profile-input" value={name} maxLength={24}
+              onChange={e => handleNameChange(e.target.value)}
+              placeholder={t('给频道起个名字')}
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="edit-profile-field">
+            <span className="edit-profile-label">{t('开通规模')}</span>
+            <div className="create-scale-toggle">
+              <button
+                type="button"
+                className={`create-scale-tab${scaleMode === 'qty' ? ' create-scale-tab--active' : ''}`}
+                onClick={() => setScaleMode('qty')}
+                disabled={paying === 'loading'}
+              >
+                {t('按个数')}
+              </button>
+              <button
+                type="button"
+                className={`create-scale-tab${scaleMode === 'star' ? ' create-scale-tab--active' : ''}`}
+                onClick={() => setScaleMode('star')}
+                disabled={paying === 'loading'}
+              >
+                {t('按星级包')}
+              </button>
+            </div>
+            {scaleMode === 'qty' ? (
+              <div className="create-qty-block">
+                <button type="button" className="create-qty-btn" onClick={() => setQuantity(value => Math.max(1, value - 1))} disabled={paying === 'loading' || quantity <= 1} aria-label={t('减少')}>
+                  <Minus size={18} strokeWidth={2} />
+                </button>
+                <span className="create-qty-value font-mono">{quantity}</span>
+                <button type="button" className="create-qty-btn" onClick={() => setQuantity(value => Math.min(CHANNEL_OPEN_QTY_MAX, value + 1))} disabled={paying === 'loading' || quantity >= CHANNEL_OPEN_QTY_MAX} aria-label={t('增加')}>
+                  <Plus size={18} strokeWidth={2} />
+                </button>
+              </div>
+            ) : (
+              <div className="create-star-packs">
+                {CHANNEL_STAR_PACKS.map(pack => (
+                  <button key={pack.level} type="button" className={`create-star-pack${starLevel === pack.level ? ' create-star-pack--active' : ''}`} onClick={() => setStarLevel(pack.level)} disabled={paying === 'loading'}>
+                    <span aria-label={t('{level} 星包', { level: pack.level })}>{Array.from({ length: pack.level }, (_, index) => <Star key={index} size={16} fill="currentColor" strokeWidth={2} />)}</span>
+                    <span className="create-star-pack-copy">
+                      <span className="create-star-pack-title">{t('{level} 星包', { level: pack.level })}</span>
+                      <span className="create-star-pack-sub">{t('一次生成 {qty} 个', { qty: pack.qty })}</span>
+                    </span>
+                    <span className="create-star-pack-qty font-mono">×{pack.qty}</span>
+                  </button>
+                ))}
+                <span className="stake-code-caption">{t('星级包按晋升所需数量一次生成，不是把单个节点直接改成该星级')}</span>
+              </div>
+            )}
+          </div>
+          <div className="edit-profile-field">
+            <label className="edit-profile-label" htmlFor="channel-desc">{t('简介')}</label>
+            <input
+              id="channel-desc" className="edit-profile-input" value={description} maxLength={60}
+              onChange={e => setDescription(e.target.value)}
+              placeholder={t('一句话介绍频道内容')}
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="edit-profile-field">
               <span className="edit-profile-label">{t('费用明细')}</span>
               <div className="pay-combo-breakdown">
                 <div className="pay-combo-row">
                   <span className="pay-combo-label">{t('PB 消耗')}</span>
-                  <span className="pay-combo-value">{formatSuperAmount(CHANNEL_OPEN_PB_COST)} PB</span>
+                  <span className="pay-combo-value">{formatSuperAmount(channelPbCost)} PB</span>
                 </div>
                 {channelWalletNeedsSup && (
                   <div className="pay-combo-row">
                     <span className="pay-combo-label">{t('SUP 消耗')}</span>
-                    <span className="pay-combo-value">{formatSupAmount(channelSupCost)} SUP</span>
+                    <span className="pay-combo-value">{formatSupAmount(Number(channelSupCost.toFixed(4)))} SUP</span>
                   </div>
                 )}
                 {paying === 'failed' && (
                   <p className="pay-fail-reason">{failReason}</p>
                 )}
               </div>
-              <PbWalletPicker use="channel_open" amount={CHANNEL_OPEN_PB_COST} value={payWallet} onChange={setPayWallet} />
+              <PbWalletPicker use="channel_open" amount={channelPbCost} value={payWallet} onChange={setPayWallet} />
             </div>
-          )}
 
         </div>
 
-        {!isEdit && (
         <div className="channel-create-footer">
           <button
             type="button"
@@ -2575,7 +2423,6 @@ export function CreateChannelModal({ existingChannel, onClose }: { existingChann
             </p>
           )}
         </div>
-        )}
       </div>
     </div>
   );

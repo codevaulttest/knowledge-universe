@@ -61,7 +61,7 @@ export function FeedbackSheet({ onClose }: { onClose: () => void }) {
   };
 
   return createPortal(
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div className="sheet-backdrop full-page-flow" onClick={onClose}>
       <div className="payment-sheet feedback-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">{t('意见反馈')}</span>

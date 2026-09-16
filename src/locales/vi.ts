@@ -599,7 +599,6 @@ export const vi: Record<string, string> = {
   '{count} 个频道': '{count} kênh',
   '搜索频道名称或简介': 'Tìm theo tên hoặc mô tả kênh',
   '没有找到匹配的频道': 'Không tìm thấy kênh phù hợp',
-  '由 {ownerName} 运营': 'Do {ownerName} quản lý',
   '频道不存在': 'Kênh không tồn tại',
   '该频道可能已被下架': 'Kênh này có thể đã bị gỡ bỏ',
   '该频道还没有发布任何内容': 'Kênh này chưa có bài đăng nào',

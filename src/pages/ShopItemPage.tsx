@@ -55,12 +55,9 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
   // 商品被卖家下架后，非卖家本人不可见；卖家本人仍可进详情页管理并重新上架
   if (!post || !post.shop || (post.shop.delisted && !isOwn)) {
     return (
-      <div className="sheet-backdrop" onClick={onClose}>
-        <div className="payment-sheet shop-item-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
-          <div className="sheet-header">
-            <span className="sheet-title">{t('商品详情')}</span>
-            <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
-          </div>
+      <div className="page shop-item-page">
+        <PageHeader title={t('商品详情')} onBack={onClose} />
+        <div className="shop-item-sheet shop-item-page-content">
           <p style={{ color: 'var(--ku-color-text-meta)', textAlign: 'center', padding: '32px 0' }}>{t('该商品已下架')}</p>
         </div>
       </div>
@@ -176,13 +173,9 @@ export function ShopItemPage({ postId, onClose }: { postId: string; onClose: () 
 
   return (
     <>
-      <div className="sheet-backdrop" onClick={onClose}>
-      <div className="payment-sheet shop-item-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
-        {/* 弹窗头：标题 + 关闭 */}
-        <div className="sheet-header">
-          <span className="sheet-title">{t('商品详情')}</span>
-          <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
-        </div>
+      <div className="page shop-item-page">
+      <PageHeader title={t('商品详情')} onBack={onClose} />
+      <div className="shop-item-sheet shop-item-page-content">
 
         {/* 商品图片：只显示首图，无图 / 全锁时回退为占位图 */}
         <div className="shop-item-cover-wrap">

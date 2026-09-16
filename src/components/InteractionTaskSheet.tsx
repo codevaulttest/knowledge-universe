@@ -22,7 +22,7 @@ export function InteractionTaskSheet({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      <div className="sheet-backdrop" onClick={onClose}>
+      <div className="sheet-backdrop full-page-flow" onClick={onClose}>
         <div className="payment-sheet task-panel-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
           <div className="sheet-header">
             <span className="sheet-title">{t('本月空投收益历史')}</span>

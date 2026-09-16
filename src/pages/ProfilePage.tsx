@@ -1393,7 +1393,7 @@ function ChannelCollaborationModal({
   };
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div className="sheet-backdrop full-page-flow" onClick={onClose}>
       <div className="follow-list-modal channel-collab-modal" onClick={e => e.stopPropagation()}>
         <div className="follow-list-header">
           <span className="follow-list-title">{t('频道协作')}</span>

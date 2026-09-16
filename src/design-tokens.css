@@ -191,6 +191,7 @@
   --ku-channel-action-height:  32px;
   --ku-shadow-control-outline: inset 0 0 0 1px var(--ku-color-primary);
   --ku-profile-editor-background-height: 200px;
+  --ku-channel-cover-height:   120px;
 
   /* ═══════════════════════════════════════════════════
      圆角 (Border Radius)

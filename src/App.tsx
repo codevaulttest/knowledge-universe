@@ -24,6 +24,7 @@ import { INITIAL_FAVORITE_NODE_IDS, KnowledgePlanetPage } from './pages/Knowledg
 import { PostDetailPage } from './pages/PostDetailPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { ChannelPage } from './pages/ChannelPage';
+import { ManageChannelPage } from './pages/ManageChannelPage';
 import { ActivityPage } from './pages/ActivityPage';
 import { DmListPage, DmChatPage } from './pages/DmPage';
 import { SearchPage } from './pages/SearchPage';
@@ -499,7 +500,6 @@ export default function App({ account, onLanguageChange }: {
   // 演示到期续费态：产品大叔的方法论频道保留铜牌订阅记录，但已到期失去权限
   const [expiredChannelIds, setExpiredChannelIds] = useState<Set<string>>(new Set(['channel-yanlei']));
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
-  const [manageChannelId, setManageChannelId] = useState<string | null>(null);
   const [channelCreatedPromptId, setChannelCreatedPromptId] = useState<string | null>(null);
   const [channelSubscribeId, setChannelSubscribeId] = useState<string | null>(null);
   const [channelSubscribeRequiredTier, setChannelSubscribeRequiredTier] = useState<number | undefined>(undefined);
@@ -604,7 +604,7 @@ export default function App({ account, onLanguageChange }: {
   const route = stack[stack.length - 1];
   const shopItemOpen = route.page === 'P_SHOP_ITEM';
   const certOpen = route.page === 'P_CERT';
-  const pageRoute = (shopItemOpen || certOpen) && stack.length > 1 ? stack[stack.length - 2]! : route;
+  const pageRoute = certOpen && stack.length > 1 ? stack[stack.length - 2]! : route;
   const tab = pageRoute.page === 'P0' ? pageRoute.tab : 0;
   const navigate = (r: Route) => { setSearchOpen(false); setStack(s => [...s, r]); };
   const navigateRoot = (r: Route) => setStack([r]);
@@ -616,12 +616,8 @@ export default function App({ account, onLanguageChange }: {
   };
   const goBack = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
   const setTab = (t: 0 | 1 | 2) => setStack(s => [...s.slice(0, -1), { page: 'P0', tab: t }]);
-  // 跳转到频道 tab 并自动切到「发现」子标签（用于「为你推荐的频道」卡片的「查看全部」）
-  const [channelDiscoverAutoOpen, setChannelDiscoverAutoOpen] = useState(false);
-  const openChannelDiscover = () => {
-    setTab(2);
-    setChannelDiscoverAutoOpen(true);
-  };
+  // 跳转到频道 tab（用于「为你推荐的频道」卡片的「查看全部」）
+  const openChannelDiscover = () => setTab(2);
 
   useEffect(() => {
     if (pageRoute.page !== 'P0' && navBarsHidden) setNavBarsHidden(false);
@@ -895,9 +891,8 @@ export default function App({ account, onLanguageChange }: {
   };
   const closeCreateChannel = () => setCreateChannelOpen(false);
   const openManageChannel = (channelId: string) => {
-    requireWallet(() => setManageChannelId(channelId));
+    requireWallet(() => navigate({ page: 'P_CHANNEL_MANAGE', channelId }));
   };
-  const closeManageChannel = () => setManageChannelId(null);
 
   // 开通频道是一步流程：CreateChannelModal 自己跑完支付动画（1000 PB + 100 PB + 0.1 SUP）后直接调用此函数建号
   const createChannel = (data: NewChannelData) => {
@@ -913,6 +908,8 @@ export default function App({ account, onLanguageChange }: {
       name: data.name,
       description: data.description,
       avatarSeed: userProfile.avatarSeed,
+      avatarUrl: data.avatarUrl,
+      headerBackgroundUrl: data.headerBackgroundUrl,
       category: data.category,
       tiers: withFreeTier(data.tiers),
       subscriberCount: 0,
@@ -935,6 +932,8 @@ export default function App({ account, onLanguageChange }: {
         ...c,
         name: data.name,
         description: data.description,
+        avatarUrl: data.avatarUrl,
+        headerBackgroundUrl: data.headerBackgroundUrl,
         category: data.category,
         tiers: withFreeTier(data.tiers),
         tiersChangedAt: tiersChanged ? Date.now() : c.tiersChangedAt,
@@ -1344,12 +1343,12 @@ export default function App({ account, onLanguageChange }: {
     userProfile, updateUserProfile,
     editProfileAutoOpen, setEditProfileAutoOpen, openEditProfileContacts,
     nodeTransferAutoOpenId, setNodeTransferAutoOpenId,
-    channelDiscoverAutoOpen, setChannelDiscoverAutoOpen, openChannelDiscover,
+    openChannelDiscover,
     channels: visibleChannels, subscribedChannelTiers, expiredChannelIds,
     openChannelSubscribe, subscribeToChannelTier,
     createChannel, updateChannel, resetChannelTierCooldown,
     openCreateChannel, createChannelOpen, closeCreateChannel,
-    openManageChannel, closeManageChannel,
+    openManageChannel,
     demoHideOwnChannels, toggleDemoHideOwnChannels,
     supWallets, supBalance, supHistory, deductSup, meritBalance: MOCK_MERIT_BALANCE, adnWithdrawableFec, withdrawAdnFec,
     depositAirdropPb, withdrawAirdropPb, depositSiteSup, withdrawSiteSup,
@@ -1392,6 +1391,7 @@ export default function App({ account, onLanguageChange }: {
         {pageRoute.page === 'P2' && <PostDetailPage postId={pageRoute.postId} scrollToComments={pageRoute.scrollToComments} />}
         {pageRoute.page === 'P6' && <ProfilePage authorName={pageRoute.authorName} />}
         {pageRoute.page === 'P_CHANNEL' && <ChannelPage channelId={pageRoute.channelId} />}
+        {pageRoute.page === 'P_CHANNEL_MANAGE' && <ManageChannelPage channelId={pageRoute.channelId} />}
         {pageRoute.page === 'P_NODE' && <NodeDetailPage node={pageRoute.node} />}
         {pageRoute.page === 'P7' && <ActivityPage />}
         {pageRoute.page === 'P_PLANET' && <KnowledgePlanetPage initialSearch={pageRoute.searchNodeCode} openBsp={pageRoute.openBsp} />}
@@ -1405,7 +1405,7 @@ export default function App({ account, onLanguageChange }: {
         {/* 码库全局底部导航（知识宇宙内始终保持同一套宿主导航）*/}
         {showBottomNav && <BottomNav route={pageRoute} setTab={setTab} />}
 
-        {/* 覆盖层：商品详情弹窗 */}
+        {/* 商品详情为独立全页面 */}
         {shopItemOpen && (
           <ShopItemPage postId={route.postId} onClose={goBack} />
         )}
@@ -1572,13 +1572,6 @@ export default function App({ account, onLanguageChange }: {
         {createChannelOpen && (
           <CreateChannelModal onClose={closeCreateChannel} />
         )}
-
-        {/* 覆盖层：管理频道 */}
-        {manageChannelId && (() => {
-          const channel = channels.find(c => c.id === manageChannelId);
-          if (!channel) return null;
-          return <CreateChannelModal existingChannel={channel} onClose={closeManageChannel} />;
-        })()}
 
         {/* 覆盖层：开通成功 → 引导设置会员档位（代开通场景付款人不是频道主，不引导设置档位） */}
         {channelCreatedPromptId && (() => {

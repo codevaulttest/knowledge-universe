@@ -127,7 +127,7 @@ export function PlanetHeroBalances() {
       </button>
 
       {pbInfoOpen && createPortal(
-        <div className="sheet-backdrop" onClick={() => setPbInfoOpen(false)}>
+        <div className="sheet-backdrop full-page-flow" onClick={() => setPbInfoOpen(false)}>
           <div
             className="payment-sheet pb-info-sheet"
             role="dialog"

@@ -148,7 +148,7 @@ export function BspInvestSheet({
   };
 
   return (
-    <div className="sheet-backdrop" onClick={() => !paying && onClose()}>
+    <div className="sheet-backdrop full-page-flow" onClick={() => !paying && onClose()}>
       <div className="payment-sheet bsp-invest-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">{t('BSP 巨星投流')}</span>

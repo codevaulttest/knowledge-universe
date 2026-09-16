@@ -192,7 +192,7 @@ function seedNodesWithChannel(channels: { ownerName: string; id: string; nodeCod
 }
 
 export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?: string; openBsp?: boolean } = {}) {
-  const { showToast, t, language, channels, walletAddress, walletConnecting, connectWallet, goBack, canGoBack, payPb, navigate, nodeTransferAutoOpenId, setNodeTransferAutoOpenId, favoriteNodeIds, toggleFavoriteNode } = useApp();
+  const { showToast, t, language, channels, walletAddress, walletConnecting, connectWallet, goBack, canGoBack, payPb, navigate, openCreateChannel, nodeTransferAutoOpenId, setNodeTransferAutoOpenId, favoriteNodeIds, toggleFavoriteNode } = useApp();
   const zh = isChinese(language);
   const [nodes, setNodes] = useState<KnowledgeNode[]>(() => seedNodesWithChannel(channels));
   const [bspRecords, setBspRecords] = useState<BspInvestment[]>(() => buildInitialBspInvestments(MOCK_WALLET_ADDRESS));
@@ -327,12 +327,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
   };
 
   const handleCreateChannel = () => {
-    if (!walletAddress) {
-      setConnectWalletSheetOpen(true);
-      return;
-    }
-    resetCreateSheet();
-    setCreateSheetOpen(true);
+    openCreateChannel();
   };
 
   useEffect(() => {
@@ -1340,7 +1335,7 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
 
       {/* ── BSP 巨星投流：完整投流记录底部弹层 ── */}
       {bspRecordsOpen && (
-        <div className="sheet-backdrop" onClick={() => setBspRecordsOpen(false)}>
+        <div className="sheet-backdrop full-page-flow" onClick={() => setBspRecordsOpen(false)}>
           <div
             className="payment-sheet bsp-record-list-sheet"
             role="dialog"

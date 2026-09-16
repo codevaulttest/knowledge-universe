@@ -143,6 +143,7 @@ export type Route =
   | { page: 'P2'; postId: string; scrollToComments?: boolean }
   | { page: 'P6'; authorName: string }
   | { page: 'P_CHANNEL'; channelId: string }
+  | { page: 'P_CHANNEL_MANAGE'; channelId: string }
   | { page: 'P_NODE'; node: KnowledgeNode }
   | { page: 'P7' }
   | { page: 'P_PLANET'; searchNodeCode?: string; openBsp?: boolean }
@@ -204,6 +205,8 @@ export type Channel = {
   name: string;
   description: string;
   avatarSeed: string;
+  avatarUrl?: string;
+  headerBackgroundUrl?: string;
   category: string;
   tiers: ChannelTier[]; // 固定含 1 个免费档（tiers[0]）+ 最多 3 个付费档
   subscriberCount: number;
@@ -226,6 +229,8 @@ export type ChannelSubscriber = {
 export type NewChannelData = {
   name: string;
   description: string;
+  avatarUrl?: string;
+  headerBackgroundUrl?: string;
   category: string;
   tiers: ChannelTier[];
   /** 代开通频道：已校验通过的他人钱包地址；自己开通则不传。 */

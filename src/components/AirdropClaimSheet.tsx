@@ -35,7 +35,7 @@ export function AirdropClaimSheet({ amount, onClose }: { amount: number; onClose
   };
 
   return (
-    <div className="sheet-backdrop" onClick={status === 'loading' ? undefined : onClose}>
+    <div className="sheet-backdrop full-page-flow" onClick={status === 'loading' ? undefined : onClose}>
       <div className="payment-sheet airdrop-claim-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
           <span className="sheet-title">{t('空投收益')}</span>

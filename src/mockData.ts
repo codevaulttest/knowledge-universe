@@ -443,6 +443,51 @@ export const ALL_CHANNELS: Channel[] = [
     ],
     subscriberCount: 124, createdAt: '2026-03-15',
   },
+  {
+    id: 'channel-caijing', nodeCode: 'B8C9D0', ownerName: '财经观察局', name: '财经观察局·周报',
+    description: '宏观数据与行业动态每周复盘，附图表解读。',
+    avatarSeed: '财经观察局', category: '财经',
+    tiers: [
+      { id: 'caijing-1', name: '铜牌', price: 40 },
+      { id: 'caijing-2', name: '银牌', price: 180 },
+    ],
+    subscriberCount: 158, createdAt: '2026-02-11',
+  },
+  {
+    id: 'channel-shejishi', nodeCode: 'E1F2G3', ownerName: '设计师小七', name: '小七的设计手记',
+    description: '界面设计拆解与作品集复盘，附源文件下载。',
+    avatarSeed: '设计师小七', category: '设计',
+    tiers: [
+      { id: 'shejishi-1', name: '铜牌', price: 25 },
+    ],
+    subscriberCount: 73, createdAt: '2026-04-03',
+  },
+  {
+    id: 'channel-healthlab', nodeCode: 'H4I5J6', ownerName: '健身实验室', name: '健身实验室·训练笔记',
+    description: '力量训练计划与饮食搭配，附动作示范视频。',
+    avatarSeed: '健身实验室', category: '健康',
+    tiers: [
+      { id: 'healthlab-1', name: '铜牌', price: 30 },
+      { id: 'healthlab-2', name: '银牌', price: 100 },
+    ],
+    subscriberCount: 96, createdAt: '2026-05-20',
+  },
+  {
+    id: 'channel-lawcorner', nodeCode: 'K7L8M9', ownerName: '法务角落', name: '法务角落·合规笔记',
+    description: '创业合规与合同风险提示，案例拆解通俗易懂。',
+    avatarSeed: '法务角落', category: '法律',
+    tiers: [
+      { id: 'lawcorner-1', name: '铜牌', price: 60 },
+    ],
+    subscriberCount: 51, createdAt: '2026-01-29',
+  },
+  {
+    id: 'channel-travelnote', nodeCode: 'N0O1P2', ownerName: '慢旅行笔记', name: '慢旅行笔记',
+    description: '小众目的地攻略与实拍照片，附行程预算表。',
+    avatarSeed: '慢旅行笔记', category: '旅行',
+    tiers: [],
+    subscriberCount: 33, createdAt: '2026-06-12',
+  },
   ...MY_DEMO_CHANNELS,
 ].map(c => ({ ...c, tiers: withFreeTier(c.tiers) }));
 

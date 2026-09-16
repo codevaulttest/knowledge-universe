@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ScanLine, Search, Wallet } from 'lucide-react';
+import { Plus, ScanLine, Search, Wallet } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_USERS_MOCK, BATCH_SIZE, getMutualSubscriberCount } from '../mockData';
-import type { Channel, Post, RepostedBy } from '../types';
+import type { Post, RepostedBy } from '../types';
 import { PostCard } from '../components/PostCard';
-import { ChannelCard } from '../components/shared';
+import { Avatar } from '../components/shared';
 import { SuggestedChannelsCard } from '../components/SuggestedChannelsCard';
 import { DevPanel } from '../components/DevPanel';
 import { ShopFeed } from './ShopPage';
@@ -110,35 +110,40 @@ function FollowFeed({ followedAuthors }: { followedAuthors: Set<string> }) {
   );
 }
 
-// ── ChannelDiscoverFeed（频道发现：类似 YouTube 频道推荐）──────────
-function ChannelDiscoverFeed() {
-  const { channels, subscribedChannelTiers, expiredChannelIds, followedAuthors, navigate, t, channelDiscoverAutoOpen, setChannelDiscoverAutoOpen } = useApp();
-  const [scope, setScope] = useState<'all' | 'subscribed'>('subscribed');
-
-  useEffect(() => {
-    if (channelDiscoverAutoOpen) {
-      setScope('all');
-      setChannelDiscoverAutoOpen(false);
-    }
-  }, [channelDiscoverAutoOpen, setChannelDiscoverAutoOpen]);
+// ── ChannelsFeed（频道：订阅频道横向头像栏 + 帖子流，仿 YouTube 订阅页）──────────
+function ChannelsFeed() {
+  const { channels, subscribedChannelTiers, followedAuthors, posts, t } = useApp();
+  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const subscribedChannels = useMemo(
     () => channels.filter(c => subscribedChannelTiers[c.id] != null),
     [channels, subscribedChannelTiers],
   );
-  // 发现：排除已订阅频道，按与当前用户共同订阅的人数排序，而非原始列表顺序
-  const discoverChannels = useMemo(() => {
+  const subscribedChannelIds = useMemo(
+    () => new Set(subscribedChannels.map(c => c.id)),
+    [subscribedChannels],
+  );
+  // 头像栏在订阅频道后接推荐频道（按共同订阅人数排序），横向可滑动，不设上限；
+  // 已过期未续费的频道仍算「订阅过」，排除在推荐之外，避免同一频道在栏里出现两次
+  const recommendedChannels = useMemo(() => {
     return channels
-      .filter(c => {
-        const subscribedTierIndex = subscribedChannelTiers[c.id];
-        const isSubscribed = subscribedTierIndex != null && !expiredChannelIds.has(c.id);
-        return !isSubscribed;
-      })
+      .filter(c => !subscribedChannelIds.has(c.id))
       .map(channel => ({ channel, mutualCount: getMutualSubscriberCount(channel, followedAuthors) }))
-      .sort((a, b) => b.mutualCount - a.mutualCount);
-  }, [channels, subscribedChannelTiers, expiredChannelIds, followedAuthors]);
-  const displayedChannels = scope === 'subscribed'
-    ? subscribedChannels.map(channel => ({ channel, mutualCount: 0 }))
-    : discoverChannels;
+      .sort((a, b) => b.mutualCount - a.mutualCount)
+      .map(({ channel }) => channel);
+  }, [channels, subscribedChannelIds, followedAuthors]);
+  // 未选中某个频道时，聚合展示全部已订阅频道的内容；选中后下方切到该频道自己的内容
+  const channelPosts = useMemo(
+    () => posts.filter(post => {
+      if (!post.deleted && isPostVisible(post) && post.channelId) {
+        return selectedChannelId ? post.channelId === selectedChannelId : subscribedChannelIds.has(post.channelId);
+      }
+      return false;
+    }),
+    [posts, subscribedChannelIds, selectedChannelId],
+  );
+  const selectedChannel = selectedChannelId
+    ? channels.find(c => c.id === selectedChannelId)
+    : undefined;
 
   if (channels.length === 0) {
     return (
@@ -147,48 +152,65 @@ function ChannelDiscoverFeed() {
       </div>
     );
   }
+  const toggleSelect = (channelId: string) => setSelectedChannelId(id => id === channelId ? null : channelId);
   return (
-    <section className="channel-discover-list">
-      <nav className="channel-scope-nav" aria-label={t('频道范围')}>
-        <button
-          type="button"
-          className={`channel-scope-tab${scope === 'subscribed' ? ' channel-scope-tab--active' : ''}`}
-          onClick={() => setScope('subscribed')}
-          aria-selected={scope === 'subscribed'}
-        >
-          {t('已订阅')}
-        </button>
-        <button
-          type="button"
-          className={`channel-scope-tab${scope === 'all' ? ' channel-scope-tab--active' : ''}`}
-          onClick={() => setScope('all')}
-          aria-selected={scope === 'all'}
-        >
-          {t('发现')}
-        </button>
-      </nav>
-
-      {displayedChannels.length === 0 ? (
-        scope === 'subscribed' ? (
+    <section className="channel-feed">
+      <div className="channel-avatar-strip">
+        {subscribedChannels.map((channel, i) => (
+          <button
+            key={channel.id}
+            type="button"
+            className={`channel-avatar-strip-item${selectedChannelId === channel.id ? ' channel-avatar-strip-item--active' : ''}`}
+            onClick={() => toggleSelect(channel.id)}
+            aria-pressed={selectedChannelId === channel.id}
+          >
+            <Avatar index={i} seed={channel.avatarSeed} />
+            <span className="channel-avatar-strip-name">{channel.name}</span>
+          </button>
+        ))}
+        {recommendedChannels.map((channel, i) => (
+          <button
+            key={channel.id}
+            type="button"
+            className={`channel-avatar-strip-item channel-avatar-strip-item--suggested${selectedChannelId === channel.id ? ' channel-avatar-strip-item--active' : ''}`}
+            onClick={() => toggleSelect(channel.id)}
+            aria-pressed={selectedChannelId === channel.id}
+            aria-label={t('推荐频道 {name}', { name: channel.name })}
+          >
+            <span className="channel-avatar-strip-avatar-wrap">
+              <Avatar index={i} seed={channel.avatarSeed} />
+              <span className="channel-avatar-strip-suggested-badge" aria-hidden="true">
+                <Plus size={10} strokeWidth={3} />
+              </span>
+            </span>
+            <span className="channel-avatar-strip-name">{channel.name}</span>
+          </button>
+        ))}
+      </div>
+      {selectedChannel ? (
+        channelPosts.length === 0 ? (
           <div className="empty-state">
-            <p>{t('还没有订阅任何频道')}</p>
-            <p className="empty-sub">{t('去"发现"里看看有没有喜欢的频道')}</p>
+            <p>{t('该频道还没有发布内容')}</p>
           </div>
         ) : (
-          <div className="empty-state">
-            <p>{t('已经订阅了全部频道')}</p>
+          <div className="feed" data-layer="feed">
+            {channelPosts.map((post, i) => <PostCard key={post.id} post={post} index={i % 3} />)}
           </div>
         )
-      ) : displayedChannels.map(({ channel, mutualCount }, i) => (
-        <ChannelCard
-          key={channel.id}
-          channel={channel}
-          index={i % 3}
-          onClick={() => navigate({ page: 'P_CHANNEL', channelId: channel.id })}
-          showSubscribe
-          mutualCount={scope === 'all' ? mutualCount : undefined}
-        />
-      ))}
+      ) : subscribedChannels.length === 0 ? (
+        <div className="empty-state">
+          <p>{t('还没有订阅任何频道')}</p>
+          <p className="empty-sub">{t('去搜索里找找感兴趣的频道')}</p>
+        </div>
+      ) : channelPosts.length === 0 ? (
+        <div className="empty-state">
+          <p>{t('订阅的频道还没有发布内容')}</p>
+        </div>
+      ) : (
+        <div className="feed" data-layer="feed">
+          {channelPosts.map((post, i) => <PostCard key={post.id} post={post} index={i % 3} />)}
+        </div>
+      )}
     </section>
   );
 }
@@ -353,7 +375,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
         )}
         {tab === 0 && <RecommendFeed key={feedKey} scrollRef={scrollRef} />}
         {tab === 1 && <FollowFeed key={feedKey} followedAuthors={followedAuthors} />}
-        {tab === 2 && <ChannelDiscoverFeed key={feedKey} />}
+        {tab === 2 && <ChannelsFeed key={feedKey} />}
       </div>
       <DevPanel />
     </>

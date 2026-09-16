@@ -57,22 +57,20 @@ export function ChannelPage({ channelId }: { channelId: string }) {
         onBack={canGoBack ? goBack : undefined}
       />
       <div className="scroll-area">
+        {channel.headerBackgroundUrl && (
+          <div className="channel-page-cover">
+            <img src={channel.headerBackgroundUrl} alt="" aria-hidden="true" />
+          </div>
+        )}
         <div className="channel-page-hero">
           <Avatar
             index={0}
             seed={channel.avatarSeed}
+            avatarUrl={channel.avatarUrl}
             onClick={() => navigate({ page: 'P6', authorName: channel.ownerName })}
           />
           <div className="channel-page-hero-info">
             <span className="channel-page-hero-name">{channel.name}</span>
-            <button
-              type="button"
-              className="channel-page-hero-owner"
-              onClick={() => navigate({ page: 'P6', authorName: channel.ownerName })}
-            >
-              {t('由 {ownerName} 运营', { ownerName: channel.ownerName })}
-              <ChevronRight size={13} strokeWidth={2.2} aria-hidden="true" />
-            </button>
           </div>
           <div className="channel-page-hero-actions">
             <button

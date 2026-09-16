@@ -7,7 +7,7 @@ import type { Channel, Post } from '../types';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
 import { ImageWithFallback } from './ImageWithFallback';
 
-const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
+export const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
 
 export function VerifiedBadge({ size = 14 }: { size?: number }) {
   const { t } = useApp();
@@ -109,7 +109,6 @@ export function ChannelCard({
   showAvatar = true,
   showSubscribe = false,
   showLink = true,
-  mutualCount,
 }: {
   channel: Channel;
   index: number;
@@ -124,8 +123,6 @@ export function ChannelCard({
   showSubscribe?: boolean;
   /** 「链接」快捷入口（Gemini Chain 跨平台链接）——频道主查看自己的频道列表时不需要，传 false 隐藏 */
   showLink?: boolean;
-  /** 与当前用户共同订阅的人数——推荐场景传入后优先展示「N 位共同订阅」，比总订阅人数更能说明「为什么推荐」 */
-  mutualCount?: number;
 }) {
   const { t, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, openChannelLink, linkedChannelIds } = useApp();
   const subscribedTierIndex = subscribedChannelTiers[channel.id];
@@ -151,7 +148,7 @@ export function ChannelCard({
         onClick={onClick}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
       >
-        {showAvatar && <Avatar index={index} seed={channel.avatarSeed} />}
+        {showAvatar && <Avatar index={index} seed={channel.avatarSeed} avatarUrl={channel.avatarUrl} />}
         <div className="channel-discover-info">
           <span className="channel-discover-name">
             <Radio size={13} strokeWidth={2.2} />
@@ -159,11 +156,7 @@ export function ChannelCard({
           </span>
           <span className="channel-discover-desc">{channel.description}</span>
           <span className="channel-discover-subs-row">
-            <span className="channel-discover-subs">
-              {mutualCount != null && mutualCount > 0
-                ? t('{count} 位共同订阅', { count: mutualCount })
-                : t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}
-            </span>
+            <span className="channel-discover-subs">{t('{subscriberCount} 人已订阅', { subscriberCount: channel.subscriberCount })}</span>
             {onManage ? (
               <button
                 type="button"

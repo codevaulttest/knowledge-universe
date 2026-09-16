@@ -599,7 +599,6 @@ export const es: Record<string, string> = {
   '{count} 个频道': '{count} canales',
   '搜索频道名称或简介': 'Buscar por nombre o descripción del canal',
   '没有找到匹配的频道': 'No se encontraron canales coincidentes',
-  '由 {ownerName} 运营': 'Gestionado por {ownerName}',
   '频道不存在': 'El canal no existe',
   '该频道可能已被下架': 'Este canal podría haber sido dado de baja',
   '该频道还没有发布任何内容': 'Este canal aún no tiene publicaciones',

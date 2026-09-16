@@ -236,41 +236,66 @@ button {
   flex-direction: column;
   gap: 10px;
 }
-.channel-scope-nav {
+
+/* ── Channels Feed（频道 tab：订阅频道横向头像栏 + 帖子流，仿 YouTube 订阅页）── */
+.channel-avatar-strip {
   display: flex;
-  gap: 4px;
-  padding: 3px;
-  border-radius: var(--ku-radius-pill);
-  background: var(--ku-color-bg-page);
+  gap: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: var(--ku-feed-padding-top) var(--ku-feed-padding-x) 14px;
 }
-.channel-scope-tab {
-  flex: 1;
-  padding: 8px 12px;
-  border-radius: var(--ku-radius-pill);
+.channel-avatar-strip::-webkit-scrollbar { display: none; }
+.channel-avatar-strip-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 60px;
   border: none;
   background: transparent;
-  color: var(--ku-color-text-secondary);
-  font: 600 13px/1 var(--ku-font-family);
+  padding: 0;
   cursor: pointer;
-  transition: background var(--ku-motion-fast), color var(--ku-motion-fast);
+  -webkit-tap-highlight-color: transparent;
+  --ku-avatar-size: 52px;
 }
-.channel-scope-tab--active {
-  background: var(--ku-color-bg-phone);
-  color: var(--ku-color-primary-dark);
-  box-shadow: var(--ku-shadow-card);
+.channel-avatar-strip-name {
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-secondary);
+  max-width: 60px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.channel-discover-section-head {
+/* 推荐（未订阅）频道：头像右下角加「+」角标，与已订阅头像区分开 */
+.channel-avatar-strip-avatar-wrap {
+  position: relative;
+  display: block;
+}
+.channel-avatar-strip-suggested-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 24px;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--ku-color-primary);
+  color: #fff;
+  border: 2px solid var(--ku-color-bg-phone);
 }
-.channel-discover-section-label {
-  font: 600 12px/1 var(--ku-font-family);
+.channel-avatar-strip-item--suggested .channel-avatar-strip-name {
   color: var(--ku-color-text-meta);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+}
+/* 选中态：头像加主色描边，下方帖子流已切到该频道 */
+.channel-avatar-strip-item--active .avatar {
+  box-shadow: 0 0 0 2px var(--ku-color-bg-phone), 0 0 0 4px var(--ku-color-primary);
+  border-radius: 50%;
+}
+.channel-avatar-strip-item--active .channel-avatar-strip-name {
+  color: var(--ku-color-primary);
 }
 .channel-refresh-btn {
   display: inline-flex;
@@ -3331,6 +3356,36 @@ button {
   padding: var(--ku-modal-content-padding);
   box-shadow: var(--ku-shadow-modal);
 }
+
+/* 业务操作采用子页面承载；术语、规则和确认说明仍保留为弹窗。 */
+.sheet-backdrop.full-page-flow {
+  padding: 0;
+  align-items: stretch;
+  background: var(--ku-color-bg-phone);
+}
+.sheet-backdrop.full-page-flow > .payment-sheet,
+.sheet-backdrop.full-page-flow > .edit-profile-sheet,
+.sheet-backdrop.full-page-flow > .follow-list-modal {
+  width: 100%;
+  max-width: var(--ku-layout-max-width);
+  max-height: none;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0 auto;
+}
+@media (min-width: 600px) {
+  .sheet-backdrop.full-page-flow > .payment-sheet,
+  .sheet-backdrop.full-page-flow > .edit-profile-sheet,
+  .sheet-backdrop.full-page-flow > .follow-list-modal {
+    box-shadow: var(--ku-shadow-phone);
+  }
+}
+.shop-item-page-content {
+  flex: 1;
+  max-height: none;
+  padding: 0 16px calc(12px + env(safe-area-inset-bottom));
+}
 .sheet-header {
   display: flex;
   align-items: baseline;
@@ -5308,6 +5363,17 @@ button {
   border: 1px solid var(--ku-color-border-control);
 }
 /* ── 频道详情页（按 channelId 独立访问）── */
+.channel-page-cover {
+  width: 100%;
+  height: var(--ku-channel-cover-height);
+  overflow: hidden;
+}
+.channel-page-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .channel-page-hero {
   display: flex;
   align-items: center;
@@ -5326,25 +5392,6 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.channel-page-hero-owner {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  align-self: flex-start;
-  border: none;
-  background: none;
-  padding: 0;
-  font: var(--ku-text-caption);
-  color: var(--ku-color-text-secondary);
-  cursor: pointer;
-}
-.channel-page-hero-owner svg {
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-.channel-page-hero-owner:active {
-  opacity: 0.7;
 }
 .channel-page-hero-actions {
   display: flex;
@@ -7080,6 +7127,18 @@ button {
   flex-direction: column;
 }
 
+/* 搜索页已经由 .search-content 提供左右安全边距，推荐列表不再重复缩进。 */
+.search-content .channel-discover-list {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.search-content .search-user-list .follow-list-item {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.search-section .feed,
 .search-results-group .feed,
 .search-results-group .shop-grid {
   padding: 0;
@@ -7132,6 +7191,10 @@ button {
 }
 .edit-profile-sheet--channel .edit-profile-field:has(.pay-combo-breakdown) {
   gap: 4px;
+}
+.edit-profile-sheet--channel .planet-upgrade-row--address {
+  align-items: stretch;
+  padding-inline: 0;
 }
 .channel-create-footer {
   flex-shrink: 0;
