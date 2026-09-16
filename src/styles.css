@@ -7196,6 +7196,10 @@ button {
   align-items: stretch;
   padding-inline: 0;
 }
+.edit-profile-sheet--channel .planet-upgrade-row-label {
+  font-size: 13px;
+  font-weight: 400;
+}
 .channel-create-footer {
   flex-shrink: 0;
   margin-top: 0;

@@ -120,7 +120,7 @@ export function SearchPage({ onClose, initialShopOnly = false }: { onClose: () =
   const visiblePosts = tab === 'users' || tab === 'channels' ? [] : matchedPosts;
   const visibleUsers = tab === 'posts' || tab === 'channels' ? [] : matchedUsers;
   const visibleChannels = tab === 'posts' || tab === 'users' ? [] : matchedChannels;
-  const hasQuery = query.trim().length > 0 || shopOnly;
+  const hasQuery = query.trim().length > 0;
   const hasResults = visiblePosts.length > 0 || visibleUsers.length > 0 || visibleChannels.length > 0;
 
   const recommendedChannels = useMemo(
