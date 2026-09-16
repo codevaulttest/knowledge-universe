@@ -3413,6 +3413,26 @@ button {
   align-items: center;
   gap: 8px;
 }
+.sheet-header--centered {
+  align-items: center;
+}
+.sheet-title--centered {
+  flex: 1;
+  text-align: center;
+}
+.sheet-header-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--ku-color-text-secondary);
+}
+.sheet-header-spacer {
+  width: 28px;
+  flex-shrink: 0;
+}
 .shop-addr-form-back {
   display: flex;
   align-items: center;
@@ -5013,12 +5033,34 @@ button {
   border-radius: var(--ku-radius-card);
   background: var(--ku-color-bg-root);
 }
+.mutual-promotion-target__row {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-space-3);
+}
+.mutual-promotion-target__row .avatar {
+  width: var(--ku-avatar-size-compact);
+  height: var(--ku-avatar-size-compact);
+}
+.mutual-promotion-target__body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--ku-space-1);
+}
 .mutual-promotion-target__label,
 .mutual-promotion-target__meta,
 .mutual-promotion-channel__meta,
 .mutual-promotion-empty {
   font: var(--ku-text-meta);
   color: var(--ku-color-text-meta);
+}
+.mutual-promotion-target__meta,
+.mutual-promotion-channel__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 .mutual-promotion-target__name,
 .mutual-promotion-channel__name {
@@ -5085,6 +5127,11 @@ button {
   min-width: 0;
   flex-direction: column;
   gap: var(--ku-space-1);
+}
+.mutual-promotion-channel .avatar,
+.mutual-promotion-option .avatar {
+  width: var(--ku-avatar-size-compact);
+  height: var(--ku-avatar-size-compact);
 }
 .pay-page-result-desc {
   max-width: var(--ku-modal-width);
