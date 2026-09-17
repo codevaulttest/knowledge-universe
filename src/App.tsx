@@ -1564,7 +1564,7 @@ export default function App({ account, onLanguageChange }: {
                 setLinkedChannelIds(ids => new Set(ids).add(channel.id));
                 setChannelLinkSheet(null);
                 showToast(promotedChannel
-                  ? t('已获得向《{target}》订阅用户推荐《{channel}》的权限', { target: channel.name, channel: promotedChannel.name })
+                  ? t('《{channel}》已获得推荐位，将展示给《{target}》的订阅用户', { channel: promotedChannel.name, target: channel.name })
                   : t('已获得互推推荐权限'));
               }}
               onClose={() => setChannelLinkSheet(null)}

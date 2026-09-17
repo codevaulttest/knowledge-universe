@@ -263,11 +263,11 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
         {tier > 0 && (
           <div className="pay-combo-breakdown">
             <div className="pay-combo-row">
-              <span className="pay-combo-label">{t('PB 消耗')}</span>
+              <span className="pay-combo-label">{t('代币手续费')}</span>
               <span className="pay-combo-value">{formatSuperAmount(tier)} PB</span>
             </div>
             <div className="pay-combo-row">
-              <span className="pay-combo-label">{t('SUP 消耗')}</span>
+              <span className="pay-combo-label">{t('网络手续费')}</span>
               <span className="pay-combo-value">{formatSupAmount(supCost)} SUP</span>
             </div>
             <p className="pay-combo-hint">
@@ -869,11 +869,11 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
         )}
         <div className="pay-combo-breakdown">
           <div className="pay-combo-row">
-            <span className="pay-combo-label">{t('PB 消耗')}</span>
+            <span className="pay-combo-label">{t('代币手续费')}</span>
             <span className="pay-combo-value">{formatSuperAmount(LINK_TIER)} PB</span>
           </div>
           <div className="pay-combo-row">
-            <span className="pay-combo-label">{t('SUP 消耗')}</span>
+            <span className="pay-combo-label">{t('网络手续费')}</span>
             <span className="pay-combo-value">{formatSupAmount(SUP_COST_BY_TIER[LINK_TIER])} SUP</span>
           </div>
         </div>
@@ -2503,12 +2503,12 @@ export function CreateChannelModal({ onClose }: { onClose: () => void }) {
               <span className="edit-profile-label">{t('费用明细')}</span>
               <div className="pay-combo-breakdown">
                 <div className="pay-combo-row">
-                  <span className="pay-combo-label">{t('PB 消耗')}</span>
+                  <span className="pay-combo-label">{t('代币手续费')}</span>
                   <span className="pay-combo-value">{formatSuperAmount(channelPbCost)} PB</span>
                 </div>
                 {channelWalletNeedsSup && (
                   <div className="pay-combo-row">
-                    <span className="pay-combo-label">{t('SUP 消耗')}</span>
+                    <span className="pay-combo-label">{t('网络手续费')}</span>
                     <span className="pay-combo-value">{formatSupAmount(Number(channelSupCost.toFixed(4)))} SUP</span>
                   </div>
                 )}
