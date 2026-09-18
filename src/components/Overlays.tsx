@@ -234,13 +234,14 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
   };
 
   return (
-    <div className="sheet-backdrop" onClick={status === 'loading' ? undefined : onClose}>
+    <div className="sheet-backdrop full-page-flow" onClick={status === 'loading' ? undefined : onClose}>
       <div className="payment-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
-        <div className="sheet-header">
-          <span className="sheet-title">{sheetTitle}</span>
-          <button type="button" className="modal-close" onClick={onClose} disabled={status === 'loading'} aria-label={t('关闭')}>
-            <X size={18} strokeWidth={2} />
+        <div className="sheet-header sheet-header--centered">
+          <button type="button" className="sheet-header-back" onClick={onClose} disabled={status === 'loading'} aria-label={t('返回')}>
+            <ArrowLeft size={18} strokeWidth={2} />
           </button>
+          <span className="sheet-title sheet-title--centered">{sheetTitle}</span>
+          <div className="sheet-header-spacer" aria-hidden />
         </div>
 
         {relatedPost && (
@@ -353,13 +354,14 @@ export function GeminiStakeModal({
 
   return (
     <>
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className="gemini-stake-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
-        <div className="sheet-header">
-          <span className="sheet-title">{isPartner ? t('加入合伙人') : t('同步创建子节点')}</span>
-          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
-            <X size={18} strokeWidth={2} />
+    <div className="sheet-backdrop full-page-flow" onClick={onClose}>
+      <div className="gemini-stake-modal gemini-stake-modal--full-page" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div className="sheet-header sheet-header--centered">
+          <button type="button" className="sheet-header-back" onClick={onClose} aria-label={t('返回')}>
+            <ArrowLeft size={18} strokeWidth={2} />
           </button>
+          <span className="sheet-title sheet-title--centered">{isPartner ? t('加入合伙人') : t('同步创建子节点')}</span>
+          <div className="sheet-header-spacer" aria-hidden />
         </div>
 
         {isPartner ? (
@@ -614,7 +616,7 @@ function PaymentConfirmPage({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LinkSheet — 固定面额链接 + 支付
+// LinkSheet — 链接 + 支付（博主互推固定 1000 PB，其它链接可选择档位）
 // ═══════════════════════════════════════════════════════════════
 export type LinkTarget = Pick<Post, 'id' | 'nodeId' | 'rating' | 'visiblePercent' | 'channelId' | 'minTierIndex' | 'author'>;
 
@@ -633,6 +635,7 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
   const [failReason, setFailReason] = useState('');
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
   const [nodeCodeCopied, setNodeCodeCopied] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<Exclude<StakeTier, 0>>(10);
 
   const isChannelPromotion = !!promotionTarget;
   const promotionTargetNodeCode = promotionTarget?.nodeCode ?? post.nodeId ?? '';
@@ -647,7 +650,8 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
   const [promotedChannelId, setPromotedChannelId] = useState<string | null>(() => promotionChannels[0]?.id ?? null);
   const [promotionPickerOpen, setPromotionPickerOpen] = useState(false);
   const promotedChannel = promotionChannels.find(item => item.id === promotedChannelId);
-  const superAmount = SUPER_BY_TIER[LINK_TIER];
+  const tier = isChannelPromotion ? LINK_TIER : selectedTier;
+  const linkTiers: Exclude<StakeTier, 0>[] = [10, 100, 1000];
   const hasHiddenContent = post.visiblePercent < 100;
 
   // 频道会员门槛：未达标时链接不会解锁内容，不展示「解锁」相关文案（与 PostCard 一致）
@@ -660,7 +664,7 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
   const showUnlockCopy = hasHiddenContent && !channelLocked;
 
   const pay = () => {
-    if (!payWallet || (isChannelPromotion && !promotedChannel) || !payPb({ amount: LINK_TIER, use: 'unlock', wallet: payWallet, supCost: SUP_COST_BY_TIER[LINK_TIER] })) {
+    if (!payWallet || (isChannelPromotion && !promotedChannel) || !payPb({ amount: tier, use: 'unlock', wallet: payWallet, supCost: SUP_COST_BY_TIER[tier] })) {
       setFailReason(t('所选钱包余额不足或不适用于此操作'));
       setStep('failed');
       return;
@@ -670,7 +674,7 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
       setStep('done');
       setTimeout(() => {
         if (mode === 'unlock') recordTaskInteraction(post.id);
-        onSuccess(LINK_TIER, promotedChannel?.id);
+        onSuccess(tier, promotedChannel?.id);
       }, 800);
     }, 1300);
   };
@@ -714,9 +718,9 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
               channel: promotedChannel.name,
             })
           : post.nodeId ? `节点 ${post.nodeId}` : t('知识宇宙')}
-        amountText={`${LINK_TIER} PB`}
-        networkFee={isChannelPromotion ? `${SUP_COST_BY_TIER[LINK_TIER]} SUP` : `${formatSuperAmount(superAmount)} PB`}
-        tokenFee={`${LINK_TIER} PB`}
+        amountText={`${tier} PB`}
+        networkFee={`${SUP_COST_BY_TIER[tier]} SUP`}
+        tokenFee={`${tier} PB`}
         walletId={payWallet}
         failReason={failReason}
         successTitle={isChannelPromotion ? t('已获得互推推荐权限') : undefined}
@@ -735,33 +739,28 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
   }
 
   return (
-    <div className={`sheet-backdrop${isChannelPromotion ? ' full-page-flow' : ''}`} onClick={onClose}>
-      <div className={`gemini-stake-modal${isChannelPromotion ? ' gemini-stake-modal--full-page' : ''}`} role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
-        {isChannelPromotion ? (
-          <div className="sheet-header sheet-header--centered">
-            <button type="button" className="sheet-header-back" onClick={onClose} aria-label={t('返回')}>
-              <ArrowLeft size={18} strokeWidth={2} />
-            </button>
-            <span className="sheet-title sheet-title--centered">{t('博主互推')}</span>
-            <div className="sheet-header-spacer" aria-hidden />
-          </div>
-        ) : (
-          <div className="sheet-header">
-            <span className="sheet-title">
-              {mode === 'unlock' ? t('解锁全部内容') : t('创建子节点并链接')}
-            </span>
-            <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
-              <X size={18} strokeWidth={2} />
-            </button>
-          </div>
-        )}
+    <div className="sheet-backdrop full-page-flow" onClick={onClose}>
+      <div className="gemini-stake-modal gemini-stake-modal--full-page" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div className="sheet-header sheet-header--centered">
+          <button type="button" className="sheet-header-back" onClick={onClose} aria-label={t('返回')}>
+            <ArrowLeft size={18} strokeWidth={2} />
+          </button>
+          <span className="sheet-title sheet-title--centered">
+            {isChannelPromotion
+              ? t('博主互推')
+              : mode === 'unlock'
+                ? t('解锁全部内容')
+                : t('创建子节点并链接')}
+          </span>
+          <div className="sheet-header-spacer" aria-hidden />
+        </div>
 
         <p className="gemini-stake-lead">
           {isChannelPromotion
             ? t('在目标频道创建推荐位，将你选择的频道推荐给其订阅用户。')
             : mode === 'unlock'
-            ? t('消耗 1000 PB 创建知识宇宙子节点，同步解锁全部内容')
-            : t('消耗 1000 PB，在此节点下生成子节点并加入空投激励网络')}
+            ? t('选择面额创建知识宇宙子节点，同步解锁全部内容')
+            : t('选择链接面额，在此节点下生成子节点并加入空投激励网络')}
         </p>
 
         {isChannelPromotion && promotionTarget ? (
@@ -867,25 +866,42 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
             {t('链接后同步解锁本帖全部内容')}
           </p>
         )}
+        {!isChannelPromotion && (
+          <div className="stake-tier-list stake-tier-list--row link-tier-list">
+            {linkTiers.map(option => (
+              <button
+                key={option}
+                type="button"
+                className={`stake-tier-option${selectedTier === option ? ' stake-tier-option--active' : ''}`}
+                onClick={() => setSelectedTier(option)}
+              >
+                <span className="stake-tier-option__amount">
+                  <span className="stake-tier-option__value">{option}</span>
+                  <span className="stake-tier-option__unit">PB</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
         <div className="pay-combo-breakdown">
           <div className="pay-combo-row">
             <span className="pay-combo-label">{t('代币手续费')}</span>
-            <span className="pay-combo-value">{formatSuperAmount(LINK_TIER)} PB</span>
+            <span className="pay-combo-value">{formatSuperAmount(tier)} PB</span>
           </div>
           <div className="pay-combo-row">
             <span className="pay-combo-label">{t('网络手续费')}</span>
-            <span className="pay-combo-value">{formatSupAmount(SUP_COST_BY_TIER[LINK_TIER])} SUP</span>
+            <span className="pay-combo-value">{formatSupAmount(SUP_COST_BY_TIER[tier])} SUP</span>
           </div>
         </div>
-        <PbWalletPicker use="unlock" amount={LINK_TIER} value={payWallet} onChange={setPayWallet} />
+        <PbWalletPicker use="unlock" amount={tier} value={payWallet} onChange={setPayWallet} />
         <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" disabled={isChannelPromotion && !promotedChannel} onClick={() => setStep('confirm')}>
           {isChannelPromotion
             ? t('获得互推推荐权限 · 1000 PB')
             : mode === 'unlock'
-            ? t('解锁并创建子节点 · {selected} PB', { selected: LINK_TIER })
+            ? t('解锁并创建子节点 · {selected} PB', { selected: tier })
             : showUnlockCopy
-              ? t('解锁全文并链接 · {selected} PB', { selected: LINK_TIER })
-              : t('创建子节点并链接 · {selected} PB', { selected: LINK_TIER })}
+              ? t('解锁全文并链接 · {selected} PB', { selected: tier })
+              : t('创建子节点并链接 · {selected} PB', { selected: tier })}
         </button>
       </div>
     </div>

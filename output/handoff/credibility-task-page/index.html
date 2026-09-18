@@ -1,0 +1,156 @@
+<title>公信力任务改为独立页面</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap">
+<style>
+  :root {
+    --ground: #F4F7FB;
+    --surface: #FFFFFF;
+    --ink: #0E1830;
+    --ink-soft: #4A5670;
+    --line: #D9E1EC;
+    --accent: #1B6BFF;
+    --accent-ink: #1456D6;
+    --accent-wash: #E6EEFF;
+    --new: #0F7B4A;
+    --new-wash: #DDF3E8;
+    --changed: #9A4A00;
+    --changed-wash: #FDEBD6;
+    --removed: #B42318;
+    --removed-wash: #FDE4E1;
+    --phone-frame: #0E1830;
+    --sans: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0B1120; --surface: #121A2C; --ink: #E7ECF5; --ink-soft: #A3AEC4; --line: #25304A;
+      --accent: #5B93FF; --accent-ink: #8AB2FF; --accent-wash: #16264A;
+      --new: #5FD39A; --new-wash: #10301F; --changed: #F5B065; --changed-wash: #3A2410;
+      --removed: #FF8A7E; --removed-wash: #3D1512; --phone-frame: #2A3550;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0B1120; --surface: #121A2C; --ink: #E7ECF5; --ink-soft: #A3AEC4; --line: #25304A;
+    --accent: #5B93FF; --accent-ink: #8AB2FF; --accent-wash: #16264A;
+    --new: #5FD39A; --new-wash: #10301F; --changed: #F5B065; --changed-wash: #3A2410;
+    --removed: #FF8A7E; --removed-wash: #3D1512; --phone-frame: #2A3550;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font: 15px/1.7 var(--sans);
+    padding-inline: 20px;
+    padding-block: 0 72px;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+
+  header.top { padding-block: 44px 28px; border-bottom: 1px solid var(--line); display: grid; gap: 14px; }
+  .eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); margin: 0; }
+  h1 { font-size: clamp(28px, 4.4vw, 40px); line-height: 1.2; font-weight: 900; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+  .intro { color: var(--ink-soft); max-width: 62ch; margin: 0; }
+  dl.meta { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 6px 0 0; }
+  dl.meta div { display: grid; gap: 2px; }
+  dl.meta dt { font: 500 12px/1.4 var(--mono); color: var(--ink-soft); letter-spacing: .04em; }
+  dl.meta dd { margin: 0; font: 500 14px/1.4 var(--mono); }
+
+  .overview { padding-block: 28px 8px; max-width: 520px; }
+  .overview h2 { font-size: 13px; font-weight: 700; letter-spacing: .06em; color: var(--ink-soft); margin: 0 0 10px; }
+  .toc { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; counter-reset: toc; }
+  .toc li { counter-increment: toc; }
+  .toc a { display: flex; gap: 10px; color: var(--ink); text-decoration: none; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+  .toc a::before { content: counter(toc, decimal-leading-zero); font: 500 12px/1.9 var(--mono); color: var(--accent-ink); }
+  .toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .toc a:hover { color: var(--accent-ink); }
+
+
+  .screens { display: grid; gap: 0; margin-top: 36px; }
+  .screen { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 40px; padding-block: 40px; border-top: 1px solid var(--line); align-items: start; }
+  .phone { margin: 0; background: var(--phone-frame); padding: 8px; border-radius: 34px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+  .phone img { display: block; width: 100%; height: auto; border-radius: 27px; }
+  .screen-body { display: grid; gap: 14px; max-width: 60ch; }
+  .screen-index { margin: 0; font: 500 12px/1 var(--mono); color: var(--ink-soft); letter-spacing: .06em; }
+  .screen h3 { margin: 0; font-size: 22px; line-height: 1.35; font-weight: 700; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; text-wrap: balance; }
+  .tag { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; line-height: 1.4; }
+  .tag--new { color: var(--new); background: var(--new-wash); }
+  .tag--changed { color: var(--changed); background: var(--changed-wash); }
+  .tag--removed { color: var(--removed); background: var(--removed-wash); }
+
+  .path { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font: 13px/1.5 var(--mono); }
+  .path li { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; }
+  .path li + li::before { content: "→"; color: var(--ink-soft); margin-right: 6px; margin-left: -4px; }
+  .path li + li { position: relative; }
+
+  .changes { margin: 0; padding-left: 1.1em; display: grid; gap: 8px; }
+  .notes { background: var(--accent-wash); border-radius: 10px; padding: 12px 16px; }
+  .notes h4 { margin: 0 0 6px; font-size: 13px; color: var(--accent-ink); }
+  .notes ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; font-size: 14px; }
+
+  footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 13px; }
+
+  @media (max-width: 760px) {
+    .screen { grid-template-columns: 1fr; gap: 20px; }
+    .phone { position: static; max-width: 280px; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">知识宇宙 · 功能交付</p>
+    <h1>公信力任务改为独立页面</h1>
+    <p class="intro">公信力任务从首页弹出的底部面板，改成可返回的独立页面；页面里同时展示本月日历、今天和昨天的完成情况、以及按直连五星节点数计算的规则摘要。</p>
+    <dl class="meta"><div><dt>提交范围</dt><dd>1629df7..4c6046d</dd></div><div><dt>日期</dt><dd>2026-09-18</dd></div><div><dt>涉及页面</dt><dd>P0 首页 · P_LOT_TASK</dd></div></dl>
+  </header>
+
+  <nav class="overview" aria-label="屏幕目录">
+    <h2>逐屏说明</h2>
+    <ol class="toc"><li><a href="#entry">首页入口</a></li><li><a href="#page">公信力任务页</a></li><li><a href="#today">今天进度、昨天记录与规则摘要</a></li><li><a href="#rules">完整规则面板</a></li></ol>
+  </nav>
+
+  <section class="screens">
+    <article class="screen" id="entry">
+      <figure class="phone"><img src="shots/entry.png" alt="首页入口 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 1</p>
+        <h3>首页入口<span class="tag tag--changed">改动</span></h3>
+        <ol class="path" aria-label="入口路径"><li>P0 首页</li></ol>
+        <ul class="changes"><li>入口位置和图标不变；今天还有未达成的公信力奖励时显示红点</li><li>点击后进入独立页面，替代原来的底部弹窗</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>未连接钱包时先弹钱包连接，连接成功后自动进入任务页</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="page">
+      <figure class="phone"><img src="shots/page.png" alt="公信力任务页 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 2</p>
+        <h3>公信力任务页<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>P0 首页</li><li>公信力任务图标</li><li>P_LOT_TASK</li></ol>
+        <ul class="changes"><li>标题「本月公信力收益历史」，左上角返回回到来源页</li><li>顶部保留「查看完整公信力任务规则」入口</li><li>日历格内显示当天是否达成与当日收益（+数值 / 0），仅展示、不可点击</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>页面走路由栈，和其它二级页一样支持返回；原底部面板组件已删除</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="today">
+      <figure class="phone"><img src="shots/today.png" alt="今天进度、昨天记录与规则摘要 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 3</p>
+        <h3>今天进度、昨天记录与规则摘要<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>P_LOT_TASK</li><li>日历下方</li></ol>
+        <ul class="changes"><li>今天卡片列出「发帖 已发 x / 要求篇数」和「跟别人的帖子互动 已互动 x / 要求次数」，达成项图标和数字变绿</li><li>卡片内附昨天一行：发帖 x 篇 · 互动 x 次</li><li>今天没有任何记录时显示「暂无任务完成记录」</li><li>规则摘要按直连五星节点数切换文案：有直连节点时写明节点编号、面额、频道数与总互动次数；没有时写基础要求，并提示直连五星节点可解锁更高上限</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>要求篇数 = 直连五星节点数对应的任务组数；要求互动次数 = 组数 × 每组互动数</li><li>演示数据为直连 3 个五星节点</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="rules">
+      <figure class="phone"><img src="shots/rules.png" alt="完整规则面板 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 4</p>
+        <h3>完整规则面板<span class="tag tag--changed">改动</span></h3>
+        <ol class="path" aria-label="入口路径"><li>P_LOT_TASK</li><li>查看完整公信力任务规则</li></ol>
+        <ul class="changes"><li>从任务页顶部入口打开，居中弹窗展示，点背景或右上角关闭</li><li>分别说明未直连和直连五星节点时的每日上限，以 3 个节点举例</li></ul>
+        
+      </div>
+    </article></section>
+
+  <footer>截图由脚本从原型自动生成，橙色描边标出本次改动的位置。原型数据全部为本地演示数据。</footer>
+</div>
+

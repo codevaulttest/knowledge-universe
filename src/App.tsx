@@ -1410,9 +1410,9 @@ export default function App({ account, onLanguageChange }: {
           <ShopItemPage postId={route.postId} onClose={goBack} />
         )}
 
-        {/* 覆盖层：认证详情弹窗 */}
+        {/* 认证详情采用全页面；确权规则仍作为详情内的说明弹层。 */}
         {certOpen && (
-          <div className="sheet-backdrop cert-detail-backdrop" onClick={goBack}>
+          <div className="sheet-backdrop full-page-flow cert-detail-backdrop" onClick={goBack}>
             <div className="payment-sheet" role="dialog" aria-modal="true" aria-label={t('认证详情')} onClick={e => e.stopPropagation()}>
               <CertDetailPage certId={route.certId} onClose={goBack} />
             </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronRight, Copy, Crown, Gem, Info, Loader2, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, X } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronRight, Copy, Crown, Gem, Info, Loader2, Minus, Plus, Radio, RotateCcw, Search, ShieldCheck, ShieldX, Sparkles, Star, Wallet, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { AssetOverviewCard } from '../components/AssetOverviewCard';
@@ -1021,24 +1021,24 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
 
       {/* ── Create Channel Sheet：规模 + 身份 + 账单一次性提交 ── */}
       {walletAddress && createSheetOpen && (
-        <div className="sheet-backdrop" onClick={closeCreateSheet}>
+        <div className="sheet-backdrop full-page-flow" onClick={closeCreateSheet}>
           <div
             className="payment-sheet planet-upgrade-sheet planet-create-sheet"
             role="dialog"
             aria-modal="true"
             onClick={e => e.stopPropagation()}
           >
-            <div className="sheet-header">
-              <span className="sheet-title">{t('抢先开通频道')}</span>
+            <div className="sheet-header sheet-header--centered">
               <button
-                className="back-btn"
-                style={{ marginLeft: 'auto' }}
+                className="sheet-header-back"
                 onClick={closeCreateSheet}
-                aria-label={t('关闭')}
+                aria-label={t('返回')}
                 disabled={creating}
               >
-                <X size={18} strokeWidth={2} />
+                <ArrowLeft size={18} strokeWidth={2} />
               </button>
+              <span className="sheet-title sheet-title--centered">{t('抢先开通频道')}</span>
+              <div className="sheet-header-spacer" aria-hidden />
             </div>
 
             <div className="create-step-body">

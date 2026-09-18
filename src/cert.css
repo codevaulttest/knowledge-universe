@@ -444,6 +444,22 @@
   background: none;
   color: var(--ku-color-text-secondary);
 }
+.cert-detail-page .cert-card {
+  max-width: none;
+}
+.cert-detail-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.cert-detail-page-footer {
+  margin-top: auto;
+  padding: var(--ku-space-4) 0 calc(var(--ku-space-3) + env(safe-area-inset-bottom, 0px));
+}
+.cert-detail-page-footer .planet-confirm-btn {
+  min-height: var(--ku-control-height-md);
+  margin-top: 0;
+}
 
 /* ═══════════════════════════════════ 文章列表徽章 */
 

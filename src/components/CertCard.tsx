@@ -94,7 +94,6 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
         {cert.status === 'burned' && (
           <div className="cert-burned-body">
             <div className="cert-burned-title">{t('该认证已回收')}</div>
-            <div className="cert-burned-desc">{cert.burnReason ?? t('经人工核查存在异常点赞，认证已回收')}</div>
 
             <div className="cert-burned-meta">
               <div className="cert-field">

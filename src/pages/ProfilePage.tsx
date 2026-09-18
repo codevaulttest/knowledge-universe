@@ -4,7 +4,7 @@ import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, AUTHOR_REPOSTS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, getChannelSubscribers, getGenesisTier, MOCK_WALLET_ADDRESS } from '../mockData';
 import type { UserListItem } from '../mockData';
-import type { AddressMigration, Channel, ChannelAuthorization, ChannelSubscriber, CertStatus, Draft, Language, OutgoingTip, ProfileContacts, RepostedBy, UserProfile } from '../types';
+import type { AddressMigration, Channel, ChannelAuthorization, ChannelSubscriber, Draft, Language, OutgoingTip, ProfileContacts, RepostedBy, UserProfile } from '../types';
 import { PostCard } from '../components/PostCard';
 import { ShopProductGrid } from './ShopPage';
 import { DevPanel } from '../components/DevPanel';
@@ -17,6 +17,17 @@ import { isPostVisible, formatScheduledAt } from '../dateUtils';
 import { isValidWalletAddress } from '../formatAddress';
 
 const AVATAR_COLORS = ['#00cdb8', '#0e3060', '#f4e4c4', '#1a2a4e', '#d6fff6'];
+
+function relativePostAgeMinutes(time: string) {
+  if (time === '刚刚' || time === 'Just now') return 0;
+  if (time === '昨天' || time === 'Yesterday') return 24 * 60;
+  const value = Number.parseFloat(time);
+  if (Number.isNaN(value)) return Number.POSITIVE_INFINITY;
+  if (time.includes('分钟') || time.includes('m ago')) return value;
+  if (time.includes('小时') || time.includes('h ago')) return value * 60;
+  if (time.includes('天') || time.includes('d ago')) return value * 24 * 60;
+  return Number.POSITIVE_INFINITY;
+}
 
 function getBackgroundContentInset(image: HTMLImageElement) {
   const sampleWidth = 72;
@@ -94,7 +105,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
 
   // Tab 仅在自己主页上启用：0 = 帖子，1 = 草稿，2 = 转发，3 = 打赏，4 = 收藏，5 = 赞过
   const [profileTab, setProfileTab] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
-  const [postCertFilter, setPostCertFilter] = useState<'all' | 'scheduled' | 'shop' | Exclude<CertStatus, 'pending'>>('all');
+  const [postCertFilter, setPostCertFilter] = useState<'all' | 'certified' | 'scheduled' | 'shop'>('all');
   // 他人主页内容筛选：'all' | 'free' | 'sub' | 'shop'
   const [contentFilter, setContentFilter] = useState<'all' | 'free' | 'sub' | 'shop'>('all');
   const [followListType, setFollowListType] = useState<'following' | 'followers' | null>(null);
@@ -198,17 +209,15 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   ) : null;
 
   const myCerts = isOwn ? knowledgeCerts.filter(c => c.holder === CURRENT_USER) : [];
-  const mintedCertCount = myCerts.filter(c => c.status === 'minted').length;
-  const burnedCertCount = myCerts.filter(c => c.status === 'burned').length;
-  const certPostsByStatus = (status: Exclude<CertStatus, 'pending'>) => myCerts
-    .filter(cert => cert.status === status)
+  const certifiedPosts = myCerts
+    .filter(cert => cert.status !== 'pending')
     .map(cert => allPosts.find(p => p.id === cert.postId) ?? ALL_POSTS.find(p => p.id === cert.postId))
-    .filter((p): p is (typeof allPosts)[number] => !!p);
+    .filter((p): p is (typeof allPosts)[number] => !!p)
+    .sort((a, b) => relativePostAgeMinutes(a.time) - relativePostAgeMinutes(b.time));
   const scheduledPosts = isOwn ? myPosts.filter(p => !isPostVisible(p)) : [];
-  const postFilterTabs: { key: 'all' | 'scheduled' | 'shop' | Exclude<CertStatus, 'pending'>; label: string; count?: number }[] = [
+  const postFilterTabs: { key: 'all' | 'certified' | 'scheduled' | 'shop'; label: string; count?: number }[] = [
     { key: 'all', label: t('全部') },
-    { key: 'minted', label: t('已确权'), count: mintedCertCount },
-    { key: 'burned', label: t('已销毁'), count: burnedCertCount },
+    { key: 'certified', label: t('确权'), count: certifiedPosts.length },
     { key: 'scheduled', label: t('定时'), count: scheduledPosts.length },
     { key: 'shop', label: t('小黄车') },
   ];
@@ -216,8 +225,8 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const isShopView = (isOwn && profileTab === 0 && postCertFilter === 'shop') || (!isOwn && contentFilter === 'shop');
   const filteredPostEntries: { post: (typeof allPosts)[number]; repostedBy?: RepostedBy }[] = isOwn && profileTab === 0 && postCertFilter === 'scheduled'
     ? scheduledPosts.map(post => ({ post }))
-    : isOwn && profileTab === 0 && postCertFilter !== 'all' && postCertFilter !== 'scheduled' && postCertFilter !== 'shop'
-    ? certPostsByStatus(postCertFilter).map(post => ({ post }))
+    : isOwn && profileTab === 0 && postCertFilter === 'certified'
+    ? certifiedPosts.map(post => ({ post }))
     : displayedEntries;
   const filteredPosts = filteredPostEntries.map(entry => entry.post);
 

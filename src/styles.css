@@ -4895,6 +4895,9 @@ button {
   font: 400 13px/1.5 var(--ku-font-family);
   color: var(--ku-color-text-secondary);
 }
+.link-tier-list {
+  margin-bottom: var(--ku-space-2);
+}
 .gemini-stake-tier-card {
   display: flex;
   flex-direction: column;
