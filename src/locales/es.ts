@@ -101,7 +101,6 @@ export const es: Record<string, string> = {
   '网络': 'Red',
   '网络手续费': 'Comisión de red',
   '提示文案占位': 'Marcador de texto de ayuda',
-  '代币手续费': 'Comisión del token',
   '确定': 'Confirmar',
   '拒绝': 'Rechazar',
   '支付失败': 'Pago fallido',

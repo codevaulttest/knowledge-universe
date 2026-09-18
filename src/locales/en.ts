@@ -197,7 +197,6 @@ export const en: Record<string, string> = {
   '网络': 'Network',
   '网络手续费': 'Network fee',
   '提示文案占位': 'Tooltip placeholder',
-  '代币手续费': 'Token fee',
   '确定': 'Confirm',
   '拒绝': 'Reject',
   '支付失败': 'Redemption failed',

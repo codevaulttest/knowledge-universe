@@ -101,7 +101,6 @@ export const pt: Record<string, string> = {
   '网络': 'Rede',
   '网络手续费': 'Taxa de rede',
   '提示文案占位': 'Texto de dica de espaço reservado',
-  '代币手续费': 'Taxa do token',
   '确定': 'Confirmar',
   '拒绝': 'Rejeitar',
   '支付失败': 'Falha no pagamento',

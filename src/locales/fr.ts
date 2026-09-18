@@ -101,7 +101,6 @@ export const fr: Record<string, string> = {
   '网络': 'Réseau',
   '网络手续费': 'Frais de réseau',
   '提示文案占位': 'Texte d\'astuce provisoire',
-  '代币手续费': 'Frais de jeton',
   '确定': 'Confirmer',
   '拒绝': 'Refuser',
   '支付失败': 'Échec du paiement',

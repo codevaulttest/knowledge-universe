@@ -101,7 +101,6 @@ export const vi: Record<string, string> = {
   '网络': 'Mạng',
   '网络手续费': 'Phí mạng',
   '提示文案占位': 'Văn bản gợi ý tạm thời',
-  '代币手续费': 'Phí token',
   '确定': 'Xác nhận',
   '拒绝': 'Từ chối',
   '支付失败': 'Thanh toán thất bại',

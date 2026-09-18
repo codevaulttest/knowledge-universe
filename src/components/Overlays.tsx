@@ -262,18 +262,9 @@ export function PaymentSheet({ payCtx, onSuccess, onClose }: {
         )}
 
         {tier > 0 && (
-          <div className="pay-combo-breakdown">
-            <div className="pay-combo-row">
-              <span className="pay-combo-label">{t('代币手续费')}</span>
-              <span className="pay-combo-value">{formatSuperAmount(tier)} PB</span>
-            </div>
-            <div className="pay-combo-row">
-              <span className="pay-combo-label">{t('网络手续费')}</span>
-              <span className="pay-combo-value">{formatSupAmount(supCost)} SUP</span>
-            </div>
-            <p className="pay-combo-hint">
-              {t('将扣除 PB，并同步扣除站内 SUP')}
-            </p>
+          <div className="compose-stake-gas" style={{ marginBottom: 16 }}>
+            <span className="compose-stake-gas-label">{t('Gas 费')}</span>
+            <span className="compose-stake-gas-value">{formatSupAmount(supCost)} SUP</span>
           </div>
         )}
 
@@ -552,7 +543,7 @@ function PaymentConfirmPage({
               </div>
               <div className="pay-page-row">
                 <FeeLabelTooltip
-                  label={t('代币手续费')}
+                  label={t('所需 PB')}
                   tip={t('提示文案占位')}
                 />
                 <span className="pay-page-row-value">{tokenFee}</span>
@@ -883,15 +874,9 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
             ))}
           </div>
         )}
-        <div className="pay-combo-breakdown">
-          <div className="pay-combo-row">
-            <span className="pay-combo-label">{t('代币手续费')}</span>
-            <span className="pay-combo-value">{formatSuperAmount(tier)} PB</span>
-          </div>
-          <div className="pay-combo-row">
-            <span className="pay-combo-label">{t('网络手续费')}</span>
-            <span className="pay-combo-value">{formatSupAmount(SUP_COST_BY_TIER[tier])} SUP</span>
-          </div>
+        <div className="compose-stake-gas" style={{ marginBottom: 16 }}>
+          <span className="compose-stake-gas-label">{t('Gas 费')}</span>
+          <span className="compose-stake-gas-value">{formatSupAmount(SUP_COST_BY_TIER[tier])} SUP</span>
         </div>
         <PbWalletPicker use="unlock" amount={tier} value={payWallet} onChange={setPayWallet} />
         <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" disabled={isChannelPromotion && !promotedChannel} onClick={() => setStep('confirm')}>
@@ -2519,7 +2504,7 @@ export function CreateChannelModal({ onClose }: { onClose: () => void }) {
               <span className="edit-profile-label">{t('费用明细')}</span>
               <div className="pay-combo-breakdown">
                 <div className="pay-combo-row">
-                  <span className="pay-combo-label">{t('代币手续费')}</span>
+                  <span className="pay-combo-label">{t('所需 PB')}</span>
                   <span className="pay-combo-value">{formatSuperAmount(channelPbCost)} PB</span>
                 </div>
                 {channelWalletNeedsSup && (
