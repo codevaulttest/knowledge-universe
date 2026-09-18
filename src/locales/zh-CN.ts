@@ -949,7 +949,7 @@ export const zhCN: Record<string, string> = {
   '今天发布 {posts} 篇帖子、对他人帖子完成互动 {interactions} 次，最多 +{credibility} 公信力': '今天发布 {posts} 篇帖子、对他人帖子完成互动 {interactions} 次，最多 +{credibility} 公信力',
   '你已直连 {nodes} 个五星节点，今天发布 ': '你已直连 {nodes} 个五星节点，今天发布 ',
   '今天发布 ': '今天发布 ',
-  '每日发布至少 {posts} 篇帖子，并完成 {interactionsPerChannel} 次互动；连续完成任务满 {consecutiveDays} 天后，最高可获得 {credibility} 公信力。': '每日发布至少 {posts} 篇帖子，并完成 {interactionsPerChannel} 次互动；连续完成任务满 {consecutiveDays} 天后，最高可获得 {credibility} 公信力。',
+  '每日发布至少 {posts} 篇帖子，并完成 {interactionsPerChannel} 次互动；连续完成任务满 {consecutiveDays} 天后，最高可获得 {credibility} 公信力。拥有直连五星节点可解锁更高公信力奖励上限。': '每日发布至少 {posts} 篇帖子，并完成 {interactionsPerChannel} 次互动；连续完成任务满 {consecutiveDays} 天后，最高可获得 {credibility} 公信力。拥有直连五星节点可解锁更高公信力奖励上限。',
   '您的节点 {nodeCode} 直连了 {nodes} 个{faceValue}面额的五星节点。每日在 {channels} 个频道各发布至少 {postsPerChannel} 篇帖子，并完成 {interactionsPerChannel} 次互动，共计 {totalInteractions} 次；连续完成任务满 {consecutiveDays} 天后，最高可获得 {credibility} 公信力。': '您的节点 {nodeCode} 直连了 {nodes} 个{faceValue}面额的五星节点。每日在 {channels} 个频道各发布至少 {postsPerChannel} 篇帖子，并完成 {interactionsPerChannel} 次互动，共计 {totalInteractions} 次；连续完成任务满 {consecutiveDays} 天后，最高可获得 {credibility} 公信力。',
   ' 篇帖子、对他人帖子完成互动 ': ' 篇帖子、对他人帖子完成互动 ',
   ' 次，最多 ': ' 次，最多 ',

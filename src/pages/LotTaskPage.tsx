@@ -73,7 +73,7 @@ function LotTaskCalendarSection({ month, lotQuota }: { month: TaskCalendarMonth;
 function LotTaskRuleSummary({ lotQuota }: { lotQuota: LotQuota }) {
   const { t } = useApp();
   const ruleCopy = lotQuota.fiveStarNodeCount === 0
-    ? t('每日发布至少 {posts} 篇帖子，并完成 {interactionsPerChannel} 次互动；连续完成任务满 {consecutiveDays} 天后，最高可获得 {credibility} 公信力。', {
+    ? t('每日发布至少 {posts} 篇帖子，并完成 {interactionsPerChannel} 次互动；连续完成任务满 {consecutiveDays} 天后，最高可获得 {credibility} 公信力。拥有直连五星节点可解锁更高公信力奖励上限。', {
       posts: lotQuota.units,
       interactionsPerChannel: LOT_TASK_RULE_CONTEXT.interactionsPerChannel,
       consecutiveDays: LOT_TASK_RULE_CONTEXT.consecutiveDays,
