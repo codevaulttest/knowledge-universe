@@ -14,7 +14,7 @@ import { translate } from './locales';
 import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { InteractionTaskSheet } from './components/InteractionTaskSheet';
-import { LotTaskSheet } from './components/LotTaskSheet';
+import { LotTaskPage } from './pages/LotTaskPage';
 import { effectiveClaimRatio, getIssuedCredibilityRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, isRatioLadderActive, lotCredibilityEarned, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueCredibilityRewards, simulateInteractedCount, taskDayKey, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
 import { Toast } from './components/shared';
 import { TaskCelebrationOverlay } from './components/TaskCelebrationOverlay';
@@ -81,7 +81,6 @@ export default function App({ account, onLanguageChange }: {
   const [activityGroups, setActivityGroups] = useState(ACTIVITY_GROUPS);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [interactionTaskOpen, setInteractionTaskOpen] = useState(false);
-  const [lotTaskOpen, setLotTaskOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchShopOnly, setSearchShopOnly] = useState(false);
   const openSearch = (opts?: { shopOnly?: boolean }) => {
@@ -592,7 +591,7 @@ export default function App({ account, onLanguageChange }: {
 
   // 常驻入口：随时打开「公信力任务」面板；未连接钱包时先引导连接
   const openLotTask = () => {
-    requireWallet(() => setLotTaskOpen(true));
+    requireWallet(() => navigate({ page: 'P_LOT_TASK' }));
   };
 
   // 今天是否还有可领取的空投奖励，供互动帖任务入口红点展示
@@ -1335,7 +1334,7 @@ export default function App({ account, onLanguageChange }: {
     openArticleReader, openVideoPlayer,
     activityGroups, unreadActivityCount, markAllRead,
     interactionTaskOpen, openInteractionTask, interactionTaskAlert,
-    lotTaskOpen, openLotTask, lotTaskAlert,
+    openLotTask, lotTaskAlert,
     recentSearches, saveRecentSearch, removeRecentSearch, clearRecentSearches,
     searchOpen, searchShopOnly, openSearch, closeSearch,
     scanOpen, openScan, closeScan,
@@ -1401,6 +1400,7 @@ export default function App({ account, onLanguageChange }: {
         {pageRoute.page === 'P_ORDERS' && <OrdersPage initialRole={pageRoute.role} />}
         {pageRoute.page === 'P_CERTS' && <CertsPage />}
         {pageRoute.page === 'P_ADN' && <AdnPage />}
+        {pageRoute.page === 'P_LOT_TASK' && <LotTaskPage />}
 
         {/* 码库全局底部导航（知识宇宙内始终保持同一套宿主导航）*/}
         {showBottomNav && <BottomNav route={pageRoute} setTab={setTab} />}
@@ -1603,11 +1603,6 @@ export default function App({ account, onLanguageChange }: {
 
         {/* 覆盖层：互动帖任务（决定明天的空投领取比例） */}
         {interactionTaskOpen && <InteractionTaskSheet onClose={() => setInteractionTaskOpen(false)} />}
-
-        {/* 覆盖层：公信力任务（发帖 + 公信力任务，决定今天的公信力奖励） */}
-        {lotTaskOpen && (
-          <LotTaskSheet onClose={() => setLotTaskOpen(false)} />
-        )}
 
         {/* 搜索全页面：覆盖宿主内容，关闭后回到原信息流 */}
         {searchOpen && <SearchPage onClose={closeSearch} initialShopOnly={searchShopOnly} />}

@@ -154,7 +154,8 @@ export type Route =
   | { page: 'P_ORDERS'; role?: 'buyer' | 'seller' }
   | { page: 'P_CERTS' }
   | { page: 'P_CERT'; certId: string }
-  | { page: 'P_ADN' };
+  | { page: 'P_ADN' }
+  | { page: 'P_LOT_TASK' };
 
 // ── 知识星球节点 ───────────────────────────────────────────────
 export type NodeTier = 10 | 100 | 1000;

@@ -64,7 +64,6 @@ export type AppContextValue = {
   openInteractionTask: () => void;
   /** 今天是否还有可领取的空投奖励，供互动帖任务入口红点展示 */
   interactionTaskAlert: boolean;
-  lotTaskOpen: boolean;
   openLotTask: () => void;
   /** 今天是否还有待达成的公信力奖励，供公信力任务入口红点展示 */
   lotTaskAlert: boolean;

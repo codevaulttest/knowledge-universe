@@ -8535,6 +8535,20 @@ button {
   color: var(--ku-color-text-primary);
   font-weight: 700;
 }
+.task-calendar-history-inline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ku-space-2);
+  margin-top: var(--ku-space-1);
+  padding-top: var(--ku-space-2);
+  border-top: 1px solid var(--ku-color-border-cell);
+}
+.task-calendar-history-inline .task-calendar-detail-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ku-color-text-secondary);
+}
 .task-calendar-detail-date {
   font: 700 14px/1.3 var(--ku-font-family);
   color: var(--ku-color-text-primary);
@@ -8553,6 +8567,14 @@ button {
 .task-calendar-detail-summary-emphasis {
   color: var(--ku-color-lot-red);
   font-weight: 700;
+}
+.bsp-rules-entry.task-calendar-rule-summary {
+  align-items: flex-start;
+  margin: 0;
+  cursor: default;
+}
+.task-calendar-rule-summary .task-calendar-detail-summary-emphasis {
+  color: var(--ku-color-text-primary);
 }
 .task-calendar-detail-conditions {
   display: flex;
@@ -13532,6 +13554,68 @@ html[lang="zh-TW"] .planet-hero-title {
 
 .lot-task-panel-sheet > .sheet-header {
   margin-bottom: var(--ku-space-1);
+}
+
+/* 公信力收益历史使用独立页面承载；日历与明细可在原上下文内滚动查看。 */
+.lot-task-page {
+  background: var(--ku-color-bg-phone);
+}
+.lot-task-page-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--ku-space-3) var(--ku-space-4) var(--ku-space-6);
+  -webkit-overflow-scrolling: touch;
+}
+.lot-task-page .task-panel-rules-entry {
+  width: 100%;
+  margin-bottom: var(--ku-space-4);
+}
+.lot-task-page .bsp-rules-entry {
+  background: var(--ku-color-lot-tint);
+  color: var(--ku-color-lot-red);
+}
+.lot-task-page .bsp-rules-entry:active:not(:disabled) {
+  background: var(--ku-color-lot-tint-strong);
+}
+.lot-task-page .task-calendar-month,
+.lot-task-page .task-calendar-day-earn.is-earned,
+.lot-task-page .task-calendar-detail-status.is-posted {
+  color: var(--ku-color-lot-red);
+}
+.lot-task-page .task-calendar-day.is-posted,
+.lot-task-page .task-calendar-day.is-full,
+.lot-task-page .task-calendar-detail {
+  background: var(--ku-color-lot-tint);
+}
+.lot-task-page .task-calendar-day.is-full {
+  background: var(--ku-color-lot-red);
+  box-shadow: none;
+}
+.lot-task-page .task-calendar-day.is-full .task-calendar-day-num,
+.lot-task-page .task-calendar-day.is-full .task-calendar-day-earn.is-earned {
+  color: var(--ku-color-on-primary);
+}
+.lot-task-page .task-calendar-day.is-today,
+.lot-task-page .task-calendar-day.is-selected {
+  border-color: var(--ku-color-lot-red);
+}
+.lot-task-page .task-calendar-day.is-selected {
+  box-shadow: 0 0 0 2px var(--ku-color-lot-tint-strong);
+}
+.lot-task-page .task-calendar-history-details .task-calendar-detail--history {
+  gap: 4px;
+  padding: 10px 12px 0;
+  border-top: 1px solid var(--ku-color-border-cell);
+  border-radius: 0;
+  background: transparent;
+}
+.lot-task-page .task-calendar-detail-status strong,
+.lot-task-page .task-calendar-detail-row strong {
+  color: var(--ku-color-text-primary);
+}
+.lot-task-page .task-calendar-detail-number {
+  color: var(--ku-color-lot-red);
 }
 
 .lot-task-panel-sheet .bsp-rules-entry {
