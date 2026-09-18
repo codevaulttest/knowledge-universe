@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { AlertTriangle, Check, ChevronRight, Circle, Info, X } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { calendarIntlLocale } from '../dateUtils';
 import {
   lotCredibilityEarned,
   lotRequiredPostCount,
@@ -10,6 +9,7 @@ import {
   TASK_LOT_UNITS_PER_NODE,
   type LotQuota,
   type TaskCalendarMonth,
+  type TaskDaySnapshot,
 } from '../taskConfig';
 import { TaskCalendarView } from './TaskCalendarView';
 
@@ -88,7 +88,7 @@ function LotTaskRulesSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** 本月历史日历：内嵌在公信力任务面板底部，不再是需要点开的二级弹窗。 */
+/** 本月历史日历只负责展示达成状态；下方固定对照今天和昨天的完成数据。 */
 function LotTaskCalendarSection({
   month,
   lotQuota,
@@ -96,27 +96,13 @@ function LotTaskCalendarSection({
   month: TaskCalendarMonth;
   lotQuota: LotQuota;
 }) {
-  const { t, language } = useApp();
-  const intlLocale = calendarIntlLocale(language);
-  const [selectedDate, setSelectedDate] = useState<string | null>(
-    month.days.find(d => d.isToday && d.snapshot)?.date ?? null
-  );
-  const selectedDay = month.days.find(d => d.date === selectedDate);
-  const snapshot = selectedDay?.snapshot;
-  const requiredPostCount = lotRequiredPostCount(lotQuota.fiveStarNodeCount);
-  const postCountDone = (snapshot?.postedCount ?? 0) >= requiredPostCount;
-  const interactionDone = (snapshot?.interactedCount ?? 0) >= lotQuota.interactions;
-  const earned = snapshot
-    ? lotCredibilityEarned(snapshot.postedCount, snapshot.interactedCount, lotQuota.interactions)
-    : 0;
+  const { t, taskSnapshotToday, taskSnapshotYesterday } = useApp();
 
   return (
     <>
       <TaskCalendarView
         month={month}
-        caption={t('格内标记的是当天公信力任务的达成状态，点开日期查看当天详情')}
-        selectedDate={selectedDate}
-        onSelectDay={setSelectedDate}
+        caption={t('格内标记的是当天公信力任务的达成状态')}
         dayClassName={day => (day.snapshot?.bonusEligible ? 'is-full' : (day.snapshot?.posted ? 'is-posted' : ''))}
         dayExtra={day => {
           const snapshot = day.snapshot;
@@ -130,49 +116,81 @@ function LotTaskCalendarSection({
         }}
       />
 
-      {snapshot && (
-        <div className="task-calendar-detail">
-          <div className="task-calendar-detail-meta">
-            <span className="task-calendar-detail-date">
-              {selectedDay.isToday
-                ? t('今天')
-                : new Intl.DateTimeFormat(intlLocale, { month: 'long', day: 'numeric' }).format(new Date(`${selectedDay.date}T00:00:00`))}
-            </span>
+      <div className="task-calendar-history-details">
+        <LotTaskCompletionDetail label={t('今天')} snapshot={taskSnapshotToday} lotQuota={lotQuota} showTodaySummary />
+        <LotTaskCompletionDetail label={t('昨天')} snapshot={taskSnapshotYesterday} lotQuota={lotQuota} />
+      </div>
+    </>
+  );
+}
+
+function LotTaskCompletionDetail({
+  label,
+  snapshot,
+  lotQuota,
+  showTodaySummary = false,
+}: {
+  label: string;
+  snapshot: TaskDaySnapshot | null;
+  lotQuota: LotQuota;
+  showTodaySummary?: boolean;
+}) {
+  const { t } = useApp();
+  const requiredPostCount = lotRequiredPostCount(lotQuota.fiveStarNodeCount);
+
+  if (!snapshot) {
+    return (
+      <div className={`task-calendar-detail${showTodaySummary ? '' : ' task-calendar-detail--history'}`}>
+        <div className="task-calendar-detail-meta"><span className="task-calendar-detail-date">{label}</span></div>
+        <span className="task-calendar-detail-empty">{t('暂无任务完成记录')}</span>
+      </div>
+    );
+  }
+
+  const postCountDone = snapshot.postedCount >= requiredPostCount;
+  const interactionDone = snapshot.interactedCount >= lotQuota.interactions;
+
+  return (
+    <div className={`task-calendar-detail${showTodaySummary ? '' : ' task-calendar-detail--history'}`}>
+      <div className="task-calendar-detail-meta">
+        <span className="task-calendar-detail-date">{label}</span>
+        {!showTodaySummary && (
+          <div className="task-calendar-history-summary">
+            <span>{t('发帖')} <strong>{snapshot.postedCount}</strong> {t('篇')}</span>
+            <span aria-hidden="true">·</span>
+            <span>{t('互动')} <strong>{snapshot.interactedCount}</strong> {t('次')}</span>
           </div>
-          {selectedDay.isToday && (
-            <div className="task-calendar-detail-summary">
-              <span className="task-calendar-detail-summary-copy">
-                {lotQuota.fiveStarNodeCount > 0
-                  ? t('你已直连 {nodes} 个五星节点，今天发布 ', { nodes: lotQuota.fiveStarNodeCount })
-                  : t('今天发布 ')}
-                <strong className="task-calendar-detail-summary-emphasis">{requiredPostCount}</strong>
-                {t(' 篇帖子、对他人帖子完成互动 ')}
-                <strong className="task-calendar-detail-summary-emphasis">{lotQuota.interactions}</strong>
-                {t(' 次，最多 ')}
-                <strong className="task-calendar-detail-summary-emphasis">+{lotQuota.credibility}</strong>
-                {t(' 公信力')}
-              </span>
-            </div>
-          )}
-          <div className="task-calendar-detail-conditions">
-            <span className={`task-calendar-detail-status${postCountDone ? ' is-posted' : ''}`}>
-              {postCountDone ? <Check size={13} strokeWidth={2.6} /> : <Circle size={13} strokeWidth={1.9} />}
-              {t('发帖')}
-              <strong>{t('已发')} <span className="task-calendar-detail-number">{snapshot.postedCount}</span> / <span className="task-calendar-detail-number">{requiredPostCount}</span> {t('篇')}</strong>
-            </span>
-            <span className={`task-calendar-detail-status${interactionDone ? ' is-posted' : ''}`}>
-              {interactionDone ? <Check size={13} strokeWidth={2.6} /> : <Circle size={13} strokeWidth={1.9} />}
-              {t('跟别人的帖子互动')}
-              <strong>{t('已互动')} <span className="task-calendar-detail-number">{snapshot.interactedCount}</span> / <span className="task-calendar-detail-number">{lotQuota.interactions}</span> {t('次')}</strong>
-            </span>
-          </div>
-          <span className="task-calendar-detail-row">
-            {t('当日公信力奖励')}<strong>
-              <span className="task-calendar-detail-number">+{earned}</span> {t('公信力')}
-            </strong>
+        )}
+      </div>
+      {showTodaySummary && (
+        <div className="task-calendar-detail-summary">
+          <span className="task-calendar-detail-summary-copy">
+            {lotQuota.fiveStarNodeCount > 0
+              ? t('你已直连 {nodes} 个五星节点，今天发布 ', { nodes: lotQuota.fiveStarNodeCount })
+              : t('今天发布 ')}
+            <strong className="task-calendar-detail-summary-emphasis">{requiredPostCount}</strong>
+            {t(' 篇帖子、对他人帖子完成互动 ')}
+            <strong className="task-calendar-detail-summary-emphasis">{lotQuota.interactions}</strong>
+            {t(' 次，最多 ')}
+            <strong className="task-calendar-detail-summary-emphasis">+{lotQuota.credibility}</strong>
+            {t(' 公信力')}
           </span>
         </div>
       )}
-    </>
+      {showTodaySummary ? (
+        <div className="task-calendar-detail-conditions">
+          <span className={`task-calendar-detail-status${postCountDone ? ' is-posted' : ''}`}>
+            {postCountDone ? <Check size={13} strokeWidth={2.6} /> : <Circle size={13} strokeWidth={1.9} />}
+            {t('发帖')}
+            <strong>{t('已发')} <span className="task-calendar-detail-number">{snapshot.postedCount}</span> / <span className="task-calendar-detail-number">{requiredPostCount}</span> {t('篇')}</strong>
+          </span>
+          <span className={`task-calendar-detail-status${interactionDone ? ' is-posted' : ''}`}>
+            {interactionDone ? <Check size={13} strokeWidth={2.6} /> : <Circle size={13} strokeWidth={1.9} />}
+            {t('跟别人的帖子互动')}
+            <strong>{t('已互动')} <span className="task-calendar-detail-number">{snapshot.interactedCount}</span> / <span className="task-calendar-detail-number">{lotQuota.interactions}</span> {t('次')}</strong>
+          </span>
+        </div>
+      ) : null}
+    </div>
   );
 }

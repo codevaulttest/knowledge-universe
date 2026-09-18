@@ -8410,6 +8410,9 @@ button {
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
 }
+.task-calendar-grid--static .task-calendar-day {
+  cursor: default;
+}
 .task-calendar-day {
   display: flex;
   flex-direction: column;
@@ -8492,6 +8495,46 @@ button {
   border-radius: var(--ku-radius-card);
   background: var(--ku-color-primary-alpha-04);
 }
+.task-calendar-history-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+.task-calendar-history-details .task-calendar-detail {
+  margin-top: 0;
+}
+.lot-task-panel-sheet .task-calendar-history-details .task-calendar-detail--history {
+  gap: 4px;
+  padding: 10px 12px 0;
+  border-top: 1px solid var(--ku-color-border-cell);
+  border-radius: 0;
+  background: transparent;
+}
+.task-calendar-detail--history .task-calendar-detail-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ku-color-text-secondary);
+}
+.task-calendar-detail--history .task-calendar-detail-conditions {
+  gap: 4px;
+}
+.task-calendar-detail--history .task-calendar-detail-status {
+  font-weight: 500;
+}
+.task-calendar-history-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  white-space: nowrap;
+  font: 500 13px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
+}
+.task-calendar-history-summary strong {
+  color: var(--ku-color-text-primary);
+  font-weight: 700;
+}
 .task-calendar-detail-date {
   font: 700 14px/1.3 var(--ku-font-family);
   color: var(--ku-color-text-primary);
@@ -8551,6 +8594,10 @@ button {
 .task-calendar-detail-row strong {
   color: var(--ku-color-text-primary);
   font-weight: 700;
+}
+.task-calendar-detail-empty {
+  font: 500 13px/1.4 var(--ku-font-family);
+  color: var(--ku-color-text-secondary);
 }
 /* ── Profile Edit Button ── */
 .profile-edit-btn {

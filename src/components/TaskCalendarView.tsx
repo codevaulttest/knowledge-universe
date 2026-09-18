@@ -14,8 +14,9 @@ export function TaskCalendarView({
 }: {
   month: TaskCalendarMonth;
   caption: string;
-  selectedDate: string | null;
-  onSelectDay: (date: string) => void;
+  /** 未提供选择回调时，日历只展示历史状态，不提供日期交互。 */
+  selectedDate?: string | null;
+  onSelectDay?: (date: string) => void;
   /** 该业务的"已达成"判定，返回要叠加的 class（如 'is-full' / 'is-posted'），无叠加返回空字符串 */
   dayClassName: (day: TaskCalendarDay) => string;
   /** 格子第二行内容，无内容返回 null */
@@ -41,27 +42,35 @@ export function TaskCalendarView({
         ))}
       </div>
 
-      <div className="task-calendar-grid">
+      <div className={`task-calendar-grid${onSelectDay ? '' : ' task-calendar-grid--static'}`}>
         {Array.from({ length: month.leadingBlanks }, (_, i) => (
           <span key={`blank-${i}`} className="task-calendar-day-blank" aria-hidden="true" />
         ))}
-        {month.days.map(day => (
-          <button
-            type="button"
-            key={day.date}
-            disabled={!day.snapshot}
-            onClick={() => onSelectDay(day.date)}
-            className={[
-              'task-calendar-day',
-              day.isToday && 'is-today',
-              day.snapshot && dayClassName(day),
-              day.date === selectedDate && 'is-selected',
-            ].filter(Boolean).join(' ')}
-          >
-            <span className="task-calendar-day-num">{day.day}</span>
-            {day.snapshot && dayExtra(day)}
-          </button>
-        ))}
+        {month.days.map(day => {
+          const className = [
+            'task-calendar-day',
+            day.isToday && 'is-today',
+            day.snapshot && dayClassName(day),
+            day.date === selectedDate && 'is-selected',
+          ].filter(Boolean).join(' ');
+          const content = <><span className="task-calendar-day-num">{day.day}</span>{day.snapshot && dayExtra(day)}</>;
+
+          return onSelectDay ? (
+            <button
+              type="button"
+              key={day.date}
+              disabled={!day.snapshot}
+              onClick={() => onSelectDay(day.date)}
+              className={className}
+            >
+              {content}
+            </button>
+          ) : (
+            <span key={day.date} className={className}>
+              {content}
+            </span>
+          );
+        })}
       </div>
     </>
   );
