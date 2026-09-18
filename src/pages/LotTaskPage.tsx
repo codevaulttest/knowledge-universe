@@ -14,9 +14,8 @@ import {
 } from '../taskConfig';
 import { TaskCalendarView } from '../components/TaskCalendarView';
 
-const LOT_TASK_RULE_SUMMARY = {
-  nodeCode: 'A28643', directFiveStarNodes: '94', faceValue: '1000', channelCount: '846', postsPerChannel: '1',
-  interactionsPerChannel: '10', totalInteractions: '8460', consecutiveDays: '10', maxCredibility: '8460',
+const LOT_TASK_RULE_CONTEXT = {
+  nodeCode: 'A28643', faceValue: '1000', postsPerChannel: '1', interactionsPerChannel: '10', consecutiveDays: '10',
 };
 
 /** 公信力任务独立页：保留原任务数据与规则入口，返回时回到来源页面。 */
@@ -66,23 +65,41 @@ function LotTaskCalendarSection({ month, lotQuota }: { month: TaskCalendarMonth;
     }} />
     <div className="task-calendar-history-details">
       <LotTaskCompletionDetail label={t('今天')} snapshot={taskSnapshotToday} lotQuota={lotQuota} historySnapshot={taskSnapshotYesterday} showTodaySummary />
-      <LotTaskRuleSummary />
+      <LotTaskRuleSummary lotQuota={lotQuota} />
     </div>
   </>;
 }
 
-function LotTaskRuleSummary() {
+function LotTaskRuleSummary({ lotQuota }: { lotQuota: LotQuota }) {
   const { t } = useApp();
+  const ruleCopy = lotQuota.fiveStarNodeCount === 0
+    ? t('每日发布至少 {posts} 篇帖子，并完成 {interactionsPerChannel} 次互动；连续完成任务满 {consecutiveDays} 天后，最高可获得 {credibility} 公信力。', {
+      posts: lotQuota.units,
+      interactionsPerChannel: LOT_TASK_RULE_CONTEXT.interactionsPerChannel,
+      consecutiveDays: LOT_TASK_RULE_CONTEXT.consecutiveDays,
+      credibility: lotQuota.credibility,
+    })
+    : t('您的节点 {nodeCode} 直连了 {nodes} 个{faceValue}面额的五星节点。每日在 {channels} 个频道各发布至少 {postsPerChannel} 篇帖子，并完成 {interactionsPerChannel} 次互动，共计 {totalInteractions} 次；连续完成任务满 {consecutiveDays} 天后，最高可获得 {credibility} 公信力。', {
+      nodeCode: LOT_TASK_RULE_CONTEXT.nodeCode,
+      nodes: lotQuota.fiveStarNodeCount,
+      faceValue: LOT_TASK_RULE_CONTEXT.faceValue,
+      channels: lotQuota.units,
+      postsPerChannel: LOT_TASK_RULE_CONTEXT.postsPerChannel,
+      interactionsPerChannel: LOT_TASK_RULE_CONTEXT.interactionsPerChannel,
+      totalInteractions: lotQuota.interactions,
+      consecutiveDays: LOT_TASK_RULE_CONTEXT.consecutiveDays,
+      credibility: lotQuota.credibility,
+    });
   return <div className="bsp-rules-entry task-panel-rules-entry--neutral task-calendar-rule-summary">
     <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
-    <span className="task-calendar-detail-summary-copy">{t('您的节点 ')}<strong className="task-calendar-detail-summary-emphasis">{LOT_TASK_RULE_SUMMARY.nodeCode}</strong>{t(' 直连了 ')}<strong className="task-calendar-detail-summary-emphasis">{LOT_TASK_RULE_SUMMARY.directFiveStarNodes}</strong>{t(' 个')}{LOT_TASK_RULE_SUMMARY.faceValue}{t(' 面额的五星节点。每日在 ')}<strong className="task-calendar-detail-summary-emphasis">{LOT_TASK_RULE_SUMMARY.channelCount}</strong>{t(' 个频道各发布至少 ')}{LOT_TASK_RULE_SUMMARY.postsPerChannel}{t(' 篇帖子，并完成 ')}{LOT_TASK_RULE_SUMMARY.interactionsPerChannel}{t(' 次互动，共计 ')}<strong className="task-calendar-detail-summary-emphasis">{LOT_TASK_RULE_SUMMARY.totalInteractions}</strong>{t(' 次；连续完成任务满 ')}{LOT_TASK_RULE_SUMMARY.consecutiveDays}{t(' 天后，最高可获得 ')}<strong className="task-calendar-detail-summary-emphasis">{LOT_TASK_RULE_SUMMARY.maxCredibility}</strong>{t(' 公信力。')}</span>
+    <span className="task-calendar-detail-summary-copy">{ruleCopy}</span>
   </div>;
 }
 
 function LotTaskCompletionDetail({ label, snapshot, lotQuota, historySnapshot, showTodaySummary = false }: { label: string; snapshot: TaskDaySnapshot | null; lotQuota: LotQuota; historySnapshot?: TaskDaySnapshot | null; showTodaySummary?: boolean }) {
   const { t } = useApp();
-  const requiredPostCount = showTodaySummary ? Number(LOT_TASK_RULE_SUMMARY.channelCount) : lotRequiredPostCount(lotQuota.fiveStarNodeCount);
-  const requiredInteractionCount = showTodaySummary ? Number(LOT_TASK_RULE_SUMMARY.totalInteractions) : lotQuota.interactions;
+  const requiredPostCount = showTodaySummary ? lotQuota.units : lotRequiredPostCount(lotQuota.fiveStarNodeCount);
+  const requiredInteractionCount = lotQuota.interactions;
   if (!snapshot) return <div className={`task-calendar-detail${showTodaySummary ? '' : ' task-calendar-detail--history'}`}><div className="task-calendar-detail-meta"><span className="task-calendar-detail-date">{label}</span></div><span className="task-calendar-detail-empty">{t('暂无任务完成记录')}</span></div>;
   const postCountDone = snapshot.postedCount >= requiredPostCount;
   const interactionDone = snapshot.interactedCount >= requiredInteractionCount;
