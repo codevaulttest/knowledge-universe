@@ -13617,6 +13617,15 @@ html[lang="zh-TW"] .planet-hero-title {
 .lot-task-page .task-calendar-detail-number {
   color: var(--ku-color-lot-red);
 }
+.lot-task-page .task-calendar-detail-status.is-posted {
+  color: var(--ku-color-text-meta);
+}
+.lot-task-page .task-calendar-detail-status.is-posted svg {
+  color: var(--ku-color-success-text);
+}
+.lot-task-page .task-calendar-detail-status.is-posted .task-calendar-detail-number {
+  color: var(--ku-color-success-text);
+}
 
 .lot-task-panel-sheet .bsp-rules-entry {
   background: var(--ku-color-lot-tint);
