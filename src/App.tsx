@@ -494,7 +494,7 @@ export default function App({ account, onLanguageChange }: {
     showToast(t('已结束频道协作试用'));
   };
 
-  // 10/1 0 点后：仍未达活跃五星且未缴费的频道主，试用期产生的授权自动取消
+  // 10/1 0 点后：仍未达活跃五星且未缴费的频道主，试用期产生的授权被取消（正式版由运营执行）
   useEffect(() => {
     if (channelCollabPhase !== 'post_grace' || isActiveFiveStar || myCollabLicenseExpiresAt) return;
     setChannelAuthorizations(prev => {
