@@ -2150,8 +2150,8 @@ function formatCollabDate(ms: number) {
 function ChannelCollabQualification() {
   const { t, hasOwnFiveStarChannel, hasDirectFiveStarConnection } = useApp();
   const items = [
-    { done: hasOwnFiveStarChannel, label: t('本人拥有五星频道') },
-    { done: hasDirectFiveStarConnection, label: t('直连至少 1 名五星博主') },
+    { done: hasOwnFiveStarChannel, label: t('本人是五星频道博主') },
+    { done: hasDirectFiveStarConnection, label: t('直推至少 1 个五星频道') },
   ];
   return (
     <ul className="channel-collab-qualify">
@@ -2226,15 +2226,15 @@ function ChannelCollabFeePay({ confirmLabel, cancelLabel, onCancel, onPaid }: {
   );
 }
 
-/** 确认结束试用：取消名下所有进行中的授权 */
+/** 确认关闭频道协作：取消名下所有进行中的授权 */
 function EndCollabTrialAlert({ onCancel, onDone }: { onCancel: () => void; onDone: () => void }) {
   const { t, endChannelCollabTrial } = useApp();
   return (
     <Ios26Alert
-      title={t('确认结束频道协作试用？')}
-      message={t('结束后，名下频道的协作授权全部取消，协作者停止代发')}
+      title={t('确认关闭频道协作？')}
+      message={t('关闭后，名下频道的协作授权全部取消，协作者停止代发。')}
       cancelLabel={t('再想想')}
-      confirmLabel={t('结束试用')}
+      confirmLabel={t('确认关闭')}
       onCancel={onCancel}
       onConfirm={() => { endChannelCollabTrial(); onDone(); }}
     />
@@ -2251,7 +2251,7 @@ export function ChannelCollabReminderModal({ onClose, onGoQualify }: { onClose: 
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="payment-sheet channel-collab-reminder" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="sheet-header">
-          <span className="sheet-title">{t('频道协作试用已结束')}</span>
+          <span className="sheet-title">{t('频道协作免费体验已结束')}</span>
           <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
             <X size={18} strokeWidth={2} />
           </button>
@@ -2259,11 +2259,11 @@ export function ChannelCollabReminderModal({ onClose, onGoQualify }: { onClose: 
         {isActiveFiveStar ? (
           <>
             <p className="channel-collab-license-desc">
-              {t('免费试用已于 9 月 22 日 0 点结束。缴纳 {amount} PB 年费后，名下所有频道的协作者恢复代发，有效期一年。', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}
+              {t('频道协作授权的免费体验已于 9 月 22 日 0 点结束。支付 {amount} PB 年费后，名下所有频道的协作者恢复代发，有效期一年。', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}
             </p>
             <ChannelCollabFeePay
-              confirmLabel={t('支付 {amount} PB 年费', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}
-              cancelLabel={t('结束试用')}
+              confirmLabel={t('续年费')}
+              cancelLabel={t('关闭频道协作')}
               onCancel={() => setConfirmEnd(true)}
               onPaid={onClose}
             />
@@ -2272,14 +2272,13 @@ export function ChannelCollabReminderModal({ onClose, onGoQualify }: { onClose: 
           <>
             <p className="channel-collab-license-desc">
               {inGrace
-                ? t('频道协作面向活跃五星开放。你的授权记录保留至 10 月 1 日 0 点，期间完成以下两项条件并缴纳年费即可继续使用。')
-                : t('频道协作面向活跃五星开放。完成以下两项条件并缴纳年费即可继续使用。')}
+                ? t('频道协作授权的免费体验已于 9 月 22 日 0 点结束，之后仅对活跃五星博主开放。请在 10 月 1 日 0 点前达成以下两项条件并续年费，现有授权会保留到那时：')
+                : t('频道协作授权的免费体验已于 9 月 22 日 0 点结束，之后仅对活跃五星博主开放。达成以下两项条件并续年费即可继续使用：')}
             </p>
             <ChannelCollabQualification />
             <button type="button" className="planet-confirm-btn" onClick={onGoQualify}>{t('去完成条件')}</button>
             <div className="channel-collab-reminder-secondary">
-              <button type="button" className="channel-collab-license-cancel" onClick={onClose}>{t('稍后处理')}</button>
-              <button type="button" className="channel-collab-license-cancel" onClick={() => setConfirmEnd(true)}>{t('结束试用')}</button>
+              <button type="button" className="channel-collab-license-cancel" onClick={() => setConfirmEnd(true)}>{t('关闭频道协作')}</button>
             </div>
           </>
         )}
@@ -2414,7 +2413,7 @@ export function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
             )}
             {!inTrial && !licensed && hasOpenAuths && (
               <button type="button" className="channel-collab-license-text-btn" onClick={() => setConfirmEnd(true)}>
-                {t('结束试用')}
+                {t('关闭频道协作')}
               </button>
             )}
           </div>
