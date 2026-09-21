@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, AddressMigration, Channel, ChannelAuthorization, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import type { ActivityGroup, AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import type { LotQuota, TaskCalendarMonth, TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
@@ -160,14 +160,22 @@ export type AppContextValue = {
   delegatedChannels: Channel[];
   /** 有效授权但频道主未缴协作年费的频道：已暂停代发 */
   pausedDelegatedChannels: Channel[];
-  /** 频道协作年费：channelId → 到期时间戳 */
-  channelCollabLicenses: Record<string, number>;
-  /** 试用期内或年费有效时为 true */
+  /** 频道协作阶段（受开发工具的演示时间影响）与对应的「当前时间」 */
+  channelCollabPhase: ChannelCollabPhase;
+  collabNow: number;
+  demoCollabPhase: 'realtime' | ChannelCollabPhase;
+  cycleDemoCollabPhase: () => void;
+  /** 活跃五星 = 本人拥有五星频道 + 直连至少 1 名五星博主 */
+  hasOwnFiveStarChannel: boolean;
+  hasDirectFiveStarConnection: boolean;
+  isActiveFiveStar: boolean;
+  /** 当前用户协作年费到期时间；未缴或已过期为 null。年费覆盖名下所有频道 */
+  myCollabLicenseExpiresAt: number | null;
+  hasMyCollabAccess: boolean;
+  /** 试用期内，或该频道的频道主已取得协作准入时为 true */
   isChannelCollabEnabled: (channelId: string) => boolean;
-  payChannelCollabLicense: (channelId: string, wallet: PbWalletId) => boolean;
-  // 开发工具：模拟频道协作免费试用期内
-  collabTrialActive: boolean;
-  toggleCollabTrialActive: () => void;
+  payChannelCollabLicense: (wallet: PbWalletId) => { ok: boolean; message?: string };
+  endChannelCollabTrial: () => void;
   /** 当前用户收到的待处理频道授权邀请 */
   pendingIncomingChannelAuthorizations: ChannelAuthorization[];
   // 知识宇宙页：邀请码绑定

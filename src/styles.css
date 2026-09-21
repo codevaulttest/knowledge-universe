@@ -9513,6 +9513,61 @@ button {
   font: var(--ku-text-caption-strong);
   cursor: pointer;
 }
+.channel-collab-license-links {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-space-4);
+}
+.channel-collab-license-text-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-caption-strong);
+  cursor: pointer;
+}
+.channel-collab-qualify {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.channel-collab-qualify-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-space-2);
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-secondary);
+}
+.channel-collab-qualify-item svg {
+  flex-shrink: 0;
+  color: var(--ku-color-text-danger);
+}
+.channel-collab-qualify-item--done svg {
+  color: var(--ku-color-delegate-badge);
+}
+.channel-collab-qualify-state {
+  margin-left: auto;
+  font: var(--ku-text-caption-strong);
+}
+.channel-collab-reminder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-3);
+}
+.channel-collab-reminder .planet-confirm-btn {
+  margin-top: 0;
+}
+.channel-collab-reminder-secondary {
+  display: flex;
+  gap: var(--ku-space-2);
+}
+.channel-collab-reminder-secondary .channel-collab-license-cancel {
+  flex: 1 1 0;
+  padding: var(--ku-space-3) 0;
+}
 .channel-collab-license-pay {
   display: flex;
   flex-direction: column;

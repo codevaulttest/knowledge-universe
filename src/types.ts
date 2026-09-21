@@ -395,6 +395,9 @@ export type AddressMigration = {
 /** 频道授权：频道主授权他人钱包地址代为发帖，代发帖署名仍展示为频道主，需对方接受后生效，双方可随时撤销。 */
 export type ChannelAuthorizationStatus = 'pending' | 'active' | 'declined' | 'revoked';
 
+/** 频道协作阶段：免费试用 → 保留期（9/22–10/1）→ 保留期后 */
+export type ChannelCollabPhase = 'trial' | 'grace' | 'post_grace';
+
 export type ChannelAuthorization = {
   id: string;
   channelId: string;
@@ -405,7 +408,7 @@ export type ChannelAuthorization = {
   createdAt: number;
   respondedAt?: number; // 接受/婉拒时间
   revokedAt?: number;
-  revokedBy?: 'owner' | 'delegate';
+  revokedBy?: 'owner' | 'delegate' | 'system'; // system = 保留期结束后由平台取消
 };
 
 export type SupTransaction = {

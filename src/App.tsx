@@ -2,17 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { withFreeTier } from './channelTiers';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_CHANNEL_AUTHORIZATIONS, MOCK_CHANNEL_COLLAB_LICENSES, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_KNOWLEDGE_CERTS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_CHANNEL_AUTHORIZATIONS, MOCK_CHANNEL_COLLAB_LICENSES, MOCK_FIVE_STAR_NODE_COUNT, NODE_STARS_BY_CODE, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_KNOWLEDGE_CERTS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { formatScheduledAt } from './dateUtils';
 import { isValidWalletAddress } from './formatAddress';
-import type { AddressMigration, Channel, ChannelAuthorization, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
-import { CHANNEL_COLLAB_ANNUAL_PB, CHANNEL_COLLAB_TERM_MS, CHANNEL_COLLAB_TRIAL_END, PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
+import type { AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import { CHANNEL_COLLAB_ANNUAL_PB, CHANNEL_COLLAB_DEMO_NOW, CHANNEL_COLLAB_GRACE_END, CHANNEL_COLLAB_TERM_MS, CHANNEL_COLLAB_TRIAL_END, COLLAB_PHASE_CYCLE, channelCollabPhaseAt, PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
 import { postHasStake, formatTokenAmount } from './stakeConfig';
 import { translate } from './locales';
 import { BottomNav } from './components/BottomNav';
-import { ArticleReader, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
+import { ArticleReader, ChannelCollabReminderModal, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { InteractionTaskSheet } from './components/InteractionTaskSheet';
 import { LotTaskPage } from './pages/LotTaskPage';
 import { effectiveClaimRatio, getIssuedCredibilityRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, isRatioLadderActive, lotCredibilityEarned, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueCredibilityRewards, simulateInteractedCount, taskDayKey, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
@@ -417,15 +417,43 @@ export default function App({ account, onLanguageChange }: {
   const [channelAuthorizations, setChannelAuthorizations] = useState<ChannelAuthorization[]>(MOCK_CHANNEL_AUTHORIZATIONS);
   const normalizedWalletAddress = (walletAddress ?? '').toLowerCase();
 
-  // ── 频道协作年费：试用期结束后，每个频道需缴年费才能授权/代发；未缴费频道的已有授权暂停 ──
+  // ── 频道协作准入：9/22 0 点前免费试用；之后仅「活跃五星 + 已缴年费」的频道主可授权，
+  //    年费按频道主收取，名下所有频道共享；不达标者的试用授权保留到 10/1 0 点 ──
   const [channelCollabLicenses, setChannelCollabLicenses] = useState<Record<string, number>>(MOCK_CHANNEL_COLLAB_LICENSES);
-  // 开发工具：默认按真实日期判断试用期，可手动切换演示试用期内/外
-  const [collabTrialActive, setCollabTrialActive] = useState(() => Date.now() < CHANNEL_COLLAB_TRIAL_END);
-  const toggleCollabTrialActive = useCallback(() => setCollabTrialActive(prev => !prev), []);
-  const isChannelCollabEnabled = useCallback(
-    (channelId: string) => collabTrialActive || (channelCollabLicenses[channelId] ?? 0) > Date.now(),
-    [collabTrialActive, channelCollabLicenses],
+  // 开发工具：realtime 按真实时间判断阶段，其余三档固定到各阶段内的一个演示时间点
+  const [demoCollabPhase, setDemoCollabPhase] = useState<'realtime' | ChannelCollabPhase>('realtime');
+  const [realtimeNow, setRealtimeNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (demoCollabPhase !== 'realtime') return;
+    const timer = window.setInterval(() => setRealtimeNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, [demoCollabPhase]);
+  const collabNow = demoCollabPhase === 'realtime' ? realtimeNow : CHANNEL_COLLAB_DEMO_NOW[demoCollabPhase];
+  const channelCollabPhase = channelCollabPhaseAt(collabNow);
+  const cycleDemoCollabPhase = useCallback(() => {
+    setDemoCollabPhase(prev => COLLAB_PHASE_CYCLE[(COLLAB_PHASE_CYCLE.indexOf(prev) + 1) % COLLAB_PHASE_CYCLE.length]);
+  }, []);
+
+  // 活跃五星：本人拥有五星频道，且直连至少 1 名五星博主
+  const hasOwnFiveStarChannel = useMemo(
+    () => channels.some(c => c.ownerName === CURRENT_USER && NODE_STARS_BY_CODE[c.nodeCode ?? ''] === 5),
+    [channels],
   );
+  const hasDirectFiveStarConnection = demoFiveStarNodeCount >= 1;
+  const isActiveFiveStar = hasOwnFiveStarChannel && hasDirectFiveStarConnection;
+  const myCollabLicenseExpiresAt = (channelCollabLicenses[CURRENT_USER] ?? 0) > collabNow ? channelCollabLicenses[CURRENT_USER] : null;
+
+  const ownerHasCollabAccess = useCallback((ownerName: string) => {
+    if (channelCollabPhase === 'trial') return true;
+    const licensed = (channelCollabLicenses[ownerName] ?? 0) > collabNow;
+    // 其他频道主的缴费记录已代表其资格通过；当前账号按可切换的演示条件实时判断
+    return ownerName === CURRENT_USER ? licensed && isActiveFiveStar : licensed;
+  }, [channelCollabPhase, channelCollabLicenses, collabNow, isActiveFiveStar]);
+  const hasMyCollabAccess = ownerHasCollabAccess(CURRENT_USER);
+  const isChannelCollabEnabled = useCallback((channelId: string) => {
+    const channel = channels.find(c => c.id === channelId);
+    return channel ? ownerHasCollabAccess(channel.ownerName) : false;
+  }, [channels, ownerHasCollabAccess]);
 
   const activeDelegatedChannels = useMemo(() => {
     const activeChannelIds = new Set(
@@ -444,16 +472,45 @@ export default function App({ account, onLanguageChange }: {
     [activeDelegatedChannels, isChannelCollabEnabled],
   );
 
-  const payChannelCollabLicense = (channelId: string, wallet: PbWalletId): boolean => {
-    const channel = channels.find(c => c.id === channelId);
-    if (!channel || channel.ownerName !== CURRENT_USER) return false;
-    if (!payPb({ amount: CHANNEL_COLLAB_ANNUAL_PB, use: 'channel_collab', wallet, supCost: pbOnchainFee(CHANNEL_COLLAB_ANNUAL_PB) })) return false;
+  const payChannelCollabLicense = (wallet: PbWalletId): { ok: boolean; message?: string } => {
+    if (!isActiveFiveStar) return { ok: false, message: t('完成活跃五星条件后可缴纳年费') };
+    if (!payPb({ amount: CHANNEL_COLLAB_ANNUAL_PB, use: 'channel_collab', wallet, supCost: pbOnchainFee(CHANNEL_COLLAB_ANNUAL_PB) })) {
+      return { ok: false, message: t('所选钱包余额不足或不适用于此操作') };
+    }
     setChannelCollabLicenses(prev => ({
       ...prev,
-      [channelId]: Math.max(Date.now(), prev[channelId] ?? 0) + CHANNEL_COLLAB_TERM_MS,
+      [CURRENT_USER]: Math.max(collabNow, prev[CURRENT_USER] ?? 0) + CHANNEL_COLLAB_TERM_MS,
     }));
-    return true;
+    return { ok: true };
   };
+
+  // 用户主动结束试用：名下所有进行中/待接受的授权一并取消
+  const endChannelCollabTrial = () => {
+    setChannelAuthorizations(prev => prev.map(a => (
+      a.ownerName === CURRENT_USER && (a.status === 'pending' || a.status === 'active')
+        ? { ...a, status: 'revoked', revokedAt: collabNow, revokedBy: 'owner' }
+        : a
+    )));
+    showToast(t('已结束频道协作试用'));
+  };
+
+  // 10/1 0 点后：仍未达活跃五星且未缴费的频道主，试用期产生的授权被取消（正式版由运营执行）
+  useEffect(() => {
+    if (channelCollabPhase !== 'post_grace' || isActiveFiveStar || myCollabLicenseExpiresAt) return;
+    setChannelAuthorizations(prev => {
+      let changed = false;
+      const next = prev.map(a => {
+        if (a.ownerName !== CURRENT_USER || a.createdAt >= CHANNEL_COLLAB_TRIAL_END) return a;
+        if (a.status !== 'pending' && a.status !== 'active') return a;
+        changed = true;
+        return { ...a, status: 'revoked' as const, revokedAt: CHANNEL_COLLAB_GRACE_END, revokedBy: 'system' as const };
+      });
+      return changed ? next : prev;
+    });
+  }, [channelCollabPhase, isActiveFiveStar, myCollabLicenseExpiresAt]);
+
+  const hasOpenOutgoingAuthorizations = channelAuthorizations.some(a =>
+    a.ownerName === CURRENT_USER && (a.status === 'pending' || a.status === 'active'));
 
   const pendingIncomingChannelAuthorizations = useMemo(
     () => channelAuthorizations.filter(a => a.status === 'pending' && a.delegateAddress === normalizedWalletAddress),
@@ -463,7 +520,8 @@ export default function App({ account, onLanguageChange }: {
   const requestChannelAuthorization = (channelId: string, delegateAddress: string): { ok: boolean; message?: string } => {
     const channel = channels.find(c => c.id === channelId);
     if (!channel || channel.ownerName !== CURRENT_USER) return { ok: false, message: t('无权操作该频道') };
-    if (!isChannelCollabEnabled(channelId)) return { ok: false, message: t('开通频道协作后可授权协作者') };
+    if (channelCollabPhase !== 'trial' && !isActiveFiveStar) return { ok: false, message: t('完成活跃五星条件后可授权协作者') };
+    if (channelCollabPhase !== 'trial' && !myCollabLicenseExpiresAt) return { ok: false, message: t('请先缴纳频道协作年费') };
     if (!isValidWalletAddress(delegateAddress)) return { ok: false, message: t('请输入合法的钱包地址') };
     const normalized = delegateAddress.trim().toLowerCase();
     if (normalized === normalizedWalletAddress) return { ok: false, message: t('不能授权给自己') };
@@ -479,7 +537,7 @@ export default function App({ account, onLanguageChange }: {
       delegateAddress: normalized,
       delegateName: delegate?.name,
       status: 'pending',
-      createdAt: Date.now(),
+      createdAt: collabNow,
     };
     setChannelAuthorizations(prev => [authorization, ...prev]);
     showToast(t('已发送授权邀请，等待对方接受'));
@@ -636,6 +694,15 @@ export default function App({ account, onLanguageChange }: {
   const certOpen = route.page === 'P_CERT';
   const pageRoute = certOpen && stack.length > 1 ? stack[stack.length - 2]! : route;
   const tab = pageRoute.page === 'P0' ? pageRoute.tab : 0;
+
+  // 试用结束后，仍有进行中授权但未取得协作准入的频道主，进入首页时弹窗提醒；关闭后本次停留不再弹
+  const [collabReminderDismissed, setCollabReminderDismissed] = useState(false);
+  const isOnHome = pageRoute.page === 'P0';
+  useEffect(() => {
+    if (!isOnHome) setCollabReminderDismissed(false);
+  }, [isOnHome]);
+  const collabReminderOpen = isOnHome && !collabReminderDismissed
+    && channelCollabPhase !== 'trial' && hasOpenOutgoingAuthorizations && !hasMyCollabAccess;
   const navigate = (r: Route) => { setSearchOpen(false); setStack(s => [...s, r]); };
   const navigateRoot = (r: Route) => setStack([r]);
   // 跳转到自己的主页并自动展开「账户与资料」（用于小黄车联系方式发现引导）
@@ -1388,7 +1455,9 @@ export default function App({ account, onLanguageChange }: {
     addressMigrations, requestAddressMigration, cancelAddressMigration, dismissMigrationReminder,
     channelAuthorizations, requestChannelAuthorization, respondToChannelAuthorization, revokeChannelAuthorization,
     delegatedChannels, pausedDelegatedChannels, pendingIncomingChannelAuthorizations,
-    channelCollabLicenses, isChannelCollabEnabled, payChannelCollabLicense, collabTrialActive, toggleCollabTrialActive,
+    channelCollabPhase, collabNow, demoCollabPhase, cycleDemoCollabPhase,
+    hasOwnFiveStarChannel, hasDirectFiveStarConnection, isActiveFiveStar, myCollabLicenseExpiresAt, hasMyCollabAccess,
+    isChannelCollabEnabled, payChannelCollabLicense, endChannelCollabTrial,
     airdropClaimed, claimAirdrop,
     taskSnapshotToday, taskSnapshotYesterday, airdropClaimRatio, airdropRatioLadderActive, lotQuota,
     taskCelebrateSignal, recordTaskInteraction, getDailyTaskCalendar: () => getTaskCalendarMonth(new Date(), lotQuota.interactions),
@@ -1603,6 +1672,14 @@ export default function App({ account, onLanguageChange }: {
             />
           );
         })()}
+
+        {/* 覆盖层：频道协作试用结束提醒 */}
+        {collabReminderOpen && (
+          <ChannelCollabReminderModal
+            onClose={() => setCollabReminderDismissed(true)}
+            onGoQualify={() => { setCollabReminderDismissed(true); navigate({ page: 'P_PLANET' }); }}
+          />
+        )}
 
         {/* 覆盖层：开通频道 */}
         {createChannelOpen && (

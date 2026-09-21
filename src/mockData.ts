@@ -118,18 +118,18 @@ export const MOCK_CHANNEL_AUTHORIZATIONS: ChannelAuthorization[] = [
     delegateAddress: '0x5f2a8c1e6d9b3074a5c6e8f0123456789abcdef0',
     delegateName: '阿May的研究笔记',
     status: 'active',
-    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 3,
-    respondedAt: Date.now() - 1000 * 60 * 60 * 24 * 2,
+    createdAt: new Date('2026-09-18T10:00:00+08:00').getTime(),
+    respondedAt: new Date('2026-09-19T10:00:00+08:00').getTime(),
   },
 ];
 
-/** 频道协作年费到期时间（channelId → ms）。他人频道已缴费，便于接受邀请后直接代发；
- *  自己的 channel-me-2 未缴费，用于演示试用结束后已有协作者被暂停 */
+/** 频道协作年费到期时间（频道主 → ms）。其他频道主已缴费，便于接受邀请后直接代发；
+ *  当前用户未缴费，用于演示试用结束后的续费/保留期流程 */
 export const MOCK_CHANNEL_COLLAB_LICENSES: Record<string, number> = {
-  'channel-jike': new Date('2027-08-15T00:00:00+08:00').getTime(),
-  'channel-amay': new Date('2027-09-01T00:00:00+08:00').getTime(),
-  'channel-yanlei': new Date('2027-07-20T00:00:00+08:00').getTime(),
-  'channel-aieff': new Date('2027-09-10T00:00:00+08:00').getTime(),
+  '极客前沿': new Date('2027-08-15T00:00:00+08:00').getTime(),
+  '阿May的研究笔记': new Date('2027-09-01T00:00:00+08:00').getTime(),
+  '产品大叔严磊': new Date('2027-07-20T00:00:00+08:00').getTime(),
+  'AI 效率研究所': new Date('2027-09-10T00:00:00+08:00').getTime(),
 };
 
 /** 将 6 位邀请码解析为邀请人钱包地址；未知码用确定性 mock 地址，保证 demo 可绑任意码 */

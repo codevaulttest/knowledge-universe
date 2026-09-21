@@ -2141,25 +2141,174 @@ export function channelTierPriceError(
   return null;
 }
 
+function formatCollabDate(ms: number) {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** 活跃五星两项条件的达成清单 */
+function ChannelCollabQualification() {
+  const { t, hasOwnFiveStarChannel, hasDirectFiveStarConnection } = useApp();
+  const items = [
+    { done: hasOwnFiveStarChannel, label: t('本人拥有五星频道') },
+    { done: hasDirectFiveStarConnection, label: t('直连至少 1 名五星博主') },
+  ];
+  return (
+    <ul className="channel-collab-qualify">
+      {items.map(item => (
+        <li key={item.label} className={`channel-collab-qualify-item${item.done ? ' channel-collab-qualify-item--done' : ''}`}>
+          {item.done ? <Check size={14} strokeWidth={2.5} aria-hidden /> : <X size={14} strokeWidth={2.5} aria-hidden />}
+          <span>{item.label}</span>
+          <span className="channel-collab-qualify-state">{item.done ? t('已达成') : t('未达成')}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** 协作年费支付块：费用明细 + 钱包选择 + 支付按钮（管理页与首页弹窗共用） */
+function ChannelCollabFeePay({ confirmLabel, cancelLabel, onCancel, onPaid }: {
+  confirmLabel: string;
+  cancelLabel?: string;
+  onCancel?: () => void;
+  onPaid: () => void;
+}) {
+  const { t, showToast, payChannelCollabLicense, myCollabLicenseExpiresAt } = useApp();
+  const [paying, setPaying] = useState<'idle' | 'loading' | 'failed'>('idle');
+  const [failReason, setFailReason] = useState('');
+  const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
+  const supCost = pbOnchainFee(CHANNEL_COLLAB_ANNUAL_PB);
+
+  const handlePay = () => {
+    if (!payWallet || paying === 'loading') return;
+    const renewing = Boolean(myCollabLicenseExpiresAt);
+    setPaying('loading');
+    setTimeout(() => {
+      const result = payChannelCollabLicense(payWallet);
+      if (!result.ok) {
+        setFailReason(result.message ?? t('所选钱包余额不足或不适用于此操作'));
+        setPaying('failed');
+        return;
+      }
+      setPaying('idle');
+      showToast(renewing ? t('已续费，有效期延长一年') : t('频道协作已开通，名下所有频道可授权协作者'));
+      onPaid();
+    }, 1300);
+  };
+
+  return (
+    <div className="channel-collab-license-pay">
+      <div className="pay-combo-breakdown">
+        <div className="pay-combo-row">
+          <span className="pay-combo-label">{t('所需 PB')}</span>
+          <span className="pay-combo-value">{formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB)} PB</span>
+        </div>
+        {(!payWallet || walletConsumesSup(payWallet)) && (
+          <div className="pay-combo-row">
+            <span className="pay-combo-label">{t('网络手续费')}</span>
+            <span className="pay-combo-value">{formatSupAmount(supCost)} SUP</span>
+          </div>
+        )}
+        {paying === 'failed' && <p className="pay-fail-reason">{failReason}</p>}
+      </div>
+      <PbWalletPicker use="channel_collab" amount={CHANNEL_COLLAB_ANNUAL_PB} value={payWallet} onChange={setPayWallet} />
+      <div className="channel-collab-license-actions">
+        {onCancel && (
+          <button type="button" className="channel-collab-license-cancel" onClick={onCancel} disabled={paying === 'loading'}>
+            {cancelLabel ?? t('取消')}
+          </button>
+        )}
+        <button type="button" className="planet-confirm-btn" disabled={!payWallet || paying === 'loading'} onClick={handlePay}>
+          {paying === 'loading' ? <span className="spinner" /> : paying === 'failed' ? t('重试') : confirmLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** 确认结束试用：取消名下所有进行中的授权 */
+function EndCollabTrialAlert({ onCancel, onDone }: { onCancel: () => void; onDone: () => void }) {
+  const { t, endChannelCollabTrial } = useApp();
+  return (
+    <Ios26Alert
+      title={t('确认结束频道协作试用？')}
+      message={t('结束后，名下频道的协作授权全部取消，协作者停止代发')}
+      cancelLabel={t('再想想')}
+      confirmLabel={t('结束试用')}
+      onCancel={onCancel}
+      onConfirm={() => { endChannelCollabTrial(); onDone(); }}
+    />
+  );
+}
+
+/** 首页弹窗：试用结束后，仍有进行中授权但未取得协作准入的频道主 */
+export function ChannelCollabReminderModal({ onClose, onGoQualify }: { onClose: () => void; onGoQualify: () => void }) {
+  const { t, isActiveFiveStar, channelCollabPhase } = useApp();
+  const [confirmEnd, setConfirmEnd] = useState(false);
+  const inGrace = channelCollabPhase === 'grace';
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="payment-sheet channel-collab-reminder" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div className="sheet-header">
+          <span className="sheet-title">{t('频道协作试用已结束')}</span>
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t('关闭')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+        {isActiveFiveStar ? (
+          <>
+            <p className="channel-collab-license-desc">
+              {t('免费试用已于 9 月 22 日 0 点结束。缴纳 {amount} PB 年费后，名下所有频道的协作者恢复代发，有效期一年。', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}
+            </p>
+            <ChannelCollabFeePay
+              confirmLabel={t('支付 {amount} PB 年费', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}
+              cancelLabel={t('结束试用')}
+              onCancel={() => setConfirmEnd(true)}
+              onPaid={onClose}
+            />
+          </>
+        ) : (
+          <>
+            <p className="channel-collab-license-desc">
+              {inGrace
+                ? t('频道协作面向活跃五星开放。你的授权记录保留至 10 月 1 日 0 点，期间完成以下两项条件并缴纳年费即可继续使用。')
+                : t('频道协作面向活跃五星开放。完成以下两项条件并缴纳年费即可继续使用。')}
+            </p>
+            <ChannelCollabQualification />
+            <button type="button" className="planet-confirm-btn" onClick={onGoQualify}>{t('去完成条件')}</button>
+            <div className="channel-collab-reminder-secondary">
+              <button type="button" className="channel-collab-license-cancel" onClick={onClose}>{t('稍后处理')}</button>
+              <button type="button" className="channel-collab-license-cancel" onClick={() => setConfirmEnd(true)}>{t('结束试用')}</button>
+            </div>
+          </>
+        )}
+      </div>
+      {confirmEnd && <EndCollabTrialAlert onCancel={() => setConfirmEnd(false)} onDone={onClose} />}
+    </div>
+  );
+}
+
 export function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
   const {
-    t, showToast, channelAuthorizations, requestChannelAuthorization, revokeChannelAuthorization,
-    channelCollabLicenses, isChannelCollabEnabled, payChannelCollabLicense, collabTrialActive,
+    t, navigate, showToast, channelAuthorizations, requestChannelAuthorization, revokeChannelAuthorization,
+    isChannelCollabEnabled, channelCollabPhase, isActiveFiveStar, myCollabLicenseExpiresAt,
   } = useApp();
   const [formOpen, setFormOpen] = useState(false);
-  const collabEnabled = isChannelCollabEnabled(channel.id);
-  const licenseExpiresAt = channelCollabLicenses[channel.id];
-  const licensed = (licenseExpiresAt ?? 0) > Date.now();
-  const [payOpen, setPayOpen] = useState(false);
-  const [paying, setPaying] = useState<'idle' | 'loading' | 'failed'>('idle');
-  const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
-  const collabSupCost = pbOnchainFee(CHANNEL_COLLAB_ANNUAL_PB);
   const [addressInput, setAddressInput] = useState('');
   const [addressStatus, setAddressStatus] = useState<'1' | '2' | '3' | '4'>('1');
   const [verifying, setVerifying] = useState(false);
   const [confirmRevokeAuthId, setConfirmRevokeAuthId] = useState<string | null>(null);
+  const [payOpen, setPayOpen] = useState(false);
+  const [confirmEnd, setConfirmEnd] = useState(false);
   const collabDelegate = addressStatus === '3' ? findRegisteredUserByAddress(addressInput.trim()) : undefined;
   const collabAuths = channelAuthorizations.filter(a => a.channelId === channel.id && a.status !== 'declined');
+  const collabEnabled = isChannelCollabEnabled(channel.id);
+  const inTrial = channelCollabPhase === 'trial';
+  const licensed = Boolean(myCollabLicenseExpiresAt);
+  // 新授权：试用期内所有人可用；之后需活跃五星且已缴年费
+  const canInvite = collabEnabled;
+  const hasOpenAuths = collabAuths.some(a => a.status === 'pending' || a.status === 'active');
 
   const handleAddressChange = (value: string) => {
     setAddressInput(value);
@@ -2187,33 +2336,34 @@ export function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
     }
   };
 
-  const handlePayLicense = () => {
-    if (!payWallet || paying === 'loading') return;
-    setPaying('loading');
-    setTimeout(() => {
-      if (!payChannelCollabLicense(channel.id, payWallet)) {
-        setPaying('failed');
-        return;
-      }
-      setPaying('idle');
-      setPayOpen(false);
-      showToast(licensed ? t('已续费，有效期延长一年') : t('频道协作已开通'));
-    }, 1300);
-  };
-
-  const formatDate = (ms: number) => {
-    const d = new Date(ms);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
-
-  const hasPausedCollaborators = !collabEnabled && collabAuths.some(a => a.status === 'active');
-
-  const statusLabel = (status: 'pending' | 'active' | 'declined' | 'revoked') => {
-    if (status === 'pending') return t('待对方接受');
-    if (status === 'active') return collabEnabled ? t('协作中') : t('已暂停');
-    if (status === 'revoked') return t('已撤销');
+  const statusLabel = (auth: { status: 'pending' | 'active' | 'declined' | 'revoked'; revokedBy?: 'owner' | 'delegate' | 'system' }) => {
+    if (auth.status === 'pending') return collabEnabled ? t('待对方接受') : t('已暂停');
+    if (auth.status === 'active') return collabEnabled ? t('协作中') : t('已暂停');
+    if (auth.status === 'revoked') return auth.revokedBy === 'system' ? t('保留期结束已取消') : t('已撤销');
     return t('已婉拒');
   };
+  const statusClass = (status: 'pending' | 'active' | 'declined' | 'revoked') =>
+    (status === 'pending' || status === 'active') && !collabEnabled ? 'paused' : status;
+
+  // 状态卡片：按「试用期 / 已缴费 / 达标未缴 / 未达标」四种情况展示
+  let cardTitle: string;
+  let cardDesc: string;
+  if (licensed) {
+    cardTitle = t('频道协作已开通');
+    cardDesc = t('名下所有频道共享，有效期至 {date}，续费后顺延一年', { date: formatCollabDate(myCollabLicenseExpiresAt!) });
+  } else if (inTrial) {
+    cardTitle = t('频道协作免费试用中');
+    cardDesc = t('免费试用至 9 月 22 日 0 点。之后面向活跃五星开放，年费 {amount} PB，名下所有频道共享', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) });
+  } else if (isActiveFiveStar) {
+    cardTitle = t('开通频道协作');
+    cardDesc = t('缴纳年费后，名下所有频道可授权协作者，有效期一年');
+  } else {
+    cardTitle = t('频道协作面向活跃五星开放');
+    cardDesc = channelCollabPhase === 'grace' && hasOpenAuths
+      ? t('现有授权保留至 10 月 1 日 0 点。完成以下两项条件后可缴纳年费继续使用')
+      : t('完成以下两项条件后可缴纳年费开通');
+  }
+  const canPay = isActiveFiveStar;
 
   return (
     <div className="edit-profile-field">
@@ -2224,8 +2374,8 @@ export function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
       {collabAuths.map(auth => (
         <div key={auth.id} className="channel-collab-row">
           <span className="channel-collab-name">{auth.delegateName ?? shortenAddress(auth.delegateAddress)}</span>
-          <span className={`channel-collab-status channel-collab-status--${auth.status === 'active' && !collabEnabled ? 'paused' : auth.status}`}>
-            {statusLabel(auth.status)}
+          <span className={`channel-collab-status channel-collab-status--${statusClass(auth.status)}`}>
+            {statusLabel(auth)}
           </span>
           {(auth.status === 'pending' || auth.status === 'active') && (
             <button type="button" className="channel-collab-revoke-btn" onClick={() => setConfirmRevokeAuthId(auth.id)}>
@@ -2234,58 +2384,44 @@ export function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
           )}
         </div>
       ))}
+
       <div className="channel-collab-license">
         <div className="channel-collab-license-head">
-          <span className="channel-collab-license-title">
-            {licensed ? t('频道协作已开通') : collabEnabled ? t('频道协作免费试用中') : t('开通频道协作')}
-          </span>
+          <span className="channel-collab-license-title">{cardTitle}</span>
           <span className="channel-collab-license-price font-mono">{t('{amount} PB / 年', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}</span>
         </div>
-        <p className="channel-collab-license-desc">
-          {licensed
-            ? t('有效期至 {date}，续费后顺延一年', { date: formatDate(licenseExpiresAt) })
-            : collabEnabled && collabTrialActive
-              ? t('免费试用至 2026-09-22 00:00，之后按频道收取年费')
-              : t('开通后一年内可授权任意多位协作者')}
-        </p>
-        {hasPausedCollaborators && (
-          <p className="channel-collab-license-desc">{t('开通后已授权的协作者自动恢复代发')}</p>
+        <p className="channel-collab-license-desc">{cardDesc}</p>
+        {!licensed && !inTrial && !isActiveFiveStar && <ChannelCollabQualification />}
+        {!licensed && !inTrial && hasOpenAuths && isActiveFiveStar && (
+          <p className="channel-collab-license-desc">{t('缴纳后已授权的协作者自动恢复代发')}</p>
         )}
-        {!payOpen && (
-          <button type="button" className="channel-collab-license-btn" onClick={() => setPayOpen(true)}>
-            {licensed ? t('续费') : collabEnabled ? t('提前开通') : t('开通')}
-          </button>
-        )}
-        {payOpen && (
-          <div className="channel-collab-license-pay">
-            <div className="pay-combo-breakdown">
-              <div className="pay-combo-row">
-                <span className="pay-combo-label">{t('所需 PB')}</span>
-                <span className="pay-combo-value">{formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB)} PB</span>
-              </div>
-              {(!payWallet || walletConsumesSup(payWallet)) && (
-                <div className="pay-combo-row">
-                  <span className="pay-combo-label">{t('网络手续费')}</span>
-                  <span className="pay-combo-value">{formatSupAmount(collabSupCost)} SUP</span>
-                </div>
-              )}
-              {paying === 'failed' && (
-                <p className="pay-fail-reason">{t('所选钱包余额不足或不适用于此操作')}</p>
-              )}
-            </div>
-            <PbWalletPicker use="channel_collab" amount={CHANNEL_COLLAB_ANNUAL_PB} value={payWallet} onChange={setPayWallet} />
-            <div className="channel-collab-license-actions">
-              <button type="button" className="channel-collab-license-cancel" onClick={() => { setPayOpen(false); setPaying('idle'); }} disabled={paying === 'loading'}>
-                {t('取消')}
+        {payOpen && canPay ? (
+          <ChannelCollabFeePay
+            confirmLabel={t('支付 {amount} PB', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}
+            onCancel={() => setPayOpen(false)}
+            onPaid={() => setPayOpen(false)}
+          />
+        ) : (
+          <div className="channel-collab-license-links">
+            {canPay ? (
+              <button type="button" className="channel-collab-license-btn" onClick={() => setPayOpen(true)}>
+                {licensed ? t('续费') : inTrial ? t('提前开通') : t('开通')}
               </button>
-              <button type="button" className="planet-confirm-btn" disabled={!payWallet || paying === 'loading'} onClick={handlePayLicense}>
-                {paying === 'loading' ? <span className="spinner" /> : paying === 'failed' ? t('重试') : t('支付 {amount} PB', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}
+            ) : !inTrial && (
+              <button type="button" className="channel-collab-license-btn" onClick={() => navigate({ page: 'P_PLANET' })}>
+                {t('去完成条件')}
               </button>
-            </div>
+            )}
+            {!inTrial && !licensed && hasOpenAuths && (
+              <button type="button" className="channel-collab-license-text-btn" onClick={() => setConfirmEnd(true)}>
+                {t('结束试用')}
+              </button>
+            )}
           </div>
         )}
       </div>
-      {!collabEnabled ? null : !formOpen ? (
+
+      {canInvite && (!formOpen ? (
         <button type="button" className="channel-tier-add-btn" onClick={() => setFormOpen(true)}>
           <Plus size={16} strokeWidth={2.5} aria-hidden />
           {t('授权协作者')}
@@ -2327,7 +2463,7 @@ export function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
             {t('发送授权邀请')}
           </button>
         </div>
-      )}
+      ))}
       {confirmRevokeAuthId && (
         <Ios26Alert
           title={t('确认撤销授权？')}
@@ -2341,6 +2477,7 @@ export function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
           }}
         />
       )}
+      {confirmEnd && <EndCollabTrialAlert onCancel={() => setConfirmEnd(false)} onDone={() => setConfirmEnd(false)} />}
     </div>
   );
 }

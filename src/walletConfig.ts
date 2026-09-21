@@ -1,4 +1,4 @@
-import type { PbUse, PbWalletId, SupTransactionReason, SupWalletId } from './types';
+import type { ChannelCollabPhase, PbUse, PbWalletId, SupTransactionReason, SupWalletId } from './types';
 
 export type PbWalletMeta = {
   id: PbWalletId;
@@ -107,6 +107,22 @@ export const CHANNEL_OPEN_PB_COST = 1000;
 export const CHANNEL_COLLAB_ANNUAL_PB = 5000;
 export const CHANNEL_COLLAB_TRIAL_END = new Date('2026-09-22T00:00:00+08:00').getTime();
 export const CHANNEL_COLLAB_TERM_MS = 365 * 24 * 60 * 60 * 1000;
+/** 未达活跃五星者的试用授权保留到 10/1 0 点（北京时间）。 */
+export const CHANNEL_COLLAB_GRACE_END = new Date('2026-10-01T00:00:00+08:00').getTime();
+
+export function channelCollabPhaseAt(now: number): ChannelCollabPhase {
+  if (now < CHANNEL_COLLAB_TRIAL_END) return 'trial';
+  if (now < CHANNEL_COLLAB_GRACE_END) return 'grace';
+  return 'post_grace';
+}
+
+/** 开发工具切换阶段时使用的演示时间点。 */
+export const CHANNEL_COLLAB_DEMO_NOW: Record<ChannelCollabPhase, number> = {
+  trial: new Date('2026-09-21T12:00:00+08:00').getTime(),
+  grace: new Date('2026-09-23T12:00:00+08:00').getTime(),
+  post_grace: new Date('2026-10-02T12:00:00+08:00').getTime(),
+};
+export const COLLAB_PHASE_CYCLE: ReadonlyArray<'realtime' | ChannelCollabPhase> = ['realtime', 'trial', 'grace', 'post_grace'];
 
 /**
  * 一笔 Gas 费只从一个池子出，不跨池拼单。

@@ -12,7 +12,7 @@ export function DevPanel({ children }: DevPanelProps) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(true);
   const {
-    walletConnected, connectWallet, disconnectWallet, demoHideOwnChannels, toggleDemoHideOwnChannels, collabTrialActive, toggleCollabTrialActive, t,
+    walletConnected, connectWallet, disconnectWallet, demoHideOwnChannels, toggleDemoHideOwnChannels, demoCollabPhase, cycleDemoCollabPhase, t,
     taskSnapshotToday, resetDemoTasks, simulateDemoTaskInteractions, setDemoPbWallets,
     demoForceLadder, toggleDemoForceLadder, demoForceNewUser, toggleDemoForceNewUser,
     demoFiveStarNodeCount, cycleDemoFiveStarNodeCount,
@@ -68,17 +68,14 @@ export function DevPanel({ children }: DevPanelProps) {
               {demoHideOwnChannels ? t('开') : t('关')}
             </span>
           </button>
-          <button
-            type="button"
-            className="planet-dev-menu-item"
-            role="menuitemcheckbox"
-            aria-checked={collabTrialActive}
-            onClick={toggleCollabTrialActive}
-          >
-            <span>{t('频道协作试用期内')}</span>
-            <span className={`planet-dev-menu-toggle${collabTrialActive ? ' planet-dev-menu-toggle--on' : ''}`}>
-              {collabTrialActive ? t('开') : t('关')}
-            </span>
+          <button type="button" className="planet-dev-menu-item" onClick={cycleDemoCollabPhase}>
+            <span>{t('频道协作阶段')}</span>
+            <span className="planet-dev-menu-toggle">{
+              demoCollabPhase === 'realtime' ? t('实时')
+                : demoCollabPhase === 'trial' ? t('试用期')
+                  : demoCollabPhase === 'grace' ? t('保留期')
+                    : t('保留期后')
+            }</span>
           </button>
           <button
             type="button"
