@@ -1479,7 +1479,7 @@ function ChannelCollaborationModal({
                     </span>
                     <span className="channel-collab-owner">
                       {pausedIds.has(channel.id)
-                        ? t('已暂停 · {name} 续费后恢复代发', { name: channel.ownerName })
+                        ? t('已暂停 · {name} 续期后恢复代发', { name: channel.ownerName })
                         : t('来自 {name} 的授权', { name: channel.ownerName })}
                     </span>
                   </button>

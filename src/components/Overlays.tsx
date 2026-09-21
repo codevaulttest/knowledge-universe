@@ -2166,7 +2166,7 @@ function ChannelCollabQualification() {
   );
 }
 
-/** 协作年费支付块：费用明细 + 钱包选择 + 支付按钮（管理页与首页弹窗共用） */
+/** 协作权限兑换块：费用明细 + 钱包选择 + 兑换按钮（管理页与首页弹窗共用） */
 function ChannelCollabFeePay({ confirmLabel, cancelLabel, onCancel, onPaid }: {
   confirmLabel: string;
   cancelLabel?: string;
@@ -2191,7 +2191,7 @@ function ChannelCollabFeePay({ confirmLabel, cancelLabel, onCancel, onPaid }: {
         return;
       }
       setPaying('idle');
-      showToast(renewing ? t('已续费，有效期延长一年') : t('频道协作已开通，名下所有频道可授权协作者'));
+      showToast(renewing ? t('已续期，有效期延长一年') : t('频道协作已开通，名下所有频道可授权协作者'));
       onPaid();
     }, 1300);
   };
@@ -2259,10 +2259,10 @@ export function ChannelCollabReminderModal({ onClose, onGoQualify }: { onClose: 
         {isActiveFiveStar ? (
           <>
             <p className="channel-collab-license-desc">
-              {t('频道协作授权的免费体验已于 9 月 22 日 0 点结束。支付 {amount} PB 年费后，名下所有频道的协作者恢复代发，有效期一年。', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}
+              {t('频道协作授权的免费体验已于 9 月 22 日 0 点结束。兑换一年协作权限（{amount} PB）后，名下所有频道的协作者恢复代发，有效期一年。', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}
             </p>
             <ChannelCollabFeePay
-              confirmLabel={t('续年费')}
+              confirmLabel={t('兑换续期')}
               cancelLabel={t('关闭频道协作')}
               onCancel={() => setConfirmEnd(true)}
               onPaid={onClose}
@@ -2272,8 +2272,8 @@ export function ChannelCollabReminderModal({ onClose, onGoQualify }: { onClose: 
           <>
             <p className="channel-collab-license-desc">
               {inGrace
-                ? t('频道协作授权的免费体验已于 9 月 22 日 0 点结束，之后仅对活跃五星博主开放。请在 10 月 1 日 0 点前达成以下两项条件并续年费，现有授权会保留到那时：')
-                : t('频道协作授权的免费体验已于 9 月 22 日 0 点结束，之后仅对活跃五星博主开放。达成以下两项条件并续年费即可继续使用：')}
+                ? t('频道协作授权的免费体验已于 9 月 22 日 0 点结束，之后仅对活跃五星博主开放。请在 10 月 1 日 0 点前达成以下两项条件并兑换续期，现有授权会保留到那时：')
+                : t('频道协作授权的免费体验已于 9 月 22 日 0 点结束，之后仅对活跃五星博主开放。达成以下两项条件并兑换续期即可继续使用：')}
             </p>
             <ChannelCollabQualification />
             <button type="button" className="planet-confirm-btn" onClick={onGoQualify}>{t('去完成条件')}</button>
@@ -2349,18 +2349,18 @@ export function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
   let cardDesc: string;
   if (licensed) {
     cardTitle = t('频道协作已开通');
-    cardDesc = t('名下所有频道共享，有效期至 {date}，续费后顺延一年', { date: formatCollabDate(myCollabLicenseExpiresAt!) });
+    cardDesc = t('名下所有频道共享，有效期至 {date}，续期后顺延一年', { date: formatCollabDate(myCollabLicenseExpiresAt!) });
   } else if (inTrial) {
     cardTitle = t('频道协作免费试用中');
-    cardDesc = t('免费试用至 9 月 22 日 0 点。之后面向活跃五星开放，年费 {amount} PB，名下所有频道共享', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) });
+    cardDesc = t('免费试用至 9 月 22 日 0 点。之后面向活跃五星开放，每年 {amount} PB，名下所有频道共享', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) });
   } else if (isActiveFiveStar) {
     cardTitle = t('开通频道协作');
-    cardDesc = t('缴纳年费后，名下所有频道可授权协作者，有效期一年');
+    cardDesc = t('兑换后，名下所有频道可授权协作者，有效期一年');
   } else {
     cardTitle = t('频道协作面向活跃五星开放');
     cardDesc = channelCollabPhase === 'grace' && hasOpenAuths
-      ? t('现有授权保留至 10 月 1 日 0 点。完成以下两项条件后可缴纳年费继续使用')
-      : t('完成以下两项条件后可缴纳年费开通');
+      ? t('现有授权保留至 10 月 1 日 0 点。完成以下两项条件后可兑换继续使用')
+      : t('完成以下两项条件后可兑换开通');
   }
   const canPay = isActiveFiveStar;
 
@@ -2392,11 +2392,11 @@ export function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
         <p className="channel-collab-license-desc">{cardDesc}</p>
         {!licensed && !inTrial && !isActiveFiveStar && <ChannelCollabQualification />}
         {!licensed && !inTrial && hasOpenAuths && isActiveFiveStar && (
-          <p className="channel-collab-license-desc">{t('缴纳后已授权的协作者自动恢复代发')}</p>
+          <p className="channel-collab-license-desc">{t('兑换后已授权的协作者自动恢复代发')}</p>
         )}
         {payOpen && canPay ? (
           <ChannelCollabFeePay
-            confirmLabel={t('支付 {amount} PB', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}
+            confirmLabel={t('兑换 {amount} PB', { amount: formatSuperAmount(CHANNEL_COLLAB_ANNUAL_PB) })}
             onCancel={() => setPayOpen(false)}
             onPaid={() => setPayOpen(false)}
           />
@@ -2404,7 +2404,7 @@ export function ChannelCollaboratorsSection({ channel }: { channel: Channel }) {
           <div className="channel-collab-license-links">
             {canPay ? (
               <button type="button" className="channel-collab-license-btn" onClick={() => setPayOpen(true)}>
-                {licensed ? t('续费') : inTrial ? t('提前开通') : t('开通')}
+                {licensed ? t('续期') : inTrial ? t('提前开通') : t('开通')}
               </button>
             ) : !inTrial && (
               <button type="button" className="channel-collab-license-btn" onClick={() => navigate({ page: 'P_PLANET' })}>

@@ -473,7 +473,7 @@ export default function App({ account, onLanguageChange }: {
   );
 
   const payChannelCollabLicense = (wallet: PbWalletId): { ok: boolean; message?: string } => {
-    if (!isActiveFiveStar) return { ok: false, message: t('完成活跃五星条件后可缴纳年费') };
+    if (!isActiveFiveStar) return { ok: false, message: t('完成活跃五星条件后可兑换') };
     if (!payPb({ amount: CHANNEL_COLLAB_ANNUAL_PB, use: 'channel_collab', wallet, supCost: pbOnchainFee(CHANNEL_COLLAB_ANNUAL_PB) })) {
       return { ok: false, message: t('所选钱包余额不足或不适用于此操作') };
     }
@@ -521,7 +521,7 @@ export default function App({ account, onLanguageChange }: {
     const channel = channels.find(c => c.id === channelId);
     if (!channel || channel.ownerName !== CURRENT_USER) return { ok: false, message: t('无权操作该频道') };
     if (channelCollabPhase !== 'trial' && !isActiveFiveStar) return { ok: false, message: t('完成活跃五星条件后可授权协作者') };
-    if (channelCollabPhase !== 'trial' && !myCollabLicenseExpiresAt) return { ok: false, message: t('请先缴纳频道协作年费') };
+    if (channelCollabPhase !== 'trial' && !myCollabLicenseExpiresAt) return { ok: false, message: t('请先兑换频道协作权限') };
     if (!isValidWalletAddress(delegateAddress)) return { ok: false, message: t('请输入合法的钱包地址') };
     const normalized = delegateAddress.trim().toLowerCase();
     if (normalized === normalizedWalletAddress) return { ok: false, message: t('不能授权给自己') };
