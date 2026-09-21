@@ -2151,17 +2151,14 @@ function ChannelCollabQualification() {
   const { t } = useApp();
   const items = [t('本人是五星频道博主'), t('直推至少 1 个五星频道')];
   return (
-    <div className="channel-collab-qualify-wrap">
-      <ul className="channel-collab-qualify">
-        {items.map(label => (
-          <li key={label} className="channel-collab-qualify-item">
-            <Star size={14} strokeWidth={2} aria-hidden />
-            <span>{label}</span>
-          </li>
-        ))}
-      </ul>
-      <p className="channel-collab-qualify-hint">{t('达成条件后 15 分钟内可兑换')}</p>
-    </div>
+    <ul className="channel-collab-qualify">
+      {items.map(label => (
+        <li key={label} className="channel-collab-qualify-item">
+          <Star size={14} strokeWidth={2} aria-hidden />
+          <span>{label}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

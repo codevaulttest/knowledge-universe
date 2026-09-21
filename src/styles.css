@@ -9526,11 +9526,6 @@ button {
   font: var(--ku-text-caption-strong);
   cursor: pointer;
 }
-.channel-collab-qualify-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ku-space-2);
-}
 .channel-collab-qualify {
   display: flex;
   flex-direction: column;
@@ -9548,11 +9543,6 @@ button {
 }
 .channel-collab-qualify-item svg {
   flex-shrink: 0;
-  color: var(--ku-color-text-secondary);
-}
-.channel-collab-qualify-hint {
-  margin: 0;
-  font: var(--ku-text-caption);
   color: var(--ku-color-text-secondary);
 }
 .channel-collab-reminder {

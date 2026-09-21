@@ -1336,7 +1336,6 @@ export const en: Record<string, string> = {
   '请先兑换频道协作权限': 'Exchange channel collaboration access first',
   '已暂停 · {name} 续期后恢复代发': 'Paused · resumes when {name} renews',
   '续期': 'Renew',
-  '达成条件后 15 分钟内可兑换': 'You can exchange within 15 minutes of meeting the requirements',
   '再想想': 'Not now',
   '去完成条件': 'Meet requirements',
   '完成活跃五星条件后可授权协作者': 'Become an active five-star creator to authorize collaborators',
