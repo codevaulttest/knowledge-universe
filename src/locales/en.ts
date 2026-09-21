@@ -195,7 +195,7 @@ export const en: Record<string, string> = {
   '钱包地址': 'Account address',
   '余额': 'Balance',
   '网络': 'Network',
-  '网络手续费': 'Network fee',
+  '网络手续费': 'Gas fee',
   '提示文案占位': 'Tooltip placeholder',
   '确定': 'Confirm',
   '拒绝': 'Reject',
