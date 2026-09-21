@@ -345,6 +345,7 @@ export type SupTransactionReason =
   | 'airdrop'
   | 'node_upgrade'
   | 'node_transfer'
+  | 'channel_collab'
   | 'withdraw';
 
 /** 四种 PB 钱包。余额彼此独立，一笔支付只使用其中一个钱包。 */
@@ -370,6 +371,7 @@ export type PbUse =
   | 'tip'
   | 'node_upgrade'
   | 'node_transfer'
+  | 'channel_collab'
   | 'post_overlength';
 
 /** 地址迁移由后续服务执行；前端只维护申请、撤销与展示状态。 */

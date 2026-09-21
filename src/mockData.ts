@@ -28,7 +28,7 @@ export const MOCK_PB_WALLETS = {
   onchain: 5600,
   station: 2400,
   credibility: 800,
-  airdrop: 3200,
+  airdrop: 6400, // 需覆盖频道协作年费 5000 PB，便于演示支付
 } as const;
 /** 演示钱包 SUP 余额，站内/链上两池独立（连接后展示） */
 export const MOCK_SUP_WALLETS = {
@@ -100,6 +100,17 @@ export const MOCK_CHANNEL_AUTHORIZATIONS: ChannelAuthorization[] = [
     createdAt: Date.now() - 1000 * 60 * 60 * 36,
   },
   {
+    // CURRENT_USER 已接受「财经观察局」授权，但对方未缴协作年费 → 试用结束后代发暂停
+    id: 'collab-6',
+    channelId: 'channel-caijing',
+    ownerName: '财经观察局',
+    delegateAddress: MOCK_WALLET_ADDRESS.toLowerCase(),
+    delegateName: CURRENT_USER,
+    status: 'active',
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 20,
+    respondedAt: Date.now() - 1000 * 60 * 60 * 24 * 19,
+  },
+  {
     // 视角二：CURRENT_USER 作为频道主，已授权「阿May的研究笔记」代发 channel-me-2
     id: 'collab-2',
     channelId: 'channel-me-2',
@@ -111,6 +122,15 @@ export const MOCK_CHANNEL_AUTHORIZATIONS: ChannelAuthorization[] = [
     respondedAt: Date.now() - 1000 * 60 * 60 * 24 * 2,
   },
 ];
+
+/** 频道协作年费到期时间（channelId → ms）。他人频道已缴费，便于接受邀请后直接代发；
+ *  自己的 channel-me-2 未缴费，用于演示试用结束后已有协作者被暂停 */
+export const MOCK_CHANNEL_COLLAB_LICENSES: Record<string, number> = {
+  'channel-jike': new Date('2027-08-15T00:00:00+08:00').getTime(),
+  'channel-amay': new Date('2027-09-01T00:00:00+08:00').getTime(),
+  'channel-yanlei': new Date('2027-07-20T00:00:00+08:00').getTime(),
+  'channel-aieff': new Date('2027-09-10T00:00:00+08:00').getTime(),
+};
 
 /** 将 6 位邀请码解析为邀请人钱包地址；未知码用确定性 mock 地址，保证 demo 可绑任意码 */
 export function resolveInviterAddress(code: string): string {

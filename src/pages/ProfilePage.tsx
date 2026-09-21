@@ -74,7 +74,7 @@ function getBackgroundContentInset(image: HTMLImageElement) {
 }
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, knowledgeCerts, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, channelAuthorizations, delegatedChannels, pendingIncomingChannelAuthorizations, respondToChannelAuthorization, revokeChannelAuthorization } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, knowledgeCerts, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, channelAuthorizations, delegatedChannels, pausedDelegatedChannels, pendingIncomingChannelAuthorizations, respondToChannelAuthorization, revokeChannelAuthorization } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
@@ -195,7 +195,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   // 频道协作：仅自己主页展示，收到待接受邀请或已持有代发权限时才出现入口，避免空态占位
   const [channelCollabOpen, setChannelCollabOpen] = useState(false);
   const collabAlertCount = pendingIncomingChannelAuthorizations.length;
-  const collabSection = isOwn && (collabAlertCount > 0 || delegatedChannels.length > 0) ? (
+  const collabSection = isOwn && (collabAlertCount > 0 || delegatedChannels.length > 0 || pausedDelegatedChannels.length > 0) ? (
     <button type="button" className="channel-summary-entry channel-summary-entry--half" onClick={() => setChannelCollabOpen(true)}>
       <UserCheck size={14} strokeWidth={2.2} className="channel-summary-entry-icon" />
       <span className="channel-summary-entry-text channel-summary-entry-text--inline">
@@ -640,6 +640,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
           channels={channels}
           pendingIncoming={pendingIncomingChannelAuthorizations}
           delegatedChannels={delegatedChannels}
+          pausedChannels={pausedDelegatedChannels}
           channelAuthorizations={channelAuthorizations}
           onRespond={respondToChannelAuthorization}
           onRevoke={revokeChannelAuthorization}
@@ -1378,6 +1379,7 @@ function ChannelCollaborationModal({
   channels,
   pendingIncoming,
   delegatedChannels,
+  pausedChannels,
   channelAuthorizations,
   onRespond,
   onRevoke,
@@ -1386,6 +1388,8 @@ function ChannelCollaborationModal({
   channels: Channel[];
   pendingIncoming: ChannelAuthorization[];
   delegatedChannels: Channel[];
+  /** 频道主未缴协作年费、代发已暂停的频道 */
+  pausedChannels: Channel[];
   channelAuthorizations: ChannelAuthorization[];
   onRespond: (authId: string, response: 'accept' | 'decline') => void;
   onRevoke: (authId: string) => void;
@@ -1395,6 +1399,8 @@ function ChannelCollaborationModal({
   const [confirmRevokeAuthId, setConfirmRevokeAuthId] = useState<string | null>(null);
   const [confirmDeclineAuthId, setConfirmDeclineAuthId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'invites' | 'channels'>(pendingIncoming.length > 0 ? 'invites' : 'channels');
+  const pausedIds = new Set(pausedChannels.map(c => c.id));
+  const collabChannels = [...delegatedChannels, ...pausedChannels];
   const channelName = (channelId: string) => channels.find(c => c.id === channelId)?.name ?? channelId;
   const handleInviteResponse = (authId: string, response: 'accept' | 'decline') => {
     onRespond(authId, response);
@@ -1429,7 +1435,7 @@ function ChannelCollaborationModal({
             onClick={() => setActiveTab('channels')}
           >
             {t('我协作的频道')}
-            {delegatedChannels.length > 0 && <span className="orders-tab-badge channel-collab-tab-badge--neutral">{delegatedChannels.length}</span>}
+            {collabChannels.length > 0 && <span className="orders-tab-badge channel-collab-tab-badge--neutral">{collabChannels.length}</span>}
           </button>
         </nav>
         <div className="follow-list-content channel-collab-content">
@@ -1456,9 +1462,9 @@ function ChannelCollaborationModal({
                 </button>
               </span>
             </div>
-          )) : delegatedChannels.length === 0 ? (
+          )) : collabChannels.length === 0 ? (
             <div className="channel-directory-empty">{t('暂无协作中的频道')}</div>
-          ) : delegatedChannels.map(channel => {
+          ) : collabChannels.map(channel => {
               const auth = channelAuthorizations.find(a => a.channelId === channel.id && a.status === 'active');
               return (
                 <div key={channel.id} className="channel-collab-row">
@@ -1471,7 +1477,11 @@ function ChannelCollaborationModal({
                       <span className="channel-collab-name">{channel.name}</span>
                       <ChevronRight size={16} strokeWidth={2} className="channel-collab-name-chevron" aria-hidden />
                     </span>
-                    <span className="channel-collab-owner">{t('来自 {name} 的授权', { name: channel.ownerName })}</span>
+                    <span className="channel-collab-owner">
+                      {pausedIds.has(channel.id)
+                        ? t('已暂停 · {name} 续费后恢复代发', { name: channel.ownerName })
+                        : t('来自 {name} 的授权', { name: channel.ownerName })}
+                    </span>
                   </button>
                   {auth && (
                     <button type="button" className="channel-collab-revoke-btn" onClick={() => setConfirmRevokeAuthId(auth.id)}>

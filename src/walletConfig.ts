@@ -55,6 +55,8 @@ export const PB_USE_ALLOWED_WALLETS: Record<PbUse, readonly PbWalletId[]> = {
   purchase: ['airdrop', 'onchain'],
   node_upgrade: ['credibility', 'airdrop', 'onchain'],
   node_transfer: ['credibility', 'airdrop', 'onchain'],
+  // 频道协作年费：仅可用空投进站内的 PB 支付。
+  channel_collab: ['airdrop'],
   // 会议尚未覆盖以下用途，原型先保守仅开放通用 PB。
   tip: ['airdrop', 'onchain'],
   // 发帖超长费：可从可提取、站内或链上 PB 中任选其一，不跨钱包拼单。
@@ -82,7 +84,7 @@ export function supReasonForPbUse(use: PbUse): SupTransactionReason {
     save: 'save', unlock: 'unlock', partner: 'partner',
     channel_subscribe: 'chain_unlock', purchase: 'purchase', tip: 'chain_unlock',
     node_upgrade: 'node_upgrade', node_transfer: 'node_transfer',
-    post_overlength: 'post',
+    channel_collab: 'channel_collab', post_overlength: 'post',
   };
   return map[use];
 }
@@ -100,6 +102,11 @@ export function splitAirdropClaim(claimedAmount: number): { onchainAmount: numbe
 }
 
 export const CHANNEL_OPEN_PB_COST = 1000;
+
+/** 频道协作授权按频道收年费；免费试用到 2026-09-22 0 点（北京时间）结束。 */
+export const CHANNEL_COLLAB_ANNUAL_PB = 5000;
+export const CHANNEL_COLLAB_TRIAL_END = new Date('2026-09-22T00:00:00+08:00').getTime();
+export const CHANNEL_COLLAB_TERM_MS = 365 * 24 * 60 * 60 * 1000;
 
 /**
  * 一笔 Gas 费只从一个池子出，不跨池拼单。

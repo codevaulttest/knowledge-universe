@@ -9468,6 +9468,75 @@ button {
   background: var(--ku-color-delegate-badge-bg);
   color: var(--ku-color-delegate-badge);
 }
+.channel-collab-status--paused {
+  background: var(--ku-color-warning-bg);
+  color: var(--ku-color-warning-text);
+}
+.channel-collab-license {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-2);
+  margin: var(--ku-space-2) 0;
+  padding: var(--ku-space-3);
+  border: 1px solid var(--ku-color-border);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-page);
+}
+.channel-collab-license-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ku-space-2);
+}
+.channel-collab-license-title {
+  font: var(--ku-text-body-sm);
+  font-weight: 600;
+  color: var(--ku-color-text-primary);
+}
+.channel-collab-license-price {
+  flex-shrink: 0;
+  font: var(--ku-text-caption-strong);
+  color: var(--ku-color-text-primary);
+}
+.channel-collab-license-desc {
+  margin: 0;
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-secondary);
+}
+.channel-collab-license-btn {
+  align-self: flex-start;
+  padding: var(--ku-space-1) var(--ku-space-4);
+  border: 1px solid var(--ku-color-primary);
+  border-radius: var(--ku-radius-pill);
+  background: transparent;
+  color: var(--ku-color-primary);
+  font: var(--ku-text-caption-strong);
+  cursor: pointer;
+}
+.channel-collab-license-pay {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-space-2);
+}
+.channel-collab-license-actions {
+  display: flex;
+  gap: var(--ku-space-2);
+}
+.channel-collab-license-actions .planet-confirm-btn {
+  flex: 1 1 auto;
+  width: auto;
+  margin-top: 0;
+}
+.channel-collab-license-cancel {
+  flex-shrink: 0;
+  padding: 0 var(--ku-space-5);
+  border: 1px solid var(--ku-color-border);
+  border-radius: var(--ku-radius-card);
+  background: transparent;
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-caption-strong);
+  cursor: pointer;
+}
 .channel-collab-status--revoked,
 .channel-collab-status--declined {
   color: var(--ku-color-text-meta);

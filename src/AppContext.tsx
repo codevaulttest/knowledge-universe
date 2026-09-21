@@ -158,6 +158,16 @@ export type AppContextValue = {
   revokeChannelAuthorization: (authId: string) => void;
   /** 当前用户持有的有效代发授权对应的频道，供发帖选择器等复用 */
   delegatedChannels: Channel[];
+  /** 有效授权但频道主未缴协作年费的频道：已暂停代发 */
+  pausedDelegatedChannels: Channel[];
+  /** 频道协作年费：channelId → 到期时间戳 */
+  channelCollabLicenses: Record<string, number>;
+  /** 试用期内或年费有效时为 true */
+  isChannelCollabEnabled: (channelId: string) => boolean;
+  payChannelCollabLicense: (channelId: string, wallet: PbWalletId) => boolean;
+  // 开发工具：模拟频道协作免费试用期内
+  collabTrialActive: boolean;
+  toggleCollabTrialActive: () => void;
   /** 当前用户收到的待处理频道授权邀请 */
   pendingIncomingChannelAuthorizations: ChannelAuthorization[];
   // 知识宇宙页：邀请码绑定

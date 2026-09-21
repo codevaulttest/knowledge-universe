@@ -2,11 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppProvider } from './AppContext';
 import type { AppContextValue } from './AppContext';
 import { withFreeTier } from './channelTiers';
-import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_CHANNEL_AUTHORIZATIONS, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_KNOWLEDGE_CERTS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
+import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_CHANNEL_AUTHORIZATIONS, MOCK_CHANNEL_COLLAB_LICENSES, MOCK_FIVE_STAR_NODE_COUNT, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_KNOWLEDGE_CERTS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { formatScheduledAt } from './dateUtils';
 import { isValidWalletAddress } from './formatAddress';
 import type { AddressMigration, Channel, ChannelAuthorization, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
-import { PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
+import { CHANNEL_COLLAB_ANNUAL_PB, CHANNEL_COLLAB_TERM_MS, CHANNEL_COLLAB_TRIAL_END, PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
 import { postHasStake, formatTokenAmount } from './stakeConfig';
@@ -417,7 +417,17 @@ export default function App({ account, onLanguageChange }: {
   const [channelAuthorizations, setChannelAuthorizations] = useState<ChannelAuthorization[]>(MOCK_CHANNEL_AUTHORIZATIONS);
   const normalizedWalletAddress = (walletAddress ?? '').toLowerCase();
 
-  const delegatedChannels = useMemo(() => {
+  // ── 频道协作年费：试用期结束后，每个频道需缴年费才能授权/代发；未缴费频道的已有授权暂停 ──
+  const [channelCollabLicenses, setChannelCollabLicenses] = useState<Record<string, number>>(MOCK_CHANNEL_COLLAB_LICENSES);
+  // 开发工具：默认按真实日期判断试用期，可手动切换演示试用期内/外
+  const [collabTrialActive, setCollabTrialActive] = useState(() => Date.now() < CHANNEL_COLLAB_TRIAL_END);
+  const toggleCollabTrialActive = useCallback(() => setCollabTrialActive(prev => !prev), []);
+  const isChannelCollabEnabled = useCallback(
+    (channelId: string) => collabTrialActive || (channelCollabLicenses[channelId] ?? 0) > Date.now(),
+    [collabTrialActive, channelCollabLicenses],
+  );
+
+  const activeDelegatedChannels = useMemo(() => {
     const activeChannelIds = new Set(
       channelAuthorizations
         .filter(a => a.status === 'active' && a.delegateAddress === normalizedWalletAddress)
@@ -425,6 +435,25 @@ export default function App({ account, onLanguageChange }: {
     );
     return channels.filter(c => activeChannelIds.has(c.id));
   }, [channels, channelAuthorizations, normalizedWalletAddress]);
+  const delegatedChannels = useMemo(
+    () => activeDelegatedChannels.filter(c => isChannelCollabEnabled(c.id)),
+    [activeDelegatedChannels, isChannelCollabEnabled],
+  );
+  const pausedDelegatedChannels = useMemo(
+    () => activeDelegatedChannels.filter(c => !isChannelCollabEnabled(c.id)),
+    [activeDelegatedChannels, isChannelCollabEnabled],
+  );
+
+  const payChannelCollabLicense = (channelId: string, wallet: PbWalletId): boolean => {
+    const channel = channels.find(c => c.id === channelId);
+    if (!channel || channel.ownerName !== CURRENT_USER) return false;
+    if (!payPb({ amount: CHANNEL_COLLAB_ANNUAL_PB, use: 'channel_collab', wallet, supCost: pbOnchainFee(CHANNEL_COLLAB_ANNUAL_PB) })) return false;
+    setChannelCollabLicenses(prev => ({
+      ...prev,
+      [channelId]: Math.max(Date.now(), prev[channelId] ?? 0) + CHANNEL_COLLAB_TERM_MS,
+    }));
+    return true;
+  };
 
   const pendingIncomingChannelAuthorizations = useMemo(
     () => channelAuthorizations.filter(a => a.status === 'pending' && a.delegateAddress === normalizedWalletAddress),
@@ -434,6 +463,7 @@ export default function App({ account, onLanguageChange }: {
   const requestChannelAuthorization = (channelId: string, delegateAddress: string): { ok: boolean; message?: string } => {
     const channel = channels.find(c => c.id === channelId);
     if (!channel || channel.ownerName !== CURRENT_USER) return { ok: false, message: t('无权操作该频道') };
+    if (!isChannelCollabEnabled(channelId)) return { ok: false, message: t('开通频道协作后可授权协作者') };
     if (!isValidWalletAddress(delegateAddress)) return { ok: false, message: t('请输入合法的钱包地址') };
     const normalized = delegateAddress.trim().toLowerCase();
     if (normalized === normalizedWalletAddress) return { ok: false, message: t('不能授权给自己') };
@@ -481,6 +511,7 @@ export default function App({ account, onLanguageChange }: {
     if (!channelId) return undefined;
     const channel = channels.find(c => c.id === channelId);
     if (!channel || channel.ownerName === CURRENT_USER) return undefined;
+    if (!isChannelCollabEnabled(channelId)) return undefined;
     const hasActiveGrant = channelAuthorizations.some(a =>
       a.channelId === channelId && a.status === 'active' && a.delegateAddress === normalizedWalletAddress);
     return hasActiveGrant ? channel.ownerName : undefined;
@@ -1356,7 +1387,8 @@ export default function App({ account, onLanguageChange }: {
     pbWallets, pbBalance, getPbWalletOptions, pickDefaultPbWallet, payPb, setDemoPbWallets, myInviteCode: MOCK_MY_INVITE_CODE, inviterAddress, bindInviter,
     addressMigrations, requestAddressMigration, cancelAddressMigration, dismissMigrationReminder,
     channelAuthorizations, requestChannelAuthorization, respondToChannelAuthorization, revokeChannelAuthorization,
-    delegatedChannels, pendingIncomingChannelAuthorizations,
+    delegatedChannels, pausedDelegatedChannels, pendingIncomingChannelAuthorizations,
+    channelCollabLicenses, isChannelCollabEnabled, payChannelCollabLicense, collabTrialActive, toggleCollabTrialActive,
     airdropClaimed, claimAirdrop,
     taskSnapshotToday, taskSnapshotYesterday, airdropClaimRatio, airdropRatioLadderActive, lotQuota,
     taskCelebrateSignal, recordTaskInteraction, getDailyTaskCalendar: () => getTaskCalendarMonth(new Date(), lotQuota.interactions),

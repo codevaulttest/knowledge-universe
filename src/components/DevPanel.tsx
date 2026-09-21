@@ -12,7 +12,7 @@ export function DevPanel({ children }: DevPanelProps) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(true);
   const {
-    walletConnected, connectWallet, disconnectWallet, demoHideOwnChannels, toggleDemoHideOwnChannels, t,
+    walletConnected, connectWallet, disconnectWallet, demoHideOwnChannels, toggleDemoHideOwnChannels, collabTrialActive, toggleCollabTrialActive, t,
     taskSnapshotToday, resetDemoTasks, simulateDemoTaskInteractions, setDemoPbWallets,
     demoForceLadder, toggleDemoForceLadder, demoForceNewUser, toggleDemoForceNewUser,
     demoFiveStarNodeCount, cycleDemoFiveStarNodeCount,
@@ -66,6 +66,18 @@ export function DevPanel({ children }: DevPanelProps) {
             <span>{t('未创建频道')}</span>
             <span className={`planet-dev-menu-toggle${demoHideOwnChannels ? ' planet-dev-menu-toggle--on' : ''}`}>
               {demoHideOwnChannels ? t('开') : t('关')}
+            </span>
+          </button>
+          <button
+            type="button"
+            className="planet-dev-menu-item"
+            role="menuitemcheckbox"
+            aria-checked={collabTrialActive}
+            onClick={toggleCollabTrialActive}
+          >
+            <span>{t('频道协作试用期内')}</span>
+            <span className={`planet-dev-menu-toggle${collabTrialActive ? ' planet-dev-menu-toggle--on' : ''}`}>
+              {collabTrialActive ? t('开') : t('关')}
             </span>
           </button>
           <button
