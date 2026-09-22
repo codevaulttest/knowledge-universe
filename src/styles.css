@@ -14782,66 +14782,22 @@ html[lang="zh-TW"] .planet-hero-title {
 .channel-share-sheet {
   text-align: center;
 }
-.channel-share-title {
-  margin: 4px 0 16px;
-  font: 600 15px/1.4 var(--ku-font-family);
-  color: var(--ku-color-text-primary);
-}
-.channel-share-link-card {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  padding: 12px 14px;
-  border: 1px solid var(--ku-color-border-card);
-  border-radius: var(--ku-radius-card);
-  background: var(--ku-color-bg-secondary);
-  color: var(--ku-color-text-secondary);
-}
-.channel-share-link-text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--ku-font-mono);
-  font-size: 13px;
-  color: var(--ku-color-text-primary);
-}
 .channel-share-qr-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-  padding: 12px;
-  border: 1px solid var(--ku-color-border-card);
-  border-radius: var(--ku-radius-card);
-  background: var(--ku-color-bg-secondary);
-  text-align: left;
+  justify-content: center;
+  margin-bottom: 16px;
 }
 .channel-share-qr-card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 72px;
-  flex-shrink: 0;
-  padding: 6px;
-  border-radius: calc(var(--ku-radius-card) - 4px);
-  background: var(--ku-color-bg-page);
+  width: 220px;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
 }
 .channel-share-qr-img {
   width: 100%;
   height: auto;
   display: block;
-  border-radius: calc(var(--ku-radius-card) - 8px);
-}
-.channel-share-qr-hint {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  font: var(--ku-text-body-sm);
-  color: var(--ku-color-text-meta);
-  line-height: 1.5;
 }
 .channel-share-cta-btn {
   display: inline-flex;
@@ -14863,11 +14819,18 @@ html[lang="zh-TW"] .planet-hero-title {
   background: var(--ku-color-bg-page);
   color: var(--ku-color-text-secondary);
 }
-.channel-share-cta-btn--secondary {
-  margin-bottom: 0;
-  background: var(--ku-color-primary-alpha-06);
+.channel-share-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 0 0;
+  border: 0;
+  background: none;
+  font: var(--ku-text-body-sm);
   color: var(--ku-color-primary-dark);
-  border: 1px solid var(--ku-color-border-card);
+  cursor: pointer;
 }
 .shop-item-contacts-reveal {
   display: grid;

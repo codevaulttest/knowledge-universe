@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { Download, Link2, Share2, X } from 'lucide-react';
+import { Download, Link2, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import type { Channel } from '../types';
 
-/** 分享频道：链接 + 二维码名片，同屏展示。扫码跳转逻辑尚未实现，链接调起系统分享面板（不支持时降级为复制），二维码支持保存到相册，两者指向同一个 mock 链接。 */
+/** 分享频道：链接 + 二维码名片，同屏展示。扫码跳转逻辑尚未实现，链接通过文字按钮复制，二维码支持保存到相册，两者指向同一个 mock 链接。 */
 export function ChannelShareSheet({ channel, onClose }: { channel: Channel; onClose: () => void }) {
   const { t, showToast } = useApp();
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -25,35 +25,50 @@ export function ChannelShareSheet({ channel, onClose }: { channel: Channel; onCl
       img.onload = () => {
         if (cancelled) return;
         const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size + captionHeight;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
+        const fontFamily = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
+        // 频道名放在二维码上方，最多两行，超出截断加省略号
+        ctx.font = `700 24px ${fontFamily}`;
+        const maxWidth = size - 40;
+        const lines: string[] = [];
+        let line = '';
+        for (const ch of Array.from(channel.name)) {
+          if (ctx.measureText(line + ch).width > maxWidth) {
+            lines.push(line);
+            line = ch;
+          } else {
+            line += ch;
+          }
+        }
+        if (line) lines.push(line);
+        if (lines.length > 2) {
+          let second = lines[1];
+          while (second && ctx.measureText(second + '…').width > maxWidth) second = second.slice(0, -1);
+          lines.splice(1, lines.length - 1, second + '…');
+        }
+        const lineHeight = 32;
+        const nameHeight = 24 + lines.length * lineHeight;
+        canvas.width = size;
+        canvas.height = nameHeight + size + captionHeight;
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, size, size);
         ctx.fillStyle = '#1a1a1a';
-        ctx.font = '600 20px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(t('用「知识宇宙」App 扫一扫'), size / 2, size + captionHeight / 2);
+        ctx.font = `700 24px ${fontFamily}`;
+        lines.forEach((l, i) => ctx.fillText(l, size / 2, 20 + lineHeight / 2 + i * lineHeight));
+        ctx.drawImage(img, 0, nameHeight, size, size);
+        ctx.font = `600 20px ${fontFamily}`;
+        ctx.fillText(t('用「知识宇宙」App 扫一扫'), size / 2, nameHeight + size + captionHeight / 2);
         setQrDataUrl(canvas.toDataURL('image/png'));
       };
       img.src = rawUrl;
     });
     return () => { cancelled = true; };
-  }, [shareLink, t]);
+  }, [shareLink, channel.name, t]);
 
-  const handleShareLink = async () => {
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({ title: channel.name, url: shareLink });
-        return;
-      } catch (err) {
-        if ((err as Error)?.name === 'AbortError') return;
-        // 系统分享面板不可用时降级为复制链接
-      }
-    }
+  const handleCopyLink = () => {
     navigator.clipboard.writeText(shareLink).then(() => showToast(t('链接已复制'))).catch(() => {});
   };
 
@@ -76,26 +91,18 @@ export function ChannelShareSheet({ channel, onClose }: { channel: Channel; onCl
           <button type="button" className="sheet-close" onClick={onClose} aria-label={t('关闭')}><X size={18} strokeWidth={2} /></button>
         </div>
 
-        <p className="channel-share-title">{channel.name}</p>
-
-        <div className="channel-share-link-card">
-          <Link2 size={16} strokeWidth={2} aria-hidden="true" />
-          <span className="channel-share-link-text">{shareLink}</span>
-        </div>
-        <button type="button" className="channel-share-cta-btn" onClick={handleShareLink}>
-          <Share2 size={16} strokeWidth={2} />
-          {t('分享链接')}
-        </button>
-
         <div className="channel-share-qr-row">
           <div className="channel-share-qr-card">
             {qrDataUrl && <img src={qrDataUrl} alt={t('频道二维码')} className="channel-share-qr-img" />}
           </div>
-          <p className="channel-share-qr-hint">{t('使用「知识宇宙」App 扫一扫，识别二维码直达频道')}</p>
         </div>
-        <button type="button" className="channel-share-cta-btn channel-share-cta-btn--secondary" onClick={handleSave} disabled={!qrDataUrl}>
+        <button type="button" className="channel-share-cta-btn" onClick={handleSave} disabled={!qrDataUrl}>
           <Download size={16} strokeWidth={2} />
           {t('保存二维码')}
+        </button>
+        <button type="button" className="channel-share-copy-btn" onClick={handleCopyLink}>
+          <Link2 size={16} strokeWidth={2} />
+          {t('复制链接')}
         </button>
       </div>
     </div>

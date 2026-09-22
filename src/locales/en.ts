@@ -91,6 +91,7 @@ export const en: Record<string, string> = {
   '分享': 'Share',
   '分享商品': 'Share item',
   '分享链接': 'Share link',
+  '复制链接': 'Copy link',
   '链接已复制': 'Link copied',
   '商品二维码': 'Item QR code',
   '用「知识宇宙」App 扫一扫': 'Scan with the Wisverse app',

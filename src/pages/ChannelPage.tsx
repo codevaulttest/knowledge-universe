@@ -69,6 +69,7 @@ export function ChannelPage({ channelId }: { channelId: string }) {
             <div className="channel-page-hero-info">
               <span className="channel-page-hero-name">{channel.name}</span>
             </div>
+            {isOwn && (
             <div className="channel-page-hero-actions">
               <button
                 type="button"
@@ -79,6 +80,7 @@ export function ChannelPage({ channelId }: { channelId: string }) {
                 <Share2 size={16} strokeWidth={2} />
               </button>
             </div>
+            )}
           </div>
 
           {channel.description && (
