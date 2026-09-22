@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, CircleCheck, Gem, Radio, RotateCcw, Settings, Share2 } from 'lucide-react';
+import { ChevronRight, CircleCheck, Gem, Radio, RotateCcw, QrCode, Settings } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, NODE_STARS_BY_CODE } from '../mockData';
 import { PostCard } from '../components/PostCard';
@@ -69,7 +69,6 @@ export function ChannelPage({ channelId }: { channelId: string }) {
             <div className="channel-page-hero-info">
               <span className="channel-page-hero-name">{channel.name}</span>
             </div>
-            {isOwn && (
             <div className="channel-page-hero-actions">
               <button
                 type="button"
@@ -77,10 +76,9 @@ export function ChannelPage({ channelId }: { channelId: string }) {
                 onClick={() => setShareOpen(true)}
                 aria-label={t('分享频道')}
               >
-                <Share2 size={16} strokeWidth={2} />
+                <QrCode size={16} strokeWidth={2} />
               </button>
             </div>
-            )}
           </div>
 
           {channel.description && (

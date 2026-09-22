@@ -14439,8 +14439,6 @@ html[lang="zh-TW"] .planet-hero-title {
   position: relative;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--ku-color-border-card);
-  border-radius: var(--ku-radius-card);
   background: var(--ku-color-bg-phone);
   cursor: pointer;
   text-align: left;

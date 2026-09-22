@@ -100,24 +100,24 @@
   <header class="top">
     <p class="eyebrow">知识宇宙 · 功能交付</p>
     <h1>频道分享</h1>
-    <p class="intro">频道主可在自己的频道主页右上角打开分享弹窗，保存频道二维码或复制频道链接；其他用户在信息广场首页用扫一扫识别二维码，直接进入该频道。</p>
-    <dl class="meta"><div><dt>提交范围</dt><dd>5032cf8 · 51ad29a · 仅频道主可分享（未提交）</dd></div><div><dt>日期</dt><dd>2026-09-22</dd></div><div><dt>涉及页面</dt><dd>频道主页 · 分享频道弹窗 · 信息广场首页扫一扫</dd></div></dl>
+    <p class="intro">在任意频道主页右上角打开分享弹窗，可保存频道二维码或复制频道链接；其他用户在信息广场首页用扫一扫识别二维码，直接进入该频道。</p>
+    <dl class="meta"><div><dt>提交范围</dt><dd>5032cf8 · 51ad29a · 03b27fb · 开放分享他人频道（未提交）</dd></div><div><dt>日期</dt><dd>2026-09-22</dd></div><div><dt>涉及页面</dt><dd>频道主页 · 分享频道弹窗 · 信息广场首页扫一扫</dd></div></dl>
   </header>
 
   <nav class="overview" aria-label="屏幕目录">
     <h2>逐屏说明</h2>
-    <ol class="toc"><li><a href="#share-entry">我的频道主页：分享按钮</a></li><li><a href="#share-sheet">分享频道弹窗</a></li><li><a href="#scan-to-channel">扫码直达频道</a></li></ol>
+    <ol class="toc"><li><a href="#share-entry">频道主页：分享按钮</a></li><li><a href="#share-sheet">分享频道弹窗</a></li><li><a href="#scan-to-channel">扫码直达频道</a></li></ol>
   </nav>
 
   <section class="screens">
     <article class="screen" id="share-entry">
-      <figure class="phone"><img src="shots/share-entry.png" alt="我的频道主页：分享按钮 截图" loading="lazy" width="390" height="844"></figure>
+      <figure class="phone"><img src="shots/share-entry.png" alt="频道主页：分享按钮 截图" loading="lazy" width="390" height="844"></figure>
       <div class="screen-body">
         <p class="screen-index">屏 1</p>
-        <h3>我的频道主页：分享按钮<span class="tag tag--new">新增</span></h3>
-        <ol class="path" aria-label="入口路径"><li>信息广场首页</li><li>搜索自己频道的节点码</li><li>我的频道主页</li></ol>
-        <ul class="changes"><li>自己的频道主页，封面右上角新增圆形分享按钮</li><li>分享按钮只出现在频道主自己的频道主页，频道主可分享自己的频道</li></ul>
-        <div class="notes"><h4>开发注意</h4><ul><li>按钮显示条件：当前用户是该频道的频道主</li></ul></div>
+        <h3>频道主页：分享按钮<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>信息广场首页</li><li>点击频道帖子的频道名</li><li>频道主页</li></ol>
+        <ul class="changes"><li>频道主页封面右上角新增圆形二维码按钮，自己的频道和他人的频道都可分享</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>任何用户都可分享任意频道，分享内容为该频道的二维码与链接</li></ul></div>
       </div>
     </article>
     <article class="screen" id="share-sheet">
@@ -125,9 +125,9 @@
       <div class="screen-body">
         <p class="screen-index">屏 2</p>
         <h3>分享频道弹窗<span class="tag tag--new">新增</span></h3>
-        <ol class="path" aria-label="入口路径"><li>我的频道主页</li><li>分享按钮</li><li>分享频道弹窗</li></ol>
-        <ul class="changes"><li>弹窗以频道二维码图片为主：图片上方是频道名，中间是大尺寸二维码，底部是「用知识宇宙 App 扫一扫」，他人可直接扫描屏幕；弹窗里展示的就是保存下来的图片，下方是「保存二维码」主按钮</li><li>最下方是「复制链接」文字按钮，复制的链接与二维码指向同一个频道</li></ul>
-        <div class="notes"><h4>开发注意</h4><ul><li>复制链接：复制频道链接到剪贴板，并提示「链接已复制」</li><li>保存二维码：保存的图片上方是频道名（加粗，最多两行，超出截断加省略号），中间是二维码，下方是扫码说明；保存成功后提示「二维码已保存到相册」，二维码生成完成前按钮置灰</li><li>二维码只编码频道 ID；频道改名后，旧图上的名字不变，扫码仍进入同一频道</li><li>原型中链接为占位域名，正式链接格式由后端给出，需能被 App 扫码识别为频道</li></ul></div>
+        <ol class="path" aria-label="入口路径"><li>频道主页</li><li>分享按钮</li><li>分享频道弹窗</li></ol>
+        <ul class="changes"><li>弹窗以频道二维码名片为主：顶部左侧是频道头像，右侧是频道名和节点码；中间是大尺寸二维码，中心嵌知识宇宙 logo；底部是「用知识宇宙 App 扫一扫」。他人可直接扫描屏幕，弹窗里展示的就是保存下来的图片，下方是「保存二维码」主按钮</li><li>最下方是「复制链接」文字按钮，复制的链接与二维码指向同一个频道</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>复制链接：复制频道链接到剪贴板，并提示「链接已复制」</li><li>保存二维码：保存的名片图片包含频道头像、频道名（加粗，最多两行，超出截断加省略号）、节点码、带 logo 的二维码和扫码说明；保存成功后提示「二维码已保存到相册」，图片生成完成前按钮置灰</li><li>二维码中心嵌 logo，生成时使用最高容错等级（H），保证遮挡后仍可识别</li><li>节点码用于扫码不便时的兜底：在搜索框输入节点码可直达频道</li><li>二维码只编码频道 ID；频道改名后，旧图上的名字不变，扫码仍进入同一频道</li><li>原型中链接为占位域名，正式链接格式由后端给出，需能被 App 扫码识别为频道</li></ul></div>
       </div>
     </article>
     <article class="screen" id="scan-to-channel">
