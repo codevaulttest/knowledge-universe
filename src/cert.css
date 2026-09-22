@@ -591,67 +591,6 @@
   color: var(--ku-color-text-primary);
 }
 
-/* ═══════════════════════════════════ 申请确权流程 */
-
-.cert-apply-steps {
-  list-style: none;
-  display: flex;
-  gap: var(--ku-space-2);
-  margin: 0 0 var(--ku-space-4);
-  padding: 0;
-}
-.cert-apply-step {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-  font: var(--ku-text-caption);
-  color: var(--ku-color-text-secondary);
-  white-space: nowrap;
-}
-.cert-apply-step-dot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--ku-color-bg-secondary);
-  font: var(--ku-text-caption);
-  font-size: 12px;
-}
-.cert-apply-step--active {
-  color: var(--ku-color-text-primary);
-  font-weight: 600;
-}
-.cert-apply-step--active .cert-apply-step-dot,
-.cert-apply-step--done .cert-apply-step-dot {
-  background: var(--ku-color-primary-on-tint);
-  color: var(--ku-color-bg-phone);
-}
-.cert-apply-body {
-  display: grid;
-  gap: var(--ku-space-3);
-  padding-bottom: var(--ku-space-2);
-}
-.cert-apply-hero-icon {
-  color: var(--ku-color-primary-on-tint);
-}
-.cert-apply-lead {
-  margin: 0;
-  font: var(--ku-text-body-sm);
-  color: var(--ku-color-text-primary);
-}
-.cert-apply-points {
-  margin: 0;
-  padding-left: 1.1em;
-  display: grid;
-  gap: 6px;
-  font: var(--ku-text-body-sm);
-  color: var(--ku-color-text-secondary);
-}
 .cert-version-link {
   display: inline-block;
   width: auto;

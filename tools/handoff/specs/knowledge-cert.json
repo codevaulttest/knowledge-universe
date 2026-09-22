@@ -1,9 +1,9 @@
 {
   "slug": "knowledge-cert",
   "feature": "内容确权",
-  "intro": "确权改为作者主动申请：帖子满 100 赞后，作者完成实名认证、确权兑换和钱包签名，认证进入铸造。认证绑定帖子的一个版本：修改已确权的帖子会生成新版本，旧版本和它的认证一起保留，读者可以点版本号查看。人工核查发现问题时认证被撤销，链上保留撤销时间和原因。",
+  "intro": "确权改为作者主动申请：帖子满 100 赞后，作者在弹窗里确认申请，由平台发出认证并铸造上链。认证绑定帖子的一个版本：修改有认证的帖子会生成新版本，旧版本和它的认证一起保留，读者可以点版本号查看。人工核查发现问题时认证被撤销，链上保留撤销时间和原因。",
   "meta": {
-    "提交范围": "3253082 之后（分支 cert-apply-and-versions）",
+    "提交范围": "7846000",
     "日期": "2026-09-22",
     "涉及页面": "个人主页 · 帖子详情 · 申请确权 · 认证详情"
   },
@@ -22,23 +22,23 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();const r=document.querySelector('.profile-cert-apply-row'); r.scrollIntoView({block:'center'}); hl(r);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();const r=document.querySelector('.profile-cert-apply-row'); r.scrollIntoView({block:'center'}); hl(r);}",
           "wait": 500
         }
       ],
       "changes": [
         "「确权」筛选列出确权中、已确权、已撤销的帖子，数量显示在筛选旁",
-        "满 100 赞、当前版本还没申请的帖子排在后面，卡片上方一行「已满 100 赞，可申请确权」和「申请确权」按钮",
-        "空态文案：帖子满 100 赞后可申请知识确权"
+        "当前版本满 100 赞、还没申请的帖子排在后面，卡片上方一行「已满 100 赞，可申请确权」和「申请确权」按钮",
+        "列表为空（没有任何认证，也没有满 100 赞的帖子）时显示空态「还没有知识确权认证」，副标题「帖子满 100 赞后可申请知识确权」"
       ],
       "devNotes": [
         "「申请确权」同时出现在自己帖子的「…」菜单和帖子详情的「…」菜单",
-        "可申请条件：作者本人、点赞 ≥ 100、当前版本没有任何认证（确权中 / 已确权 / 已撤销都算有）"
+        "可申请条件：作者本人、当前版本赞数 ≥ 100、当前版本没有任何认证（确权中 / 已确权 / 已撤销都算有）"
       ]
     },
     {
-      "id": "apply-intro",
-      "title": "申请确权：说明",
+      "id": "apply-modal",
+      "title": "申请确权弹窗",
       "tag": "new",
       "path": [
         "确权筛选",
@@ -46,77 +46,18 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(400);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(400);}",
           "wait": 500
         }
       ],
       "changes": [
-        "整页流程，顶部步骤条：确权说明 → 实名认证 → 兑换 → 签名授权",
-        "说明认证绑定当前版本，之后修改会生成新版本、可再单独申请"
+        "一个居中确认弹窗完成申请：标题「为 vN 申请确权」，说明内容指纹和作者信息永久记录在链上、认证绑定当前版本、之后修改会生成新版本并可单独申请",
+        "主按钮「确认申请」：提交后提示「已提交确权，铸造完成后通知你」；次按钮「取消」"
       ],
       "devNotes": [
-        "已实名的账号打开时步骤条只有三步，跳过实名"
-      ]
-    },
-    {
-      "id": "apply-realname",
-      "title": "申请确权：实名认证",
-      "tag": "new",
-      "path": [
-        "申请确权",
-        "开始申请"
-      ],
-      "steps": [
-        {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(400);sb('开始申请'); await w(300);}",
-          "wait": 500
-        }
-      ],
-      "changes": [
-        "每个账号完成一次实名认证，之后申请直接进入兑换"
-      ],
-      "devNotes": [
-        "原型只模拟认证成功，实名的具体流程和服务商待定"
-      ]
-    },
-    {
-      "id": "apply-exchange",
-      "title": "申请确权：兑换",
-      "tag": "new",
-      "path": [
-        "申请确权",
-        "实名认证完成"
-      ],
-      "steps": [
-        {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(400);sb('开始申请'); await w(300); sb('开始实名认证'); await w(1300);}",
-          "wait": 500
-        }
-      ],
-      "changes": [
-        "列出确权兑换 PB 和 Gas 费 SUP，按钮写明合计"
-      ],
-      "devNotes": [
-        "金额是占位数据（50 PB + 0.05 SUP），是否收费、收多少待产品确认"
-      ]
-    },
-    {
-      "id": "apply-sign",
-      "title": "申请确权：签名授权",
-      "tag": "new",
-      "path": [
-        "申请确权",
-        "兑换完成"
-      ],
-      "steps": [
-        {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(400);sb('开始申请'); await w(300); sb('开始实名认证'); await w(1300); sb('兑换 ·'); await w(1300);}",
-          "wait": 500
-        }
-      ],
-      "changes": [
-        "钱包签名，授权以作者名义为这一版本生成确权凭证",
-        "签名后关闭流程，提示「已提交确权，铸造完成后通知你」"
+        "弹窗沿用连接钱包弹窗的样式",
+        "认证由平台发出，前端没有作者签名环节",
+        "实名认证和费用后续版本再加"
       ]
     },
     {
@@ -124,12 +65,12 @@
       "title": "提交后：确权中",
       "tag": "new",
       "path": [
-        "签名并提交",
+        "确认申请",
         "回到确权筛选"
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(400);sb('开始申请'); await w(300); sb('开始实名认证'); await w(1300); sb('兑换 ·'); await w(1300); sb('签名并提交'); await w(1400); const c=card('周报模板完整版'); c.scrollIntoView({block:'center'}); hl(c.querySelector('.post-cert-badge'));}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(400);sb('确认申请'); await w(1400); const c=card('周报模板完整版'); c.scrollIntoView({block:'center'}); hl(c.querySelector('.post-cert-badge'));}",
           "wait": 500
         }
       ],
@@ -151,7 +92,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='确权中').click(); await w(700);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='确权中').click(); await w(700);}",
           "wait": 500
         }
       ],
@@ -166,26 +107,27 @@
     },
     {
       "id": "edit-confirm",
-      "title": "编辑已确权帖子前的提示",
+      "title": "编辑有认证的帖子前的提示",
       "tag": "new",
       "path": [
-        "已确权帖子",
+        "有认证的帖子",
         "…",
         "编辑"
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();const c=card('机械键盘'); c.scrollIntoView({block:'center'}); c.querySelector('.post-more-trigger').click(); await w(250); [...c.querySelectorAll('[role=menuitem]')].find(b=>b.textContent.includes('编辑')).click(); await w(500);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();const c=card('机械键盘'); c.scrollIntoView({block:'center'}); c.querySelector('.post-more-trigger').click(); await w(250); [...c.querySelectorAll('[role=menuitem]')].find(b=>b.textContent.includes('编辑')).click(); await w(500);}",
           "wait": 500
         }
       ],
       "changes": [
-        "当前版本已确权时，编辑前弹出「修改后将生成新版本」",
-        "说明原版本的确权保留在原版本，新版本没有确权标识，可以之后再单独申请",
-        "选「继续修改」进入编辑，「取消」关闭"
+        "当前版本有认证（确权中 / 已确权 / 已撤销）时，编辑前弹出「修改后将生成新版本」",
+        "正文按认证状态说明影响：已确权——原版本的确权保留在原版本；确权中——认证对应提交时的内容，铸造完成后保留在原版本；已撤销——撤销记录保留在原版本",
+        "新版本没有确权标识，赞数从 0 开始累计，满 100 赞后可以单独申请；选「继续修改」进入编辑，「取消」关闭"
       ],
       "devNotes": [
-        "未确权的帖子直接进入编辑，不弹提示，也不存版本",
+        "申请过确权的帖子（任一状态）保存编辑时都存版本，保证认证对应的内容不被覆盖",
+        "从没申请过确权的帖子直接进入编辑，不弹提示，也不存版本",
         "自己的帖子现在都能编辑（原来只有频道帖和小黄车帖）"
       ]
     },
@@ -199,17 +141,18 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);}",
           "wait": 500
         }
       ],
       "changes": [
         "有历史版本的帖子，作者行显示「v2 · 已编辑」，旁边是「v1 已确权」徽章",
-        "点版本号打开版本记录：当前版本在最前，历史版本标明更新时间和确权状态"
+        "点版本号打开版本记录：当前版本在最前，显示本版本获得的赞数；历史版本标明更新时间和认证状态（已确权 / 确权中 / 已撤销）"
       ],
       "devNotes": [
-        "只有确权过的帖子保存编辑时才存版本；保存时把旧的标题和正文存档，版本号 +1",
-        "当前版本没有认证、旧版本已确权时，徽章显示「vN 已确权」（灰色），点击进入该版本的证书"
+        "申请过确权的帖子保存编辑时存版本；保存时把旧的标题和正文存档，版本号 +1",
+        "当前版本没有认证、旧版本已确权时，徽章显示「vN 已确权」（灰色），点击进入该版本的证书",
+        "每个版本单独计赞：保存新版本时记下当时的累计赞数，当前版本赞数 = 累计赞数 − 该值；帖子上展示的仍是累计赞数"
       ]
     },
     {
@@ -222,7 +165,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);document.querySelectorAll('.post-version-item')[1].click(); await w(300);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);document.querySelectorAll('.post-version-item')[1].click(); await w(300);}",
           "wait": 500
         }
       ],
@@ -240,7 +183,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);document.querySelectorAll('.post-version-item')[1].click(); await w(300); document.querySelector('.post-version-content .planet-confirm-btn').click(); await w(700); hl(document.querySelector('.cert-version-link'));}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);document.querySelectorAll('.post-version-item')[1].click(); await w(300); document.querySelector('.post-version-content .planet-confirm-btn').click(); await w(700); hl(document.querySelector('.cert-version-link'));}",
           "wait": 500
         }
       ],
@@ -262,7 +205,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();const b=[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='已撤销'); b.scrollIntoView({block:'center'}); b.click(); await w(700);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();const b=[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='已撤销'); b.scrollIntoView({block:'center'}); b.click(); await w(700);}",
           "wait": 500
         }
       ],
@@ -285,12 +228,12 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.cert-apply-sheet button')].find(b=>b.textContent.includes(t)).click();[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='确权中').click(); await w(700); document.querySelector('[aria-label=了解知识确权规则]').click(); await w(400);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='确权中').click(); await w(700); document.querySelector('[aria-label=了解知识确权规则]').click(); await w(400);}",
           "wait": 500
         }
       ],
       "changes": [
-        "改为五段：申请条件、上链记录、按版本确权、查看位置、撤销机制",
+        "改为五段：申请条件（作者申请，平台发出认证并铸造上链）、上链记录、按版本确权（新版本赞数从 0 开始累计）、查看位置、撤销机制",
         "底部提示：认证一经撤销无法恢复，请确保帖子内容原创、点赞来自真实互动"
       ]
     }

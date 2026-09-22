@@ -242,11 +242,6 @@ export type AppContextValue = {
   simulateCertMint: (certId: string) => void;
   /** 开发工具：模拟人工核查后撤销（minted → revoked） */
   simulateCertRevoke: (certId: string, reason: RevokeReason) => void;
-  /** 实名认证：每个账号完成一次 */
-  realNameVerified: boolean;
-  verifyRealName: () => void;
-  /** 开发工具：重置实名状态 */
-  resetRealName: () => void;
   /** 打开申请确权流程 */
   openCertApply: (postId: string) => void;
   /** 签名提交后生成一条「确权中」证书 */

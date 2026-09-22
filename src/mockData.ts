@@ -959,9 +959,10 @@ export const ALL_POSTS: Post[] = [
     id: 'own-50', author: CURRENT_USER, time: '2 小时前',
     title: '2025 年个人阅读 Top 5 书单\n每一本都值得反复读，附精读笔记链接。',
     kind: 'image', imageCount: 3, visiblePercent: 50, isNode: true, stakeTier: 100, nodeId: 'Jn9pQ2',
-    rating: 1, replies: 12, links: 7, shares: 9, saves: 41, likes: 103, tipsReceived: 120,
+    rating: 1, replies: 12, links: 7, shares: 9, saves: 41, likes: 218, tipsReceived: 120,
     // v1 已确权；作者之后补了精读笔记链接，生成 v2（未确权）
     version: 2,
+    versionStartLikes: 103,
     versions: [
       { version: 1, title: '2025 年个人阅读 Top 5 书单\n每一本都值得反复读。', editedAt: Date.now() - 1000 * 60 * 60 },
     ],

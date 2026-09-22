@@ -15,7 +15,6 @@ export function CertBadge({ post, isOwn }: { post: Post; isOwn: boolean }) {
   const pastMinted = knowledgeCerts
     .filter(c => c.postId === post.id && c.version < version && c.status === 'minted')
     .sort((a, b) => b.version - a.version)[0];
-
   const open = (certId: string) => (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate({ page: 'P_CERT', certId });

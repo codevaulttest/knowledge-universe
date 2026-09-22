@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, BadgeCheck, ChevronRight, X } from 'lucide-react';
 import { useApp } from '../AppContext';
-import { certForVersion, currentVersion } from '../certUtils';
+import { certForVersion, currentVersion, currentVersionLikes } from '../certUtils';
 import { formatScheduledAt } from '../dateUtils';
 import { localizeTime } from '../i18n';
 import type { Post } from '../types';
@@ -70,7 +70,9 @@ export function PostVersionsSheet({ post, initialVersion, onClose }: { post: Pos
                       <span className="post-version-item-meta">
                         {entry.editedAt
                           ? t('{time} 更新为 v{next}', { time: formatScheduledAt(entry.editedAt), next: entry.version + 1 })
-                          : lastEditedAt ? formatScheduledAt(lastEditedAt) : localizeTime(post.time, language)}
+                          : lastEditedAt
+                            ? t('{time} · 本版本 {likes} 赞', { time: formatScheduledAt(lastEditedAt), likes: currentVersionLikes(post) })
+                            : localizeTime(post.time, language)}
                       </span>
                     </span>
                     {cert?.status === 'minted' && (
@@ -78,6 +80,9 @@ export function PostVersionsSheet({ post, initialVersion, onClose }: { post: Pos
                         <BadgeCheck size={12} strokeWidth={2.5} aria-hidden="true" />
                         {t('已确权')}
                       </span>
+                    )}
+                    {cert?.status === 'minting' && (
+                      <span className="post-cert-badge post-cert-badge--neutral">{t('确权中')}</span>
                     )}
                     {cert?.status === 'revoked' && (
                       <span className="post-cert-badge post-cert-badge--revoked">{t('已撤销')}</span>

@@ -18,7 +18,7 @@ export function CertRulesSheet({ onClose }: { onClose: () => void }) {
         <div className="pb-info-sheet-body">
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('申请条件：')}</strong>
-            {t('帖子获得 100 个赞后，作者可以申请确权；完成实名认证和确权兑换、签名授权后开始铸造。')}
+            {t('帖子获得 100 个赞后，作者可以申请确权，由平台发出认证并铸造上链。')}
           </p>
 
           <p className="pb-info-sheet-para">
@@ -28,7 +28,7 @@ export function CertRulesSheet({ onClose }: { onClose: () => void }) {
 
           <p className="pb-info-sheet-para">
             <strong className="pb-info-sheet-label">{t('按版本确权：')}</strong>
-            {t('认证绑定申请时的帖子版本。修改已确权的帖子会生成新版本，原版本和认证一起保留，读者可以点版本号查看；新版本可以单独申请确权。')}
+            {t('认证绑定申请时的帖子版本。修改已确权的帖子会生成新版本，原版本和认证一起保留，读者可以点版本号查看；新版本的赞数从 0 开始累计，满 100 赞后可以单独申请确权。')}
           </p>
 
           <p className="pb-info-sheet-para">

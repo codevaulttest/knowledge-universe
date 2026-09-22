@@ -127,6 +127,8 @@ export type Post = {
   scheduledAt?: number;
   // 版本：只有确权过的帖子编辑时才存版本；缺省为 1
   version?: number;
+  // 当前版本开始时帖子的累计赞数；当前版本赞数 = likes - versionStartLikes（新版本从 0 重新累计）
+  versionStartLikes?: number;
   // 历史版本（不含当前版本），按版本号升序
   versions?: PostVersion[];
 };

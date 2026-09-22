@@ -5,7 +5,7 @@ import { withFreeTier } from './channelTiers';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_CHANNEL_AUTHORIZATIONS, MOCK_CHANNEL_COLLAB_LICENSES, MOCK_FIVE_STAR_NODE_COUNT, NODE_STARS_BY_CODE, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_KNOWLEDGE_CERTS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { formatScheduledAt } from './dateUtils';
 import { isValidWalletAddress } from './formatAddress';
-import type { AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, Draft, InteractionAction, KnowledgeCert, Language, RevokeReason, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import type { AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, CertStatus, Draft, InteractionAction, KnowledgeCert, Language, RevokeReason, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import { CHANNEL_COLLAB_ANNUAL_PB, CHANNEL_COLLAB_DEMO_NOW, CHANNEL_COLLAB_GRACE_END, CHANNEL_COLLAB_TERM_MS, CHANNEL_COLLAB_TRIAL_END, COLLAB_PHASE_CYCLE, channelCollabPhaseAt, PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
@@ -33,7 +33,7 @@ import { ShopPage } from './pages/ShopPage';
 import { ShopItemPage } from './pages/ShopItemPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { CertApplySheet } from './components/CertApplySheet';
-import { certForVersion, currentVersion, hasAnyMintedCert } from './certUtils';
+import { certForVersion, currentVersion, hasAnyCert } from './certUtils';
 import { CertDetailPage } from './pages/CertDetailPage';
 import { NodeDetailPage } from './pages/NodeDetailPage';
 import { AdnPage } from './pages/AdnPage';
@@ -921,13 +921,14 @@ export default function App({ account, onLanguageChange }: {
     requireWallet(() => setConfirmDelete({ postId, onAfterDelete }));
   };
 
-  // 编辑已确权帖子：先提示修改后生成的新版本不带确权标识
-  const [certEditConfirm, setCertEditConfirm] = useState<{ postId: string; version: number } | null>(null);
+  // 编辑有认证的帖子（确权中 / 已确权 / 已撤销）：先提示修改会生成新版本，以及对当前认证的影响
+  const [certEditConfirm, setCertEditConfirm] = useState<{ postId: string; version: number; status: CertStatus } | null>(null);
   const openEditPost = (postId: string) => {
     requireWallet(() => {
       const post = posts.find(p => p.id === postId);
-      if (post && certForVersion(knowledgeCerts, postId, currentVersion(post))?.status === 'minted') {
-        setCertEditConfirm({ postId, version: currentVersion(post) });
+      const cert = post && certForVersion(knowledgeCerts, postId, currentVersion(post));
+      if (post && cert) {
+        setCertEditConfirm({ postId, version: currentVersion(post), status: cert.status });
         return;
       }
       setEditPostId(postId);
@@ -950,9 +951,10 @@ export default function App({ account, onLanguageChange }: {
       ? {
           ...p,
           // 确权过的帖子编辑时存档旧版本并升版本号；未确权帖子直接覆盖
-          ...(hasAnyMintedCert(knowledgeCerts, postId) && newTitle !== p.title
+          ...(hasAnyCert(knowledgeCerts, postId) && newTitle !== p.title
             ? {
                 version: currentVersion(p) + 1,
+                versionStartLikes: p.likes,
                 versions: [...(p.versions ?? []), { version: currentVersion(p), title: p.title, articlePreview: p.articlePreview, editedAt: Date.now() }],
               }
             : {}),
@@ -1261,7 +1263,6 @@ export default function App({ account, onLanguageChange }: {
   };
 
   // ── 知识确权：作者主动申请 ──
-  const [realNameVerified, setRealNameVerified] = useState(false);
   const [certApplyPostId, setCertApplyPostId] = useState<string | null>(null);
   const openCertApply = (postId: string) => requireWallet(() => setCertApplyPostId(postId));
   const applyCert = (postId: string) => {
@@ -1507,7 +1508,6 @@ export default function App({ account, onLanguageChange }: {
     addShippingAddress, setDefaultAddress, removeShippingAddress, updateShippingAddress,
     placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle, requestShopRefund,
     knowledgeCerts, simulateCertMint, simulateCertRevoke,
-    realNameVerified, verifyRealName: () => setRealNameVerified(true), resetRealName: () => setRealNameVerified(false),
     openCertApply, applyCert,
     navBarsHidden, setNavBarsHidden,
   };
@@ -1635,7 +1635,14 @@ export default function App({ account, onLanguageChange }: {
         {certEditConfirm && (
           <Ios26Alert
             title={t('修改后将生成新版本')}
-            message={t('v{version} 的确权保留在 v{version}。修改后的 v{next} 没有确权标识，可以之后再单独申请。', { version: certEditConfirm.version, next: certEditConfirm.version + 1 })}
+            message={t(
+              certEditConfirm.status === 'minting'
+                ? 'v{version} 的认证正在铸造，对应提交时的 v{version} 内容，铸造完成后保留在 v{version}。修改后的 v{next} 没有确权标识，赞数从 0 开始累计，满 100 赞后可以单独申请。'
+                : certEditConfirm.status === 'revoked'
+                  ? 'v{version} 的认证已撤销，撤销记录保留在 v{version}。修改后的 v{next} 赞数从 0 开始累计，满 100 赞后可以单独申请。'
+                  : 'v{version} 的确权保留在 v{version}。修改后的 v{next} 没有确权标识，赞数从 0 开始累计，满 100 赞后可以单独申请。',
+              { version: certEditConfirm.version, next: certEditConfirm.version + 1 },
+            )}
             cancelLabel={t('取消')}
             confirmLabel={t('继续修改')}
             confirmTone="default"
