@@ -1,3 +1,4 @@
+import { CERT_LIKES_THRESHOLD, canApplyCert } from '../certUtils';
 import React, { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, BadgeCheck, Bookmark, Camera, Check, ChevronRight, Clock, Edit3, FileText, Flame, Gem, HandCoins, Headset, Languages, LayoutGrid, MessageCircle, MessageCircleMore, Phone, Plus, Radio, Repeat2, Search, ShoppingCart, ThumbsUp, Trash2, UserCheck, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
@@ -74,7 +75,7 @@ function getBackgroundContentInset(image: HTMLImageElement) {
 }
 
 export function ProfilePage({ authorName }: { authorName: string }) {
-  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, knowledgeCerts, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, channelAuthorizations, delegatedChannels, pausedDelegatedChannels, pendingIncomingChannelAuthorizations, respondToChannelAuthorization, revokeChannelAuthorization } = useApp();
+  const { goBack, canGoBack, navigate, drafts, openComposeWithDraft, deleteDraft, followedAuthors, toggleFollow, language, setLanguage, posts: allPosts, savedPostIds, likedPostIds, repostedPostIds, outgoingTips, t, userProfile, updateUserProfile, channels, openCreateChannel, requireWallet, knowledgeCerts, openCertApply, editProfileAutoOpen, setEditProfileAutoOpen, showToast, addressMigrations, cancelAddressMigration, dismissMigrationReminder, channelAuthorizations, delegatedChannels, pausedDelegatedChannels, pendingIncomingChannelAuthorizations, respondToChannelAuthorization, revokeChannelAuthorization } = useApp();
   const isOwn = authorName === CURRENT_USER;
   const isFollowing = followedAuthors.has(authorName);
   // 频道从「用户主页单个附属信息」改为独立实体：一个用户可拥有任意数量频道，主页展示为可搜索的目录
@@ -209,11 +210,12 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   ) : null;
 
   const myCerts = isOwn ? knowledgeCerts.filter(c => c.holder === CURRENT_USER) : [];
-  const certifiedPosts = myCerts
-    .filter(cert => cert.status !== 'pending')
-    .map(cert => allPosts.find(p => p.id === cert.postId) ?? ALL_POSTS.find(p => p.id === cert.postId))
+  const certifiedPosts = [...new Set(myCerts.map(cert => cert.postId))]
+    .map(postId => allPosts.find(p => p.id === postId) ?? ALL_POSTS.find(p => p.id === postId))
     .filter((p): p is (typeof allPosts)[number] => !!p)
     .sort((a, b) => relativePostAgeMinutes(a.time) - relativePostAgeMinutes(b.time));
+  // 满门槛、当前版本还没申请的帖子排在确权列表后面，带「申请确权」入口
+  const applicablePosts = isOwn ? myPosts.filter(p => canApplyCert(knowledgeCerts, p) && !certifiedPosts.includes(p)) : [];
   const scheduledPosts = isOwn ? myPosts.filter(p => !isPostVisible(p)) : [];
   const postFilterTabs: { key: 'all' | 'certified' | 'scheduled' | 'shop'; label: string; count?: number }[] = [
     { key: 'all', label: t('全部') },
@@ -226,7 +228,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
   const filteredPostEntries: { post: (typeof allPosts)[number]; repostedBy?: RepostedBy }[] = isOwn && profileTab === 0 && postCertFilter === 'scheduled'
     ? scheduledPosts.map(post => ({ post }))
     : isOwn && profileTab === 0 && postCertFilter === 'certified'
-    ? certifiedPosts.map(post => ({ post }))
+    ? [...certifiedPosts, ...applicablePosts].map(post => ({ post }))
     : displayedEntries;
   const filteredPosts = filteredPostEntries.map(entry => entry.post);
 
@@ -555,6 +557,14 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                     {t('定时发布 · {time}', { time: formatScheduledAt(entry.post.scheduledAt) })}
                   </p>
                 )}
+                {isOwn && profileTab === 0 && postCertFilter === 'certified' && canApplyCert(knowledgeCerts, entry.post) && (
+                  <div className="profile-cert-apply-row">
+                    <span>{t('已满 {count} 赞，可申请确权', { count: CERT_LIKES_THRESHOLD })}</span>
+                    <button type="button" className="profile-cert-apply-btn" onClick={() => openCertApply(entry.post.id)}>
+                      {t('申请确权')}
+                    </button>
+                  </div>
+                )}
                 <PostCard
                   post={entry.post}
                   index={i % 3}
@@ -576,7 +586,7 @@ export function ProfilePage({ authorName }: { authorName: string }) {
                   <>
                     <BadgeCheck size={32} strokeWidth={1.2} className="profile-empty-icon" />
                     <p className="profile-empty-title">{t('还没有知识确权认证')}</p>
-                    <p className="profile-empty-sub">{t('文章满 100 赞即可获得')}</p>
+                    <p className="profile-empty-sub">{t('帖子满 100 赞后可申请知识确权')}</p>
                   </>
                 ) : profileTab === 2 ? (
                   <>

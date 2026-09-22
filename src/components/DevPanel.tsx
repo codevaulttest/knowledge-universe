@@ -16,6 +16,7 @@ export function DevPanel({ children }: DevPanelProps) {
     taskSnapshotToday, resetDemoTasks, simulateDemoTaskInteractions, setDemoPbWallets,
     demoForceLadder, toggleDemoForceLadder, demoForceNewUser, toggleDemoForceNewUser,
     demoFiveStarNodeCount, cycleDemoFiveStarNodeCount,
+    realNameVerified, verifyRealName, resetRealName,
   } = useApp();
 
   if (!visible) return null;
@@ -139,6 +140,18 @@ export function DevPanel({ children }: DevPanelProps) {
             <span>{t('运营后台模式')}</span>
             <span className={`planet-dev-menu-toggle${getShellMode() === 'admin' ? ' planet-dev-menu-toggle--on' : ''}`}>
               {getShellMode() === 'admin' ? t('开') : t('关')}
+            </span>
+          </button>
+          <button
+            type="button"
+            className="planet-dev-menu-item"
+            role="menuitemcheckbox"
+            aria-checked={realNameVerified}
+            onClick={() => realNameVerified ? resetRealName() : verifyRealName()}
+          >
+            <span>{t('已实名认证')}</span>
+            <span className={`planet-dev-menu-toggle${realNameVerified ? ' planet-dev-menu-toggle--on' : ''}`}>
+              {realNameVerified ? t('开') : t('关')}
             </span>
           </button>
           {children}

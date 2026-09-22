@@ -5,17 +5,33 @@ import { ALL_POSTS } from '../mockData';
 import { formatScheduledAt } from '../dateUtils';
 import type { KnowledgeCert } from '../types';
 import { CertRulesSheet } from './CertRulesSheet';
+import { CertExplorerSheet } from './CertExplorerSheet';
+import { PostVersionsSheet } from './PostVersionsSheet';
+import { REVOKE_REASON_KEYS } from '../certUtils';
 
-/** 知识确权认证证书卡：黑金物料，三态（已确权 / 待铸造 / 已销毁）*/
+/** 知识确权认证证书卡：黑金物料，三态（已确权 / 确权中 / 已撤销）*/
 export function CertCard({ cert }: { cert: KnowledgeCert }) {
   const { t, posts } = useApp();
   const sourcePost = posts.find(p => p.id === cert.postId) ?? ALL_POSTS.find(p => p.id === cert.postId);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [explorerOpen, setExplorerOpen] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  const hasVersions = !!sourcePost?.versions?.length;
+  const versionField = (
+    <div className="cert-field">
+      <span className="cert-f-label">{t('认证版本')}</span>
+      {hasVersions ? (
+        <button type="button" className="cert-f-val cert-version-link" onClick={() => setVersionsOpen(true)}>v{cert.version}</button>
+      ) : (
+        <span className="cert-f-val">v{cert.version}</span>
+      )}
+    </div>
+  );
 
   return (
     <>
       <div className="cert-rule-banner">
-        {t('帖子满 100 赞自动铸造确权认证，永久上链。')}
+        {t('确权认证绑定帖子的一个版本，永久记录在链上。')}
       </div>
 
       <button
@@ -36,7 +52,7 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
               <BadgeCheck className="cert-seal-icon-shape" />
               <Check className="cert-seal-icon-check" strokeWidth={3} />
             </span>
-          ) : cert.status === 'burned' ? (
+          ) : cert.status === 'revoked' ? (
             <span className="cert-burned-glyph" aria-hidden="true">
               <BadgeCheck className="cert-burned-glyph-shape" />
               <X className="cert-burned-glyph-x" strokeWidth={3} />
@@ -45,20 +61,22 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
           <div className="cert-status-pill">
             <span className="cert-pill-dot" />
             <span>
-              {cert.status === 'minted' ? t('已确权') : cert.status === 'pending' ? t('待铸造') : t('已销毁')}
+              {cert.status === 'minted' ? t('已确权') : cert.status === 'minting' ? t('确权中') : t('已撤销')}
             </span>
           </div>
         </div>
 
-        {cert.status !== 'burned' && (
+        {cert.status !== 'revoked' && (
           <>
             <div className="cert-main">
               <div className="cert-eyebrow">{t('证书编号')}</div>
-              <div className="cert-number">{cert.status === 'pending' ? t('铸造完成后生成') : cert.id}</div>
+              <div className="cert-number">{cert.status === 'minting' ? t('铸造完成后生成') : cert.id}</div>
               <div className="cert-rule" />
 
+              {versionField}
+
               <div className="cert-field">
-                <span className="cert-f-label">{t('当前持有人')}</span>
+                <span className="cert-f-label">{t('认证作者')}</span>
                 <span className="cert-f-val">{cert.holder}</span>
               </div>
 
@@ -67,7 +85,7 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
                 {cert.issuedAt ? (
                   <span className="cert-f-val">{formatScheduledAt(cert.issuedAt)}</span>
                 ) : (
-                  <span className="cert-f-val cert-muted">{t('等待次日铸造')}</span>
+                  <span className="cert-f-val cert-muted">{t('铸造中')}</span>
                 )}
               </div>
 
@@ -83,7 +101,7 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
                     {cert.txHash}
                   </span>
                 ) : (
-                  <span className="cert-f-val cert-muted">{t('等待次日铸造')}</span>
+                  <span className="cert-f-val cert-muted">{t('铸造完成后生成')}</span>
                 )}
               </div>
 
@@ -91,15 +109,22 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
           </>
         )}
 
-        {cert.status === 'burned' && (
+        {cert.status === 'revoked' && (
           <div className="cert-burned-body">
-            <div className="cert-burned-title">{t('该认证已回收')}</div>
+            <div className="cert-burned-title">{t('该认证已撤销')}</div>
+
+            <div className="cert-burned-desc">{t('链上记录永久保留，可查询撤销信息。')}</div>
 
             <div className="cert-burned-meta">
               <div className="cert-field">
-                <span className="cert-f-label">{t('回收时间')}</span>
-                <span className="cert-f-val">{cert.burnedAt ? formatScheduledAt(cert.burnedAt) : '—'}</span>
+                <span className="cert-f-label">{t('撤销原因')}</span>
+                <span className="cert-f-val">{cert.revokeReason ? t(REVOKE_REASON_KEYS[cert.revokeReason]) : '—'}</span>
               </div>
+              <div className="cert-field">
+                <span className="cert-f-label">{t('撤销时间')}</span>
+                <span className="cert-f-val">{cert.revokedAt ? formatScheduledAt(cert.revokedAt) : '—'}</span>
+              </div>
+              {versionField}
               <div className="cert-field">
                 <span className="cert-f-label">{t('内容指纹')}</span>
                 <span className="cert-f-val cert-mono">{cert.contentHash}</span>
@@ -117,10 +142,11 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
 
       </div>
 
-      {sourcePost && (
+      {sourcePost && cert.txHash && (
         <button
           type="button"
           className="cert-f-val cert-link"
+          onClick={() => setExplorerOpen(true)}
           style={{ display: 'block', margin: '14px auto 0', textAlign: 'center' }}
         >
           {t('前往区块链浏览器')}
@@ -128,6 +154,12 @@ export function CertCard({ cert }: { cert: KnowledgeCert }) {
       )}
 
       {rulesOpen && <CertRulesSheet onClose={() => setRulesOpen(false)} />}
+      {explorerOpen && cert.txHash && (
+        <CertExplorerSheet label={t('铸造交易哈希')} value={cert.txHash} onClose={() => setExplorerOpen(false)} />
+      )}
+      {versionsOpen && sourcePost && (
+        <PostVersionsSheet post={sourcePost} initialVersion={cert.version} onClose={() => setVersionsOpen(false)} />
+      )}
 
     </>
   );

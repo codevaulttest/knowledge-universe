@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, PackageX, Pencil, Radio, Repeat2, RotateCcw, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, UserMinus, UserPlus, Users, X } from 'lucide-react';
+import { CertBadge } from './CertBadge';
+import { canApplyCert } from '../certUtils';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
@@ -227,7 +229,7 @@ export function PostCard({
   /** 透传给 GeminiNodeBadge：仅「我的主页」用空心链接按钮 */
   chainOutline?: boolean;
 }) {
-  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, delistShopPost, relistShopPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, requireWallet, knowledgeCerts } = useApp();
+  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, delistShopPost, relistShopPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, requireWallet, knowledgeCerts, openCertApply } = useApp();
   const [moreOpen, setMoreOpen] = useState(false);
   const [actorsTab, setActorsTab] = useState<PostAction | 'link' | 'tip' | null>(null);
   const [showTip, setShowTip] = useState(false);
@@ -239,7 +241,6 @@ export function PostCard({
   const views = post.views ?? derivedStat(post.id, 2, 80, 4200);
   const isFollowing = followedAuthors.has(post.displayAuthorName ?? post.author);
   const totalImgs = post.imageCount ?? 3;
-  const cert = knowledgeCerts.find(c => c.postId === post.id && c.status !== 'pending');
   const shopPriceFull = post.shop
     ? t('{price} PB', { price: formatTokenAmount(getShopMinPrice(post.shop)) })
     : '';
@@ -292,34 +293,7 @@ export function PostCard({
         </span>
         <div className="author-meta-row">
           <span className="author-time">{localizeTime(post.time, language)}</span>
-          {cert?.status === 'minted' && (
-            <button
-              type="button"
-              className="post-cert-badge"
-            aria-label={t('已确权 · 查看认证证书')}
-            onClick={e => { e.stopPropagation(); navigate({ page: 'P_CERT', certId: cert.id }); }}
-          >
-              <span className="post-cert-badge-mark" aria-hidden="true">
-                <BadgeCheck className="post-cert-badge-icon" aria-hidden="true" />
-                <Check className="post-cert-badge-check" strokeWidth={4.5} aria-hidden="true" />
-              </span>
-              <span className="post-cert-badge-text">{t('已确权')}</span>
-            </button>
-          )}
-          {cert?.status === 'burned' && (
-            <button
-              type="button"
-              className="post-cert-badge post-cert-badge--burned"
-              aria-label={t('已销毁')}
-              onClick={e => { e.stopPropagation(); navigate({ page: 'P_CERT', certId: cert.id }); }}
-            >
-              <span className="post-cert-badge-mark" aria-hidden="true">
-                <BadgeCheck className="post-cert-badge-icon" aria-hidden="true" />
-                <X className="post-cert-badge-check" strokeWidth={4.5} aria-hidden="true" />
-              </span>
-              <span className="post-cert-badge-text">{t('已销毁')}</span>
-            </button>
-          )}
+          <CertBadge post={post} isOwn={isOwn} />
           {isOwn && requiredTier && (
             <span className="post-tier-badge" aria-label={t('需订阅达到 {name} 及以上', { name: requiredTier.name })}>
               <Gem size={11} strokeWidth={2.2} />
@@ -374,9 +348,14 @@ export function PostCard({
                   <Users size={14} strokeWidth={2.2} /> {t('查看互动')}
                 </button>
               )}
-              {isOwn && (post.channelId || post.shop) && (
+              {isOwn && (
                 <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); openEditPost(post.id); }}>
                   <Pencil size={14} strokeWidth={2.2} /> {t('编辑')}
+                </button>
+              )}
+              {canApplyCert(knowledgeCerts, post) && (
+                <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); openCertApply(post.id); }}>
+                  <BadgeCheck size={14} strokeWidth={2.2} /> {t('申请确权')}
                 </button>
               )}
               {isOwn && (post.shop ? (

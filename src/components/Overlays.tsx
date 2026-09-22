@@ -1567,11 +1567,14 @@ export function Ios26Alert({
   confirmLabel,
   onCancel,
   onConfirm,
+  confirmTone = 'destructive',
 }: {
   title: string;
   message?: string;
   cancelLabel: string;
   confirmLabel: string;
+  /** 确认按钮语气：破坏性操作用红色，普通确认用主色 */
+  confirmTone?: 'destructive' | 'default';
   onCancel: () => void;
   onConfirm: () => void;
 }) {
@@ -1596,7 +1599,7 @@ export function Ios26Alert({
             {cancelLabel}
           </button>
           <div className="ios26-alert__sep" aria-hidden />
-          <button type="button" className="ios26-alert__btn ios26-alert__btn--destructive" onClick={onConfirm}>
+          <button type="button" className={`ios26-alert__btn ios26-alert__btn--${confirmTone === 'destructive' ? 'destructive' : 'primary'}`} onClick={onConfirm}>
             {confirmLabel}
           </button>
         </div>

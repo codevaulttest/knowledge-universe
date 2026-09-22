@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Ellipsis, Eye, Flame, Gem, Heart, Radio, ShoppingCart, Trash2, User } from 'lucide-react';
+import { BadgeCheck, Ellipsis, Eye, Flame, Gem, Heart, History, Pencil, Radio, ShoppingCart, Trash2, User } from 'lucide-react';
+import { CertBadge } from '../components/CertBadge';
+import { PostVersionsSheet } from '../components/PostVersionsSheet';
+import { canApplyCert, currentVersion } from '../certUtils';
 import { useApp } from '../AppContext';
 import { CURRENT_USER, getGenesisTier, POST_ACTORS, POST_REPLIES, replyLikesStore, likedReplyIdsStore } from '../mockData';
 import type { Reply } from '../types';
@@ -44,12 +47,13 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
     goBack, navigate, showToast, openLink, linkedPostIds, posts, requestDeletePost,
     openImageLightbox, incrementReplies, decrementReplies, extraRepliesByPostId, language, t,
     channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, userProfile, requireWallet, walletConnected,
-    requestPostInteraction,
+    requestPostInteraction, openEditPost, openCertApply, knowledgeCerts,
   } = useApp();
   const post = posts.find(p => p.id === postId);
   const [replyText, setReplyText] = useState('');
   const [repostOpen, setRepostOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
   const [showTip, setShowTip] = useState(false);
   const [actorsTab, setActorsTab] = useState<'link' | 'tip' | null>(null);
   // 快照排序：进入页面时按持久化的赞数排一次，会话内点赞不触发重排
@@ -215,6 +219,13 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
             </span>
             <div className="author-meta-row">
               <span className="author-time">{localizeTime(post.time, language)}</span>
+              {(post.versions?.length ?? 0) > 0 && (
+                <button type="button" className="post-version-pill" aria-label={t('查看版本记录')} onClick={() => setVersionsOpen(true)}>
+                  <History size={12} strokeWidth={2.5} aria-hidden="true" />
+                  {t('v{version} · 已编辑', { version: currentVersion(post) })}
+                </button>
+              )}
+              <CertBadge post={post} isOwn={isOwn} />
               {isOwn && requiredTier && (
                 <span className="post-tier-badge" aria-label={t('需订阅达到 {name} 及以上', { name: requiredTier.name })}>
                   <Gem size={11} strokeWidth={2.2} />
@@ -235,6 +246,10 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
               />
               {moreOpen && (
                 <div className="more-dropdown" onClick={e => e.stopPropagation()}>
+                  <button type="button" onClick={() => { setMoreOpen(false); openEditPost(post.id); }}><Pencil size={14} strokeWidth={2.2} /> {t('编辑')}</button>
+                  {canApplyCert(knowledgeCerts, post) && (
+                    <button type="button" onClick={() => { setMoreOpen(false); openCertApply(post.id); }}><BadgeCheck size={14} strokeWidth={2.2} /> {t('申请确权')}</button>
+                  )}
                   <button type="button" onClick={handleDelete}><Trash2 size={14} strokeWidth={2.2} /> {t('删除')}</button>
                 </div>
               )}
@@ -460,6 +475,10 @@ export function PostDetailPage({ postId, scrollToComments }: { postId: string; s
 
       {actorsTab && (
         <ActorsSheet postId={post.id} initialTab={actorsTab} onClose={() => setActorsTab(null)} />
+      )}
+
+      {versionsOpen && (
+        <PostVersionsSheet post={post} onClose={() => setVersionsOpen(false)} />
       )}
 
       {pendingDeleteReplyId && (

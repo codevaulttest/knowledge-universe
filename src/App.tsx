@@ -5,14 +5,14 @@ import { withFreeTier } from './channelTiers';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_CHANNEL_AUTHORIZATIONS, MOCK_CHANNEL_COLLAB_LICENSES, MOCK_FIVE_STAR_NODE_COUNT, NODE_STARS_BY_CODE, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_KNOWLEDGE_CERTS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { formatScheduledAt } from './dateUtils';
 import { isValidWalletAddress } from './formatAddress';
-import type { AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import type { AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, Draft, InteractionAction, KnowledgeCert, Language, RevokeReason, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import { CHANNEL_COLLAB_ANNUAL_PB, CHANNEL_COLLAB_DEMO_NOW, CHANNEL_COLLAB_GRACE_END, CHANNEL_COLLAB_TERM_MS, CHANNEL_COLLAB_TRIAL_END, COLLAB_PHASE_CYCLE, channelCollabPhaseAt, PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
 import { postHasStake, formatTokenAmount } from './stakeConfig';
 import { translate } from './locales';
 import { BottomNav } from './components/BottomNav';
-import { ArticleReader, ChannelCollabReminderModal, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
+import { ArticleReader, ChannelCollabReminderModal, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, Ios26Alert, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { InteractionTaskSheet } from './components/InteractionTaskSheet';
 import { LotTaskPage } from './pages/LotTaskPage';
 import { effectiveClaimRatio, getIssuedCredibilityRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, isRatioLadderActive, lotCredibilityEarned, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueCredibilityRewards, simulateInteractedCount, taskDayKey, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
@@ -32,7 +32,8 @@ import { ScanSheet } from './components/ScanSheet';
 import { ShopPage } from './pages/ShopPage';
 import { ShopItemPage } from './pages/ShopItemPage';
 import { OrdersPage } from './pages/OrdersPage';
-import { CertsPage } from './pages/CertsPage';
+import { CertApplySheet } from './components/CertApplySheet';
+import { certForVersion, currentVersion, hasAnyMintedCert } from './certUtils';
 import { CertDetailPage } from './pages/CertDetailPage';
 import { NodeDetailPage } from './pages/NodeDetailPage';
 import { AdnPage } from './pages/AdnPage';
@@ -920,8 +921,17 @@ export default function App({ account, onLanguageChange }: {
     requireWallet(() => setConfirmDelete({ postId, onAfterDelete }));
   };
 
+  // 编辑已确权帖子：先提示修改后生成的新版本不带确权标识
+  const [certEditConfirm, setCertEditConfirm] = useState<{ postId: string; version: number } | null>(null);
   const openEditPost = (postId: string) => {
-    requireWallet(() => setEditPostId(postId));
+    requireWallet(() => {
+      const post = posts.find(p => p.id === postId);
+      if (post && certForVersion(knowledgeCerts, postId, currentVersion(post))?.status === 'minted') {
+        setCertEditConfirm({ postId, version: currentVersion(post) });
+        return;
+      }
+      setEditPostId(postId);
+    });
   };
 
   // 小黄车下架/重新上架：帖子本身保留，仅商品对买家隐藏/恢复可见，卖家随时可撤回
@@ -939,6 +949,13 @@ export default function App({ account, onLanguageChange }: {
     setPosts(prev => prev.map(p => p.id === postId
       ? {
           ...p,
+          // 确权过的帖子编辑时存档旧版本并升版本号；未确权帖子直接覆盖
+          ...(hasAnyMintedCert(knowledgeCerts, postId) && newTitle !== p.title
+            ? {
+                version: currentVersion(p) + 1,
+                versions: [...(p.versions ?? []), { version: currentVersion(p), title: p.title, articlePreview: p.articlePreview, editedAt: Date.now() }],
+              }
+            : {}),
           title: newTitle,
           ...(patch && 'minTierIndex' in patch ? { minTierIndex: patch.minTierIndex } : {}),
           ...(patch && 'shop' in patch ? { shop: patch.shop } : {}),
@@ -1243,7 +1260,28 @@ export default function App({ account, onLanguageChange }: {
     showToast(t('已结算'));
   };
 
-  // 开发工具：模拟 cron 完成铸造（pending → minted）
+  // ── 知识确权：作者主动申请 ──
+  const [realNameVerified, setRealNameVerified] = useState(false);
+  const [certApplyPostId, setCertApplyPostId] = useState<string | null>(null);
+  const openCertApply = (postId: string) => requireWallet(() => setCertApplyPostId(postId));
+  const applyCert = (postId: string) => {
+    const post = posts.find(p => p.id === postId) ?? ALL_POSTS.find(p => p.id === postId);
+    if (!post) return;
+    const hex = (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    setKnowledgeCerts(prev => [...prev, {
+      id: `WV-KC-2026${String(Math.floor(Math.random() * 1e7)).padStart(7, '0')}`,
+      postId,
+      status: 'minting',
+      version: currentVersion(post),
+      holder: CURRENT_USER,
+      likesAtMint: post.likes,
+      contentHash: hex(64),
+      issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
+    }]);
+    showToast(t('已提交确权，铸造完成后通知你'));
+  };
+
+  // 开发工具：模拟链上铸造完成（minting → minted）
   const simulateCertMint = (certId: string) => {
     setKnowledgeCerts(prev => prev.map(c => c.id === certId
       ? {
@@ -1257,12 +1295,12 @@ export default function App({ account, onLanguageChange }: {
     showToast(t('已确权'));
   };
 
-  // 开发工具：模拟人工判定刷赞后回收（minted → burned）
-  const simulateCertBurn = (certId: string, reason: string) => {
+  // 开发工具：模拟人工核查后撤销（minted → revoked，token 保留）
+  const simulateCertRevoke = (certId: string, reason: RevokeReason) => {
     setKnowledgeCerts(prev => prev.map(c => c.id === certId
-      ? { ...c, status: 'burned', burnedAt: Date.now(), burnReason: reason }
+      ? { ...c, status: 'revoked', revokedAt: Date.now(), revokeReason: reason }
       : c));
-    showToast(t('已回收'));
+    showToast(t('认证已撤销'));
   };
 
   const handlePaySuccess = () => {
@@ -1468,7 +1506,9 @@ export default function App({ account, onLanguageChange }: {
     shopOrders, shippingAddresses, defaultAddress,
     addShippingAddress, setDefaultAddress, removeShippingAddress, updateShippingAddress,
     placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle, requestShopRefund,
-    knowledgeCerts, simulateCertMint, simulateCertBurn,
+    knowledgeCerts, simulateCertMint, simulateCertRevoke,
+    realNameVerified, verifyRealName: () => setRealNameVerified(true), resetRealName: () => setRealNameVerified(false),
+    openCertApply, applyCert,
     navBarsHidden, setNavBarsHidden,
   };
 
@@ -1499,7 +1539,6 @@ export default function App({ account, onLanguageChange }: {
         {pageRoute.page === 'P_DM_CHAT' && <DmChatPage peerId={pageRoute.peerId} orderId={pageRoute.orderId} productId={pageRoute.productId} />}
         {pageRoute.page === 'P_SHOP' && <ShopPage />}
         {pageRoute.page === 'P_ORDERS' && <OrdersPage initialRole={pageRoute.role} />}
-        {pageRoute.page === 'P_CERTS' && <CertsPage />}
         {pageRoute.page === 'P_ADN' && <AdnPage />}
         {pageRoute.page === 'P_LOT_TASK' && <LotTaskPage />}
 
@@ -1584,6 +1623,26 @@ export default function App({ account, onLanguageChange }: {
             />
           );
         })()}
+
+        {/* 覆盖层：申请确权 */}
+        {certApplyPostId && (() => {
+          // 文章类帖子不在 posts 状态里（个人主页确权列表从 ALL_POSTS 兜底），这里同样兜底
+          const applyPost = posts.find(p => p.id === certApplyPostId) ?? ALL_POSTS.find(p => p.id === certApplyPostId);
+          return applyPost ? <CertApplySheet post={applyPost} onClose={() => setCertApplyPostId(null)} /> : null;
+        })()}
+
+        {/* 覆盖层：编辑已确权帖子前的版本提示 */}
+        {certEditConfirm && (
+          <Ios26Alert
+            title={t('修改后将生成新版本')}
+            message={t('v{version} 的确权保留在 v{version}。修改后的 v{next} 没有确权标识，可以之后再单独申请。', { version: certEditConfirm.version, next: certEditConfirm.version + 1 })}
+            cancelLabel={t('取消')}
+            confirmLabel={t('继续修改')}
+            confirmTone="default"
+            onCancel={() => setCertEditConfirm(null)}
+            onConfirm={() => { setEditPostId(certEditConfirm.postId); setCertEditConfirm(null); }}
+          />
+        )}
 
         {/* 覆盖层：删除确认弹窗 */}
         {confirmDelete && (

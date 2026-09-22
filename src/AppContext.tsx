@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, Draft, InteractionAction, KnowledgeCert, Language, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import type { ActivityGroup, AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, Draft, InteractionAction, KnowledgeCert, Language, RevokeReason, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import type { LotQuota, TaskCalendarMonth, TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
@@ -236,12 +236,21 @@ export type AppContextValue = {
   simulateShopSettle: (orderId: string) => void;
   /** 买家申请退款：订单仍为「待发货」时可发起，退回商品款并恢复库存 */
   requestShopRefund: (orderId: string) => void;
-  /** 知识确权认证：文章满 100 赞后由 cron 铸造的链上 NFT 凭证列表 */
+  /** 知识确权认证：作者主动申请、绑定帖子版本的链上 NFT 凭证列表 */
   knowledgeCerts: KnowledgeCert[];
-  /** 开发工具：模拟 cron 完成铸造（pending → minted） */
+  /** 开发工具：模拟链上铸造完成（minting → minted） */
   simulateCertMint: (certId: string) => void;
-  /** 开发工具：模拟人工判定刷赞后回收（minted → burned） */
-  simulateCertBurn: (certId: string, reason: string) => void;
+  /** 开发工具：模拟人工核查后撤销（minted → revoked） */
+  simulateCertRevoke: (certId: string, reason: RevokeReason) => void;
+  /** 实名认证：每个账号完成一次 */
+  realNameVerified: boolean;
+  verifyRealName: () => void;
+  /** 开发工具：重置实名状态 */
+  resetRealName: () => void;
+  /** 打开申请确权流程 */
+  openCertApply: (postId: string) => void;
+  /** 签名提交后生成一条「确权中」证书 */
+  applyCert: (postId: string) => void;
   /** 首页信息流下滑时，顶部/底部导航渐隐让出沉浸空间 */
   navBarsHidden: boolean;
   setNavBarsHidden: Dispatch<SetStateAction<boolean>>;

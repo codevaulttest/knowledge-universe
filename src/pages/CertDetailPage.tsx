@@ -1,9 +1,12 @@
 import { ArrowLeft } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { CertCard } from '../components/CertCard';
+import { DevPanel } from '../components/DevPanel';
+import { REVOKE_REASON_KEYS } from '../certUtils';
+import type { RevokeReason } from '../types';
 
 export function CertDetailPage({ certId, onClose }: { certId: string; onClose: () => void }) {
-  const { t, knowledgeCerts } = useApp();
+  const { t, knowledgeCerts, simulateCertMint, simulateCertRevoke } = useApp();
   const cert = knowledgeCerts.find(c => c.id === certId);
 
   return (
@@ -27,6 +30,20 @@ export function CertDetailPage({ certId, onClose }: { certId: string; onClose: (
           {t('返回')}
         </button>
       </footer>
+      {cert && (cert.status === 'minting' || cert.status === 'minted') && (
+        <DevPanel>
+          {cert.status === 'minting' && (
+            <button type="button" className="planet-dev-menu-item" onClick={() => simulateCertMint(cert.id)}>
+              <span>{t('模拟铸造完成')}</span>
+            </button>
+          )}
+          {cert.status === 'minted' && (Object.keys(REVOKE_REASON_KEYS) as RevokeReason[]).map(reason => (
+            <button key={reason} type="button" className="planet-dev-menu-item" onClick={() => simulateCertRevoke(cert.id, reason)}>
+              <span>{t('模拟撤销：{reason}', { reason: t(REVOKE_REASON_KEYS[reason]) })}</span>
+            </button>
+          ))}
+        </DevPanel>
+      )}
     </div>
   );
 }

@@ -57,22 +57,27 @@ export type ShopOrder = {
   payWallet?: PbWalletId;
 };
 
-export type CertStatus = 'minted' | 'pending' | 'burned';
+/** minting：作者已申请、链上铸造中；minted：已确权；revoked：已撤销（token 保留，写入撤销记录） */
+export type CertStatus = 'minting' | 'minted' | 'revoked';
 
-/** 知识确权认证：一篇文章满 100 赞后由 cron 铸造的链上 NFT 凭证 */
+/** 撤销原因代码，展示文案在页面层按语言映射 */
+export type RevokeReason = 'fake_likes' | 'content_violation' | 'plagiarism' | 'other';
+
+/** 知识确权认证：作者对满 100 赞的帖子主动申请，认证绑定申请时的帖子版本 */
 export type KnowledgeCert = {
   id: string; // 证书编号，如 'WV-KC-20260001007'
   postId: string; // 对应文章
   status: CertStatus;
-  holder: string; // 当前持有人（作者名）
-  issuedAt?: number; // 铸造完成时间戳；pending 时无
+  version: number; // 认证的帖子版本
+  holder: string; // 认证作者
+  issuedAt?: number; // 铸造完成时间戳；minting 时无
   likesAtMint?: number; // 触发铸造时的赞数
   contentHash: string; // 文章内容指纹（64 位 hex）
   tokenId?: string; // 链上 Token ID
   txHash?: string; // 铸造交易哈希
   issuerAddress: string; // 发行方地址
-  burnedAt?: number; // 销毁时间戳
-  burnReason?: string; // 销毁原因（人工审核判定）
+  revokedAt?: number; // 撤销时间戳
+  revokeReason?: RevokeReason; // 撤销原因代码
 };
 
 export type Post = {
@@ -120,6 +125,17 @@ export type Post = {
   shop?: ShopInfo;
   // 定时发布：设置该时间戳之前，帖子对除作者外的所有人不可见；未设置=立即发帖
   scheduledAt?: number;
+  // 版本：只有确权过的帖子编辑时才存版本；缺省为 1
+  version?: number;
+  // 历史版本（不含当前版本），按版本号升序
+  versions?: PostVersion[];
+};
+
+export type PostVersion = {
+  version: number;
+  title: string;
+  articlePreview?: string;
+  editedAt: number; // 该版本成为当前版本的时间
 };
 
 
@@ -152,7 +168,6 @@ export type Route =
   | { page: 'P_SHOP' }
   | { page: 'P_SHOP_ITEM'; postId: string }
   | { page: 'P_ORDERS'; role?: 'buyer' | 'seller' }
-  | { page: 'P_CERTS' }
   | { page: 'P_CERT'; certId: string }
   | { page: 'P_ADN' }
   | { page: 'P_LOT_TASK' };

@@ -960,6 +960,11 @@ export const ALL_POSTS: Post[] = [
     title: '2025 年个人阅读 Top 5 书单\n每一本都值得反复读，附精读笔记链接。',
     kind: 'image', imageCount: 3, visiblePercent: 50, isNode: true, stakeTier: 100, nodeId: 'Jn9pQ2',
     rating: 1, replies: 12, links: 7, shares: 9, saves: 41, likes: 103, tipsReceived: 120,
+    // v1 已确权；作者之后补了精读笔记链接，生成 v2（未确权）
+    version: 2,
+    versions: [
+      { version: 1, title: '2025 年个人阅读 Top 5 书单\n每一本都值得反复读。', editedAt: Date.now() - 1000 * 60 * 60 },
+    ],
   },
   // ── 本人演示频道 mock 帖（频道详情页「免费 / 会员」筛选有内容可看）──
   {
@@ -1004,7 +1009,7 @@ export const ALL_POSTS: Post[] = [
     rating: 0, replies: 8, links: 0, shares: 2, saves: 29, likes: 67,
     channelId: 'channel-me-2', minTierIndex: 1,
   },
-  // ── 知识确权认证演示帖（当前用户）：pending / burned 两态 ──
+  // ── 知识确权认证演示帖（当前用户）：确权中 / 已撤销 两态 ──
   {
     id: 'cert-pending-1', author: CURRENT_USER, time: '3 小时前',
     title: '从零搭建个人知识库：工具选型与目录结构实践\n记录了三次推倒重来后，最终稳定下来的一套方法论。',
@@ -1458,10 +1463,10 @@ export const MOCK_SHOP_ORDERS: ShopOrder[] = [
   },
 ];
 
-// ── 知识确权认证：文章满 100 赞后由 cron 铸造的链上 NFT 凭证种子数据 ──
+// ── 知识确权认证：作者主动申请、绑定帖子版本的链上 NFT 凭证种子数据 ──
 export const MOCK_KNOWLEDGE_CERTS: KnowledgeCert[] = [
   {
-    id: 'WV-KC-20260000412', postId: 'p9', status: 'minted', holder: CURRENT_USER,
+    id: 'WV-KC-20260000412', postId: 'p9', status: 'minted', version: 1, holder: CURRENT_USER,
     issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 3, likesAtMint: 150,
     contentHash: '05bd857af7f70bf51b6aac9d4e112a8f3c7b2e91f4d6a0c8e5b3d2f1a7c9e4b6',
     tokenId: '53234914853141795189840113938456271650482947316',
@@ -1469,7 +1474,7 @@ export const MOCK_KNOWLEDGE_CERTS: KnowledgeCert[] = [
     issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
   {
-    id: 'WV-KC-20260000198', postId: 'p2', status: 'minted', holder: '阿May的研究笔记',
+    id: 'WV-KC-20260000198', postId: 'p2', status: 'minted', version: 1, holder: '阿May的研究笔记',
     issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 11, likesAtMint: 214,
     contentHash: '9e2c6f1a4d7b0834eac5f92d1b6087a3c4e5f60918273645fabc0d1e2f3a4b5',
     tokenId: '41207765218843906612205173390946612053177720184',
@@ -1477,7 +1482,7 @@ export const MOCK_KNOWLEDGE_CERTS: KnowledgeCert[] = [
     issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
   {
-    id: 'WV-KC-20260000355', postId: 'shop-ph-article', status: 'minted', holder: '阿May的研究笔记',
+    id: 'WV-KC-20260000355', postId: 'shop-ph-article', status: 'minted', version: 1, holder: '阿May的研究笔记',
     issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 6, likesAtMint: 201,
     contentHash: '3f8a1c9e2b6d5074f1a3c8e9d2b4f6017c9e2a4d6b8f0135e7c9a1b3d5f7091',
     tokenId: '68901234567890123456789012345678901234567890123',
@@ -1485,23 +1490,31 @@ export const MOCK_KNOWLEDGE_CERTS: KnowledgeCert[] = [
     issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
   {
-    id: 'WV-KC-20260000487', postId: 'cert-pending-1', status: 'pending', holder: CURRENT_USER,
+    id: 'WV-KC-20260000466', postId: 'own-50', status: 'minted', version: 1, holder: CURRENT_USER,
+    issuedAt: Date.now() - 1000 * 60 * 60 * 3, likesAtMint: 101,
+    contentHash: 'c41d9e07b2a5f8361e0d4c7b9a2f5e8103d6c9b2e5f8a1d4c7b0e3f6a9d2c5b8',
+    tokenId: '27718390456120347',
+    txHash: '0x8d2e5b7c9a1f3d6e0b4c8a2f5e9d1b3c7a0e4f8d2b6c9a3e7f1d5b8c2a6e9f03',
+    issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
+  },
+  {
+    id: 'WV-KC-20260000487', postId: 'cert-pending-1', status: 'minting', version: 1, holder: CURRENT_USER,
     likesAtMint: 132,
     contentHash: '7c1e3a5f9082b4d6f8091a3c5e7092b4d6f8a1c3e5f7091b3d5f7092b4d6f8a',
     issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
   {
-    id: 'WV-KC-20260000276', postId: 'cert-burned-1', status: 'burned', holder: CURRENT_USER,
+    id: 'WV-KC-20260000276', postId: 'cert-burned-1', status: 'revoked', version: 1, holder: CURRENT_USER,
     issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 8, likesAtMint: 145,
-    burnedAt: Date.now() - 1000 * 60 * 60 * 6,
-    burnReason: '经人工核查存在异常点赞，认证已回收',
+    revokedAt: Date.now() - 1000 * 60 * 60 * 6,
+    revokeReason: 'fake_likes',
     contentHash: 'ad2f4b6d8e01f3a5c7092b4d6f8a1c3e5f7091b3d5f7092b4d6f8a1c3e5f709',
     tokenId: '10293847561029384756102938475610293847561029384',
     txHash: '0xf0918273645fabc0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5061728394a5b6c7d8',
     issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
   {
-    id: 'WV-KC-20260000523', postId: 'shop-iphone', status: 'minted', holder: '极客前沿',
+    id: 'WV-KC-20260000523', postId: 'shop-iphone', status: 'minted', version: 1, holder: '极客前沿',
     issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 2, likesAtMint: 428,
     contentHash: 'f9758b650f17751cfc8089d6355fabebad635fa92f6aebb1f0ce96fd9c8b527c',
     tokenId: '62592625540211963',
@@ -1509,7 +1522,7 @@ export const MOCK_KNOWLEDGE_CERTS: KnowledgeCert[] = [
     issuerAddress: '0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74',
   },
   {
-    id: 'WV-KC-20260000601', postId: 'shop-mine', status: 'minted', holder: CURRENT_USER,
+    id: 'WV-KC-20260000601', postId: 'shop-mine', status: 'minted', version: 1, holder: CURRENT_USER,
     issuedAt: Date.now() - 1000 * 60 * 60 * 24 * 1, likesAtMint: 132,
     contentHash: '93afbd59996bbc200cadb46c7fee4a1eb8830ab4f2b10ae63be0d4560aba3301',
     tokenId: '19930683504345219',

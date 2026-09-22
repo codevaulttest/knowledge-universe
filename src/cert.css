@@ -91,18 +91,18 @@
   background: var(--ku-cert-gold-strong-bg);
   color: var(--ku-cert-gold-strong);
 }
-.cert-card[data-cert-state="pending"] .cert-status-pill {
+.cert-card[data-cert-state="minting"] .cert-status-pill {
   background: var(--ku-color-bg-secondary);
   color: var(--ku-color-text-secondary);
 }
-.cert-card[data-cert-state="burned"] .cert-status-pill {
+.cert-card[data-cert-state="revoked"] .cert-status-pill {
   background: var(--ku-color-danger-bg);
   color: var(--ku-color-text-danger);
 }
 
 .cert-card[data-cert-state="minted"] .cert-pill-dot { background: var(--ku-cert-gold-strong); }
-.cert-card[data-cert-state="pending"] .cert-pill-dot { background: var(--ku-color-text-secondary); }
-.cert-card[data-cert-state="burned"] .cert-pill-dot { background: var(--ku-color-text-danger); }
+.cert-card[data-cert-state="minting"] .cert-pill-dot { background: var(--ku-color-text-secondary); }
+.cert-card[data-cert-state="revoked"] .cert-pill-dot { background: var(--ku-color-text-danger); }
 
 /* ═══════════════════════════════════ 证书主体 */
 
@@ -478,14 +478,14 @@
   flex-shrink: 0;
 }
 .post-cert-badge:active { opacity: 0.85; }
-.post-cert-badge--burned {
+.post-cert-badge--revoked {
   background: var(--ku-color-danger-bg);
   color: var(--ku-color-text-danger);
 }
-.post-cert-badge--burned .post-cert-badge-icon {
+.post-cert-badge--revoked .post-cert-badge-icon {
   fill: currentColor;
 }
-.post-cert-badge--burned .post-cert-badge-check {
+.post-cert-badge--revoked .post-cert-badge-check {
   color: var(--ku-color-danger-bg);
 }
 .post-cert-badge-mark {
@@ -506,6 +506,165 @@
   width: var(--ku-space-2);
   height: var(--ku-space-2);
   color: var(--ku-cert-gold-strong-bg);
+}
+
+/* 确权中 / 旧版本已确权：中性弱化样式 */
+.post-cert-badge--neutral {
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-secondary);
+}
+
+/* ═══════════════════════════════════ 帖子详情：版本号入口 */
+
+.post-version-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: none;
+  border-radius: var(--ku-radius-badge);
+  padding: 2px 6px;
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-secondary);
+  font: var(--ku-text-badge);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════ 版本列表面板 */
+
+.post-versions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 var(--ku-space-4);
+  display: grid;
+  gap: var(--ku-space-2);
+}
+.post-version-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-space-2);
+  width: 100%;
+  padding: var(--ku-space-3);
+  border: 1px solid var(--ku-color-border);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-primary);
+  font: var(--ku-text-body-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.post-version-item-main {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.post-version-item-title {
+  font-weight: 600;
+}
+.post-version-item-meta {
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-secondary);
+}
+.post-version-content {
+  display: grid;
+  gap: var(--ku-space-3);
+  padding-bottom: var(--ku-space-4);
+}
+.post-version-content-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-space-2);
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-secondary);
+}
+.post-version-content-title {
+  margin: 0;
+  font: var(--ku-text-body-sm);
+  font-weight: 600;
+  color: var(--ku-color-text-primary);
+  white-space: pre-line;
+}
+.post-version-content-body {
+  margin: 0;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-primary);
+}
+
+/* ═══════════════════════════════════ 申请确权流程 */
+
+.cert-apply-steps {
+  list-style: none;
+  display: flex;
+  gap: var(--ku-space-2);
+  margin: 0 0 var(--ku-space-4);
+  padding: 0;
+}
+.cert-apply-step {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  font: var(--ku-text-caption);
+  color: var(--ku-color-text-secondary);
+  white-space: nowrap;
+}
+.cert-apply-step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ku-color-bg-secondary);
+  font: var(--ku-text-caption);
+  font-size: 12px;
+}
+.cert-apply-step--active {
+  color: var(--ku-color-text-primary);
+  font-weight: 600;
+}
+.cert-apply-step--active .cert-apply-step-dot,
+.cert-apply-step--done .cert-apply-step-dot {
+  background: var(--ku-color-primary-on-tint);
+  color: var(--ku-color-bg-phone);
+}
+.cert-apply-body {
+  display: grid;
+  gap: var(--ku-space-3);
+  padding-bottom: var(--ku-space-2);
+}
+.cert-apply-hero-icon {
+  color: var(--ku-color-primary-on-tint);
+}
+.cert-apply-lead {
+  margin: 0;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-primary);
+}
+.cert-apply-points {
+  margin: 0;
+  padding-left: 1.1em;
+  display: grid;
+  gap: 6px;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-secondary);
+}
+.cert-version-link {
+  display: inline-block;
+  width: auto;
+  justify-self: start;
+  align-self: flex-start;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--ku-color-primary-on-tint);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 /* ═══════════════════════════════════ 列表页 tab（三态：已铸造/待铸造/已销毁） */
@@ -531,4 +690,29 @@
 .certs-tabs .orders-tab-badge {
   background: var(--ku-color-bg-secondary);
   color: var(--ku-color-text-secondary);
+}
+
+/* ═══════════════════════════════════ 个人主页：可申请确权提示行 */
+
+.profile-cert-apply-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ku-space-2);
+  margin: var(--ku-space-3) var(--ku-space-4) 0;
+  padding: var(--ku-space-2) var(--ku-space-3);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-secondary);
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-secondary);
+}
+.profile-cert-apply-btn {
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--ku-radius-badge);
+  padding: 6px 10px;
+  background: var(--ku-color-primary-on-tint);
+  color: var(--ku-color-bg-phone);
+  font: var(--ku-text-badge);
+  cursor: pointer;
 }
