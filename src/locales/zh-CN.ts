@@ -1417,6 +1417,8 @@ export const zhCN: Record<string, string> = {
   '加价': '加价',
   '出价': '出价',
   '创世 #{seat}': '创世 #{seat}',
+  '我参与的（{count}）': '我参与的（{count}）',
+  '其他场次': '其他场次',
   '上月第 {rank} 名 · 上月空投 {airdrop} PB': '上月第 {rank} 名 · 上月空投 {airdrop} PB',
   '当前价': '当前价',
   '起拍价': '起拍价',

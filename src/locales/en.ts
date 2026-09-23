@@ -1415,6 +1415,8 @@ export const en: Record<string, string> = {
   '加价': 'Raise bid',
   '出价': 'Bid',
   '创世 #{seat}': 'Genesis #{seat}',
+  '我参与的（{count}）': 'My bids ({count})',
+  '其他场次': 'Other lots',
   '上月第 {rank} 名 · 上月空投 {airdrop} PB': 'Ranked #{rank} last month · airdrop {airdrop} PB',
   '当前价': 'Current price',
   '起拍价': 'Starting price',

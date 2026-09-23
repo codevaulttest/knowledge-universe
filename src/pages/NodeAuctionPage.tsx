@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Info, Snowflake, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader } from '../components/shared';
@@ -41,7 +41,9 @@ export function NodeAuctionPage() {
     const live: AuctionLot[] = [];
     const ended: AuctionLot[] = [];
     auctionLots.forEach(lot => (auctionStatus(lot, now) === 'ended' ? ended : live).push(lot));
-    live.sort((a, b) => a.endAt - b.endAt);
+    // 自己参与（领先或被超过）的场次置顶，方便回来加价；组内仍按结束时间由早到晚
+    const mine = (lot: AuctionLot) => (auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) === 'none' ? 1 : 0);
+    live.sort((a, b) => mine(a) - mine(b) || a.endAt - b.endAt);
     ended.sort((a, b) => b.endAt - a.endAt);
     return { live, ended };
   }, [auctionLots, now]);
@@ -49,6 +51,10 @@ export function NodeAuctionPage() {
   const summary = useMemo(() => auctionFrozenSummary(auctionLots, MOCK_WALLET_ADDRESS, now), [auctionLots, now]);
   const list = tab === 'live' ? live : ended;
   const shown = list.slice(0, visible);
+  // 竞拍中分段里，自己参与的场次已排在最前；用分组标题把它们和其他场次隔开
+  const myCount = tab === 'live'
+    ? live.filter(lot => auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) !== 'none').length
+    : 0;
   const bidLot = auctionLots.find(lot => lot.id === bidLotId) ?? null;
 
   const switchTab = (next: AuctionTab) => { setTab(next); setVisible(AUCTION_PAGE_SIZE); };
@@ -94,14 +100,21 @@ export function NodeAuctionPage() {
           <div className="planet-nodes-empty">{t('这里还没有可竞拍的节点')}</div>
         ) : (
           <div className="auction-lot-list">
-            {shown.map(lot => (
-              <AuctionLotRow
-                key={lot.id}
-                lot={lot}
-                now={now}
-                onOpen={() => navigate({ page: 'P_NODE_AUCTION_LOT', lotId: lot.id })}
-                onBid={() => setBidLotId(lot.id)}
-              />
+            {shown.map((lot, index) => (
+              <Fragment key={lot.id}>
+                {myCount > 0 && index === 0 && (
+                  <div className="auction-group-title">{t('我参与的（{count}）', { count: myCount })}</div>
+                )}
+                {myCount > 0 && index === myCount && (
+                  <div className="auction-group-title auction-group-title--rest">{t('其他场次')}</div>
+                )}
+                <AuctionLotRow
+                  lot={lot}
+                  now={now}
+                  onOpen={() => navigate({ page: 'P_NODE_AUCTION_LOT', lotId: lot.id })}
+                  onBid={() => setBidLotId(lot.id)}
+                />
+              </Fragment>
             ))}
           </div>
         )}
