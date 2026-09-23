@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Minus, Plus, Snowflake, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Minus, Plus, Snowflake } from 'lucide-react';
 import { useApp } from '../AppContext';
 import {
   AUCTION_BID_CHARGES_GAS,
@@ -68,11 +68,12 @@ export function NodeAuctionBidSheet({
   return (
     <div className="sheet-backdrop full-page-flow" onClick={() => !paying && onClose()}>
       <div className="payment-sheet auction-bid-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
-        <div className="sheet-header">
-          <span className="sheet-title">{t('为创世 #{seat} 出价', { seat: lot.seatNo })}</span>
-          <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')} disabled={paying}>
-            <X size={18} strokeWidth={2} />
+        <div className="sheet-header sheet-header--centered">
+          <button type="button" className="sheet-header-back" onClick={onClose} aria-label={t('返回')} disabled={paying}>
+            <ArrowLeft size={18} strokeWidth={2} />
           </button>
+          <span className="sheet-title sheet-title--centered">{t('为创世 #{seat} 出价', { seat: lot.seatNo })}</span>
+          <div className="sheet-header-spacer" aria-hidden />
         </div>
 
         <div className="auction-price-block">
@@ -80,14 +81,14 @@ export function NodeAuctionBidSheet({
           <span className="auction-price-value">{formatTokenAmount(lot.currentPricePb)} PB</span>
           <span className="auction-price-meta">
             {lot.bids.length > 0
-              ? t('已出价 {count} 次 · 最低下一手 {min} PB', { count: lot.bids.length, min: formatTokenAmount(minBid) })
+              ? t('已出价 {count} 次 · 下次出价至少 {min} PB', { count: lot.bids.length, min: formatTokenAmount(minBid) })
               : t('第一个出价就能领先')}
           </span>
         </div>
 
         {iLead && (
           <div className="sup-deposit-warning">
-            <span>{t('你目前是最高出价，继续加价只需补足差额，上一笔冻结会原路退回。')}</span>
+            <span>{t('你目前出价最高。继续加价时，先冻结本次出价金额；成功后，上一笔冻结的 PB 原路退回。')}</span>
           </div>
         )}
 

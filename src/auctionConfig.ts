@@ -5,7 +5,7 @@ import type { PbWalletId } from './types';
  * 只做本地演示，不接任何后端。
  *
  * 规则出处：
- * - 起拍价 20 万 PB、最低加价 1 万 PB —— 需求原文
+ * - 起拍价为 20 万 PB + 该节点上月空投额度、最低加价 1 万 PB —— 需求原文
  * - 原持有人固定拿回 20 万 PB（不论成交价高低）—— 2026-09-23 确认
  * 尚未确认的规则集中在下方「待确认」区，UI 一律读常量/纯函数，规则定了只改这里。
  */
@@ -17,9 +17,10 @@ export const AUCTION_OWNER_REFUND_PB = 200_000;
 export const AUCTION_QUICK_INCREMENTS: readonly number[] = [10_000, 50_000, 100_000];
 export const AUCTION_PAGE_SIZE = 20;
 
+/** 起拍价叠加该节点上月空投额度。 */
+export const AUCTION_START_INCLUDES_AIRDROP = true;
+
 // ── 待确认（占位，规则落定后改这里即可）──────────────────
-/** 起拍价是否叠加该节点上月空投额度。 */
-export const AUCTION_START_INCLUDES_AIRDROP = false;
 /** 成交价高出起拍价的部分去向。 */
 export const AUCTION_PREMIUM_DESTINATION: 'burn' | 'platform' | 'undecided' = 'undecided';
 /** 结束前若有人出价则延时的分钟数；0 表示不启用，相关文案整体不渲染。 */

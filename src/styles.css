@@ -13546,7 +13546,7 @@ html[lang="zh-TW"] .planet-hero-title {
 
 .auction-lot-list { display: flex; flex-direction: column; gap: var(--ku-planet2-space-xs); }
 .auction-group-title { padding: 0 4px; font: var(--ku-text-caption-strong); color: var(--ku-color-text-secondary); }
-.auction-group-title--rest { margin-top: var(--ku-planet2-space-md); padding-top: var(--ku-planet2-space-md); }
+.auction-group-title--rest { margin-top: var(--ku-planet2-space-sm); }
 .auction-lot-card {
   display: flex;
   flex-direction: column;
@@ -13582,16 +13582,7 @@ html[lang="zh-TW"] .planet-hero-title {
   background: var(--ku-color-bg-secondary);
   color: var(--ku-color-text-secondary);
 }
-.auction-load-more {
-  align-self: center;
-  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-base);
-  border: 1px solid var(--ku-color-border-control);
-  border-radius: var(--ku-planet2-radius-pill);
-  background: var(--ku-color-bg-phone);
-  font-size: 13px;
-  color: var(--ku-color-text-secondary);
-  cursor: pointer;
-}
+.auction-load-more-sentinel { min-height: 1px; }
 
 /* 状态徽章与倒计时 */
 .auction-badge {
@@ -13688,14 +13679,38 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 
 /* 出价弹窗 */
+.auction-bid-sheet > .auction-price-block { margin-bottom: var(--ku-planet2-space-base); }
+.auction-bid-sheet > .create-delay-note {
+  background: var(--ku-color-genesis-gold-bg);
+  color: var(--ku-color-genesis-gold-text);
+}
+.auction-bid-sheet > .create-delay-note > svg { color: var(--ku-color-genesis-gold-text); }
+.auction-bid-sheet > .planet-confirm-btn {
+  background: var(--ku-color-genesis-gold-action-bg);
+  color: var(--ku-color-on-primary);
+  box-shadow: none;
+}
 .auction-bid-sheet .create-qty-block { flex-wrap: nowrap; margin: 0; }
 .auction-bid-input {
   flex: 1;
   min-width: 0;
+  height: 40px;
+  box-sizing: border-box;
   margin: 0 var(--ku-planet2-space-sm);
+  padding: 0 var(--ku-planet2-space-sm);
+  border: 1px solid var(--ku-color-genesis-gold);
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-genesis-gold-bg);
+  color: var(--ku-color-text-primary);
+  font-family: var(--ku-font-family);
   text-align: center;
   font-size: 24px;
   font-variant-numeric: tabular-nums;
+  appearance: none;
+}
+.auction-bid-input:focus-visible {
+  outline: 2px solid var(--ku-color-genesis-gold-text);
+  outline-offset: 2px;
 }
 .auction-quick-chips { display: flex; gap: var(--ku-planet2-space-xs); margin-top: var(--ku-planet2-space-xs); }
 .auction-quick-chip {

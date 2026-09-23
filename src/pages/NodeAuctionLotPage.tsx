@@ -4,9 +4,6 @@ import { PageHeader } from '../components/shared';
 import { AuctionCountdown, AuctionStateBadge, useAuctionNow } from '../components/NodeAuctionBits';
 import { NodeAuctionBidSheet } from '../components/NodeAuctionBidSheet';
 import {
-  AUCTION_PREMIUM_DESTINATION,
-  AUCTION_START_INCLUDES_AIRDROP,
-  AUCTION_START_PB,
   auctionMyBidState,
   auctionSettlement,
   auctionStatus,
@@ -39,12 +36,6 @@ export function NodeAuctionLotPage({ lotId }: { lotId: string }) {
   const status = auctionStatus(lot, now);
   const state = auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now);
   const settlement = status === 'ended' ? auctionSettlement(lot) : null;
-  const premiumCopy = AUCTION_PREMIUM_DESTINATION === 'burn'
-    ? t('销毁')
-    : AUCTION_PREMIUM_DESTINATION === 'platform'
-      ? t('平台留存')
-      : t('去向待公布');
-
   return (
     <div className="page auction-page">
       <PageHeader title={t('创世 #{seat}', { seat: lot.seatNo })} onBack={canGoBack ? goBack : undefined} />
@@ -68,29 +59,23 @@ export function NodeAuctionLotPage({ lotId }: { lotId: string }) {
           <InfoRow label={t('原持有人')} value={lot.previousOwnerLabel} />
         </div>
 
-        {/* 起拍价拆成两行，方便核对当前按哪种口径计算 */}
-        <div className="auction-info-card">
-          <InfoRow label={t('起拍基准')} value={`${formatTokenAmount(AUCTION_START_PB)} PB`} />
-          <InfoRow
-            label={t('叠加上月空投额度')}
-            value={AUCTION_START_INCLUDES_AIRDROP ? `+ ${formatTokenAmount(lot.lastMonthAirdropPb)} PB` : t('本期不叠加')}
-          />
-          <div className="auction-info-sep" />
-          <InfoRow label={t('起拍价')} value={`${formatTokenAmount(lot.startPricePb)} PB`} strong />
-        </div>
+        {lot.bids.length > 0 && (
+          <div className="auction-info-card">
+            <InfoRow label={t('起拍价')} value={`${formatTokenAmount(lot.startPricePb)} PB`} />
+          </div>
+        )}
 
         {settlement && (
           <div className="auction-info-card auction-settle-card">
             {settlement.winnerLabel ? (
               <>
                 <InfoRow label={t('成交价')} value={`${formatTokenAmount(settlement.finalPricePb)} PB`} strong />
-                <InfoRow label={t('中拍人')} value={settlement.winnerLabel === MOCK_WALLET_ADDRESS ? t('我') : settlement.winnerLabel} />
+                <InfoRow label={t('拍得人')} value={settlement.winnerLabel === MOCK_WALLET_ADDRESS ? t('我') : settlement.winnerLabel} />
                 <div className="auction-info-sep" />
-                <InfoRow label={t('原持有人拿回')} value={`${formatTokenAmount(settlement.ownerRefundPb)} PB`} />
-                <InfoRow label={t('溢价 {amount} PB', { amount: formatTokenAmount(settlement.premiumPb) })} value={premiumCopy} />
+                <InfoRow label={t('原持有人获得')} value={`${formatTokenAmount(settlement.ownerRefundPb)} PB`} />
               </>
             ) : (
-              <span className="auction-settle-empty">{t('本场无人出价，节点将进入下一期竞拍')}</span>
+              <span className="auction-settle-empty">{t('本场无人出价')}</span>
             )}
           </div>
         )}

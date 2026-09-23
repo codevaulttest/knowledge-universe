@@ -28,7 +28,7 @@ export const MOCK_PB_WALLETS = {
   onchain: 5600,
   station: 2400,
   credibility: 800,
-  airdrop: 6400, // 需覆盖频道协作年费 5000 PB，便于演示支付
+  airdrop: 1_000_000, // 覆盖创世节点竞拍出价，便于完整演示竞拍流程
 } as const;
 /** 演示钱包 SUP 余额，站内/链上两池独立（连接后展示） */
 export const MOCK_SUP_WALLETS = {

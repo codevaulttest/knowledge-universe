@@ -50,7 +50,7 @@ export function AuctionStateBadge({ lot, myAddress, now }: { lot: AuctionLot; my
   if (state === 'lost') return <span className="auction-badge auction-badge--ended">{t('未拍得')}</span>;
   if (status === 'ended') {
     return lot.bids.length === 0
-      ? <span className="auction-badge auction-badge--ended">{t('流拍')}</span>
+      ? <span className="auction-badge auction-badge--ended">{t('无人出价')}</span>
       : <span className="auction-badge auction-badge--ended">{t('已成交')}</span>;
   }
   if (status === 'upcoming') return <span className="auction-badge auction-badge--ended">{t('即将开拍')}</span>;

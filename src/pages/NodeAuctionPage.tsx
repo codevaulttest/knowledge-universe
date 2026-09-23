@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, Info, Snowflake, X } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader } from '../components/shared';
@@ -9,7 +9,6 @@ import {
   AUCTION_MIN_INCREMENT_PB,
   AUCTION_OWNER_REFUND_PB,
   AUCTION_PAGE_SIZE,
-  AUCTION_PREMIUM_DESTINATION,
   AUCTION_START_PB,
   auctionFrozenSummary,
   auctionMyBidState,
@@ -27,6 +26,7 @@ export function NodeAuctionPage() {
   const now = useAuctionNow();
   const [tab, setTab] = useState<AuctionTab>('live');
   const [visible, setVisible] = useState(AUCTION_PAGE_SIZE);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [bidLotId, setBidLotId] = useState<string | null>(null);
 
@@ -51,6 +51,19 @@ export function NodeAuctionPage() {
   const summary = useMemo(() => auctionFrozenSummary(auctionLots, MOCK_WALLET_ADDRESS, now), [auctionLots, now]);
   const list = tab === 'live' ? live : ended;
   const shown = list.slice(0, visible);
+
+  // 接近列表底部时自动追加一页，避免用户需要寻找并点击“加载更多”。
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    const root = target?.closest('.auction-scroll');
+    if (!target || !root || visible >= list.length) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setVisible(current => Math.min(current + AUCTION_PAGE_SIZE, list.length));
+    }, { root, rootMargin: '0px 0px 160px 0px' });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [list.length, visible]);
   // 竞拍中分段里，自己参与的场次已排在最前；用分组标题把它们和其他场次隔开
   const myCount = tab === 'live'
     ? live.filter(lot => auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) !== 'none').length
@@ -65,7 +78,7 @@ export function NodeAuctionPage() {
       <main className="scroll-area auction-scroll">
         <button type="button" className="bsp-rules-entry task-panel-rules-entry--neutral" onClick={() => setRulesOpen(true)}>
           <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
-          <span className="bsp-rules-entry-text">{t('查看完整竞拍规则')}</span>
+          <span className="bsp-rules-entry-text">{t('查看竞拍规则说明')}</span>
           <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
         </button>
 
@@ -97,7 +110,7 @@ export function NodeAuctionPage() {
         </div>
 
         {shown.length === 0 ? (
-          <div className="planet-nodes-empty">{t('这里还没有可竞拍的节点')}</div>
+          <div className="planet-nodes-empty">{tab === 'live' ? t('目前没有正在竞拍的节点') : t('还没有已结束的竞拍')}</div>
         ) : (
           <div className="auction-lot-list">
             {shown.map((lot, index) => (
@@ -119,11 +132,7 @@ export function NodeAuctionPage() {
           </div>
         )}
 
-        {list.length > shown.length && (
-          <button type="button" className="auction-load-more" onClick={() => setVisible(v => v + AUCTION_PAGE_SIZE)}>
-            {t('加载更多（剩余 {length}）', { length: list.length - shown.length })}
-          </button>
-        )}
+        {list.length > shown.length && <div ref={loadMoreRef} className="auction-load-more-sentinel" aria-hidden="true" />}
       </main>
 
       <DevPanel>
@@ -198,11 +207,6 @@ function AuctionLotRow({ lot, now, onOpen, onBid }: { lot: AuctionLot; now: numb
 
 export function AuctionRulesSheet({ onClose }: { onClose: () => void }) {
   const { t } = useApp();
-  const premiumCopy = AUCTION_PREMIUM_DESTINATION === 'burn'
-    ? t('成交价高出起拍价的部分将被销毁。')
-    : AUCTION_PREMIUM_DESTINATION === 'platform'
-      ? t('成交价高出起拍价的部分由平台留存。')
-      : t('成交价高出起拍价的部分，去向将在规则公布后同步。');
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
@@ -213,16 +217,14 @@ export function AuctionRulesSheet({ onClose }: { onClose: () => void }) {
           </button>
         </div>
         <div className="pb-info-sheet-body">
-          <p className="pb-info-sheet-para">{t('每月考核后，排名靠后的创世节点进入公开竞拍，价高者得。')}</p>
-          <p className="pb-info-sheet-para">{t('起拍价 {start} PB，每次加价至少 {step} PB。', {
+          <p className="pb-info-sheet-para">{t('每月考核排名末 50 名的创世节点将在次月公开竞拍，出价最高者获得节点。')}</p>
+          <p className="pb-info-sheet-para">{t('每个节点的起拍价为 {start} PB 加上该节点上月空投额度，每次加价至少 {step} PB。', {
             start: formatTokenAmount(AUCTION_START_PB), step: formatTokenAmount(AUCTION_MIN_INCREMENT_PB),
           })}</p>
-          <p className="pb-info-sheet-para">{t('出价后该笔 PB 冻结；被他人超过或本场落拍时，按原路退回。')}</p>
-          <p className="pb-info-sheet-para">{t('不论成交价高低，原持有人固定拿回 {refund} PB。', {
+          <p className="pb-info-sheet-para">{t('出价后 PB 暂时冻结；出价被超过或竞拍结束后未拍得时，自动退回原钱包。')}</p>
+          <p className="pb-info-sheet-para">{t('竞拍成交后，原持有人固定获得 {refund} PB。', {
             refund: formatTokenAmount(AUCTION_OWNER_REFUND_PB),
           })}</p>
-          <p className="pb-info-sheet-para">{premiumCopy}</p>
-          <p className="pb-info-sheet-para">{t('完整规则以官方公告为准。')}</p>
         </div>
       </div>
     </div>
