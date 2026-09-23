@@ -18,13 +18,13 @@ import {
 import { MOCK_WALLET_ADDRESS } from '../mockData';
 import { formatTokenAmount } from '../stakeConfig';
 
-type AuctionTab = 'live' | 'ended';
+type AuctionTab = 'current' | 'previous';
 
 /** 创世节点竞拍列表页。倒计时只在本页挂一个定时器，逐行向下传。 */
 export function NodeAuctionPage() {
   const { t, goBack, canGoBack, navigate, auctionLots, settleAuctionLot, simulateAuctionOutbid, resetAuctionDemo, setDemoPbWallets } = useApp();
   const now = useAuctionNow();
-  const [tab, setTab] = useState<AuctionTab>('live');
+  const [tab, setTab] = useState<AuctionTab>('current');
   const [visible, setVisible] = useState(AUCTION_PAGE_SIZE);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -37,21 +37,24 @@ export function NodeAuctionPage() {
       .forEach(lot => settleAuctionLot(lot.id));
   }, [auctionLots, now, settleAuctionLot]);
 
-  const { live, ended } = useMemo(() => {
-    const live: AuctionLot[] = [];
-    const ended: AuctionLot[] = [];
-    auctionLots.forEach(lot => (auctionStatus(lot, now) === 'ended' ? ended : live).push(lot));
-    // 自己参与的场次置顶：竞拍中方便回来加价，已结束方便查看结果。
+  const { current, previous } = useMemo(() => {
+    const current: AuctionLot[] = [];
+    const previous: AuctionLot[] = [];
+    auctionLots.forEach(lot => (lot.period === 'current' ? current : previous).push(lot));
+    // 两期都先看自己参与的场次，再看公开结果。
     const mine = (lot: AuctionLot) => (auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) === 'none' ? 1 : 0);
-    live.sort((a, b) => mine(a) - mine(b) || a.endAt - b.endAt);
-    ended.sort((a, b) => mine(a) - mine(b) || b.endAt - a.endAt);
-    return { live, ended };
+    current.sort((a, b) => mine(a) - mine(b) || a.endAt - b.endAt);
+    previous.sort((a, b) => mine(a) - mine(b) || b.endAt - a.endAt);
+    return { current, previous };
   }, [auctionLots, now]);
 
   const summary = useMemo(() => auctionFrozenSummary(auctionLots, MOCK_WALLET_ADDRESS, now), [auctionLots, now]);
-  const openingLot = auctionLots.find(lot => auctionStatus(lot, now) === 'upcoming');
-  const list = tab === 'live' ? live : ended;
+  const openingLot = current.find(lot => auctionStatus(lot, now) === 'upcoming');
+  // 本期席位共用结束时刻，任取一场即可驱动页面级倒计时。
+  const roundCountdownLot = current[0];
+  const list = tab === 'current' ? current : previous;
   const shown = list.slice(0, visible);
+  const previousStart = previous[0]?.startAt;
 
   // 接近列表底部时自动追加一页，避免用户需要寻找并点击“加载更多”。
   useEffect(() => {
@@ -81,42 +84,52 @@ export function NodeAuctionPage() {
           <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
         </button>
 
-        {openingLot && (
+        {tab === 'current' && roundCountdownLot && auctionStatus(roundCountdownLot, now) !== 'ended' && (
           <div className="auction-opening-bar">
-            <span>{t('本期 {count} 席统一开拍', { count: auctionLots.filter(lot => lot.period === 'current').length })}</span>
-            <AuctionCountdown lot={openingLot} now={now} />
+            <span>{openingLot
+              ? t('本期 {count} 席统一开拍', { count: current.length })
+              : t('本期竞拍结束')}</span>
+            <AuctionCountdown lot={roundCountdownLot} now={now} />
           </div>
         )}
 
         <div className="create-scale-toggle auction-tabs">
           <button
             type="button"
-            className={`create-scale-tab${tab === 'live' ? ' create-scale-tab--active' : ''}`}
-            onClick={() => switchTab('live')}
+            className={`create-scale-tab${tab === 'current' ? ' create-scale-tab--active' : ''}`}
+            onClick={() => switchTab('current')}
           >
             {openingLot
-              ? t('即将开拍（{count}）', { count: live.length })
-              : t('竞拍中（{count}）', { count: live.length })}
+              ? t('即将开拍（{count}）', { count: current.length })
+              : t('本期竞拍（{count}）', { count: current.length })}
           </button>
           <button
             type="button"
-            className={`create-scale-tab${tab === 'ended' ? ' create-scale-tab--active' : ''}`}
-            onClick={() => switchTab('ended')}
+            className={`create-scale-tab${tab === 'previous' ? ' create-scale-tab--active' : ''}`}
+            onClick={() => switchTab('previous')}
           >
-            {t('已结束（{count}）', { count: ended.length })}
+            {t('上期结果')}
           </button>
         </div>
 
         {shown.length === 0 ? (
-          <div className="planet-nodes-empty">{tab === 'live' ? t('目前没有正在竞拍的节点') : t('还没有已结束的竞拍')}</div>
+          <div className="planet-nodes-empty">{tab === 'current' ? t('目前没有正在竞拍的节点') : t('还没有已结束的竞拍')}</div>
         ) : (
           <div className="auction-lot-list">
+            {tab === 'previous' && previousStart && (
+              <div className="auction-group-title">
+                {t('{year} 年 {month} 月竞拍结果', {
+                  year: new Date(previousStart).getFullYear(),
+                  month: new Date(previousStart).getMonth() + 1,
+                })}
+              </div>
+            )}
             {shown.map((lot, index) => (
               <Fragment key={lot.id}>
                 {myCount > 0 && index === 0 && (
                   <div className="auction-group-title">{t('我参与的（{count}）', { count: myCount })}</div>
                 )}
-                {tab === 'live' && (summary.leadingCount > 0 || summary.outbidCount > 0) && index === 0 && (
+                {tab === 'current' && (summary.leadingCount > 0 || summary.outbidCount > 0) && index === 0 && (
                   <div className="auction-frozen-bar">
                     {summary.frozenPb > 0 && <Snowflake size={14} strokeWidth={2} aria-hidden />}
                     <span className="auction-frozen-amount">
@@ -155,7 +168,8 @@ export function NodeAuctionPage() {
           type="button"
           className="planet-dev-menu-item"
           onClick={() => {
-            live
+            current
+              .filter(lot => auctionStatus(lot, now) === 'live')
               .filter(lot => auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) === 'leading')
               .forEach(lot => simulateAuctionOutbid(lot.id));
           }}
@@ -166,7 +180,7 @@ export function NodeAuctionPage() {
           type="button"
           className="planet-dev-menu-item"
           onClick={() => {
-            const target = live.find(lot => auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) === 'leading');
+            const target = current.find(lot => auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) === 'leading');
             if (target) simulateAuctionOutbid(target.id);
           }}
         >
@@ -207,7 +221,9 @@ function AuctionLotRow({ lot, now, onOpen, onBid }: { lot: AuctionLot; now: numb
       </div>
       <div className="auction-lot-meta-row">
         <span className="auction-lot-meta">
-          {t('上月第 {rank} 名 · 上月空投 {airdrop} PB', { rank: lot.rankLastMonth, airdrop: formatTokenAmount(lot.lastMonthAirdropPb) })}
+          {t(lot.period === 'previous' ? '竞拍前第 {rank} 名 · 空投 {airdrop} PB' : '上月第 {rank} 名 · 上月空投 {airdrop} PB', {
+            rank: lot.rankLastMonth, airdrop: formatTokenAmount(lot.lastMonthAirdropPb),
+          })}
         </span>
         <span className="auction-lot-price-meta">
           {lot.bids.length > 0

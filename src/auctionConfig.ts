@@ -233,9 +233,12 @@ export function buildInitialAuctionLots(myAddress: string, now: number = Date.no
     const j = Math.floor(rand() * (i + 1));
     [seats[i], seats[j]] = [seats[j], seats[i]];
   }
-  // 同一期的所有席位共用开拍时刻，演示默认处于竞拍中。
-  const periodStart = now - 10 * DAY;
-  // 统一收官时刻：一部分场次同时结束，另一部分错峰，UI 不能假设全场同刻
+  // 同一期的所有席位在月初统一开拍；保留上月完整 50 场结果用于演示。
+  const today = new Date(now);
+  const periodStart = new Date(today.getFullYear(), today.getMonth(), 1).getTime();
+  const previousStart = new Date(today.getFullYear(), today.getMonth() - 1, 1).getTime();
+  const previousShift = periodStart - previousStart;
+  // 演示假设：同一期 50 席在指定时刻统一结束。
   const commonEnd = now + 4 * DAY + 8 * HOUR;
 
   const scriptedLots = seats.map((rank, index) => {
@@ -309,23 +312,47 @@ export function buildInitialAuctionLots(myAddress: string, now: number = Date.no
     return lot;
   });
 
-  // 当前期完整展示 50 席；原剧本中已结束的 17 场保留为往期记录，供结果页演示。
-  const previousLots = scriptedLots
-    .filter(lot => lot.endAt <= now)
-    .map(lot => ({
+  const previousLots = scriptedLots.map((lot, index) => {
+    const other = OTHER_BIDDERS[index % OTHER_BIDDERS.length];
+    const nodeCode = Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(rand() * CODE_CHARS.length)]).join('');
+    const bids = lot.bids.map((bid, bidIndex) => {
+      // 当前期的参与记录不复制到上期；上期剧本单独保留中拍与未拍得各一场。
+      const replaceMine = lot.endAt > now && bid.bidderAddress === myAddress;
+      return {
+        ...bid,
+        bidderAddress: replaceMine ? other.address : bid.bidderAddress,
+        bidderLabel: replaceMine ? other.label : bid.bidderLabel,
+        payWallet: replaceMine ? 'onchain' as const : bid.payWallet,
+        createdAt: bid.createdAt - previousShift,
+        refunded: bidIndex > 0,
+      };
+    });
+    const winner = bids[0] ?? null;
+    return {
       ...lot,
       id: `previous-${lot.id}`,
       period: 'previous' as const,
-      startAt: lot.startAt - 30 * DAY,
-      endAt: lot.endAt - 30 * DAY,
-      bids: lot.bids.map(bid => ({ ...bid, createdAt: bid.createdAt - 30 * DAY })),
-    }));
+      nodeCode,
+      seatNo: index + 1,
+      startAt: previousStart,
+      endAt: commonEnd - previousShift,
+      bids,
+      settled: winner
+        ? {
+            finalPricePb: winner.amount,
+            ownerRefundPb: AUCTION_OWNER_REFUND_PB,
+            premiumPb: Math.max(0, winner.amount - AUCTION_OWNER_REFUND_PB),
+            winnerLabel: winner.bidderLabel,
+          }
+        : { finalPricePb: 0, ownerRefundPb: 0, premiumPb: 0, winnerLabel: null },
+    };
+  });
   const currentLots = scriptedLots.map((lot, index) => {
-    if (lot.endAt > now) return lot;
+    if (lot.endAt > now) return { ...lot, endAt: commonEnd };
     const other = OTHER_BIDDERS[index % OTHER_BIDDERS.length];
     return {
       ...lot,
-      endAt: now + (now - lot.endAt) + HOUR,
+      endAt: commonEnd,
       // 往期「我拍得／未拍得」剧本留在往期；当前期不重复算作我参与。
       bids: lot.bids.map(bid => bid.bidderAddress === myAddress
         ? { ...bid, bidderAddress: other.address, bidderLabel: other.label, payWallet: 'onchain' as const }

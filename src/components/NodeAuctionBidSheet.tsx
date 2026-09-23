@@ -10,7 +10,6 @@ import {
   type AuctionLot,
 } from '../auctionConfig';
 import { formatTokenAmount } from '../stakeConfig';
-import { PbWalletPicker } from './PbWalletPicker';
 import type { PbWalletId } from '../types';
 
 /**
@@ -26,13 +25,15 @@ export function NodeAuctionBidSheet({
   myAddress: string;
   onClose: () => void;
 }) {
-  const { t, placeAuctionBid, showToast, walletConnected, requireWallet } = useApp();
+  const { t, placeAuctionBid, showToast, walletConnected, requireWallet, pbWallets } = useApp();
   const minBid = auctionMinNextBid(lot);
   const [amountInput, setAmountInput] = useState(String(minBid));
-  const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
   const [paying, setPaying] = useState(false);
 
   const amount = parseInt(amountInput, 10) || 0;
+  // 竞拍只收站内 PB，不提供钱包选择
+  const balance = pbWallets.airdrop;
+  const payWallet: PbWalletId | null = balance >= amount ? 'airdrop' : null;
   const belowMin = amount < minBid;
   const iLead = auctionLeadingBid(lot)?.bidderAddress === myAddress;
 
@@ -140,7 +141,13 @@ export function NodeAuctionBidSheet({
           )}
         </div>
 
-        <PbWalletPicker use="node_auction" amount={amount} value={payWallet} onChange={setPayWallet} />
+        <div className="planet-upgrade-row">
+          <span className="planet-upgrade-row-label">{t('站内 PB 余额')}</span>
+          <div className="planet-upgrade-cost">
+            <span className="planet-upgrade-cost-num">{formatTokenAmount(balance)}</span>
+            <span className="planet-upgrade-cost-unit"> PB</span>
+          </div>
+        </div>
 
         <div className="planet-upgrade-sep" />
 
@@ -167,7 +174,7 @@ export function NodeAuctionBidSheet({
         </div>
 
         {!payWallet && (
-          <div className="sup-deposit-warning"><span>{t('请选择余额充足的钱包')}</span></div>
+          <div className="sup-deposit-warning"><span>{t('站内 PB 余额不足，还差 {amount} PB', { amount: formatTokenAmount(amount - balance) })}</span></div>
         )}
 
         <button type="button" className="planet-confirm-btn" onClick={handlePay} disabled={walletConnected && !canPay}>

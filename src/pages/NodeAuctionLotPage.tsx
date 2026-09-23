@@ -54,8 +54,8 @@ export function NodeAuctionLotPage({ lotId }: { lotId: string }) {
         </div>
 
         <div className="auction-info-card">
-          <InfoRow label={t('上月考核名次')} value={t('第 {rank} 名', { rank: lot.rankLastMonth })} />
-          <InfoRow label={t('上月空投额度')} value={`${formatTokenAmount(lot.lastMonthAirdropPb)} PB`} />
+          <InfoRow label={t(lot.period === 'previous' ? '竞拍前考核名次' : '上月考核名次')} value={t('第 {rank} 名', { rank: lot.rankLastMonth })} />
+          <InfoRow label={t(lot.period === 'previous' ? '计入起拍价的空投' : '上月空投额度')} value={`${formatTokenAmount(lot.lastMonthAirdropPb)} PB`} />
           <InfoRow label={t('原持有人')} value={lot.previousOwnerLabel} />
         </div>
 

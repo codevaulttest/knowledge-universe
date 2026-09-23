@@ -13539,12 +13539,13 @@ html[lang="zh-TW"] .planet-hero-title {
   gap: var(--ku-planet2-space-xs);
   padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-sm);
   border-radius: var(--ku-planet2-radius-sm);
-  background: var(--ku-color-genesis-gold-bg);
-  color: var(--ku-color-genesis-gold-text);
+  border: 1px solid var(--ku-color-border-card);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-primary);
   font-size: 13px;
   font-weight: 700;
 }
-.auction-opening-bar .auction-countdown { color: var(--ku-color-genesis-gold-text); }
+.auction-opening-bar .auction-countdown { color: var(--ku-color-text-secondary); }
 .auction-frozen-bar {
   display: flex;
   align-items: center;
@@ -13696,6 +13697,12 @@ html[lang="zh-TW"] .planet-hero-title {
   padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-base) var(--ku-planet2-space-base);
   background: var(--ku-color-bg-phone);
   border-top: 1px solid var(--ku-color-border);
+}
+/* 竞拍主按钮跟随创世金色，与列表行内按钮一致 */
+.auction-detail-footer .planet-confirm-btn,
+.auction-bid-sheet .planet-confirm-btn {
+  background: var(--ku-color-genesis-gold-action-bg);
+  box-shadow: none;
 }
 
 /* 出价弹窗 */
