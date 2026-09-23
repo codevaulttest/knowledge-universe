@@ -1,5 +1,4 @@
 import type { PbWalletId } from './types';
-import { REGION_TREE } from './regionData';
 
 /**
  * 创世节点竞拍数据层：常量 + 类型 + 纯函数 + mock 构造器。
@@ -58,7 +57,6 @@ export type AuctionLot = {
   seatNo: number;
   /** 上月考核名次（被淘汰的后 50 名）。 */
   rankLastMonth: number;
-  regionLabel: string;
   lastMonthAirdropPb: number;
   startPricePb: number;
   currentPricePb: number;
@@ -188,10 +186,6 @@ const OTHER_BIDDERS = [
   { address: '0x1d84e6b2c9a507f3d1b8e4a6c2f9d0b5e7a3c1f6', label: '0x1d84…c1f6' },
 ];
 
-const REGION_LABELS: string[] = REGION_TREE.flatMap(province =>
-  province.cities.map(city => (city.name.startsWith(province.name) ? city.name : `${province.name} ${city.name}`)),
-);
-
 type LotScript = {
   /** 相对当前时间的结束时刻（毫秒，负数表示已结束）。 */
   endOffset: number;
@@ -279,7 +273,6 @@ export function buildInitialAuctionLots(myAddress: string, now: number = Date.no
       nodeCode,
       seatNo: rank,
       rankLastMonth: rank,
-      regionLabel: REGION_LABELS[Math.floor(rand() * REGION_LABELS.length)],
       lastMonthAirdropPb,
       startPricePb,
       currentPricePb: bids.length > 0 ? bids[0].amount : startPricePb,

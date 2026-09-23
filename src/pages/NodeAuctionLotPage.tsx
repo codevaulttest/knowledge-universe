@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import { ChevronRight, Info } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { PageHeader } from '../components/shared';
 import { AuctionCountdown, AuctionStateBadge, useAuctionNow } from '../components/NodeAuctionBits';
 import { NodeAuctionBidSheet } from '../components/NodeAuctionBidSheet';
-import { AuctionRulesSheet } from './NodeAuctionPage';
 import {
   AUCTION_PREMIUM_DESTINATION,
   AUCTION_START_INCLUDES_AIRDROP,
@@ -21,7 +19,6 @@ export function NodeAuctionLotPage({ lotId }: { lotId: string }) {
   const { t, goBack, canGoBack, auctionLots, settleAuctionLot } = useApp();
   const now = useAuctionNow();
   const [bidOpen, setBidOpen] = useState(false);
-  const [rulesOpen, setRulesOpen] = useState(false);
   const lot = auctionLots.find(l => l.id === lotId) ?? null;
 
   useEffect(() => {
@@ -66,7 +63,6 @@ export function NodeAuctionLotPage({ lotId }: { lotId: string }) {
         </div>
 
         <div className="auction-info-card">
-          <InfoRow label={t('节点位置')} value={lot.regionLabel} />
           <InfoRow label={t('上月考核名次')} value={t('第 {rank} 名', { rank: lot.rankLastMonth })} />
           <InfoRow label={t('上月空投额度')} value={`${formatTokenAmount(lot.lastMonthAirdropPb)} PB`} />
           <InfoRow label={t('原持有人')} value={lot.previousOwnerLabel} />
@@ -84,7 +80,7 @@ export function NodeAuctionLotPage({ lotId }: { lotId: string }) {
         </div>
 
         {settlement && (
-          <div className="auction-info-card">
+          <div className="auction-info-card auction-settle-card">
             {settlement.winnerLabel ? (
               <>
                 <InfoRow label={t('成交价')} value={`${formatTokenAmount(settlement.finalPricePb)} PB`} strong />
@@ -98,12 +94,6 @@ export function NodeAuctionLotPage({ lotId }: { lotId: string }) {
             )}
           </div>
         )}
-
-        <button type="button" className="bsp-rules-entry" onClick={() => setRulesOpen(true)}>
-          <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
-          <span className="bsp-rules-entry-text">{t('查看完整竞拍规则')}</span>
-          <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
-        </button>
 
         <div className="auction-history">
           <span className="auction-history-title">{t('出价记录')}</span>
@@ -136,7 +126,6 @@ export function NodeAuctionLotPage({ lotId }: { lotId: string }) {
       )}
 
       {bidOpen && <NodeAuctionBidSheet lot={lot} myAddress={MOCK_WALLET_ADDRESS} onClose={() => setBidOpen(false)} />}
-      {rulesOpen && <AuctionRulesSheet onClose={() => setRulesOpen(false)} />}
     </div>
   );
 }

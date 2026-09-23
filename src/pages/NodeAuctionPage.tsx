@@ -57,7 +57,7 @@ export function NodeAuctionPage() {
     <div className="page auction-page">
       <PageHeader title={t('创世节点竞拍')} onBack={canGoBack ? goBack : undefined} />
       <main className="scroll-area auction-scroll">
-        <button type="button" className="bsp-rules-entry" onClick={() => setRulesOpen(true)}>
+        <button type="button" className="bsp-rules-entry task-panel-rules-entry--neutral" onClick={() => setRulesOpen(true)}>
           <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
           <span className="bsp-rules-entry-text">{t('查看完整竞拍规则')}</span>
           <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
@@ -156,7 +156,7 @@ function AuctionLotRow({ lot, now, onOpen, onBid }: { lot: AuctionLot; now: numb
         <AuctionStateBadge lot={lot} myAddress={MOCK_WALLET_ADDRESS} now={now} />
       </div>
       <div className="auction-lot-meta">
-        {t('{region} · 上月空投 {airdrop} PB', { region: lot.regionLabel, airdrop: formatTokenAmount(lot.lastMonthAirdropPb) })}
+        {t('上月第 {rank} 名 · 上月空投 {airdrop} PB', { rank: lot.rankLastMonth, airdrop: formatTokenAmount(lot.lastMonthAirdropPb) })}
       </div>
       <div className="auction-lot-price-row">
         <div className="auction-lot-price">

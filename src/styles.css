@@ -13495,7 +13495,7 @@ html[lang="zh-TW"] .planet-hero-title {
   padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base);
   border: 1px solid var(--ku-color-genesis-gold);
   border-radius: var(--ku-planet2-radius-lg);
-  background: linear-gradient(135deg, var(--ku-planet2-color-genesis-gold-light), var(--ku-color-genesis-gold));
+  background: var(--ku-color-genesis-gold-bg);
   text-align: left;
   cursor: pointer;
 }
@@ -13513,11 +13513,13 @@ html[lang="zh-TW"] .planet-hero-title {
 .auction-entry-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .auction-entry-head { display: flex; align-items: center; gap: 8px; }
 .auction-entry-title { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; color: var(--ku-color-text-primary); }
-.auction-entry-sub { font-size: 12px; color: var(--ku-color-genesis-gold-text); }
+.auction-entry-sub { font-size: 12px; color: var(--ku-color-text-primary); }
 .auction-entry-mine { font-size: 12px; font-weight: 600; color: var(--ku-color-text-primary); }
-.auction-entry-mine--alert { color: var(--ku-color-text-danger); }
+.auction-entry-mine--alert { color: var(--ku-color-genesis-gold-alert-text); }
 .auction-entry-countdown { flex: none; }
-.auction-entry-chevron { color: var(--ku-color-genesis-gold-text); flex: none; }
+.auction-entry-chevron { color: var(--ku-color-text-primary); flex: none; }
+.auction-entry-card .auction-countdown { color: var(--ku-color-text-primary); }
+.auction-entry-card .auction-countdown--urgent { color: var(--ku-color-genesis-gold-alert-text); }
 
 /* 列表页 */
 .auction-scroll {
@@ -13525,6 +13527,9 @@ html[lang="zh-TW"] .planet-hero-title {
   flex-direction: column;
   gap: var(--ku-planet2-space-sm);
   padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base) var(--ku-planet2-space-xxl);
+}
+.auction-page .bsp-rules-entry {
+  margin-bottom: 0;
 }
 .auction-tabs { margin: 0; }
 .auction-frozen-bar {
