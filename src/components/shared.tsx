@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, FileText, Gem, ImageOff, Link, Lock, Radio, RotateCcw, Settings, Star, Wallet } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, ChevronRight, CircleCheck, FileText, Gem, ImageOff, Link, Lock, Radio, RotateCcw, Settings, Star, Wallet, X } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import { useApp } from '../AppContext';
 import { NODE_STARS_BY_CODE, isVerifiedAuthor } from '../mockData';
@@ -286,11 +286,17 @@ export function Rating({ value, size = 28 }: { value: number; size?: number }) {
 }
 
 // ── Toast ──────────────────────────────────────────────────────
-export function Toast({ msg, type }: { msg: string; type?: 'demo' }) {
+export function Toast({ msg, type, onClose }: { msg: string; type?: 'demo'; onClose?: () => void }) {
+  const { t } = useApp();
   return (
     <div className={`toast${type === 'demo' ? ' toast--demo' : ''}`} role="status">
       {type === 'demo' && <span className="toast-demo-badge">DEMO</span>}
-      {msg}
+      <span className="toast-msg">{msg}</span>
+      {onClose && (
+        <button type="button" className="toast-close" onClick={onClose} aria-label={t('关闭')}>
+          <X size={14} strokeWidth={2} aria-hidden />
+        </button>
+      )}
     </div>
   );
 }

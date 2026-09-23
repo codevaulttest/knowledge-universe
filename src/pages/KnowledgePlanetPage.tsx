@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRightLeft, ArrowUpDown, Bookmark, Check, ChevronDown, C
 import { useApp } from '../AppContext';
 import { KnowledgePlanetIcon } from '../components/KnowledgePlanetIcon';
 import { AssetOverviewCard } from '../components/AssetOverviewCard';
+import { NodeAuctionEntryCard } from '../components/NodeAuctionEntryCard';
 import { PlanetHeroBalances } from '../components/PlanetHeroBalances';
 import { PlanetAnnouncementBanner } from '../components/PlanetAnnouncementBanner';
 import { BspInvestSheet } from '../components/BspInvestSheet';
@@ -620,6 +621,9 @@ export function KnowledgePlanetPage({ initialSearch, openBsp }: { initialSearch?
 
           {/* ── 资产概览：空投主区 + 今日互动任务 ── */}
           <AssetOverviewCard />
+
+          {/* ── 创世节点竞拍活动入口 ── */}
+          <NodeAuctionEntryCard />
 
           {/* ── Quick Actions: BSP 巨星投流 / 创建频道 ── */}
           <div className="planet-quick-actions">

@@ -15,6 +15,20 @@ import { BottomNav } from './components/BottomNav';
 import { ArticleReader, ChannelCollabReminderModal, ChannelCreatedSuccessModal, ChannelSubscribeModal, ConfirmDeleteModal, ConfirmUnfollowModal, ConnectWalletModal, CreateChannelModal, GeminiStakeModal, ImageLightbox, Ios26Alert, LinkSheet, PaymentSheet, VideoPlayer } from './components/Overlays';
 import { InteractionTaskSheet } from './components/InteractionTaskSheet';
 import { LotTaskPage } from './pages/LotTaskPage';
+import { NodeAuctionPage } from './pages/NodeAuctionPage';
+import { NodeAuctionLotPage } from './pages/NodeAuctionLotPage';
+import {
+  auctionLeadingBid,
+  auctionMinNextBid,
+  AUCTION_BID_CHARGES_GAS,
+  AUCTION_MIN_INCREMENT_PB,
+  AUCTION_OWNER_REFUND_PB,
+  buildInitialAuctionLots,
+  validateAuctionBid,
+  type AuctionBid,
+  type AuctionBidRejection,
+  type AuctionLot,
+} from './auctionConfig';
 import { effectiveClaimRatio, getIssuedCredibilityRewardTotal, getLotQuota, getTaskCalendarMonth, getTaskSnapshot, getYesterdaySnapshot, isRatioLadderActive, lotCredibilityEarned, markInteracted, markPosted, recordAirdropClaim, resetTasks, settleDueCredibilityRewards, simulateInteractedCount, taskDayKey, TASK_CELEBRATE_EVERY, type TaskDaySnapshot } from './taskConfig';
 import { Toast } from './components/shared';
 import { TaskCelebrationOverlay } from './components/TaskCelebrationOverlay';
@@ -274,7 +288,12 @@ export default function App({ account, onLanguageChange }: {
     return true;
   };
 
-  const setDemoPbWallets = (preset: 'normal' | 'limited') => {
+  const setDemoPbWallets = (preset: 'normal' | 'limited' | 'auction') => {
+    if (preset === 'auction') {
+      // 竞拍起价 20 万 PB，演示时先把余额补到能走完出价流程
+      setPbWallets(prev => ({ ...prev, airdrop: 1_200_000, onchain: 800_000, credibility: 600_000 }));
+      return;
+    }
     setPbWallets(preset === 'normal'
       ? getInitialPbWallets()
       : { onchain: 80, station: 2400, credibility: 800 + getIssuedCredibilityRewardTotal(lotQuota.interactions), airdrop: 40 });
@@ -725,9 +744,16 @@ export default function App({ account, onLanguageChange }: {
   const [homeFeedRefreshNonce, setHomeFeedRefreshNonce] = useState(0);
   const refreshHomeFeed = useCallback(() => setHomeFeedRefreshNonce(n => n + 1), []);
 
+  // 横幅自动消失，但用户也可以手动关；手动关闭时同步清掉定时器，避免关掉后又被旧定时器误清新横幅
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissToast = useCallback(() => {
+    if (toastTimerRef.current) { clearTimeout(toastTimerRef.current); toastTimerRef.current = null; }
+    setToastMsg(null);
+  }, []);
   const showToast = (msg: string, type?: 'demo') => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMsg({ msg, type });
-    setTimeout(() => setToastMsg(null), 2500);
+    toastTimerRef.current = setTimeout(() => { toastTimerRef.current = null; setToastMsg(null); }, 2500);
   };
 
   // 奖励在北京时间跨日后结算；重新打开原型时也会补结算此前未发放的奖励。
@@ -1090,6 +1116,104 @@ export default function App({ account, onLanguageChange }: {
     showToast(wasExpired
       ? t('续费成功！已恢复「{tierName}」专属内容访问权限', { tierName })
       : t('订阅成功！已解锁「{tierName}」专属内容', { tierName }));
+  };
+
+  // ── 创世节点竞拍：出价即冻结，被超过或落拍时按原钱包解冻退回 ──────────
+  const [auctionLots, setAuctionLots] = useState<AuctionLot[]>(() => buildInitialAuctionLots(MOCK_WALLET_ADDRESS));
+
+  const refundAuctionBid = (bid: AuctionBid) => {
+    setPbWallets(prev => ({ ...prev, [bid.payWallet]: prev[bid.payWallet] + bid.amount }));
+  };
+
+  const placeAuctionBid = (input: { lotId: string; amount: number; wallet: PbWalletId }):
+    { ok: true; refundedPb: number } | { ok: false; reason: AuctionBidRejection | 'insufficient' } => {
+    const lot = auctionLots.find(l => l.id === input.lotId);
+    if (!lot) return { ok: false, reason: 'ended' };
+    const check = validateAuctionBid({ lot, amount: input.amount, now: Date.now(), myAddress: MOCK_WALLET_ADDRESS });
+    if (!check.ok) return check;
+    const paid = payPb({
+      amount: input.amount,
+      use: 'node_auction',
+      wallet: input.wallet,
+      supCost: AUCTION_BID_CHARGES_GAS ? pbOnchainFee(input.amount) : undefined,
+    });
+    if (!paid) return { ok: false, reason: 'insufficient' };
+
+    // 覆盖自己的领先价时，上一笔冻结按原钱包退回，用户净支出只是差额
+    const previous = auctionLeadingBid(lot);
+    const myPrevious = previous && previous.bidderAddress === MOCK_WALLET_ADDRESS && !previous.refunded ? previous : null;
+    if (myPrevious) refundAuctionBid(myPrevious);
+
+    const bid: AuctionBid = {
+      id: `ab${Date.now()}`,
+      bidderAddress: MOCK_WALLET_ADDRESS,
+      bidderLabel: MOCK_WALLET_ADDRESS,
+      amount: input.amount,
+      createdAt: Date.now(),
+      payWallet: input.wallet,
+    };
+    setAuctionLots(prev => prev.map(l => l.id !== lot.id ? l : {
+      ...l,
+      currentPricePb: input.amount,
+      bids: [bid, ...l.bids.map(b => b.id === myPrevious?.id ? { ...b, refunded: true } : b)],
+    }));
+    return { ok: true, refundedPb: myPrevious?.amount ?? 0 };
+  };
+
+  /** 演示用：让别人把我超过，走通解冻退回这条路径。 */
+  const simulateAuctionOutbid = (lotId: string) => {
+    const lot = auctionLots.find(l => l.id === lotId);
+    if (!lot) return;
+    const leading = auctionLeadingBid(lot);
+    const amount = auctionMinNextBid(lot) + AUCTION_MIN_INCREMENT_PB;
+    const myLeading = leading && leading.bidderAddress === MOCK_WALLET_ADDRESS && !leading.refunded ? leading : null;
+    if (myLeading) refundAuctionBid(myLeading);
+    const rival: AuctionBid = {
+      id: `ab${Date.now()}`,
+      bidderAddress: '0x7a41c9d2e6b8f0134c5a9e7d2b6f8a01c3d5e7f9',
+      bidderLabel: '0x7a41…e7f9',
+      amount,
+      createdAt: Date.now(),
+      payWallet: 'onchain',
+    };
+    setAuctionLots(prev => prev.map(l => l.id !== lotId ? l : {
+      ...l,
+      currentPricePb: amount,
+      bids: [rival, ...l.bids.map(b => b.id === myLeading?.id ? { ...b, refunded: true } : b)],
+    }));
+    if (myLeading) {
+      showToast(t('你在创世 #{seat} 的出价被超过了，{amount} PB 已退回', {
+        seat: lot.seatNo,
+        amount: formatTokenAmount(myLeading.amount),
+      }));
+    }
+  };
+
+  /** 倒计时归零后补算，写成幂等：已结算直接返回。 */
+  const settleAuctionLot = (lotId: string) => {
+    const lot = auctionLots.find(l => l.id === lotId);
+    if (!lot || lot.settled) return;
+    const leading = auctionLeadingBid(lot);
+    lot.bids
+      .filter(bid => !bid.refunded && bid.id !== leading?.id && bid.bidderAddress === MOCK_WALLET_ADDRESS)
+      .forEach(refundAuctionBid);
+    setAuctionLots(prev => prev.map(l => l.id !== lotId || l.settled ? l : {
+      ...l,
+      bids: l.bids.map(b => b.id === leading?.id ? b : { ...b, refunded: true }),
+      settled: leading
+        ? {
+            finalPricePb: leading.amount,
+            ownerRefundPb: AUCTION_OWNER_REFUND_PB,
+            premiumPb: Math.max(0, leading.amount - AUCTION_OWNER_REFUND_PB),
+            winnerLabel: leading.bidderLabel,
+          }
+        : { finalPricePb: 0, ownerRefundPb: 0, premiumPb: 0, winnerLabel: null },
+    }));
+  };
+
+  const resetAuctionDemo = () => {
+    setAuctionLots(buildInitialAuctionLots(MOCK_WALLET_ADDRESS));
+    showToast(t('竞拍数据已重置'));
   };
 
   // ── 小黄车：收货地址 + 订单 ──────────────────────────────────────
@@ -1507,6 +1631,7 @@ export default function App({ account, onLanguageChange }: {
     shopOrders, shippingAddresses, defaultAddress,
     addShippingAddress, setDefaultAddress, removeShippingAddress, updateShippingAddress,
     placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle, requestShopRefund,
+    auctionLots, placeAuctionBid, simulateAuctionOutbid, settleAuctionLot, resetAuctionDemo,
     knowledgeCerts, simulateCertMint, simulateCertRevoke,
     openCertApply, applyCert,
     navBarsHidden, setNavBarsHidden,
@@ -1541,6 +1666,8 @@ export default function App({ account, onLanguageChange }: {
         {pageRoute.page === 'P_ORDERS' && <OrdersPage initialRole={pageRoute.role} />}
         {pageRoute.page === 'P_ADN' && <AdnPage />}
         {pageRoute.page === 'P_LOT_TASK' && <LotTaskPage />}
+        {pageRoute.page === 'P_NODE_AUCTION' && <NodeAuctionPage />}
+        {pageRoute.page === 'P_NODE_AUCTION_LOT' && <NodeAuctionLotPage lotId={pageRoute.lotId} />}
 
         {/* 码库全局底部导航（知识宇宙内始终保持同一套宿主导航）*/}
         {showBottomNav && <BottomNav route={pageRoute} setTab={setTab} />}
@@ -1794,7 +1921,7 @@ export default function App({ account, onLanguageChange }: {
           />
         )}
 
-        {toastMsg && <Toast msg={toastMsg.msg} type={toastMsg.type} />}
+        {toastMsg && <Toast msg={toastMsg.msg} type={toastMsg.type} onClose={dismissToast} />}
 
         {/* 任务里程碑庆祝：每完成 5 篇互动帖就地放烟花（在信息流动作现场触发） */}
         <TaskCelebrationOverlay />

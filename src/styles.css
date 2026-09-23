@@ -1772,35 +1772,65 @@ button {
 /* ═══════════════════════════════════════════════════════════════
    Toast
    ═══════════════════════════════════════════════════════════════ */
+/* 顶部浅色横幅：白底描边 + 阴影，右侧常驻关闭按钮，可手动关掉 */
 .toast {
   position: fixed;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  top: 12px;
+  transform: translateX(-50%);
   z-index: 500;
-  padding: 10px 18px;
-  border-radius: 20px;
-  background: rgba(14, 22, 44, 0.82);
-  color: #fff;
-  font: 400 13px/1.4 var(--ku-font-family);
-  white-space: nowrap;
-  pointer-events: none;
-  max-width: 280px;
-  white-space: pre-wrap;
-  text-align: center;
-}
-.toast--demo {
-  background: #f97316;
-  color: #fff;
+  width: calc(100% - 24px);
+  max-width: calc(var(--ku-layout-max-width) - 24px);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 10px 10px 10px 14px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  box-shadow: var(--ku-shadow-card);
+  color: var(--ku-color-text-primary);
+  font: 400 13px/1.4 var(--ku-font-family);
+  text-align: left;
+  animation: ku-toast-drop 0.2s ease-out;
+}
+@keyframes ku-toast-drop {
+  from { transform: translate(-50%, -12px); opacity: 0; }
+  to   { transform: translate(-50%, 0);     opacity: 1; }
+}
+.toast-msg {
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+}
+.toast-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--ku-radius-circle);
+  background: transparent;
+  color: var(--ku-color-text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.toast-close:hover {
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-primary);
+}
+.toast--demo {
+  border-color: var(--ku-color-lot-border);
+  background: var(--ku-color-lot-tint);
 }
 .toast-demo-badge {
   flex-shrink: 0;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--ku-color-lot-tint-strong);
+  color: var(--ku-color-text-primary);
   font: var(--ku-text-caption-strong);
   letter-spacing: 0.08em;
 }
@@ -13453,6 +13483,280 @@ html[lang="zh-TW"] .planet-hero-title {
   position: relative;
   z-index: 1;
   margin-top: calc(-1 * (var(--ku-planet2-space-lg) + 28px));
+}
+
+/* ═══════════════════════════════════════════════════
+   创世节点竞拍 (NodeAuctionPage)
+   ═══════════════════════════════════════════════════ */
+
+/* 知识宇宙页的活动入口卡 */
+.auction-entry-card {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-planet2-space-sm);
+  width: 100%;
+  padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base);
+  border: 1px solid var(--ku-color-genesis-gold);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: var(--ku-color-genesis-gold-bg);
+  text-align: left;
+  cursor: pointer;
+}
+.auction-entry-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ku-planet2-radius-full);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-genesis-gold-text);
+  flex: none;
+}
+.auction-entry-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.auction-entry-head { display: flex; align-items: center; gap: 8px; }
+.auction-entry-title { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; color: var(--ku-color-text-primary); }
+.auction-entry-sub { font-size: 12px; color: var(--ku-color-text-primary); }
+.auction-entry-mine { font-size: 12px; font-weight: 600; color: var(--ku-color-text-primary); }
+.auction-entry-mine--alert { color: var(--ku-color-text-danger); }
+.auction-entry-countdown { flex: none; }
+.auction-entry-chevron { color: var(--ku-color-text-primary); flex: none; }
+.auction-entry-card .auction-countdown { color: var(--ku-color-text-primary); }
+.auction-entry-card .auction-countdown--urgent { color: var(--ku-color-text-danger); }
+
+/* 列表页 */
+.auction-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-sm);
+  padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base) var(--ku-planet2-space-xxl);
+}
+.auction-page .bsp-rules-entry {
+  margin-bottom: 0;
+}
+.auction-tabs { margin: 0; }
+.auction-opening-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ku-planet2-space-xs);
+  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-sm);
+  border-radius: var(--ku-planet2-radius-sm);
+  border: 1px solid var(--ku-color-border-card);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-text-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+.auction-opening-bar .auction-countdown { color: var(--ku-color-text-secondary); }
+.auction-frozen-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-planet2-space-xs);
+  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-sm);
+  border-radius: var(--ku-planet2-radius-sm);
+  background: var(--ku-color-genesis-gold-bg);
+  color: var(--ku-color-genesis-gold-text);
+}
+.auction-frozen-amount { font-size: 13px; font-weight: 700; }
+.auction-frozen-meta { font-size: 12px; margin-left: auto; }
+
+.auction-lot-list { display: flex; flex-direction: column; gap: var(--ku-planet2-space-xs); }
+.auction-group-title { padding: 0 4px; font: var(--ku-text-caption-strong); color: var(--ku-color-text-secondary); }
+.auction-group-title--rest { margin-top: var(--ku-planet2-space-sm); }
+.auction-lot-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-xxs);
+  width: 100%;
+  padding: var(--ku-planet2-space-sm);
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: var(--ku-color-bg-phone);
+  text-align: left;
+  cursor: pointer;
+}
+.auction-lot-head { display: flex; align-items: center; gap: var(--ku-planet2-space-xs); }
+.auction-lot-seat { font-size: 14px; font-weight: 700; color: var(--ku-color-genesis-gold-text); }
+.auction-lot-code { font-size: 13px; color: var(--ku-color-text-secondary); letter-spacing: 0.04em; }
+.auction-lot-meta-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ku-planet2-space-xs); flex-wrap: wrap; }
+.auction-lot-meta { font-size: 12px; color: var(--ku-color-text-meta); }
+.auction-lot-price-row { display: flex; align-items: center; justify-content: space-between; gap: var(--ku-planet2-space-xs); }
+.auction-lot-price { display: flex; align-items: baseline; gap: var(--ku-planet2-space-xxs); min-width: 0; flex-wrap: wrap; }
+.auction-lot-price-label { font-size: 12px; color: var(--ku-color-text-meta); }
+.auction-lot-price-value { font-size: 17px; font-weight: 700; color: var(--ku-color-text-primary); }
+.auction-lot-price-meta { font-size: 12px; color: var(--ku-color-text-meta); }
+.auction-lot-bid-count { margin-left: var(--ku-planet2-space-xs); font-size: 12px; color: var(--ku-color-text-meta); }
+.auction-lot-action {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-genesis-gold-action-bg);
+  color: var(--ku-color-on-primary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.auction-lot-action--quiet {
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-secondary);
+}
+.auction-lot-action:disabled {
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-secondary);
+  cursor: default;
+}
+.auction-load-more-sentinel { min-height: 1px; }
+
+/* 状态徽章与倒计时 */
+.auction-badge {
+  padding: 2px 8px;
+  border-radius: var(--ku-planet2-radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: auto;
+  flex: none;
+}
+.auction-badge--live { background: var(--ku-color-bg-secondary); color: var(--ku-color-text-secondary); }
+.auction-badge--leading { background: var(--ku-color-genesis-gold-bg); color: var(--ku-color-genesis-gold-text); }
+.auction-badge--outbid { background: var(--ku-color-danger-bg); color: var(--ku-color-text-danger); }
+.auction-badge--won { background: var(--ku-color-success-bg); color: var(--ku-color-success-text); }
+.auction-badge--ended { background: var(--ku-color-bg-secondary); color: var(--ku-color-text-meta); }
+.auction-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ku-planet2-space-xxs);
+  font-size: 12px;
+  color: var(--ku-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.auction-countdown--urgent { color: var(--ku-color-text-danger); font-weight: 600; }
+.auction-countdown--ended { color: var(--ku-color-text-meta); }
+
+/* 详情页 */
+.auction-detail-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-xs);
+  padding: var(--ku-planet2-space-sm);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: var(--ku-color-genesis-gold-bg);
+}
+.auction-price-block { display: flex; flex-direction: column; gap: 2px; }
+.auction-price-label { font-size: 12px; color: var(--ku-color-text-meta); }
+.auction-price-value { font-size: 26px; font-weight: 700; color: var(--ku-color-text-primary); font-variant-numeric: tabular-nums; }
+.auction-price-meta { font-size: 12px; color: var(--ku-color-text-meta); }
+.auction-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-xxs);
+  padding: var(--ku-planet2-space-sm);
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: var(--ku-color-bg-phone);
+}
+.auction-info-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ku-planet2-space-xs); }
+.auction-info-label { font-size: 13px; color: var(--ku-color-text-secondary); }
+.auction-info-value { font-size: 13px; color: var(--ku-color-text-primary); text-align: right; }
+.auction-info-value--strong { font-size: 15px; font-weight: 700; }
+.auction-info-sep { height: 1px; background: var(--ku-color-border-cell); margin: var(--ku-planet2-space-xxs) 0; }
+.auction-settle-empty { font-size: 13px; color: var(--ku-color-text-secondary); }
+
+.auction-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-xxs);
+  padding: var(--ku-planet2-space-sm);
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: var(--ku-color-bg-phone);
+}
+.auction-history-title { font-size: 14px; font-weight: 700; color: var(--ku-color-text-primary); }
+.auction-history-empty { font-size: 13px; color: var(--ku-color-text-secondary); }
+.auction-history-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-planet2-space-xs);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ku-color-border-cell);
+  font-size: 12px;
+  color: var(--ku-color-text-secondary);
+}
+.auction-history-row:last-child { border-bottom: none; }
+.auction-history-row--mine { color: var(--ku-color-genesis-gold-text); font-weight: 600; }
+.auction-history-time { flex: none; font-variant-numeric: tabular-nums; }
+.auction-history-bidder { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.auction-history-amount { flex: none; font-weight: 700; color: var(--ku-color-text-primary); }
+.auction-history-tag {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-meta);
+  font-size: 12px;
+  font-weight: 500;
+}
+.auction-detail-footer {
+  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-base) var(--ku-planet2-space-base);
+  background: var(--ku-color-bg-phone);
+  border-top: 1px solid var(--ku-color-border);
+}
+/* 竞拍主按钮跟随创世金色，与列表行内按钮一致 */
+.auction-detail-footer .planet-confirm-btn,
+.auction-bid-sheet .planet-confirm-btn {
+  background: var(--ku-color-genesis-gold-action-bg);
+  box-shadow: none;
+}
+
+/* 出价弹窗 */
+.auction-bid-sheet > .auction-price-block { margin-bottom: var(--ku-planet2-space-base); }
+.auction-bid-sheet > .create-delay-note {
+  background: var(--ku-color-genesis-gold-bg);
+  color: var(--ku-color-genesis-gold-text);
+}
+.auction-bid-sheet > .create-delay-note > svg { color: var(--ku-color-genesis-gold-text); }
+.auction-bid-sheet > .planet-confirm-btn {
+  background: var(--ku-color-genesis-gold-action-bg);
+  color: var(--ku-color-on-primary);
+  box-shadow: none;
+}
+.auction-bid-sheet .create-qty-block { flex-wrap: nowrap; margin: 0; }
+.auction-bid-input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  box-sizing: border-box;
+  margin: 0 var(--ku-planet2-space-sm);
+  padding: 0 var(--ku-planet2-space-sm);
+  border: 1px solid var(--ku-color-genesis-gold);
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-genesis-gold-bg);
+  color: var(--ku-color-text-primary);
+  font-family: var(--ku-font-family);
+  text-align: center;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  appearance: none;
+}
+.auction-bid-input:focus-visible {
+  outline: 2px solid var(--ku-color-genesis-gold-text);
+  outline-offset: 2px;
+}
+.auction-quick-chips { display: flex; gap: var(--ku-planet2-space-xs); margin-top: var(--ku-planet2-space-xs); }
+.auction-quick-chip {
+  padding: 4px 12px;
+  border: 1px solid var(--ku-color-border-control);
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-bg-phone);
+  font-size: 13px;
+  color: var(--ku-color-text-secondary);
+  cursor: pointer;
+}
+.auction-inline-error {
+  display: block;
+  margin-top: var(--ku-planet2-space-xxs);
+  font-size: 12px;
+  color: var(--ku-color-text-danger);
 }
 
 /* ═══════════════════════════════════════════════════

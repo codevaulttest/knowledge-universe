@@ -55,6 +55,8 @@ export const PB_USE_ALLOWED_WALLETS: Record<PbUse, readonly PbWalletId[]> = {
   purchase: ['airdrop', 'onchain'],
   node_upgrade: ['credibility', 'airdrop', 'onchain'],
   node_transfer: ['credibility', 'airdrop', 'onchain'],
+  // 创世节点竞拍：仅可用空投进站内的 PB 出价。
+  node_auction: ['airdrop'],
   // 频道协作年费：仅可用空投进站内的 PB 支付。
   channel_collab: ['airdrop'],
   // 会议尚未覆盖以下用途，原型先保守仅开放通用 PB。
@@ -84,7 +86,7 @@ export function supReasonForPbUse(use: PbUse): SupTransactionReason {
     save: 'save', unlock: 'unlock', partner: 'partner',
     channel_subscribe: 'chain_unlock', purchase: 'purchase', tip: 'chain_unlock',
     node_upgrade: 'node_upgrade', node_transfer: 'node_transfer',
-    channel_collab: 'channel_collab', post_overlength: 'post',
+    channel_collab: 'channel_collab', node_auction: 'node_auction', post_overlength: 'post',
   };
   return map[use];
 }

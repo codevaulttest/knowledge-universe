@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import type { ActivityGroup, AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, Draft, InteractionAction, KnowledgeCert, Language, RevokeReason, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import type { LotQuota, TaskCalendarMonth, TaskDaySnapshot } from './taskConfig';
+import type { AuctionBidRejection, AuctionLot } from './auctionConfig';
 
 export type AppContextValue = {
   navigate: (route: Route) => void;
@@ -144,8 +145,15 @@ export type AppContextValue = {
   pickDefaultPbWallet: (use: PbUse, amount: number) => PbWalletId | null;
   /** 单一钱包支付；余额或用途不符合时返回 false，绝不混用。 */
   payPb: (payment: { amount: number; use: PbUse; wallet: PbWalletId; supCost?: number; supReason?: SupTransactionReason }) => boolean;
+  // ── 创世节点竞拍：出价即冻结，被超过或落拍时原路解冻退回 ──
+  auctionLots: AuctionLot[];
+  placeAuctionBid: (input: { lotId: string; amount: number; wallet: PbWalletId }) =>
+    { ok: true; refundedPb: number } | { ok: false; reason: AuctionBidRejection | 'insufficient' };
+  simulateAuctionOutbid: (lotId: string) => void;
+  settleAuctionLot: (lotId: string) => void;
+  resetAuctionDemo: () => void;
   /** 开发工具：切换可用与受限钱包的演示余额。 */
-  setDemoPbWallets: (preset: 'normal' | 'limited') => void;
+  setDemoPbWallets: (preset: 'normal' | 'limited' | 'auction') => void;
   /** 地址迁移申请：费用在申请期冻结，实际资料迁移由后续服务执行。 */
   addressMigrations: AddressMigration[];
   requestAddressMigration: (targetAddress: string) => { ok: boolean; message?: string };

@@ -55,25 +55,25 @@ export function PbWalletPicker({
   return (
     <div className="stake-code-block" style={{ position: 'relative', marginBottom: 16 }}>
       <div className="stake-code-label-row">
-        <span className="stake-code-label">{t('支付方式')}</span>
+        <span className="stake-code-label">{t(use === 'node_auction' ? '出价钱包' : '支付方式')}</span>
       </div>
       <button
         ref={triggerRef}
         type="button"
         className="pb-wallet-trigger"
         aria-expanded={expanded}
-        aria-label={t('选择支付钱包')}
+        aria-label={t(use === 'node_auction' ? '选择出价钱包' : '选择支付钱包')}
         onClick={() => setExpanded(e => !e)}
       >
         <Wallet size={14} strokeWidth={2} className="pb-wallet-trigger-icon" aria-hidden="true" />
         <span className="pb-wallet-trigger-text">
           {selectedMeta
-            ? t('用 {wallet} 支付 · 余额 {amount} {unit}', {
+            ? t(use === 'node_auction' ? '使用 {wallet} 出价 · 余额 {amount} {unit}' : '用 {wallet} 支付 · 余额 {amount} {unit}', {
                 wallet: t(selectedMeta.labelKey),
                 amount: formatTokenAmount(pbWallets[value as PbWalletId]),
                 unit: t(selectedMeta.unitKey),
               })
-            : t('请选择支付钱包')}
+            : t(use === 'node_auction' ? '请选择出价钱包' : '请选择支付钱包')}
         </span>
         <ChevronDown
           size={14}
@@ -96,7 +96,7 @@ export function PbWalletPicker({
             className="planet-node-dropdown-menu"
             style={menuStyle}
             role="listbox"
-            aria-label={t('选择支付钱包')}
+            aria-label={t(use === 'node_auction' ? '选择出价钱包' : '选择支付钱包')}
           >
             {options.map(({ wallet, allowed, sufficient }) => {
               const meta = PB_WALLETS[wallet];
