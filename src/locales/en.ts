@@ -1478,6 +1478,7 @@ export const en: Record<string, string> = {
   '确认出价': 'Confirm bid',
   '连接钱包后出价': 'Connect an account to bid',
   '本期 {count} 个席位公开竞拍': '{count} seats open for bidding this round',
+  '本期 {count} 席公开竞拍 · {idle} 席无人出价': '{count} seats open · {idle} without a bid',
   '本期竞拍已结束，可查看成交结果': 'This round has closed — view the results',
   '我领先 {leading} 场 · 被超过 {outbid} 场': 'Leading {leading} · outbid {outbid}',
   '你在 {nodeCode} 的出价被超过了，{amount} PB 已退回': 'You were outbid on {nodeCode}. {amount} PB has been returned',

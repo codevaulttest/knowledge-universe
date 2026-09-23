@@ -743,9 +743,16 @@ export default function App({ account, onLanguageChange }: {
   const [homeFeedRefreshNonce, setHomeFeedRefreshNonce] = useState(0);
   const refreshHomeFeed = useCallback(() => setHomeFeedRefreshNonce(n => n + 1), []);
 
+  // 横幅自动消失，但用户也可以手动关；手动关闭时同步清掉定时器，避免关掉后又被旧定时器误清新横幅
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissToast = useCallback(() => {
+    if (toastTimerRef.current) { clearTimeout(toastTimerRef.current); toastTimerRef.current = null; }
+    setToastMsg(null);
+  }, []);
   const showToast = (msg: string, type?: 'demo') => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMsg({ msg, type });
-    setTimeout(() => setToastMsg(null), 2500);
+    toastTimerRef.current = setTimeout(() => { toastTimerRef.current = null; setToastMsg(null); }, 2500);
   };
 
   // 奖励在北京时间跨日后结算；重新打开原型时也会补结算此前未发放的奖励。
@@ -1848,7 +1855,7 @@ export default function App({ account, onLanguageChange }: {
           />
         )}
 
-        {toastMsg && <Toast msg={toastMsg.msg} type={toastMsg.type} />}
+        {toastMsg && <Toast msg={toastMsg.msg} type={toastMsg.type} onClose={dismissToast} />}
 
         {/* 任务里程碑庆祝：每完成 5 篇互动帖就地放烟花（在信息流动作现场触发） */}
         <TaskCelebrationOverlay />

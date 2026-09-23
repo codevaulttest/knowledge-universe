@@ -1772,35 +1772,65 @@ button {
 /* ═══════════════════════════════════════════════════════════════
    Toast
    ═══════════════════════════════════════════════════════════════ */
+/* 顶部浅色横幅：白底描边 + 阴影，右侧常驻关闭按钮，可手动关掉 */
 .toast {
   position: fixed;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  top: 12px;
+  transform: translateX(-50%);
   z-index: 500;
-  padding: 10px 18px;
-  border-radius: 20px;
-  background: rgba(14, 22, 44, 0.82);
-  color: #fff;
-  font: 400 13px/1.4 var(--ku-font-family);
-  white-space: nowrap;
-  pointer-events: none;
-  max-width: 280px;
-  white-space: pre-wrap;
-  text-align: center;
-}
-.toast--demo {
-  background: #f97316;
-  color: #fff;
+  width: calc(100% - 24px);
+  max-width: calc(var(--ku-layout-max-width) - 24px);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 10px 10px 10px 14px;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-phone);
+  box-shadow: var(--ku-shadow-card);
+  color: var(--ku-color-text-primary);
+  font: 400 13px/1.4 var(--ku-font-family);
+  text-align: left;
+  animation: ku-toast-drop 0.2s ease-out;
+}
+@keyframes ku-toast-drop {
+  from { transform: translate(-50%, -12px); opacity: 0; }
+  to   { transform: translate(-50%, 0);     opacity: 1; }
+}
+.toast-msg {
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+}
+.toast-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--ku-radius-circle);
+  background: transparent;
+  color: var(--ku-color-text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.toast-close:hover {
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-primary);
+}
+.toast--demo {
+  border-color: var(--ku-color-lot-border);
+  background: var(--ku-color-lot-tint);
 }
 .toast-demo-badge {
   flex-shrink: 0;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--ku-color-lot-tint-strong);
+  color: var(--ku-color-text-primary);
   font: var(--ku-text-caption-strong);
   letter-spacing: 0.08em;
 }
@@ -13481,7 +13511,8 @@ html[lang="zh-TW"] .planet-hero-title {
   flex: none;
 }
 .auction-entry-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.auction-entry-title { font-size: 15px; font-weight: 700; color: var(--ku-color-text-primary); }
+.auction-entry-head { display: flex; align-items: center; gap: 8px; }
+.auction-entry-title { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; color: var(--ku-color-text-primary); }
 .auction-entry-sub { font-size: 12px; color: var(--ku-color-genesis-gold-text); }
 .auction-entry-mine { font-size: 12px; font-weight: 600; color: var(--ku-color-text-primary); }
 .auction-entry-mine--alert { color: var(--ku-color-text-danger); }

@@ -1480,6 +1480,7 @@ export const zhCN: Record<string, string> = {
   '确认出价': '确认出价',
   '连接钱包后出价': '连接账户后出价',
   '本期 {count} 个席位公开竞拍': '本期 {count} 个席位公开竞拍',
+  '本期 {count} 席公开竞拍 · {idle} 席无人出价': '本期 {count} 席公开竞拍 · {idle} 席无人出价',
   '本期竞拍已结束，可查看成交结果': '本期竞拍已结束，可查看成交结果',
   '我领先 {leading} 场 · 被超过 {outbid} 场': '我领先 {leading} 场 · 被超过 {outbid} 场',
   '你在 {nodeCode} 的出价被超过了，{amount} PB 已退回': '你在 {nodeCode} 的出价被超过了，{amount} PB 已退回',

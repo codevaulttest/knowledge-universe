@@ -16,6 +16,8 @@ export function NodeAuctionEntryCard() {
   );
   const summary = useMemo(() => auctionFrozenSummary(auctionLots, MOCK_WALLET_ADDRESS, now), [auctionLots, now]);
   const soonest = live[0];
+  // 无人出价的场次单独点出来：起拍价就能拿下，是最容易促成第一笔出价的信息
+  const idleCount = live.filter(lot => lot.bids.length === 0).length;
 
   return (
     <button
@@ -25,11 +27,16 @@ export function NodeAuctionEntryCard() {
     >
       <span className="auction-entry-icon"><Gavel size={20} strokeWidth={2} aria-hidden /></span>
       <span className="auction-entry-body">
-        <span className="auction-entry-title">{t('创世节点竞拍')}</span>
+        <span className="auction-entry-head">
+          <span className="auction-entry-title">{t('创世节点竞拍')}</span>
+          {soonest && <AuctionCountdown lot={soonest} now={now} className="auction-entry-countdown" />}
+        </span>
         <span className="auction-entry-sub">
-          {live.length > 0
-            ? t('本期 {count} 个席位公开竞拍', { count: live.length })
-            : t('本期竞拍已结束，可查看成交结果')}
+          {live.length === 0
+            ? t('本期竞拍已结束，可查看成交结果')
+            : idleCount > 0
+              ? t('本期 {count} 席公开竞拍 · {idle} 席无人出价', { count: live.length, idle: idleCount })
+              : t('本期 {count} 个席位公开竞拍', { count: live.length })}
         </span>
         {(summary.leadingCount > 0 || summary.outbidCount > 0) && (
           <span className={`auction-entry-mine${summary.outbidCount > 0 ? ' auction-entry-mine--alert' : ''}`}>
@@ -37,7 +44,6 @@ export function NodeAuctionEntryCard() {
           </span>
         )}
       </span>
-      {soonest && <AuctionCountdown lot={soonest} now={now} className="auction-entry-countdown" />}
       <ChevronRight size={16} strokeWidth={2} className="auction-entry-chevron" aria-hidden />
     </button>
   );
