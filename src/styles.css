@@ -13532,6 +13532,19 @@ html[lang="zh-TW"] .planet-hero-title {
   margin-bottom: 0;
 }
 .auction-tabs { margin: 0; }
+.auction-opening-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ku-planet2-space-xs);
+  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-sm);
+  border-radius: var(--ku-planet2-radius-sm);
+  background: var(--ku-color-genesis-gold-bg);
+  color: var(--ku-color-genesis-gold-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.auction-opening-bar .auction-countdown { color: var(--ku-color-genesis-gold-text); }
 .auction-frozen-bar {
   display: flex;
   align-items: center;
@@ -13562,14 +13575,16 @@ html[lang="zh-TW"] .planet-hero-title {
 .auction-lot-head { display: flex; align-items: center; gap: var(--ku-planet2-space-xs); }
 .auction-lot-seat { font-size: 14px; font-weight: 700; color: var(--ku-color-genesis-gold-text); }
 .auction-lot-code { font-size: 13px; color: var(--ku-color-text-secondary); letter-spacing: 0.04em; }
+.auction-lot-meta-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ku-planet2-space-xs); flex-wrap: wrap; }
 .auction-lot-meta { font-size: 12px; color: var(--ku-color-text-meta); }
-.auction-lot-price-row { display: flex; align-items: baseline; gap: var(--ku-planet2-space-xs); flex-wrap: wrap; }
-.auction-lot-price { display: flex; align-items: baseline; gap: var(--ku-planet2-space-xxs); }
+.auction-lot-price-row { display: flex; align-items: center; justify-content: space-between; gap: var(--ku-planet2-space-xs); }
+.auction-lot-price { display: flex; align-items: baseline; gap: var(--ku-planet2-space-xxs); min-width: 0; flex-wrap: wrap; }
 .auction-lot-price-label { font-size: 12px; color: var(--ku-color-text-meta); }
 .auction-lot-price-value { font-size: 17px; font-weight: 700; color: var(--ku-color-text-primary); }
-.auction-lot-price-meta { font-size: 12px; color: var(--ku-color-text-meta); margin-left: auto; }
-.auction-lot-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--ku-planet2-space-xs); }
+.auction-lot-price-meta { font-size: 12px; color: var(--ku-color-text-meta); }
+.auction-lot-bid-count { margin-left: var(--ku-planet2-space-xs); font-size: 12px; color: var(--ku-color-text-meta); }
 .auction-lot-action {
+  flex-shrink: 0;
   padding: 6px 16px;
   border-radius: var(--ku-planet2-radius-pill);
   background: var(--ku-color-genesis-gold-action-bg);
@@ -13581,6 +13596,11 @@ html[lang="zh-TW"] .planet-hero-title {
 .auction-lot-action--quiet {
   background: var(--ku-color-bg-secondary);
   color: var(--ku-color-text-secondary);
+}
+.auction-lot-action:disabled {
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-secondary);
+  cursor: default;
 }
 .auction-load-more-sentinel { min-height: 1px; }
 

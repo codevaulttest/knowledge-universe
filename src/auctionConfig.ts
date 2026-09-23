@@ -53,6 +53,8 @@ export type AuctionSettlement = {
 
 export type AuctionLot = {
   id: string;
+  /** 演示数据所属期次；每期固定拍卖 50 席。 */
+  period: 'current' | 'previous';
   nodeCode: string;
   /** 创世席位号 1–100。 */
   seatNo: number;
@@ -108,18 +110,27 @@ export function auctionMyFrozenPb(lot: AuctionLot, myAddress: string): number {
 
 export function auctionFrozenSummary(lots: AuctionLot[], myAddress: string, now: number) {
   let frozenPb = 0;
+  let refundedPb = 0;
   let leadingCount = 0;
   let outbidCount = 0;
   let wonCount = 0;
   for (const lot of lots) {
     // 已结束的场次不再占用资金：中拍的已成交，落拍的已退回
-    if (auctionStatus(lot, now) !== 'ended') frozenPb += auctionMyFrozenPb(lot, myAddress);
+    if (auctionStatus(lot, now) !== 'ended') {
+      frozenPb += auctionMyFrozenPb(lot, myAddress);
+      // 汇总本期仍在竞拍的场次中，已原路退回的历史出价。
+      if (lot.period === 'current') {
+        refundedPb += lot.bids
+          .filter(bid => bid.bidderAddress === myAddress && bid.refunded)
+          .reduce((sum, bid) => sum + bid.amount, 0);
+      }
+    }
     const state = auctionMyBidState(lot, myAddress, now);
     if (state === 'leading') leadingCount += 1;
     if (state === 'outbid') outbidCount += 1;
     if (state === 'won') wonCount += 1;
   }
-  return { frozenPb, leadingCount, outbidCount, wonCount };
+  return { frozenPb, refundedPb, leadingCount, outbidCount, wonCount };
 }
 
 export function auctionSettlement(lot: AuctionLot): AuctionSettlement | null {
@@ -196,8 +207,6 @@ type LotScript = {
   myIndex?: number;
   /** 指定当前价（用于演示 6 位数排版）。 */
   currentPrice?: number;
-  /** 尚未开始。 */
-  upcoming?: boolean;
 };
 
 /** 12 条手写剧本覆盖全部状态，其余按种子生成。 */
@@ -213,7 +222,7 @@ const SCRIPTS: LotScript[] = [
   { endOffset: -DAY, rounds: 6, myIndex: 2 },
   { endOffset: -3 * DAY, rounds: 8 },
   { endOffset: -4 * DAY, rounds: 0 },
-  { endOffset: 6 * DAY, rounds: 0, upcoming: true },
+  { endOffset: 6 * DAY, rounds: 0 },
 ];
 
 export function buildInitialAuctionLots(myAddress: string, now: number = Date.now()): AuctionLot[] {
@@ -224,11 +233,12 @@ export function buildInitialAuctionLots(myAddress: string, now: number = Date.no
     const j = Math.floor(rand() * (i + 1));
     [seats[i], seats[j]] = [seats[j], seats[i]];
   }
-  const periodStart = now - 3 * DAY;
+  // 同一期的所有席位共用开拍时刻，演示默认处于竞拍中。
+  const periodStart = now - 10 * DAY;
   // 统一收官时刻：一部分场次同时结束，另一部分错峰，UI 不能假设全场同刻
   const commonEnd = now + 4 * DAY + 8 * HOUR;
 
-  return seats.map((rank, index) => {
+  const scriptedLots = seats.map((rank, index) => {
     const script: LotScript | undefined = SCRIPTS[index];
     const nodeCode = Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(rand() * CODE_CHARS.length)]).join('');
     // 名次越靠后空投越少，数据自洽
@@ -243,7 +253,7 @@ export function buildInitialAuctionLots(myAddress: string, now: number = Date.no
           ? commonEnd - now
           : 10 * MINUTE + Math.floor(rand() * 7 * DAY);
     const endAt = now + endOffset;
-    const startAt = script?.upcoming ? now + 2 * DAY : periodStart;
+    const startAt = periodStart;
     const rounds = script ? script.rounds : (endOffset < 0 || rand() > 0.35 ? Math.floor(rand() * 7) : 0);
 
     const bids: AuctionBid[] = [];
@@ -271,6 +281,7 @@ export function buildInitialAuctionLots(myAddress: string, now: number = Date.no
 
     const lot: AuctionLot = {
       id: `lot${index + 1}`,
+      period: 'current',
       nodeCode,
       seatNo: rank,
       rankLastMonth: rank,
@@ -297,4 +308,30 @@ export function buildInitialAuctionLots(myAddress: string, now: number = Date.no
     }
     return lot;
   });
+
+  // 当前期完整展示 50 席；原剧本中已结束的 17 场保留为往期记录，供结果页演示。
+  const previousLots = scriptedLots
+    .filter(lot => lot.endAt <= now)
+    .map(lot => ({
+      ...lot,
+      id: `previous-${lot.id}`,
+      period: 'previous' as const,
+      startAt: lot.startAt - 30 * DAY,
+      endAt: lot.endAt - 30 * DAY,
+      bids: lot.bids.map(bid => ({ ...bid, createdAt: bid.createdAt - 30 * DAY })),
+    }));
+  const currentLots = scriptedLots.map((lot, index) => {
+    if (lot.endAt > now) return lot;
+    const other = OTHER_BIDDERS[index % OTHER_BIDDERS.length];
+    return {
+      ...lot,
+      endAt: now + (now - lot.endAt) + HOUR,
+      // 往期「我拍得／未拍得」剧本留在往期；当前期不重复算作我参与。
+      bids: lot.bids.map(bid => bid.bidderAddress === myAddress
+        ? { ...bid, bidderAddress: other.address, bidderLabel: other.label, payWallet: 'onchain' as const }
+        : bid),
+      settled: undefined,
+    };
+  });
+  return [...currentLots, ...previousLots];
 }

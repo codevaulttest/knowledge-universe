@@ -41,14 +41,15 @@ export function NodeAuctionPage() {
     const live: AuctionLot[] = [];
     const ended: AuctionLot[] = [];
     auctionLots.forEach(lot => (auctionStatus(lot, now) === 'ended' ? ended : live).push(lot));
-    // 自己参与（领先或被超过）的场次置顶，方便回来加价；组内仍按结束时间由早到晚
+    // 自己参与的场次置顶：竞拍中方便回来加价，已结束方便查看结果。
     const mine = (lot: AuctionLot) => (auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) === 'none' ? 1 : 0);
     live.sort((a, b) => mine(a) - mine(b) || a.endAt - b.endAt);
-    ended.sort((a, b) => b.endAt - a.endAt);
+    ended.sort((a, b) => mine(a) - mine(b) || b.endAt - a.endAt);
     return { live, ended };
   }, [auctionLots, now]);
 
   const summary = useMemo(() => auctionFrozenSummary(auctionLots, MOCK_WALLET_ADDRESS, now), [auctionLots, now]);
+  const openingLot = auctionLots.find(lot => auctionStatus(lot, now) === 'upcoming');
   const list = tab === 'live' ? live : ended;
   const shown = list.slice(0, visible);
 
@@ -64,10 +65,8 @@ export function NodeAuctionPage() {
     observer.observe(target);
     return () => observer.disconnect();
   }, [list.length, visible]);
-  // 竞拍中分段里，自己参与的场次已排在最前；用分组标题把它们和其他场次隔开
-  const myCount = tab === 'live'
-    ? live.filter(lot => auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) !== 'none').length
-    : 0;
+  // 两个分段都按「我参与的 / 其他场次」分组。
+  const myCount = list.filter(lot => auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) !== 'none').length;
   const bidLot = auctionLots.find(lot => lot.id === bidLotId) ?? null;
 
   const switchTab = (next: AuctionTab) => { setTab(next); setVisible(AUCTION_PAGE_SIZE); };
@@ -82,13 +81,10 @@ export function NodeAuctionPage() {
           <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
         </button>
 
-        {summary.frozenPb > 0 && (
-          <div className="auction-frozen-bar">
-            <Snowflake size={14} strokeWidth={2} aria-hidden />
-            <span className="auction-frozen-amount">{t('冻结中 {amount} PB', { amount: formatTokenAmount(summary.frozenPb) })}</span>
-            <span className="auction-frozen-meta">
-              {t('领先 {leading} 场 · 被超过 {outbid} 场', { leading: summary.leadingCount, outbid: summary.outbidCount })}
-            </span>
+        {openingLot && (
+          <div className="auction-opening-bar">
+            <span>{t('本期 {count} 席统一开拍', { count: auctionLots.filter(lot => lot.period === 'current').length })}</span>
+            <AuctionCountdown lot={openingLot} now={now} />
           </div>
         )}
 
@@ -98,7 +94,9 @@ export function NodeAuctionPage() {
             className={`create-scale-tab${tab === 'live' ? ' create-scale-tab--active' : ''}`}
             onClick={() => switchTab('live')}
           >
-            {t('竞拍中（{count}）', { count: live.length })}
+            {openingLot
+              ? t('即将开拍（{count}）', { count: live.length })
+              : t('竞拍中（{count}）', { count: live.length })}
           </button>
           <button
             type="button"
@@ -118,6 +116,23 @@ export function NodeAuctionPage() {
                 {myCount > 0 && index === 0 && (
                   <div className="auction-group-title">{t('我参与的（{count}）', { count: myCount })}</div>
                 )}
+                {tab === 'live' && (summary.leadingCount > 0 || summary.outbidCount > 0) && index === 0 && (
+                  <div className="auction-frozen-bar">
+                    {summary.frozenPb > 0 && <Snowflake size={14} strokeWidth={2} aria-hidden />}
+                    <span className="auction-frozen-amount">
+                      {summary.frozenPb > 0
+                        ? t('冻结中 {amount} PB', { amount: formatTokenAmount(summary.frozenPb) })
+                        : t('已退回 {amount} PB', { amount: formatTokenAmount(summary.refundedPb) })}
+                    </span>
+                    <span className="auction-frozen-meta">
+                      {summary.leadingCount > 0 && summary.outbidCount > 0
+                        ? t('出价领先 {leading} 场 · 出价被超越 {outbid} 场', { leading: summary.leadingCount, outbid: summary.outbidCount })
+                        : summary.leadingCount > 0
+                          ? t('出价领先 {count} 场', { count: summary.leadingCount })
+                          : t('出价被超越 {count} 场', { count: summary.outbidCount })}
+                    </span>
+                  </div>
+                )}
                 {myCount > 0 && index === myCount && (
                   <div className="auction-group-title auction-group-title--rest">{t('其他场次')}</div>
                 )}
@@ -136,6 +151,17 @@ export function NodeAuctionPage() {
       </main>
 
       <DevPanel>
+        <button
+          type="button"
+          className="planet-dev-menu-item"
+          onClick={() => {
+            live
+              .filter(lot => auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) === 'leading')
+              .forEach(lot => simulateAuctionOutbid(lot.id));
+          }}
+        >
+          <span>{t('模拟我的出价全部被超越')}</span>
+        </button>
         <button
           type="button"
           className="planet-dev-menu-item"
@@ -166,9 +192,11 @@ function AuctionLotRow({ lot, now, onOpen, onBid }: { lot: AuctionLot; now: numb
   const state = auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now);
   const actionLabel = status === 'ended'
     ? t('查看结果')
-    : state === 'leading'
-      ? t('已领先')
-      : lot.bids.length > 0 ? t('加价') : t('出价');
+    : status === 'upcoming'
+      ? t('尚未开拍')
+      : state === 'leading'
+        ? t('已领先')
+        : lot.bids.length > 0 ? t('加价') : t('出价');
 
   return (
     <div className="auction-lot-card" role="button" tabIndex={0} onClick={onOpen} onKeyDown={e => { if (e.key === 'Enter') onOpen(); }}>
@@ -177,26 +205,27 @@ function AuctionLotRow({ lot, now, onOpen, onBid }: { lot: AuctionLot; now: numb
         <span className="auction-lot-code">{lot.nodeCode}</span>
         <AuctionStateBadge lot={lot} myAddress={MOCK_WALLET_ADDRESS} now={now} />
       </div>
-      <div className="auction-lot-meta">
-        {t('上月第 {rank} 名 · 上月空投 {airdrop} PB', { rank: lot.rankLastMonth, airdrop: formatTokenAmount(lot.lastMonthAirdropPb) })}
+      <div className="auction-lot-meta-row">
+        <span className="auction-lot-meta">
+          {t('上月第 {rank} 名 · 上月空投 {airdrop} PB', { rank: lot.rankLastMonth, airdrop: formatTokenAmount(lot.lastMonthAirdropPb) })}
+        </span>
+        <span className="auction-lot-price-meta">
+          {lot.bids.length > 0
+            ? t('起拍 {start} PB', { start: formatTokenAmount(lot.startPricePb) })
+            : t('还没有人出价')}
+        </span>
       </div>
       <div className="auction-lot-price-row">
         <div className="auction-lot-price">
           <span className="auction-lot-price-label">{lot.bids.length > 0 ? t('当前价') : t('起拍价')}</span>
           <span className="auction-lot-price-value">{formatTokenAmount(lot.currentPricePb)} PB</span>
+          {lot.bids.length > 0 && <span className="auction-lot-bid-count">{t('已出价 {count} 次', { count: lot.bids.length })}</span>}
         </div>
-        <span className="auction-lot-price-meta">
-          {lot.bids.length > 0
-            ? t('起拍 {start} · 已出价 {count} 次', { start: formatTokenAmount(lot.startPricePb), count: lot.bids.length })
-            : t('还没有人出价')}
-        </span>
-      </div>
-      <div className="auction-lot-foot">
-        <AuctionCountdown lot={lot} now={now} />
         <button
           type="button"
           className={`auction-lot-action${state === 'leading' || status === 'ended' ? ' auction-lot-action--quiet' : ''}`}
-          onClick={e => { e.stopPropagation(); if (status === 'ended') onOpen(); else onBid(); }}
+          disabled={status === 'upcoming'}
+          onClick={e => { e.stopPropagation(); if (status === 'ended') onOpen(); else if (status === 'live') onBid(); }}
         >
           {actionLabel}
         </button>
@@ -218,6 +247,7 @@ export function AuctionRulesSheet({ onClose }: { onClose: () => void }) {
         </div>
         <div className="pb-info-sheet-body">
           <p className="pb-info-sheet-para">{t('每月考核排名末 50 名的创世节点将在次月公开竞拍，出价最高者获得节点。')}</p>
+          <p className="pb-info-sheet-para">{t('本期所有节点统一开拍。')}</p>
           <p className="pb-info-sheet-para">{t('每个节点的起拍价为 {start} PB 加上该节点上月空投额度，每次加价至少 {step} PB。', {
             start: formatTokenAmount(AUCTION_START_PB), step: formatTokenAmount(AUCTION_MIN_INCREMENT_PB),
           })}</p>
