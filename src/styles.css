@@ -818,6 +818,21 @@ button {
   flex-wrap: wrap;
 }
 
+/* ── Post Channel Star（时间行的频道节点星级，点击进入频道链接）── */
+/* 星级图标本身只有 15px，靠负外边距抵消的 padding 撑出 24px 以上的点击热区，不影响这一行的排版 */
+.post-channel-star {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px;
+  margin: -5px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.post-channel-star--linked {
+  cursor: default;
+}
+
 /* ── Post Visibility Badge（仅作者可见，行内显示）── */
 .post-visibility-badge {
   display: inline-flex;
@@ -2574,7 +2589,7 @@ button {
 /* Compose full-page */
 .sheet-backdrop:has(.compose-modal) {
   padding: 0;
-  /* 与 phone-shell / pay-page-wrap 同宽：全屏遮罩下把发帖页限在布局最大宽度内居中 */
+  /* 与 phone-shell 同宽：全屏遮罩下把发帖页限在布局最大宽度内居中 */
   align-items: stretch;
   justify-content: center;
 }
@@ -3644,283 +3659,6 @@ button {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   支付确认全页 (PaymentConfirmPage)
-   ═══════════════════════════════════════════════════════════════ */
-
-/* 全页容器 — 覆盖手机壳，居中限宽 */
-.pay-page-wrap {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: var(--ku-layout-max-width);
-  z-index: 260;
-  background: var(--ku-color-bg-phone);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* 顶部渐变标题栏 */
-.pay-page-header {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--ku-gradient-primary);
-  padding: 14px 16px 56px; /* 底部留大空间供品牌圆圈叠盖 */
-}
-.pay-page-back-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--ku-radius-circle);
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
-  flex-shrink: 0;
-  transition: background var(--ku-motion-fast);
-}
-.pay-page-back-btn:hover { background: rgba(255, 255, 255, 0.32); }
-.pay-page-back-btn:disabled { opacity: 0.5; cursor: default; }
-.pay-page-header-title {
-  flex: 1;
-  text-align: center;
-  font: 600 17px/1 var(--ku-font-family);
-  color: #fff;
-}
-.pay-page-header-spacer { width: 36px; flex-shrink: 0; }
-
-/* 品牌圆圈 — 叠盖在 header 和内容区之间 */
-.pay-page-brand-row {
-  flex-shrink: 0;
-  display: flex;
-  justify-content: center;
-  margin-top: -44px;
-  position: relative;
-  z-index: 1;
-}
-.pay-page-brand-circle {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--ku-radius-circle);
-  background: var(--ku-color-bg-phone);
-  box-shadow: 0 4px 20px rgba(14, 22, 44, 0.16);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 3px solid var(--ku-color-bg-phone);
-}
-.pay-page-brand-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--ku-radius-circle);
-  background: var(--ku-gradient-primary);
-  color: var(--ku-color-on-primary);
-  box-shadow: var(--ku-shadow-primary);
-}
-.pay-page-brand-icon--tip {
-  background: linear-gradient(135deg, var(--ku-planet2-color-genesis-gold-light) 0%, var(--ku-color-genesis-gold) 100%);
-  box-shadow: none;
-}
-
-/* 金额大字 */
-.pay-page-hero {
-  flex-shrink: 0;
-  text-align: center;
-  padding: 16px 0 18px;
-}
-.pay-page-hero-amount {
-  font: 700 32px/1 var(--ku-font-family);
-  color: var(--ku-color-text-primary);
-  letter-spacing: -0.5px;
-}
-
-/* 分隔线 */
-.pay-page-sep {
-  flex-shrink: 0;
-  height: 1px;
-  background: var(--ku-color-border);
-}
-
-/* 字段列表 — 可滚动 */
-.pay-page-rows {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.pay-page-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--ku-color-border);
-}
-.pay-page-rows .pay-page-row:last-child { border-bottom: none; }
-.pay-page-row-label {
-  font: 400 14px/1.4 var(--ku-font-family);
-  color: var(--ku-color-text-secondary);
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.pay-page-row-value {
-  font: 400 14px/1.4 var(--ku-font-family);
-  color: var(--ku-color-text-primary);
-  text-align: right;
-  word-break: break-all;
-}
-.pay-page-addr {
-  font-size: 12px;
-  color: var(--ku-color-text-secondary);
-  word-break: break-all;
-  line-height: 1.5;
-}
-
-/* 手续费区块 — 实线分隔（顶部分割线复用上一行的 border-bottom，避免双线变粗） */
-.pay-page-fee-section .pay-page-row {
-  border-bottom: 1px solid var(--ku-color-border);
-}
-.pay-page-fee-section .pay-page-row:last-child { border-bottom: none; }
-
-/* 手续费标签 — 虚线下划线 + 点按/悬停 tooltip */
-.fee-tooltip {
-  position: relative;
-  display: inline-flex;
-  cursor: help;
-  outline: none;
-}
-.fee-tooltip-trigger {
-  border-bottom: 1px dashed var(--ku-color-text-secondary);
-  padding-bottom: 1px;
-}
-.fee-tooltip-bubble {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + 8px);
-  z-index: 5;
-  max-width: 220px;
-  width: max-content;
-  padding: 8px 10px;
-  border-radius: var(--ku-radius-badge);
-  background: var(--ku-color-text-primary);
-  color: var(--ku-color-on-primary);
-  font: 400 12px/1.4 var(--ku-font-family);
-  box-shadow: var(--ku-shadow-card);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(4px);
-  transition: opacity var(--ku-motion-fast), transform var(--ku-motion-fast), visibility var(--ku-motion-fast);
-  pointer-events: none;
-}
-.fee-tooltip-bubble::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 16px;
-  border: 5px solid transparent;
-  border-top-color: var(--ku-color-text-primary);
-}
-.fee-tooltip:hover .fee-tooltip-bubble,
-.fee-tooltip:focus .fee-tooltip-bubble,
-.fee-tooltip:focus-within .fee-tooltip-bubble {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-/* 底部确认按钮 */
-.pay-page-footer {
-  flex-shrink: 0;
-  padding: 16px 20px 32px;
-  background: var(--ku-color-bg-phone);
-}
-.pay-page-confirm-btn {
-  width: 100%;
-  height: 52px;
-  border-radius: 26px;
-  background: var(--ku-gradient-primary);
-  color: var(--ku-color-on-primary);
-  font: 600 16px/1 var(--ku-font-family);
-  box-shadow: var(--ku-shadow-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: opacity var(--ku-motion-fast), transform var(--ku-motion-fast);
-}
-.pay-page-confirm-btn:hover  { opacity: 0.92; }
-.pay-page-confirm-btn:active { opacity: 0.84; transform: scale(0.99); }
-.pay-page-confirm-btn:disabled { opacity: 0.55; cursor: default; transform: none; }
-.pay-page-reject-btn {
-  width: 100%;
-  height: 52px;
-  margin-top: 12px;
-  border-radius: 26px;
-  background: transparent;
-  color: var(--ku-color-text-secondary);
-  font: 600 16px/1 var(--ku-font-family);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--ku-motion-fast), opacity var(--ku-motion-fast);
-}
-.pay-page-reject-btn:hover  { background: var(--ku-color-bg-page); }
-.pay-page-reject-btn:active { opacity: 0.84; }
-.pay-page-reject-btn:disabled { opacity: 0.55; cursor: default; }
-.pay-page-spinner {
-  border-color: rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
-}
-
-/* 成功 / 失败状态居中显示 */
-.pay-page-result {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 40px 32px;
-}
-.pay-page-result-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  border-radius: var(--ku-radius-circle);
-  font-size: 28px;
-  font-weight: 600;
-}
-.pay-page-result-icon--success {
-  background: var(--ku-color-success-bg);
-  color: var(--ku-color-success-text);
-}
-.pay-page-result-icon--error {
-  background: rgba(217, 79, 79, 0.12);
-  color: #d94f4f;
-}
-.pay-page-result-title {
-  font: 600 17px/1.3 var(--ku-font-family);
-  color: var(--ku-color-text-primary);
-  text-align: center;
-}
-.pay-page-result-reason {
-  margin: 0;
-  font: 400 13px/1.5 var(--ku-font-family);
-  color: var(--ku-color-text-secondary);
-  text-align: center;
-  max-width: 260px;
-}
-
-/* ═══════════════════════════════════════════════════════════════
    P2 帖子详情页
    ═══════════════════════════════════════════════════════════════ */
 .detail-author-row {
@@ -4169,6 +3907,7 @@ button {
   width: 100%;
   padding: 10px 16px;
   text-align: left;
+  white-space: nowrap;
   font: var(--ku-text-menu-action);
   color: var(--ku-color-text-primary);
   transition: background 0.1s;
@@ -5068,6 +4807,16 @@ button {
   align-items: center;
   gap: 3px;
 }
+/* 频道简介：给用户判断这个频道值不值 1000 PB，最多两行 */
+.mutual-promotion-target__desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 2px;
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-meta);
+}
 .mutual-promotion-target__name,
 .mutual-promotion-channel__name {
   font: var(--ku-text-body-sm);
@@ -5101,27 +4850,6 @@ button {
   color: var(--ku-color-text-primary);
   text-align: left;
 }
-.mutual-promotion-options {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ku-space-2);
-}
-.mutual-promotion-option {
-  display: flex;
-  align-items: center;
-  gap: var(--ku-space-3);
-  width: 100%;
-  min-height: var(--ku-control-height-md);
-  padding: var(--ku-space-3);
-  border: 1px solid var(--ku-color-border-card);
-  border-radius: var(--ku-radius-card);
-  background: var(--ku-color-bg-phone);
-  color: var(--ku-color-text-primary);
-  text-align: left;
-}
-.mutual-promotion-option--selected {
-  color: var(--ku-color-primary-dark);
-}
 .mutual-promotion-channel--selected {
   border-color: var(--ku-color-primary);
   background: var(--ku-color-primary-alpha-06);
@@ -5134,19 +4862,28 @@ button {
   flex-direction: column;
   gap: var(--ku-space-1);
 }
-.mutual-promotion-channel .avatar,
-.mutual-promotion-option .avatar {
+.mutual-promotion-channel .avatar {
   width: var(--ku-avatar-size-compact);
   height: var(--ku-avatar-size-compact);
 }
-.pay-page-result-desc {
-  max-width: var(--ku-modal-width);
-  margin: var(--ku-space-3) 0 0;
-  padding: 0 var(--ku-space-6);
-  font: var(--ku-text-body-sm);
-  color: var(--ku-color-text-secondary);
-  line-height: 1.5;
-  text-align: center;
+/* 主按钮吸底：选项再多，兑换按钮也固定在弹层底部 */
+.gemini-stake-modal--full-page:has(> .link-sheet-cta-bar) {
+  display: flex;
+  flex-direction: column;
+}
+.gemini-stake-modal--full-page:has(> .link-sheet-cta-bar) > * {
+  flex-shrink: 0;
+}
+.link-sheet-cta-bar {
+  position: sticky;
+  bottom: calc(-1 * var(--ku-modal-content-padding));
+  margin: auto calc(-1 * var(--ku-modal-content-padding)) calc(-1 * var(--ku-modal-content-padding));
+  padding: var(--ku-space-3) var(--ku-modal-content-padding) calc(var(--ku-space-3) + env(safe-area-inset-bottom, 0px));
+  background: var(--ku-color-bg-phone);
+  border-top: 1px solid var(--ku-color-border-card);
+}
+.link-sheet-cta-bar .gemini-stake-btn {
+  margin: 0;
 }
 .link-modal-node-copy {
   display: inline-flex;
@@ -14439,6 +14176,8 @@ html[lang="zh-TW"] .planet-hero-title {
   position: relative;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-radius-card);
   background: var(--ku-color-bg-phone);
   cursor: pointer;
   text-align: left;
@@ -14780,22 +14519,54 @@ html[lang="zh-TW"] .planet-hero-title {
 .channel-share-sheet {
   text-align: center;
 }
+.channel-share-card {
+  text-align: left;
+  margin-bottom: 16px;
+}
+.channel-share-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  --ku-avatar-size: 60px;
+}
+.channel-share-identity-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.channel-share-name {
+  font: var(--ku-text-author-name);
+  color: var(--ku-color-text-primary);
+}
+.channel-share-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-secondary);
+}
+.channel-share-desc {
+  margin: 14px 0 0;
+  font: var(--ku-text-post-body);
+  color: var(--ku-color-text-secondary);
+}
 .channel-share-qr-row {
   display: flex;
   justify-content: center;
-  margin-bottom: 16px;
-}
-.channel-share-qr-card {
-  width: 220px;
-  max-width: 100%;
-  overflow: hidden;
-  border: 1px solid var(--ku-color-border-card);
-  border-radius: var(--ku-radius-card);
+  margin-top: 20px;
 }
 .channel-share-qr-img {
-  width: 100%;
+  width: 320px;
+  max-width: 100%;
   height: auto;
   display: block;
+}
+.channel-share-caption {
+  margin: 18px 0 0;
+  text-align: center;
+  font: var(--ku-text-post-body);
+  color: var(--ku-color-text-secondary);
 }
 .channel-share-cta-btn {
   display: inline-flex;

@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, useEffect, type ReactNode } from 'react';
-import { Lock, X, ArrowLeft, Play, Pause, ChevronDown, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Copy, HandCoins, Gift, Plus, Wallet, Loader2, ShieldCheck, ShieldX, Info, Minus, Star } from 'lucide-react';
+import { Lock, X, ArrowLeft, Play, Pause, ChevronRight, Maximize, Minimize, Volume2, VolumeX, MessageCircle, Repeat2, ThumbsUp, Bookmark, Check, Copy, HandCoins, Gift, Plus, Wallet, Loader2, ShieldCheck, ShieldX, Info, Minus, Star, Search } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { ALL_POSTS, ALL_USERS_MOCK, CURRENT_USER, findRegisteredUserByAddress, MOCK_WALLET_ADDRESS, NODE_STARS_BY_CODE } from '../mockData';
 import { KnowledgePlanetIcon } from './KnowledgePlanetIcon';
@@ -13,6 +13,7 @@ import type { Channel, ChannelTier, InteractionAction, PayCtx, PbUse, PbWalletId
 import { formatSuperAmount, formatSupAmount, stakeTierDescription, SUPER_BY_TIER, SUP_COST_BY_TIER } from '../stakeConfig';
 import type { StakeTier } from '../types';
 import { PbWalletPicker } from './PbWalletPicker';
+import { useChannelListSearch } from './channelSearch';
 import { CHANNEL_COLLAB_ANNUAL_PB, CHANNEL_OPEN_PB_COST, pbOnchainFee, walletConsumesSup } from '../walletConfig';
 import { shortenAddress } from '../formatAddress';
 import { PartnerRulesSheet } from './PartnerRulesSheet';
@@ -431,187 +432,13 @@ export function GeminiStakeModal({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PaymentConfirmPage — 全页支付确认（内部组件）
-// ═══════════════════════════════════════════════════════════════
-
-const MOCK_WALLET_ADDR = '0xB6E546209F774f5F0307cF68b8c1998B1E2d0C85';
-const MOCK_NETWORK     = 'BSC';
-
-function FeeLabelTooltip({ label, tip }: { label: string; tip: string }) {
-  return (
-    <span
-      className="fee-tooltip"
-      tabIndex={0}
-      role="button"
-      aria-label={`${label}: ${tip}`}
-    >
-      <span className="fee-tooltip-trigger pay-page-row-label">{label}</span>
-      <span className="fee-tooltip-bubble" role="tooltip">{tip}</span>
-    </span>
-  );
-}
-
-function PaymentConfirmPage({
-  pageStep,
-  icon,
-  productName,
-  remark,
-  amountText,
-  networkFee,
-  tokenFee,
-  gasFee,
-  walletId,
-  failReason,
-  successTitle,
-  successDescription,
-  onConfirm,
-  onRetry,
-  onBack,
-}: {
-  pageStep: 'confirm' | 'paying' | 'done' | 'failed';
-  icon: ReactNode;
-  productName: string;
-  remark: string;
-  amountText: string;
-  networkFee: string;
-  tokenFee: string;
-  gasFee?: string;
-  walletId?: PbWalletId | null;
-  failReason?: string;
-  successTitle?: string;
-  successDescription?: string;
-  onConfirm: () => void;
-  onRetry: () => void;
-  onBack: () => void;
-}) {
-  const { t, pbWallets } = useApp();
-  const isPaying = pageStep === 'paying';
-  const isDone   = pageStep === 'done';
-  const isFailed = pageStep === 'failed';
-
-  return (
-    <div className="pay-page-wrap">
-      {/* Gradient header */}
-      <div className="pay-page-header">
-        <div className="pay-page-header-spacer" aria-hidden />
-        <span className="pay-page-header-title">{t('确认支付2')}</span>
-        <div className="pay-page-header-spacer" aria-hidden />
-      </div>
-
-      {/* Brand circle overlapping the header gradient */}
-      <div className="pay-page-brand-row">
-        <div className="pay-page-brand-circle">{icon}</div>
-      </div>
-
-      {/* Confirm / Paying state */}
-      {(pageStep === 'confirm' || isPaying) && (
-        <>
-          <div className="pay-page-hero">
-            <span className="pay-page-hero-amount">{amountText}</span>
-          </div>
-
-          <div className="pay-page-sep" aria-hidden />
-
-          <div className="pay-page-rows">
-            <div className="pay-page-row">
-              <span className="pay-page-row-label">{t('商品名称')}</span>
-              <span className="pay-page-row-value">{productName}</span>
-            </div>
-            <div className="pay-page-row">
-              <span className="pay-page-row-label">{t('备注')}</span>
-              <span className="pay-page-row-value">{remark}</span>
-            </div>
-            <div className="pay-page-row">
-              <span className="pay-page-row-label">{t('钱包地址')}</span>
-              <span className="pay-page-row-value pay-page-addr">{MOCK_WALLET_ADDR}</span>
-            </div>
-            <div className="pay-page-row">
-              <span className="pay-page-row-label">{t('余额')}</span>
-              <span className="pay-page-row-value">{walletId ? `${formatSuperAmount(pbWallets[walletId])} PB` : '—'}</span>
-            </div>
-            <div className="pay-page-row">
-              <span className="pay-page-row-label">{t('网络')}</span>
-              <span className="pay-page-row-value">{MOCK_NETWORK}</span>
-            </div>
-            <div className="pay-page-fee-section">
-              <div className="pay-page-row">
-                <FeeLabelTooltip
-                  label={t('网络手续费')}
-                  tip={t('提示文案占位')}
-                />
-                <span className="pay-page-row-value">{networkFee}</span>
-              </div>
-              <div className="pay-page-row">
-                <FeeLabelTooltip
-                  label={t('所需 PB')}
-                  tip={t('提示文案占位')}
-                />
-                <span className="pay-page-row-value">{tokenFee}</span>
-              </div>
-              {gasFee != null && (
-                <div className="pay-page-row">
-                  <span className="pay-page-row-label">{t('Gas 费')}</span>
-                  <span className="pay-page-row-value">{gasFee}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="pay-page-footer">
-            <button
-              type="button"
-              className="pay-page-confirm-btn"
-              onClick={onConfirm}
-              disabled={isPaying}
-            >
-              {isPaying
-                ? <><span className="spinner pay-page-spinner" />{t('支付中…')}</>
-                : t('确定')}
-            </button>
-            <button
-              type="button"
-              className="pay-page-reject-btn"
-              onClick={onBack}
-              disabled={isPaying}
-            >
-              {t('拒绝')}
-            </button>
-          </div>
-        </>
-      )}
-
-      {/* Done state */}
-      {isDone && (
-        <div className="pay-page-result">
-          <div className="pay-page-result-icon pay-page-result-icon--success">
-            <Check size={32} strokeWidth={2.5} />
-          </div>
-          <span className="pay-page-result-title">{successTitle ?? t('支付成功')}</span>
-          {successDescription && <p className="pay-page-result-desc">{successDescription}</p>}
-        </div>
-      )}
-
-      {/* Failed state */}
-      {isFailed && (
-        <div className="pay-page-result">
-          <div className="pay-page-result-icon pay-page-result-icon--error">✕</div>
-          <span className="pay-page-result-title">{t('支付失败')}</span>
-          {failReason && <p className="pay-page-result-reason">{failReason}</p>}
-          <button type="button" className="pay-retry-btn" onClick={onRetry}>
-            {t('重试')}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
 // LinkSheet — 链接 + 支付（博主互推固定 1000 PB，其它链接可选择档位）
 // ═══════════════════════════════════════════════════════════════
 export type LinkTarget = Pick<Post, 'id' | 'nodeId' | 'rating' | 'visiblePercent' | 'channelId' | 'minTierIndex' | 'author'>;
 
 const LINK_TIER: Exclude<StakeTier, 0> = 1000;
+// 己方频道超过这个数量才显示搜索框，频道少时直接列出即可
+const PROMOTION_PICKER_SEARCH_MIN = 5;
 
 export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onClose }: {
   post: LinkTarget;
@@ -621,9 +448,7 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
   onSuccess: (tier: Exclude<StakeTier, 0>, promotedChannelId?: string) => void;
   onClose: () => void;
 }) {
-  const { t, channels, subscribedChannelTiers, expiredChannelIds, payPb, recordTaskInteraction } = useApp();
-  const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done' | 'failed'>('select');
-  const [failReason, setFailReason] = useState('');
+  const { t, channels, subscribedChannelTiers, expiredChannelIds, payPb, recordTaskInteraction, showToast } = useApp();
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
   const [nodeCodeCopied, setNodeCodeCopied] = useState(false);
   const [selectedTier, setSelectedTier] = useState<Exclude<StakeTier, 0>>(10);
@@ -636,8 +461,11 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
     return { code, stars: NODE_STARS_BY_CODE[code] ?? 1 };
   };
   const promotionChannels = isChannelPromotion
-    ? channels.filter(item => item.ownerName === CURRENT_USER)
+    ? channels
+      .filter(item => item.ownerName === CURRENT_USER)
+      .sort((a, b) => b.subscriberCount - a.subscriberCount)
     : [];
+  const promotionPicker = useChannelListSearch(promotionChannels);
   const [promotedChannelId, setPromotedChannelId] = useState<string | null>(() => promotionChannels[0]?.id ?? null);
   const [promotionPickerOpen, setPromotionPickerOpen] = useState(false);
   const promotedChannel = promotionChannels.find(item => item.id === promotedChannelId);
@@ -656,18 +484,11 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
 
   const pay = () => {
     if (!payWallet || (isChannelPromotion && !promotedChannel) || !payPb({ amount: tier, use: 'unlock', wallet: payWallet, supCost: SUP_COST_BY_TIER[tier] })) {
-      setFailReason(t('所选钱包余额不足或不适用于此操作'));
-      setStep('failed');
+      showToast(t('所选钱包余额不足或不适用于此操作'));
       return;
     }
-    setStep('paying');
-    setTimeout(() => {
-      setStep('done');
-      setTimeout(() => {
-        if (mode === 'unlock') recordTaskInteraction(post.id);
-        onSuccess(tier, promotedChannel?.id);
-      }, 800);
-    }, 1300);
+    if (mode === 'unlock') recordTaskInteraction(post.id);
+    onSuccess(tier, promotedChannel?.id);
   };
 
   const copyNodeCode = async () => {
@@ -694,40 +515,6 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
     setNodeCodeCopied(true);
     window.setTimeout(() => setNodeCodeCopied(false), 1800);
   };
-
-  // Full-page confirm/paying/done/failed
-  if (step !== 'select') {
-    return (
-      <PaymentConfirmPage
-        pageStep={step}
-        icon={<div className="pay-page-brand-icon"><KnowledgePlanetIcon style={{ width: 30, height: 30 }} /></div>}
-        productName={isChannelPromotion ? t('博主互推') : t('知识宇宙')}
-        remark={isChannelPromotion && promotionTarget && promotedChannel
-          ? t('向《{target}》的 {count} 位订阅用户推荐《{channel}》', {
-              target: promotionTarget.name,
-              count: promotionTarget.subscriberCount,
-              channel: promotedChannel.name,
-            })
-          : post.nodeId ? `节点 ${post.nodeId}` : t('知识宇宙')}
-        amountText={`${tier} PB`}
-        networkFee={`${SUP_COST_BY_TIER[tier]} SUP`}
-        tokenFee={`${tier} PB`}
-        walletId={payWallet}
-        failReason={failReason}
-        successTitle={isChannelPromotion ? t('已获得互推推荐权限') : undefined}
-        successDescription={isChannelPromotion && promotionTarget && promotedChannel
-          ? t('向《{target}》的 {count} 位订阅用户推荐《{channel}》', {
-              target: promotionTarget.name,
-              count: promotionTarget.subscriberCount,
-              channel: promotedChannel.name,
-            })
-          : undefined}
-        onConfirm={pay}
-        onRetry={() => setStep('confirm')}
-        onBack={() => setStep('select')}
-      />
-    );
-  }
 
   return (
     <div className="sheet-backdrop full-page-flow" onClick={onClose}>
@@ -767,6 +554,9 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
                   <Rating value={promotionTargetNodeStars} size={24} />
                   <span>{promotionTargetNodeCode}</span>
                 </span>
+                {promotionTarget.description && (
+                  <span className="mutual-promotion-target__desc">{promotionTarget.description}</span>
+                )}
               </div>
             </div>
           </div>
@@ -797,8 +587,8 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
                 <button
                   type="button"
                   className="mutual-promotion-channel mutual-promotion-channel--selected"
-                  aria-expanded={promotionPickerOpen}
-                  onClick={() => setPromotionPickerOpen(open => !open)}
+                  aria-haspopup="dialog"
+                  onClick={() => setPromotionPickerOpen(true)}
                 >
                   <Avatar index={0} seed={promotedChannel.avatarSeed} avatarUrl={promotedChannel.avatarUrl} />
                   <span className="mutual-promotion-channel__body">
@@ -810,41 +600,8 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
                       <span>{promotionChannelNodeInfo(promotedChannel).code}</span>
                     </span>
                   </span>
-                  <ChevronDown size={18} strokeWidth={2.2} aria-hidden="true" />
+                  <ChevronRight size={18} strokeWidth={2.2} aria-hidden="true" />
                 </button>
-                {promotionPickerOpen && (
-                  <div className="mutual-promotion-options" role="listbox" aria-label={t('选择要推荐的频道')}>
-                    {promotionChannels.map((channelOption, optionIndex) => {
-                      const selected = channelOption.id === promotedChannelId;
-                      const nodeInfo = promotionChannelNodeInfo(channelOption);
-                      return (
-                        <button
-                          key={channelOption.id}
-                          type="button"
-                          role="option"
-                          aria-selected={selected}
-                          className={`mutual-promotion-option${selected ? ' mutual-promotion-option--selected' : ''}`}
-                          onClick={() => {
-                            setPromotedChannelId(channelOption.id);
-                            setPromotionPickerOpen(false);
-                          }}
-                        >
-                          <Avatar index={optionIndex} seed={channelOption.avatarSeed} avatarUrl={channelOption.avatarUrl} />
-                          <span className="mutual-promotion-channel__body">
-                            <span className="mutual-promotion-channel__name">{channelOption.name}</span>
-                            <span className="mutual-promotion-channel__meta">
-                              <span>{t('{count} 人订阅', { count: channelOption.subscriberCount })}</span>
-                              <span aria-hidden="true">·</span>
-                              <Rating value={nodeInfo.stars} size={24} />
-                              <span>{nodeInfo.code}</span>
-                            </span>
-                          </span>
-                          {selected && <Check size={18} strokeWidth={2.5} aria-hidden="true" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
               </>
             ) : (
               <p className="mutual-promotion-empty">{t('还没有可推荐的频道')}</p>
@@ -879,7 +636,8 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
           <span className="compose-stake-gas-value">{formatSupAmount(SUP_COST_BY_TIER[tier])} SUP</span>
         </div>
         <PbWalletPicker use="unlock" amount={tier} value={payWallet} onChange={setPayWallet} />
-        <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" disabled={isChannelPromotion && !promotedChannel} onClick={() => setStep('confirm')}>
+        <div className="link-sheet-cta-bar">
+        <button type="button" className="gemini-stake-btn gemini-stake-btn--primary" disabled={isChannelPromotion && !promotedChannel} onClick={pay}>
           {isChannelPromotion
             ? t('获得互推推荐权限 · 1000 PB')
             : mode === 'unlock'
@@ -888,7 +646,72 @@ export function LinkSheet({ post, mode = 'link', promotionTarget, onSuccess, onC
               ? t('解锁全文并链接 · {selected} PB', { selected: tier })
               : t('创建子节点并链接 · {selected} PB', { selected: tier })}
         </button>
+        </div>
       </div>
+
+      {promotionPickerOpen && (
+        <div className="sheet-backdrop" onClick={e => { e.stopPropagation(); setPromotionPickerOpen(false); }}>
+          <div className="payment-sheet channel-picker-sheet" role="dialog" aria-modal="true" aria-label={t('选择要推荐的频道')} onClick={e => e.stopPropagation()}>
+            <div className="sheet-header">
+              <span className="sheet-title">{t('选择要推荐的频道')}</span>
+              <button type="button" className="modal-close" onClick={() => setPromotionPickerOpen(false)} aria-label={t('关闭')}>
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+            {promotionChannels.length > PROMOTION_PICKER_SEARCH_MIN && (
+              <div className="channel-directory-search-wrap channel-picker-search-wrap">
+                <Search size={15} strokeWidth={2} className="channel-directory-search-icon" aria-hidden />
+                <input
+                  className="channel-directory-search-input"
+                  type="text"
+                  value={promotionPicker.search}
+                  onChange={e => promotionPicker.setSearch(e.target.value)}
+                  placeholder={t('搜索频道名称或简介')}
+                  aria-label={t('搜索频道名称或简介')}
+                />
+              </div>
+            )}
+            <div className="channel-picker-list" role="listbox" aria-label={t('选择要推荐的频道')}>
+              {promotionPicker.visible.length === 0 ? (
+                <div className="channel-directory-empty">{t('没有找到匹配的频道')}</div>
+              ) : promotionPicker.visible.map((channelOption, optionIndex) => {
+                const selected = channelOption.id === promotedChannelId;
+                const nodeInfo = promotionChannelNodeInfo(channelOption);
+                return (
+                  <button
+                    key={channelOption.id}
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    className={`mutual-promotion-channel${selected ? ' mutual-promotion-channel--selected' : ''}`}
+                    onClick={() => {
+                      setPromotedChannelId(channelOption.id);
+                      setPromotionPickerOpen(false);
+                    }}
+                  >
+                    <Avatar index={optionIndex} seed={channelOption.avatarSeed} avatarUrl={channelOption.avatarUrl} />
+                    <span className="mutual-promotion-channel__body">
+                      <span className="mutual-promotion-channel__name">{channelOption.name}</span>
+                      <span className="mutual-promotion-channel__meta">
+                        <span>{t('{count} 人订阅', { count: channelOption.subscriberCount })}</span>
+                        <span aria-hidden="true">·</span>
+                        <Rating value={nodeInfo.stars} size={24} />
+                        <span>{nodeInfo.code}</span>
+                      </span>
+                    </span>
+                    {selected && <Check size={18} strokeWidth={2.5} aria-hidden="true" />}
+                  </button>
+                );
+              })}
+              {promotionPicker.hasMore && (
+                <button type="button" className="channel-directory-more-btn" onClick={promotionPicker.loadMore}>
+                  {t('加载更多（剩余 {length}）', { length: promotionPicker.filteredCount - promotionPicker.visible.length })}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1774,7 +1597,6 @@ export function TipModal({
   const [selected, setSelected] = useState<number | null>(null);
   const [custom, setCustom] = useState('');
   const [message, setMessage] = useState('');
-  const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done'>('select');
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
 
   // 自定义金额优先：填了自定义就以自定义为准，否则取选中的档位
@@ -1793,11 +1615,11 @@ export function TipModal({
 
   const handlePay = () => {
     if (!amountValid || amount == null) return;
-    if (!payWallet || !payPb({ amount, use: 'tip', wallet: payWallet, supCost: amount / 10000 })) return;
-    setStep('paying');
-    setTimeout(() => {
-      setStep('done');
-      recordOutgoingTip({
+    if (!payWallet || !payPb({ amount, use: 'tip', wallet: payWallet, supCost: amount / 10000 })) {
+      showToast(t('所选钱包余额不足或不适用于此操作'));
+      return;
+    }
+    recordOutgoingTip({
         recipientName,
         amount,
         context,
@@ -1805,41 +1627,14 @@ export function TipModal({
         postTitle: context === 'post' ? postTitle : undefined,
         message: message.trim() || undefined,
       });
-      if (context === 'post' && postId) recordTaskInteraction(postId);
-      setTimeout(() => {
-        showToast(t('打赏成功！感谢你的支持'));
-        onClose();
-      }, 800);
-    }, 1300);
+    if (context === 'post' && postId) recordTaskInteraction(postId);
+    showToast(t('打赏成功！感谢你的支持'));
+    onClose();
   };
 
   const titleLabel = context === 'author'
     ? t('打赏 {recipientName}', { recipientName })
     : t('打赏此帖');
-
-  const tipRemark = context === 'post' && postTitle
-    ? postTitle.split('\n')[0]
-    : t('打赏给 {recipientName}', { recipientName });
-
-  // Full-page confirm/paying/done
-  if (step !== 'select') {
-    return (
-      <PaymentConfirmPage
-        pageStep={step}
-        icon={<div className="pay-page-brand-icon pay-page-brand-icon--tip"><HandCoins size={28} strokeWidth={2} /></div>}
-        productName={t('知识宇宙')}
-        remark={tipRemark}
-        amountText={`${amount} PB`}
-        networkFee="1 PB"
-        tokenFee={`${amount} PB`}
-        gasFee={`${formatSupAmount((amount ?? 0) / 10000)} SUP`}
-        walletId={payWallet}
-        onConfirm={handlePay}
-        onRetry={() => setStep('confirm')}
-        onBack={() => setStep('select')}
-      />
-    );
-  }
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -1924,7 +1719,7 @@ export function TipModal({
           type="button"
           className="planet-confirm-btn"
           disabled={!amountValid || !payWallet}
-          onClick={() => amountValid && payWallet && setStep('confirm')}
+          onClick={handlePay}
         >
           {amountValid && amount != null
             ? t('确认打赏 {selected} PB', { selected: amount })
@@ -1940,14 +1735,13 @@ export function TipModal({
 // ═══════════════════════════════════════════════════════════════
 
 export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }: { channelId: string; requiredTierIndex?: number; onClose: () => void }) {
-  const { t, channels, subscribedChannelTiers, expiredChannelIds, subscribeToChannelTier, payPb } = useApp();
+  const { t, channels, subscribedChannelTiers, expiredChannelIds, subscribeToChannelTier, payPb, showToast } = useApp();
   const channel = channels.find(c => c.id === channelId);
   const currentTierIndex = subscribedChannelTiers[channelId];
   const isExpired = expiredChannelIds.has(channelId);
   // 从内容门槛锁点进来时，默认选中该内容要求的档位，省去用户再手动挑一次；
   // 已订阅档位优先（此时 requiredTierIndex 通常已满足，不会走到这个入口）
   const [selected, setSelected] = useState<number | null>(currentTierIndex ?? requiredTierIndex ?? null);
-  const [step, setStep] = useState<'select' | 'confirm' | 'paying' | 'done'>('select');
   const [payWallet, setPayWallet] = useState<PbWalletId | null>(null);
 
   if (!channel) return null;
@@ -1959,36 +1753,13 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
       use: 'channel_subscribe',
       wallet: payWallet,
       supCost: selectedTier.price / 10000,
-    })) return;
-    setStep('paying');
-    setTimeout(() => {
-      setStep('done');
-      setTimeout(() => {
-        if (selected !== null) subscribeToChannelTier(channelId, selected);
-        onClose();
-      }, 800);
-    }, 1300);
+    })) {
+      showToast(t('所选钱包余额不足或不适用于此操作'));
+      return;
+    }
+    if (selected !== null) subscribeToChannelTier(channelId, selected);
+    onClose();
   };
-
-  if (step !== 'select' && selectedTier) {
-    return (
-      <PaymentConfirmPage
-        pageStep={step}
-        icon={<div className="pay-page-brand-icon"><KnowledgePlanetIcon className="gemini-icon" /></div>}
-        productName={t('知识宇宙')}
-        remark={isExpired && selected === currentTierIndex
-          ? t('续费《{name}》· {name2}', { name: channel.name, name2: selectedTier.name })
-          : t('订阅《{name}》· {name2}', { name: channel.name, name2: selectedTier.name })}
-        amountText={`${selectedTier.price} PB`}
-        networkFee="1 PB"
-        tokenFee={`${formatSupAmount(selectedTier.price / 10000)} SUP/${t('月')}`}
-        walletId={payWallet}
-        onConfirm={handlePay}
-        onRetry={() => setStep('confirm')}
-        onBack={() => setStep('select')}
-      />
-    );
-  }
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -2047,9 +1818,8 @@ export function ChannelSubscribeModal({ channelId, requiredTierIndex, onClose }:
           disabled={selected === null || (selected === currentTierIndex && !isExpired) || (!selectedTier?.free && !payWallet)}
           onClick={() => {
             if (selected === null) return;
-            // 免费档不产生付费，跳过支付确认流程直接加入
             if (selectedTier?.free) { subscribeToChannelTier(channelId, selected); onClose(); return; }
-            setStep('confirm');
+            handlePay();
           }}
         >
           {selected !== null
