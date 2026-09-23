@@ -155,7 +155,9 @@ export type Route =
   | { page: 'P_CERTS' }
   | { page: 'P_CERT'; certId: string }
   | { page: 'P_ADN' }
-  | { page: 'P_LOT_TASK' };
+  | { page: 'P_LOT_TASK' }
+  | { page: 'P_NODE_AUCTION' }
+  | { page: 'P_NODE_AUCTION_LOT'; lotId: string };
 
 // ── 知识星球节点 ───────────────────────────────────────────────
 export type NodeTier = 10 | 100 | 1000;
@@ -346,6 +348,7 @@ export type SupTransactionReason =
   | 'node_upgrade'
   | 'node_transfer'
   | 'channel_collab'
+  | 'node_auction'
   | 'withdraw';
 
 /** 四种 PB 钱包。余额彼此独立，一笔支付只使用其中一个钱包。 */
@@ -372,6 +375,7 @@ export type PbUse =
   | 'node_upgrade'
   | 'node_transfer'
   | 'channel_collab'
+  | 'node_auction'
   | 'post_overlength';
 
 /** 地址迁移由后续服务执行；前端只维护申请、撤销与展示状态。 */

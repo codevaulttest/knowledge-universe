@@ -13453,6 +13453,230 @@ html[lang="zh-TW"] .planet-hero-title {
 }
 
 /* ═══════════════════════════════════════════════════
+   创世节点竞拍 (NodeAuctionPage)
+   ═══════════════════════════════════════════════════ */
+
+/* 知识宇宙页的活动入口卡 */
+.auction-entry-card {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-planet2-space-sm);
+  width: 100%;
+  padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base);
+  border: 1px solid var(--ku-color-genesis-gold);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: linear-gradient(135deg, var(--ku-planet2-color-genesis-gold-light), var(--ku-color-genesis-gold));
+  text-align: left;
+  cursor: pointer;
+}
+.auction-entry-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ku-planet2-radius-full);
+  background: var(--ku-color-bg-phone);
+  color: var(--ku-color-genesis-gold-text);
+  flex: none;
+}
+.auction-entry-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.auction-entry-title { font-size: 15px; font-weight: 700; color: var(--ku-color-text-primary); }
+.auction-entry-sub { font-size: 12px; color: var(--ku-color-genesis-gold-text); }
+.auction-entry-mine { font-size: 12px; font-weight: 600; color: var(--ku-color-text-primary); }
+.auction-entry-mine--alert { color: var(--ku-color-text-danger); }
+.auction-entry-countdown { flex: none; }
+.auction-entry-chevron { color: var(--ku-color-genesis-gold-text); flex: none; }
+
+/* 列表页 */
+.auction-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-sm);
+  padding: var(--ku-planet2-space-sm) var(--ku-planet2-space-base) var(--ku-planet2-space-xxl);
+}
+.auction-tabs { margin: 0; }
+.auction-frozen-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-planet2-space-xs);
+  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-sm);
+  border-radius: var(--ku-planet2-radius-sm);
+  background: var(--ku-color-genesis-gold-bg);
+  color: var(--ku-color-genesis-gold-text);
+}
+.auction-frozen-amount { font-size: 13px; font-weight: 700; }
+.auction-frozen-meta { font-size: 12px; margin-left: auto; }
+
+.auction-lot-list { display: flex; flex-direction: column; gap: var(--ku-planet2-space-xs); }
+.auction-lot-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-xxs);
+  width: 100%;
+  padding: var(--ku-planet2-space-sm);
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: var(--ku-color-bg-phone);
+  text-align: left;
+  cursor: pointer;
+}
+.auction-lot-head { display: flex; align-items: center; gap: var(--ku-planet2-space-xs); }
+.auction-lot-seat { font-size: 14px; font-weight: 700; color: var(--ku-color-genesis-gold-text); }
+.auction-lot-code { font-size: 13px; color: var(--ku-color-text-secondary); letter-spacing: 0.04em; }
+.auction-lot-meta { font-size: 12px; color: var(--ku-color-text-meta); }
+.auction-lot-price-row { display: flex; align-items: baseline; gap: var(--ku-planet2-space-xs); flex-wrap: wrap; }
+.auction-lot-price { display: flex; align-items: baseline; gap: var(--ku-planet2-space-xxs); }
+.auction-lot-price-label { font-size: 12px; color: var(--ku-color-text-meta); }
+.auction-lot-price-value { font-size: 17px; font-weight: 700; color: var(--ku-color-text-primary); }
+.auction-lot-price-meta { font-size: 12px; color: var(--ku-color-text-meta); margin-left: auto; }
+.auction-lot-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--ku-planet2-space-xs); }
+.auction-lot-action {
+  padding: 6px 16px;
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-genesis-gold);
+  color: var(--ku-color-text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.auction-lot-action--quiet {
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-secondary);
+}
+.auction-load-more {
+  align-self: center;
+  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-base);
+  border: 1px solid var(--ku-color-border-control);
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-bg-phone);
+  font-size: 13px;
+  color: var(--ku-color-text-secondary);
+  cursor: pointer;
+}
+
+/* 状态徽章与倒计时 */
+.auction-badge {
+  padding: 2px 8px;
+  border-radius: var(--ku-planet2-radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: auto;
+  flex: none;
+}
+.auction-badge--live { background: var(--ku-color-bg-secondary); color: var(--ku-color-text-secondary); }
+.auction-badge--leading { background: var(--ku-color-genesis-gold-bg); color: var(--ku-color-genesis-gold-text); }
+.auction-badge--outbid { background: var(--ku-color-danger-bg); color: var(--ku-color-text-danger); }
+.auction-badge--won { background: var(--ku-color-success-bg); color: var(--ku-color-success-text); }
+.auction-badge--ended { background: var(--ku-color-bg-secondary); color: var(--ku-color-text-meta); }
+.auction-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ku-planet2-space-xxs);
+  font-size: 12px;
+  color: var(--ku-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.auction-countdown--urgent { color: var(--ku-color-text-danger); font-weight: 600; }
+.auction-countdown--ended { color: var(--ku-color-text-meta); }
+
+/* 详情页 */
+.auction-detail-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-xs);
+  padding: var(--ku-planet2-space-sm);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: var(--ku-color-genesis-gold-bg);
+}
+.auction-price-block { display: flex; flex-direction: column; gap: 2px; }
+.auction-price-label { font-size: 12px; color: var(--ku-color-text-meta); }
+.auction-price-value { font-size: 26px; font-weight: 700; color: var(--ku-color-text-primary); font-variant-numeric: tabular-nums; }
+.auction-price-meta { font-size: 12px; color: var(--ku-color-text-meta); }
+.auction-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-xxs);
+  padding: var(--ku-planet2-space-sm);
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: var(--ku-color-bg-phone);
+}
+.auction-info-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ku-planet2-space-xs); }
+.auction-info-label { font-size: 13px; color: var(--ku-color-text-secondary); }
+.auction-info-value { font-size: 13px; color: var(--ku-color-text-primary); text-align: right; }
+.auction-info-value--strong { font-size: 15px; font-weight: 700; }
+.auction-info-sep { height: 1px; background: var(--ku-color-border-cell); margin: var(--ku-planet2-space-xxs) 0; }
+.auction-settle-empty { font-size: 13px; color: var(--ku-color-text-secondary); }
+
+.auction-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ku-planet2-space-xxs);
+  padding: var(--ku-planet2-space-sm);
+  border: 1px solid var(--ku-color-border-card);
+  border-radius: var(--ku-planet2-radius-lg);
+  background: var(--ku-color-bg-phone);
+}
+.auction-history-title { font-size: 14px; font-weight: 700; color: var(--ku-color-text-primary); }
+.auction-history-empty { font-size: 13px; color: var(--ku-color-text-secondary); }
+.auction-history-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-planet2-space-xs);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ku-color-border-cell);
+  font-size: 12px;
+  color: var(--ku-color-text-secondary);
+}
+.auction-history-row:last-child { border-bottom: none; }
+.auction-history-row--mine { color: var(--ku-color-genesis-gold-text); font-weight: 600; }
+.auction-history-time { flex: none; font-variant-numeric: tabular-nums; }
+.auction-history-bidder { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.auction-history-amount { flex: none; font-weight: 700; color: var(--ku-color-text-primary); }
+.auction-history-tag {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-bg-secondary);
+  color: var(--ku-color-text-meta);
+  font-size: 12px;
+  font-weight: 500;
+}
+.auction-detail-footer {
+  padding: var(--ku-planet2-space-xs) var(--ku-planet2-space-base) var(--ku-planet2-space-base);
+  background: var(--ku-color-bg-phone);
+  border-top: 1px solid var(--ku-color-border);
+}
+
+/* 出价弹窗 */
+.auction-bid-sheet .create-qty-block { flex-wrap: nowrap; margin: 0; }
+.auction-bid-input {
+  flex: 1;
+  min-width: 0;
+  margin: 0 var(--ku-planet2-space-sm);
+  text-align: center;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.auction-quick-chips { display: flex; gap: var(--ku-planet2-space-xs); margin-top: var(--ku-planet2-space-xs); }
+.auction-quick-chip {
+  padding: 4px 12px;
+  border: 1px solid var(--ku-color-border-control);
+  border-radius: var(--ku-planet2-radius-pill);
+  background: var(--ku-color-bg-phone);
+  font-size: 13px;
+  color: var(--ku-color-text-secondary);
+  cursor: pointer;
+}
+.auction-inline-error {
+  display: block;
+  margin-top: var(--ku-planet2-space-xxs);
+  font-size: 12px;
+  color: var(--ku-color-text-danger);
+}
+
+/* ═══════════════════════════════════════════════════
    任务面板 (TaskPanelSheet) —— 发帖任务 + 互动帖任务
    ═══════════════════════════════════════════════════ */
 .task-panel-sheet {

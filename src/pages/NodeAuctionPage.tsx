@@ -1,0 +1,217 @@
+import { useEffect, useMemo, useState } from 'react';
+import { ChevronRight, Info, Snowflake, X } from 'lucide-react';
+import { useApp } from '../AppContext';
+import { PageHeader } from '../components/shared';
+import { DevPanel } from '../components/DevPanel';
+import { AuctionCountdown, AuctionStateBadge, useAuctionNow } from '../components/NodeAuctionBits';
+import { NodeAuctionBidSheet } from '../components/NodeAuctionBidSheet';
+import {
+  AUCTION_MIN_INCREMENT_PB,
+  AUCTION_OWNER_REFUND_PB,
+  AUCTION_PAGE_SIZE,
+  AUCTION_PREMIUM_DESTINATION,
+  AUCTION_START_PB,
+  auctionFrozenSummary,
+  auctionMyBidState,
+  auctionStatus,
+  type AuctionLot,
+} from '../auctionConfig';
+import { MOCK_WALLET_ADDRESS } from '../mockData';
+import { formatTokenAmount } from '../stakeConfig';
+
+type AuctionTab = 'live' | 'ended';
+
+/** 创世节点竞拍列表页。倒计时只在本页挂一个定时器，逐行向下传。 */
+export function NodeAuctionPage() {
+  const { t, goBack, canGoBack, navigate, auctionLots, settleAuctionLot, simulateAuctionOutbid, resetAuctionDemo, setDemoPbWallets } = useApp();
+  const now = useAuctionNow();
+  const [tab, setTab] = useState<AuctionTab>('live');
+  const [visible, setVisible] = useState(AUCTION_PAGE_SIZE);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [bidLotId, setBidLotId] = useState<string | null>(null);
+
+  // 倒计时走完后补算结算结果，避免界面僵在「剩 0 秒」
+  useEffect(() => {
+    auctionLots
+      .filter(lot => !lot.settled && auctionStatus(lot, now) === 'ended')
+      .forEach(lot => settleAuctionLot(lot.id));
+  }, [auctionLots, now, settleAuctionLot]);
+
+  const { live, ended } = useMemo(() => {
+    const live: AuctionLot[] = [];
+    const ended: AuctionLot[] = [];
+    auctionLots.forEach(lot => (auctionStatus(lot, now) === 'ended' ? ended : live).push(lot));
+    live.sort((a, b) => a.endAt - b.endAt);
+    ended.sort((a, b) => b.endAt - a.endAt);
+    return { live, ended };
+  }, [auctionLots, now]);
+
+  const summary = useMemo(() => auctionFrozenSummary(auctionLots, MOCK_WALLET_ADDRESS, now), [auctionLots, now]);
+  const list = tab === 'live' ? live : ended;
+  const shown = list.slice(0, visible);
+  const bidLot = auctionLots.find(lot => lot.id === bidLotId) ?? null;
+
+  const switchTab = (next: AuctionTab) => { setTab(next); setVisible(AUCTION_PAGE_SIZE); };
+
+  return (
+    <div className="page auction-page">
+      <PageHeader title={t('创世节点竞拍')} onBack={canGoBack ? goBack : undefined} />
+      <main className="scroll-area auction-scroll">
+        <button type="button" className="bsp-rules-entry" onClick={() => setRulesOpen(true)}>
+          <Info size={14} strokeWidth={2} className="bsp-rules-entry-icon" aria-hidden />
+          <span className="bsp-rules-entry-text">{t('查看完整竞拍规则')}</span>
+          <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
+        </button>
+
+        {summary.frozenPb > 0 && (
+          <div className="auction-frozen-bar">
+            <Snowflake size={14} strokeWidth={2} aria-hidden />
+            <span className="auction-frozen-amount">{t('冻结中 {amount} PB', { amount: formatTokenAmount(summary.frozenPb) })}</span>
+            <span className="auction-frozen-meta">
+              {t('领先 {leading} 场 · 被超过 {outbid} 场', { leading: summary.leadingCount, outbid: summary.outbidCount })}
+            </span>
+          </div>
+        )}
+
+        <div className="create-scale-toggle auction-tabs">
+          <button
+            type="button"
+            className={`create-scale-tab${tab === 'live' ? ' create-scale-tab--active' : ''}`}
+            onClick={() => switchTab('live')}
+          >
+            {t('竞拍中（{count}）', { count: live.length })}
+          </button>
+          <button
+            type="button"
+            className={`create-scale-tab${tab === 'ended' ? ' create-scale-tab--active' : ''}`}
+            onClick={() => switchTab('ended')}
+          >
+            {t('已结束（{count}）', { count: ended.length })}
+          </button>
+        </div>
+
+        {shown.length === 0 ? (
+          <div className="planet-nodes-empty">{t('这里还没有可竞拍的节点')}</div>
+        ) : (
+          <div className="auction-lot-list">
+            {shown.map(lot => (
+              <AuctionLotRow
+                key={lot.id}
+                lot={lot}
+                now={now}
+                onOpen={() => navigate({ page: 'P_NODE_AUCTION_LOT', lotId: lot.id })}
+                onBid={() => setBidLotId(lot.id)}
+              />
+            ))}
+          </div>
+        )}
+
+        {list.length > shown.length && (
+          <button type="button" className="auction-load-more" onClick={() => setVisible(v => v + AUCTION_PAGE_SIZE)}>
+            {t('加载更多（剩余 {length}）', { length: list.length - shown.length })}
+          </button>
+        )}
+      </main>
+
+      <DevPanel>
+        <button
+          type="button"
+          className="planet-dev-menu-item"
+          onClick={() => {
+            const target = live.find(lot => auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now) === 'leading');
+            if (target) simulateAuctionOutbid(target.id);
+          }}
+        >
+          <span>{t('模拟被人加价')}</span>
+        </button>
+        <button type="button" className="planet-dev-menu-item" onClick={() => setDemoPbWallets('auction')}>
+          <span>{t('补足竞拍余额')}</span>
+        </button>
+        <button type="button" className="planet-dev-menu-item" onClick={resetAuctionDemo}>
+          <span>{t('重置竞拍数据')}</span>
+        </button>
+      </DevPanel>
+
+      {bidLot && <NodeAuctionBidSheet lot={bidLot} myAddress={MOCK_WALLET_ADDRESS} onClose={() => setBidLotId(null)} />}
+      {rulesOpen && <AuctionRulesSheet onClose={() => setRulesOpen(false)} />}
+    </div>
+  );
+}
+
+function AuctionLotRow({ lot, now, onOpen, onBid }: { lot: AuctionLot; now: number; onOpen: () => void; onBid: () => void }) {
+  const { t } = useApp();
+  const status = auctionStatus(lot, now);
+  const state = auctionMyBidState(lot, MOCK_WALLET_ADDRESS, now);
+  const actionLabel = status === 'ended'
+    ? t('查看结果')
+    : state === 'leading'
+      ? t('已领先')
+      : lot.bids.length > 0 ? t('加价') : t('出价');
+
+  return (
+    <div className="auction-lot-card" role="button" tabIndex={0} onClick={onOpen} onKeyDown={e => { if (e.key === 'Enter') onOpen(); }}>
+      <div className="auction-lot-head">
+        <span className="auction-lot-seat">{t('创世 #{seat}', { seat: lot.seatNo })}</span>
+        <span className="auction-lot-code">{lot.nodeCode}</span>
+        <AuctionStateBadge lot={lot} myAddress={MOCK_WALLET_ADDRESS} now={now} />
+      </div>
+      <div className="auction-lot-meta">
+        {t('{region} · 上月空投 {airdrop} PB', { region: lot.regionLabel, airdrop: formatTokenAmount(lot.lastMonthAirdropPb) })}
+      </div>
+      <div className="auction-lot-price-row">
+        <div className="auction-lot-price">
+          <span className="auction-lot-price-label">{lot.bids.length > 0 ? t('当前价') : t('起拍价')}</span>
+          <span className="auction-lot-price-value">{formatTokenAmount(lot.currentPricePb)} PB</span>
+        </div>
+        <span className="auction-lot-price-meta">
+          {lot.bids.length > 0
+            ? t('起拍 {start} · 已出价 {count} 次', { start: formatTokenAmount(lot.startPricePb), count: lot.bids.length })
+            : t('还没有人出价')}
+        </span>
+      </div>
+      <div className="auction-lot-foot">
+        <AuctionCountdown lot={lot} now={now} />
+        <button
+          type="button"
+          className={`auction-lot-action${state === 'leading' || status === 'ended' ? ' auction-lot-action--quiet' : ''}`}
+          onClick={e => { e.stopPropagation(); if (status === 'ended') onOpen(); else onBid(); }}
+        >
+          {actionLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function AuctionRulesSheet({ onClose }: { onClose: () => void }) {
+  const { t } = useApp();
+  const premiumCopy = AUCTION_PREMIUM_DESTINATION === 'burn'
+    ? t('成交价高出起拍价的部分将被销毁。')
+    : AUCTION_PREMIUM_DESTINATION === 'platform'
+      ? t('成交价高出起拍价的部分由平台留存。')
+      : t('成交价高出起拍价的部分，去向将在规则公布后同步。');
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="payment-sheet pb-info-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div className="sheet-header">
+          <span className="sheet-title">{t('创世节点竞拍规则')}</span>
+          <button className="back-btn" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t('关闭')}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+        <div className="pb-info-sheet-body">
+          <p className="pb-info-sheet-para">{t('每月考核后，排名靠后的创世节点进入公开竞拍，价高者得。')}</p>
+          <p className="pb-info-sheet-para">{t('起拍价 {start} PB，每次加价至少 {step} PB。', {
+            start: formatTokenAmount(AUCTION_START_PB), step: formatTokenAmount(AUCTION_MIN_INCREMENT_PB),
+          })}</p>
+          <p className="pb-info-sheet-para">{t('出价后该笔 PB 冻结；被他人超过或本场落拍时，按原路退回。')}</p>
+          <p className="pb-info-sheet-para">{t('不论成交价高低，原持有人固定拿回 {refund} PB。', {
+            refund: formatTokenAmount(AUCTION_OWNER_REFUND_PB),
+          })}</p>
+          <p className="pb-info-sheet-para">{premiumCopy}</p>
+          <p className="pb-info-sheet-para">{t('完整规则以官方公告为准。')}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
