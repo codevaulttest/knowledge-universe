@@ -58,7 +58,7 @@ export function NodeAuctionBidSheet({
         return;
       }
       showToast(result.refundedPb > 0
-        ? t('出价成功，{amount} PB 已冻结；上一次冻结的 {refunded} PB 已退回', {
+        ? t('出价成功，{amount} PB 已冻结；上一笔出价的 {refunded} PB 已退回', {
             amount: formatTokenAmount(amount), refunded: formatTokenAmount(result.refundedPb),
           })
         : t('出价成功，{amount} PB 已冻结', { amount: formatTokenAmount(amount) }));
@@ -89,7 +89,7 @@ export function NodeAuctionBidSheet({
 
         {iLead && (
           <div className="sup-deposit-warning">
-            <span>{t('你目前出价最高。继续加价时，先冻结本次出价金额；成功后，上一笔冻结的 PB 原路退回。')}</span>
+            <span>{t('你目前出价最高。继续加价需要余额够冻结新的出价，上一笔会自动退回。')}</span>
           </div>
         )}
 
@@ -135,7 +135,7 @@ export function NodeAuctionBidSheet({
             ))}
           </div>
           {belowMin && (
-            <span className="auction-inline-error">{t('至少要出 {min} PB（当前价加 {step}）', {
+            <span className="auction-inline-error">{t('至少出价 {min} PB', {
               min: formatTokenAmount(minBid), step: formatTokenAmount(AUCTION_MIN_INCREMENT_PB),
             })}</span>
           )}

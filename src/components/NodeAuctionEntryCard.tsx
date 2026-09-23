@@ -35,7 +35,7 @@ export function NodeAuctionEntryCard() {
         </span>
         <span className="auction-entry-sub">
           {openingLot
-            ? t('本期 {count} 席统一开拍', { count: currentRoundCount })
+            ? t('本期 {count} 个创世节点即将开拍', { count: currentRoundCount })
             : live.length === 0
             ? t('本期竞拍已结束，可查看成交结果')
             : idleCount > 0
@@ -45,10 +45,10 @@ export function NodeAuctionEntryCard() {
         {(summary.leadingCount > 0 || summary.outbidCount > 0) && (
           <span className={`auction-entry-mine${summary.outbidCount > 0 ? ' auction-entry-mine--alert' : ''}`}>
             {summary.leadingCount > 0 && summary.outbidCount > 0
-              ? t('出价领先 {leading} 场 · 出价被超越 {outbid} 场', { leading: summary.leadingCount, outbid: summary.outbidCount })
+              ? t('出价领先 {leading} 场 · 出价被超过 {outbid} 场', { leading: summary.leadingCount, outbid: summary.outbidCount })
               : summary.leadingCount > 0
                 ? t('出价领先 {count} 场', { count: summary.leadingCount })
-                : t('出价被超越 {count} 场', { count: summary.outbidCount })}
+                : t('出价被超过 {count} 场', { count: summary.outbidCount })}
           </span>
         )}
       </span>

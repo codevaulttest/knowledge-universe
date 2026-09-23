@@ -54,8 +54,8 @@ export function NodeAuctionLotPage({ lotId }: { lotId: string }) {
         </div>
 
         <div className="auction-info-card">
-          <InfoRow label={t(lot.period === 'previous' ? '竞拍前考核名次' : '上月考核名次')} value={t('第 {rank} 名', { rank: lot.rankLastMonth })} />
-          <InfoRow label={t(lot.period === 'previous' ? '计入起拍价的空投' : '上月空投额度')} value={`${formatTokenAmount(lot.lastMonthAirdropPb)} PB`} />
+          <InfoRow label={t(lot.period === 'previous' ? '考核名次' : '上月考核名次')} value={t('第 {rank} 名', { rank: lot.rankLastMonth })} />
+          <InfoRow label={t(lot.period === 'previous' ? '空投额度' : '上月空投额度')} value={`${formatTokenAmount(lot.lastMonthAirdropPb)} PB`} />
           <InfoRow label={t('原持有人')} value={lot.previousOwnerLabel} />
         </div>
 
@@ -71,8 +71,6 @@ export function NodeAuctionLotPage({ lotId }: { lotId: string }) {
               <>
                 <InfoRow label={t('成交价')} value={`${formatTokenAmount(settlement.finalPricePb)} PB`} strong />
                 <InfoRow label={t('拍得人')} value={settlement.winnerLabel === MOCK_WALLET_ADDRESS ? t('我') : settlement.winnerLabel} />
-                <div className="auction-info-sep" />
-                <InfoRow label={t('原持有人获得')} value={`${formatTokenAmount(settlement.ownerRefundPb)} PB`} />
               </>
             ) : (
               <span className="auction-settle-empty">{t('本场无人出价')}</span>

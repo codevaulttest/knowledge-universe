@@ -199,7 +199,7 @@ const OTHER_BIDDERS = [
 ];
 
 type LotScript = {
-  /** 相对当前时间的结束时刻（毫秒，负数表示已结束）。 */
+  /** 生成不同出价历史的时间剧本（毫秒）；最终结束时刻由期次统一覆盖。 */
   endOffset: number;
   /** 出价轮数。 */
   rounds: number;

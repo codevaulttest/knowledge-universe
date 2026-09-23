@@ -1163,8 +1163,8 @@ export default function App({ account, onLanguageChange }: {
       bids: [rival, ...l.bids.map(b => b.id === myLeading?.id ? { ...b, refunded: true } : b)],
     }));
     if (myLeading) {
-      showToast(t('你在 {nodeCode} 的出价被超过了，{amount} PB 已退回', {
-        nodeCode: lot.nodeCode,
+      showToast(t('你在创世 #{seat} 的出价被超过了，{amount} PB 已退回', {
+        seat: lot.seatNo,
         amount: formatTokenAmount(myLeading.amount),
       }));
     }

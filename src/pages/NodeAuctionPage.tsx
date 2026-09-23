@@ -20,7 +20,7 @@ import { formatTokenAmount } from '../stakeConfig';
 
 type AuctionTab = 'current' | 'previous';
 
-/** 创世节点竞拍列表页。倒计时只在本页挂一个定时器，逐行向下传。 */
+/** 创世节点竞拍列表页。页面级单个定时器驱动本期倒计时。 */
 export function NodeAuctionPage() {
   const { t, goBack, canGoBack, navigate, auctionLots, settleAuctionLot, simulateAuctionOutbid, resetAuctionDemo, setDemoPbWallets } = useApp();
   const now = useAuctionNow();
@@ -84,15 +84,6 @@ export function NodeAuctionPage() {
           <ChevronRight size={14} strokeWidth={2} className="bsp-rules-entry-chevron" aria-hidden />
         </button>
 
-        {tab === 'current' && roundCountdownLot && auctionStatus(roundCountdownLot, now) !== 'ended' && (
-          <div className="auction-opening-bar">
-            <span>{openingLot
-              ? t('本期 {count} 席统一开拍', { count: current.length })
-              : t('本期竞拍结束')}</span>
-            <AuctionCountdown lot={roundCountdownLot} now={now} />
-          </div>
-        )}
-
         <div className="create-scale-toggle auction-tabs">
           <button
             type="button"
@@ -112,8 +103,17 @@ export function NodeAuctionPage() {
           </button>
         </div>
 
+        {tab === 'current' && roundCountdownLot && auctionStatus(roundCountdownLot, now) !== 'ended' && (
+          <div className="auction-opening-bar">
+            <span>{openingLot
+              ? t('本期 {count} 个创世节点即将开拍', { count: current.length })
+              : t('距本期竞拍结束')}</span>
+            <AuctionCountdown lot={roundCountdownLot} now={now} />
+          </div>
+        )}
+
         {shown.length === 0 ? (
-          <div className="planet-nodes-empty">{tab === 'current' ? t('目前没有正在竞拍的节点') : t('还没有已结束的竞拍')}</div>
+          <div className="planet-nodes-empty">{tab === 'current' ? t('目前没有正在竞拍的节点') : t('还没有上期结果')}</div>
         ) : (
           <div className="auction-lot-list">
             {tab === 'previous' && previousStart && (
@@ -139,10 +139,10 @@ export function NodeAuctionPage() {
                     </span>
                     <span className="auction-frozen-meta">
                       {summary.leadingCount > 0 && summary.outbidCount > 0
-                        ? t('出价领先 {leading} 场 · 出价被超越 {outbid} 场', { leading: summary.leadingCount, outbid: summary.outbidCount })
+                        ? t('出价领先 {leading} 场 · 出价被超过 {outbid} 场', { leading: summary.leadingCount, outbid: summary.outbidCount })
                         : summary.leadingCount > 0
                           ? t('出价领先 {count} 场', { count: summary.leadingCount })
-                          : t('出价被超越 {count} 场', { count: summary.outbidCount })}
+                          : t('出价被超过 {count} 场', { count: summary.outbidCount })}
                     </span>
                   </div>
                 )}
@@ -221,7 +221,7 @@ function AuctionLotRow({ lot, now, onOpen, onBid }: { lot: AuctionLot; now: numb
       </div>
       <div className="auction-lot-meta-row">
         <span className="auction-lot-meta">
-          {t(lot.period === 'previous' ? '竞拍前第 {rank} 名 · 空投 {airdrop} PB' : '上月第 {rank} 名 · 上月空投 {airdrop} PB', {
+          {t(lot.period === 'previous' ? '考核第 {rank} 名 · 空投 {airdrop} PB' : '上月第 {rank} 名 · 上月空投 {airdrop} PB', {
             rank: lot.rankLastMonth, airdrop: formatTokenAmount(lot.lastMonthAirdropPb),
           })}
         </span>
@@ -267,8 +267,8 @@ export function AuctionRulesSheet({ onClose }: { onClose: () => void }) {
           <p className="pb-info-sheet-para">{t('每个节点的起拍价为 {start} PB 加上该节点上月空投额度，每次加价至少 {step} PB。', {
             start: formatTokenAmount(AUCTION_START_PB), step: formatTokenAmount(AUCTION_MIN_INCREMENT_PB),
           })}</p>
-          <p className="pb-info-sheet-para">{t('出价后 PB 暂时冻结；出价被超过或竞拍结束后未拍得时，自动退回原钱包。')}</p>
-          <p className="pb-info-sheet-para">{t('竞拍成交后，原持有人固定获得 {refund} PB。', {
+          <p className="pb-info-sheet-para">{t('出价后 PB 暂时冻结；出价被超过或竞拍结束后未拍得时，自动退回你的站内 PB 余额。')}</p>
+          <p className="pb-info-sheet-para">{t('如果你的节点进入竞拍，成交后你将获得 {refund} PB。', {
             refund: formatTokenAmount(AUCTION_OWNER_REFUND_PB),
           })}</p>
         </div>
