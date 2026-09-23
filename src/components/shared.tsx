@@ -241,7 +241,7 @@ export function ChannelCard({
 }
 
 // ── Rating（移植自 gemini-codevault/gemini-app/NodesPage.tsx StarPatternGraphic）──
-const STAR_COLORS: Record<number, string> = {
+export const STAR_COLORS: Record<number, string> = {
   0: '#94a3b8',
   1: '#10b981',
   2: '#6366f1',
@@ -258,19 +258,35 @@ const STAR_SHADOWS: Record<number, string> = {
   5: 'rgba(245,158,11,0.8)',
 };
 
-export function Rating({ value, size = 28 }: { value: number; size?: number }) {
+export function Rating({ value, size = 28, variant = 'full', ariaLabel }: {
+  value: number;
+  size?: number;
+  /**
+   * plain：feed 等信息密集的场景用。去掉发光、去掉星内数字（数字在小尺寸下会低于最小字号，
+   * 星级改由 aria-label 承载），且 0–3 星统一用中性色，只有 4–5 星才上色——
+   * 让颜色只在稀缺的高星级出现，避免每条帖子都闪。
+   */
+  variant?: 'full' | 'plain';
+  /** 覆盖默认的「N 星」无障碍标签；传空串表示外层已有标签，本组件对读屏隐藏。*/
+  ariaLabel?: string;
+}) {
   const { t } = useApp();
   const level = Math.max(0, Math.min(5, value));
-  const color = STAR_COLORS[level] ?? STAR_COLORS[0];
+  const plain = variant === 'plain';
+  const color = plain && level < 4
+    ? 'var(--ku-color-star-plain)'
+    : (STAR_COLORS[level] ?? STAR_COLORS[0]);
   const shadow = STAR_SHADOWS[level] ?? STAR_SHADOWS[0];
+  const label = ariaLabel ?? t('{level} 星', { level, unit: level === 1 ? 'star' : 'stars' });
 
   return (
     <div
-      aria-label={t('{level} 星', { level, unit: level === 1 ? 'star' : 'stars' })}
-      style={{ position: 'relative', width: size, height: size, flexShrink: 0, filter: `drop-shadow(0 0 6px ${shadow})` }}
+      aria-label={label || undefined}
+      aria-hidden={label ? undefined : true}
+      style={{ position: 'relative', width: size, height: size, flexShrink: 0, filter: plain ? undefined : `drop-shadow(0 0 6px ${shadow})` }}
     >
       <Star size={size} fill={color} strokeWidth={0} style={{ display: 'block' }} />
-      <span style={{
+      {!plain && <span style={{
         position: 'absolute', inset: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: '#fff', fontWeight: 700,
@@ -280,7 +296,7 @@ export function Rating({ value, size = 28 }: { value: number; size?: number }) {
         pointerEvents: 'none',
       }}>
         {level}
-      </span>
+      </span>}
     </div>
   );
 }

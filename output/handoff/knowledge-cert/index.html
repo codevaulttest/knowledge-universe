@@ -1,0 +1,215 @@
+<title>内容确权</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap">
+<style>
+  :root {
+    --ground: #F4F7FB;
+    --surface: #FFFFFF;
+    --ink: #0E1830;
+    --ink-soft: #4A5670;
+    --line: #D9E1EC;
+    --accent: #1B6BFF;
+    --accent-ink: #1456D6;
+    --accent-wash: #E6EEFF;
+    --new: #0F7B4A;
+    --new-wash: #DDF3E8;
+    --changed: #9A4A00;
+    --changed-wash: #FDEBD6;
+    --removed: #B42318;
+    --removed-wash: #FDE4E1;
+    --phone-frame: #0E1830;
+    --sans: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0B1120; --surface: #121A2C; --ink: #E7ECF5; --ink-soft: #A3AEC4; --line: #25304A;
+      --accent: #5B93FF; --accent-ink: #8AB2FF; --accent-wash: #16264A;
+      --new: #5FD39A; --new-wash: #10301F; --changed: #F5B065; --changed-wash: #3A2410;
+      --removed: #FF8A7E; --removed-wash: #3D1512; --phone-frame: #2A3550;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0B1120; --surface: #121A2C; --ink: #E7ECF5; --ink-soft: #A3AEC4; --line: #25304A;
+    --accent: #5B93FF; --accent-ink: #8AB2FF; --accent-wash: #16264A;
+    --new: #5FD39A; --new-wash: #10301F; --changed: #F5B065; --changed-wash: #3A2410;
+    --removed: #FF8A7E; --removed-wash: #3D1512; --phone-frame: #2A3550;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font: 15px/1.7 var(--sans);
+    padding-inline: 20px;
+    padding-block: 0 72px;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+
+  header.top { padding-block: 44px 28px; border-bottom: 1px solid var(--line); display: grid; gap: 14px; }
+  .eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); margin: 0; }
+  h1 { font-size: clamp(28px, 4.4vw, 40px); line-height: 1.2; font-weight: 900; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+  .intro { color: var(--ink-soft); max-width: 62ch; margin: 0; }
+  dl.meta { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 6px 0 0; }
+  dl.meta div { display: grid; gap: 2px; }
+  dl.meta dt { font: 500 12px/1.4 var(--mono); color: var(--ink-soft); letter-spacing: .04em; }
+  dl.meta dd { margin: 0; font: 500 14px/1.4 var(--mono); }
+
+  .overview { padding-block: 28px 8px; max-width: 520px; }
+  .overview h2 { font-size: 13px; font-weight: 700; letter-spacing: .06em; color: var(--ink-soft); margin: 0 0 10px; }
+  .toc { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; counter-reset: toc; }
+  .toc li { counter-increment: toc; }
+  .toc a { display: flex; gap: 10px; color: var(--ink); text-decoration: none; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+  .toc a::before { content: counter(toc, decimal-leading-zero); font: 500 12px/1.9 var(--mono); color: var(--accent-ink); }
+  .toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .toc a:hover { color: var(--accent-ink); }
+
+
+  .screens { display: grid; gap: 0; margin-top: 36px; }
+  .screen { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 40px; padding-block: 40px; border-top: 1px solid var(--line); align-items: start; }
+  .phone { margin: 0; background: var(--phone-frame); padding: 8px; border-radius: 34px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+  .phone img { display: block; width: 100%; height: auto; border-radius: 27px; }
+  .screen-body { display: grid; gap: 14px; max-width: 60ch; }
+  .screen-index { margin: 0; font: 500 12px/1 var(--mono); color: var(--ink-soft); letter-spacing: .06em; }
+  .screen h3 { margin: 0; font-size: 22px; line-height: 1.35; font-weight: 700; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; text-wrap: balance; }
+  .tag { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; line-height: 1.4; }
+  .tag--new { color: var(--new); background: var(--new-wash); }
+  .tag--changed { color: var(--changed); background: var(--changed-wash); }
+  .tag--removed { color: var(--removed); background: var(--removed-wash); }
+
+  .path { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font: 13px/1.5 var(--mono); }
+  .path li { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; }
+  .path li + li::before { content: "→"; color: var(--ink-soft); margin-right: 6px; margin-left: -4px; }
+  .path li + li { position: relative; }
+
+  .changes { margin: 0; padding-left: 1.1em; display: grid; gap: 8px; }
+  .notes { background: var(--accent-wash); border-radius: 10px; padding: 12px 16px; }
+  .notes h4 { margin: 0 0 6px; font-size: 13px; color: var(--accent-ink); }
+  .notes ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; font-size: 14px; }
+
+  footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 13px; }
+
+  @media (max-width: 760px) {
+    .screen { grid-template-columns: 1fr; gap: 20px; }
+    .phone { position: static; max-width: 280px; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">知识宇宙 · 功能交付</p>
+    <h1>内容确权</h1>
+    <p class="intro">确权改为作者主动申请：帖子满 100 赞后，作者在弹窗里确认申请，由平台发出认证并铸造上链。认证绑定帖子的一个版本：修改有认证的帖子会生成新版本，旧版本和它的认证一起保留，读者可以点版本号查看。人工核查发现问题时认证被撤销，链上保留撤销时间和原因。</p>
+    <dl class="meta"><div><dt>提交范围</dt><dd>7846000</dd></div><div><dt>日期</dt><dd>2026-09-22</dd></div><div><dt>涉及页面</dt><dd>个人主页 · 帖子详情 · 申请确权 · 认证详情</dd></div></dl>
+  </header>
+
+  <nav class="overview" aria-label="屏幕目录">
+    <h2>逐屏说明</h2>
+    <ol class="toc"><li><a href="#profile-apply">个人主页：可申请确权的帖子</a></li><li><a href="#apply-modal">申请确权弹窗</a></li><li><a href="#minting">提交后：确权中</a></li><li><a href="#cert-minting">认证详情：确权中</a></li><li><a href="#edit-confirm">编辑有认证的帖子前的提示</a></li><li><a href="#versions">帖子详情：版本记录</a></li><li><a href="#version-v1">查看旧版本原文</a></li><li><a href="#cert-version">认证详情：已确权</a></li><li><a href="#revoked">认证详情：已撤销</a></li><li><a href="#rules">确权规则</a></li></ol>
+  </nav>
+
+  <section class="screens">
+    <article class="screen" id="profile-apply">
+      <figure class="phone"><img src="shots/profile-apply.png" alt="个人主页：可申请确权的帖子 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 1</p>
+        <h3>个人主页：可申请确权的帖子<span class="tag tag--changed">改动</span></h3>
+        <ol class="path" aria-label="入口路径"><li>我的主页</li><li>帖子</li><li>确权</li></ol>
+        <ul class="changes"><li>「确权」筛选列出确权中、已确权、已撤销的帖子，数量显示在筛选旁</li><li>当前版本满 100 赞、还没申请的帖子排在后面，卡片上方一行「已满 100 赞，可申请确权」和「申请确权」按钮</li><li>列表为空（没有任何认证，也没有满 100 赞的帖子）时显示空态「还没有知识确权认证」，副标题「帖子满 100 赞后可申请知识确权」</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>「申请确权」同时出现在自己帖子的「…」菜单和帖子详情的「…」菜单</li><li>可申请条件：作者本人、当前版本赞数 ≥ 100、当前版本没有任何认证（确权中 / 已确权 / 已撤销都算有）</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="apply-modal">
+      <figure class="phone"><img src="shots/apply-modal.png" alt="申请确权弹窗 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 2</p>
+        <h3>申请确权弹窗<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>确权筛选</li><li>申请确权</li></ol>
+        <ul class="changes"><li>一个居中确认弹窗完成申请：标题「为 vN 申请确权」，说明内容指纹和作者信息永久记录在链上、认证绑定当前版本、之后修改会生成新版本并可单独申请</li><li>主按钮「确认申请」：提交后提示「已提交确权，铸造完成后通知你」；次按钮「取消」</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>弹窗沿用连接钱包弹窗的样式</li><li>认证由平台发出，前端没有作者签名环节</li><li>实名认证和费用后续版本再加</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="minting">
+      <figure class="phone"><img src="shots/minting.png" alt="提交后：确权中 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 3</p>
+        <h3>提交后：确权中<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>确认申请</li><li>回到确权筛选</li></ol>
+        <ul class="changes"><li>帖子徽章显示「确权中」，只有作者本人看得到</li><li>点击进入认证详情查看进度</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>后端状态 Pending / Minting 都显示为「确权中」；Failed 的展示待与后端对齐</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="cert-minting">
+      <figure class="phone"><img src="shots/cert-minting.png" alt="认证详情：确权中 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 4</p>
+        <h3>认证详情：确权中<span class="tag tag--changed">改动</span></h3>
+        <ol class="path" aria-label="入口路径"><li>「确权中」徽章</li><li>认证详情</li></ol>
+        <ul class="changes"><li>证书编号、交易哈希显示「铸造完成后生成」，铸造日期显示「铸造中」</li><li>新增「认证版本」字段；「当前持有人」改为「认证作者」</li><li>顶部说明改为：确权认证绑定帖子的一个版本，永久记录在链上</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>「认证作者」字段取决于 NFT 持有方方案（公司钱包还是用户托管地址），待后端确定</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="edit-confirm">
+      <figure class="phone"><img src="shots/edit-confirm.png" alt="编辑有认证的帖子前的提示 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 5</p>
+        <h3>编辑有认证的帖子前的提示<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>有认证的帖子</li><li>…</li><li>编辑</li></ol>
+        <ul class="changes"><li>当前版本有认证（确权中 / 已确权 / 已撤销）时，编辑前弹出「修改后将生成新版本」</li><li>正文按认证状态说明影响：已确权——原版本的确权保留在原版本；确权中——认证对应提交时的内容，铸造完成后保留在原版本；已撤销——撤销记录保留在原版本</li><li>新版本没有确权标识，赞数从 0 开始累计，满 100 赞后可以单独申请；选「继续修改」进入编辑，「取消」关闭</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>申请过确权的帖子（任一状态）保存编辑时都存版本，保证认证对应的内容不被覆盖</li><li>从没申请过确权的帖子直接进入编辑，不弹提示，也不存版本</li><li>自己的帖子现在都能编辑（原来只有频道帖和小黄车帖）</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="versions">
+      <figure class="phone"><img src="shots/versions.png" alt="帖子详情：版本记录 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 6</p>
+        <h3>帖子详情：版本记录<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>帖子详情</li><li>v2 · 已编辑</li></ol>
+        <ul class="changes"><li>有历史版本的帖子，作者行显示「v2 · 已编辑」，旁边是「v1 已确权」徽章</li><li>点版本号打开版本记录：当前版本在最前，显示本版本获得的赞数；历史版本标明更新时间和认证状态（已确权 / 确权中 / 已撤销）</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>申请过确权的帖子保存编辑时存版本；保存时把旧的标题和正文存档，版本号 +1</li><li>当前版本没有认证、旧版本已确权时，徽章显示「vN 已确权」（灰色），点击进入该版本的证书</li><li>每个版本单独计赞：保存新版本时记下当时的累计赞数，当前版本赞数 = 累计赞数 − 该值；帖子上展示的仍是累计赞数</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="version-v1">
+      <figure class="phone"><img src="shots/version-v1.png" alt="查看旧版本原文 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 7</p>
+        <h3>查看旧版本原文<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>版本记录</li><li>v1</li></ol>
+        <ul class="changes"><li>展示该版本的原文，已确权的版本附「查看认证证书」</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="cert-version">
+      <figure class="phone"><img src="shots/cert-version.png" alt="认证详情：已确权 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 8</p>
+        <h3>认证详情：已确权<span class="tag tag--changed">改动</span></h3>
+        <ol class="path" aria-label="入口路径"><li>v1</li><li>查看认证证书</li></ol>
+        <ul class="changes"><li>「认证版本 v1」可点，打开版本记录并定位到该版本</li><li>「前往区块链浏览器」打开铸造交易哈希，可复制</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>区块浏览器目前是站内面板占位，需要开发提供浏览器交易页地址</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="revoked">
+      <figure class="phone"><img src="shots/revoked.png" alt="认证详情：已撤销 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 9</p>
+        <h3>认证详情：已撤销<span class="tag tag--changed">改动</span></h3>
+        <ol class="path" aria-label="入口路径"><li>「已撤销」徽章</li><li>认证详情</li></ol>
+        <ul class="changes"><li>原「已销毁」改为「已撤销」，帖子徽章为红色</li><li>证书显示「该认证已撤销」、撤销原因、撤销时间，并说明链上记录永久保留</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>撤销原因代码与展示文案：fake_likes 存在异常点赞 / content_violation 内容违规 / plagiarism 内容抄袭 / other 其他违规，代码清单待与后端对齐</li><li>赞数回落不会撤销认证</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="rules">
+      <figure class="phone"><img src="shots/rules.png" alt="确权规则 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 10</p>
+        <h3>确权规则<span class="tag tag--changed">改动</span></h3>
+        <ol class="path" aria-label="入口路径"><li>认证详情</li><li>了解知识确权规则</li></ol>
+        <ul class="changes"><li>改为五段：申请条件（作者申请，平台发出认证并铸造上链）、上链记录、按版本确权（新版本赞数从 0 开始累计）、查看位置、撤销机制</li><li>底部提示：认证一经撤销无法恢复，请确保帖子内容原创、点赞来自真实互动</li></ul>
+        
+      </div>
+    </article></section>
+
+</div>
+

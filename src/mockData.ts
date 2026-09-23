@@ -182,6 +182,8 @@ export const NODE_STARS_BY_CODE: Record<string, number> = {
   S9T0U1: 1,
   V2W3X4: 1,
   Y5Z6A7: 1,
+  B8C9D0: 5,
+  E1F2G3: 4,
 };
 
 const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
@@ -574,6 +576,21 @@ export const ALL_POSTS: Post[] = [
     rating: 0, replies: 24, links: 0, shares: 31, saves: 74, likes: 209,
     videoUrl: '/mock-video.mp4',
     channelId: 'channel-jike', minTierIndex: 2,
+  },
+  // ── feed 频道星级入口走查：5 星与 4 星频道各一条，验证高星级才上色的配色规则 ──
+  {
+    id: 'star5-caijing', author: '财经观察局', time: '3 小时前',
+    title: '9 月宏观数据周报：社融回升的三个信号\n附全套图表与分项拆解，供决策参考。',
+    kind: 'text', visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 37, links: 0, shares: 52, saves: 188, likes: 496,
+    channelId: 'channel-caijing', minTierIndex: 1,
+  },
+  {
+    id: 'star4-shejishi', author: '设计师小七', time: '5 小时前',
+    title: '改版复盘：把注册流程从 5 步砍到 2 步\n逐屏对比改版前后，附源文件。',
+    kind: 'text', visiblePercent: 100, isNode: false, stakeTier: 0,
+    rating: 0, replies: 21, links: 0, shares: 18, saves: 94, likes: 263,
+    channelId: 'channel-shejishi', minTierIndex: 1,
   },
   // ── 多规格小黄车演示（首条：推荐流 + 商城 Tab 均置顶）──
   {

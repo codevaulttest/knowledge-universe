@@ -14,15 +14,15 @@ type FeedEntry =
   | { kind: 'post'; post: Post; repostedBy?: RepostedBy }
   | { kind: 'suggested-users' };
 
-// feed 第二条 mock 帖子固定演示为「转发」样式
-const DEMO_REPOST_INDEX = 1;
+// 小黄车那条 mock 帖子固定演示为「转发」样式（前面隔着首条 + 两条频道星级走查帖）
+const DEMO_REPOST_INDEX = 3;
 const DEMO_REPOSTER: RepostedBy = {
   name: '游牧开发者',
   avatarIdx: ALL_USERS_MOCK.find(u => u.name === '游牧开发者')?.avatarIdx ?? 2,
 };
 
 // 「为你推荐的人」卡片插入位置：第 N 篇帖子之后（避开上面的转发演示位）
-const SUGGESTED_USERS_INSERT_INDEX = 3;
+const SUGGESTED_USERS_INSERT_INDEX = 5;
 
 function RecommendFeed({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElement | null> }) {
   const { posts, t } = useApp();
@@ -334,7 +334,7 @@ export function FeedPage({ tab, setTab }: { tab: 0 | 1 | 2; setTab: (t: 0 | 1 | 
           <button
             type="button"
             className="feed-bell-btn"
-            onClick={() => openScan({ page: 'P_CHANNEL', channelId: 'channel-yanlei' })}
+            onClick={() => openScan({ page: 'P_CHANNEL', channelId: 'channel-jike' })}
             aria-label={t('扫一扫')}
           >
             <ScanLine size={22} strokeWidth={2} />

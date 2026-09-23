@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, MessageCircle, PackageX, Pencil, Radio, Repeat2, RotateCcw, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, UserMinus, UserPlus, Users, X } from 'lucide-react';
+import { BadgeCheck, Bookmark, Check, Ellipsis, Eye, Flame, Gem, HandCoins, Link, MessageCircle, PackageX, Pencil, Radio, Repeat2, RotateCcw, ShoppingCart, ThumbsDown, ThumbsUp, Trash2, UserMinus, UserPlus, Users, X } from 'lucide-react';
 import { CertBadge } from './CertBadge';
 import { canApplyCert } from '../certUtils';
 import { useApp } from '../AppContext';
-import { CURRENT_USER, POST_ACTORS } from '../mockData';
+import { CURRENT_USER, NODE_STARS_BY_CODE, POST_ACTORS } from '../mockData';
 import type { Post, PostAction, PostActorEntry, RepostedBy } from '../types';
-import { ArticleFeedCard, AuthorName, Avatar, clampFrameRatio, GeminiNodeBadge, MediaPlaceholder, PostContent } from './shared';
+import { ArticleFeedCard, AuthorName, Avatar, clampFrameRatio, GeminiNodeBadge, MediaPlaceholder, PostContent, Rating } from './shared';
 import { TipModal, Ios26Alert } from './Overlays';
 import { isChinese, localizeTime } from '../i18n';
 import { formatCount } from '../formatCount';
@@ -229,7 +229,7 @@ export function PostCard({
   /** 透传给 GeminiNodeBadge：仅「我的主页」用空心链接按钮 */
   chainOutline?: boolean;
 }) {
-  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, delistShopPost, relistShopPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, requireWallet, knowledgeCerts, openCertApply } = useApp();
+  const { navigate, followedAuthors, toggleFollow, requestDeletePost, openEditPost, delistShopPost, relistShopPost, openImageLightbox, openLink, openArticleReader, openVideoPlayer, linkedPostIds, language, t, userProfile, channels, subscribedChannelTiers, expiredChannelIds, openChannelSubscribe, openChannelLink, linkedChannelIds, requireWallet, knowledgeCerts, openCertApply } = useApp();
   const [moreOpen, setMoreOpen] = useState(false);
   const [actorsTab, setActorsTab] = useState<PostAction | 'link' | 'tip' | null>(null);
   const [showTip, setShowTip] = useState(false);
@@ -283,6 +283,11 @@ export function PostCard({
     else navigate({ page: 'P6', authorName: post.displayAuthorName ?? post.author });
   };
   const identityName = channel ? channel.name : displayName;
+  // 频道链接入口：他人频道帖的时间行展示该「频道」的节点星级（不是帖子的星级），点击直接进入博主互推。
+  // 自己的频道不展示——不给用户提供链接自己的入口；频道没绑节点码时同样不展示。
+  const linkableChannel = channel?.nodeCode && !isOwn ? channel : undefined;
+  const linkableChannelStars = linkableChannel ? NODE_STARS_BY_CODE[linkableChannel.nodeCode!] ?? 1 : 0;
+  const linkableChannelLinked = linkableChannel ? linkedChannelIds.has(linkableChannel.id) : false;
   const authorRow = (
     <div className="author-row">
       <Avatar index={index} seed={avatarSeed} avatarUrl={post.avatarUrl} onClick={goToIdentity} />
@@ -294,6 +299,27 @@ export function PostCard({
         <div className="author-meta-row">
           <span className="author-time">{localizeTime(post.time, language)}</span>
           <CertBadge post={post} isOwn={isOwn} />
+          {linkableChannel && (
+            linkableChannelLinked ? (
+              <span className="post-channel-star post-channel-star--linked">
+                <Rating
+                  value={linkableChannelStars}
+                  size={15}
+                  variant="plain"
+                  ariaLabel={t('已链接『{name}』，该频道 {level} 星', { name: linkableChannel.name, level: linkableChannelStars })}
+                />
+              </span>
+            ) : (
+              <button
+                type="button"
+                className="post-channel-star"
+                onClick={e => { e.stopPropagation(); openChannelLink(linkableChannel.id); }}
+                aria-label={t('链接『{name}』，该频道 {level} 星', { name: linkableChannel.name, level: linkableChannelStars })}
+              >
+                <Rating value={linkableChannelStars} size={15} variant="plain" ariaLabel="" />
+              </button>
+            )
+          )}
           {isOwn && requiredTier && (
             <span className="post-tier-badge" aria-label={t('需订阅达到 {name} 及以上', { name: requiredTier.name })}>
               <Gem size={11} strokeWidth={2.2} />
@@ -314,7 +340,7 @@ export function PostCard({
           )}
         </div>
       </div>
-      {(!hideFollow || isOwn) && (
+      {(!hideFollow || isOwn || !!linkableChannel) && (
         <div className="more-menu-wrap post-more-menu-wrap">
           <button
             type="button"
@@ -341,6 +367,15 @@ export function PostCard({
                     ? <UserMinus size={14} strokeWidth={2.2} />
                     : <UserPlus size={14} strokeWidth={2.2} />}
                   {isFollowing ? t('取消关注') : t('关注')}
+                </button>
+              )}
+              {linkableChannel && !linkableChannelLinked && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => { setMoreOpen(false); openChannelLink(linkableChannel.id); }}
+                >
+                  <Link size={14} strokeWidth={2.2} /> {t('链接这个频道')}
                 </button>
               )}
               {isOwn && hasActors && (
