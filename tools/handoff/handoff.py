@@ -125,6 +125,8 @@ def build_page(spec, out_dir: Path):
         '{{META}}': meta_html,
         '{{TOC}}': toc,
         '{{SCREENS}}': screens_html,
+        # 页脚说明：截图来源不是原型时（如正式代码 + 模拟接口）由 spec 覆盖
+        '{{FOOTER}}': esc(spec.get('footer', '截图由脚本从原型自动生成，橙色描边标出本次改动的位置。原型数据全部为本地演示数据。')),
     }.items():
         page = page.replace(key, value)
     (out_dir / 'index.html').write_text(page, encoding='utf-8')
