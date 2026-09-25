@@ -54,6 +54,8 @@
       case 'first-upcoming': return { ...base, nextConfig: next };
       case 'next-upcoming': return { ...base, oldConfigId: 1, wonCount: 1, nextConfig: next };
       case 'between': return { ...base, oldConfigId: 1, wonCount: 1 };
+      // 第一期竞拍中：没有上期
+      case 'first-live': return { ...live, oldConfigId: 0, fromTime: iso(now - 2 * D), endTime: iso(now + D + 5 * H + 23 * 60e3) };
       case 'settling': return { ...live, fromTime: iso(now - 3 * D), endTime: iso(now - 2 * 60e3) };
       default: return { ...live, fromTime: iso(now - 2 * D), endTime: iso(now + D + 5 * H + 23 * 60e3) };
     }
@@ -83,7 +85,7 @@
 
   function handle(name, req) {
     if (name === 'GetZsAuctionSummary') return summary();
-    if (name === 'GetZsAuctionList') return page(Number(req.configId) === 1 ? previous : Number(req.configId) === 2 ? current : []);
+    if (name === 'GetZsAuctionList') return page(Number(req.configId) === 1 && phase !== 'first-live' ? previous : Number(req.configId) === 2 ? current : []);
     if (name === 'GetZsAuctionBidHistory') return page(history(Number(req.infoId)));
     // BidZsAuction：出价成功后这一场转为我领先
     const l = current.find(x => x.infoId === Number(req.infoId));
