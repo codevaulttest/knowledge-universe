@@ -1,0 +1,526 @@
+{
+  "slug": "genesis-node-auction",
+  "feature": "创世节点竞拍",
+  "intro": "每月排名末 50 名的创世节点在次月公开竞拍，出价最高者获得节点。本页只展示各页面和各阶段的样子；接口字段、状态取值和规则见接口契约。开发环境目前只有即将开拍的测试数据，为了展示各阶段，截图时模拟了接口返回，页面代码与联调时相同。",
+  "meta": {
+    "代码位置": "wujie_mono · apps/web3/genesis_node",
+    "分支": "feat/genesis-node-auction（MR !53，提交 b879f418）",
+    "日期": "2026-09-25",
+    "接口契约": "https://claude.ai/artifact/Cs6dsAJY8HjmTL6hZoLeuq（字段、状态、竞拍时间、结算与刷新规则以此为准）",
+    "涉及页面": "知识宇宙页 · 竞拍列表 · 竞拍详情 · 出价页 · 规则弹窗"
+  },
+  "startPath": "/web3_genesis_node/planet",
+  "initScript": "try { if (!localStorage.getItem(\"web3_genesis_node_user_local_store\")) localStorage.setItem(\"web3_genesis_node_user_local_store\", \"{\\\"userInfo\\\": {\\\"purseDtos\\\": [{\\\"id\\\": 183, \\\"pursename\\\": \\\"PB\\\", \\\"balance\\\": 943996, \\\"freeze\\\": 0, \\\"usableBalance\\\": 943996, \\\"pursetype\\\": 101}]}}\"); } catch (e) {}\n// 截图用的竞拍接口模拟：按 localStorage.handoff_phase 返回不同期次阶段的数据，只拦截 4 个竞拍接口。\n(() => {\n  const phase = localStorage.getItem('handoff_phase') || 'live';\n  const H = 3600e3;\n  const D = 24 * H;\n  const now = Date.now();\n  const iso = ms => new Date(ms).toISOString();\n  const EMPTY = '0001-01-01T00:00:00';\n\n  const lot = (infoId, configId, seat, code, rank, airdrop, times, price, status, addr) => ({\n    infoId, configId, fromInfo: '创世节点#' + seat, thirdCode: code,\n    note: `上月第${rank}名,上月空投${airdrop}PB`, addr: addr || '',\n    beginPrice: 200000 + airdrop, addPrice: 10000, localPrice: price, times, status, statusInfo: '',\n  });\n\n  const upcoming = phase === 'first-upcoming' || phase === 'next-upcoming';\n  const s = (mine, other) => (upcoming ? -1 : mine ?? other);\n  // 本期（configId 2）\n  const current = [\n    lot(21, 2, 12, 'A12408', 41, 52300, upcoming ? 0 : 4, upcoming ? 252300 : 332300, s(2), '0x3f1....9a2c'),\n    lot(22, 2, 7, 'A07731', 36, 61800, upcoming ? 0 : 6, upcoming ? 261800 : 361800, s(3), '0x81d....44e0'),\n    lot(23, 2, 18, 'A18505', 43, 48600, upcoming ? 0 : 3, upcoming ? 248600 : 278600, -1, '0xa20....1bd3'),\n    lot(24, 2, 25, 'A25910', 45, 43100, 0, 243100, -1, ''),\n    lot(25, 2, 31, 'A31077', 47, 39800, upcoming ? 0 : 2, upcoming ? 239800 : 249800, -1, '0x5c4....e7f1'),\n    lot(26, 2, 40, 'A40263', 49, 35200, 0, 235200, -1, ''),\n    lot(27, 2, 44, 'A44241', 50, 33900, upcoming ? 0 : 5, upcoming ? 233900 : 283900, -1, '0x9e2....03ab'),\n  ];\n  // 上期（configId 1），已结算\n  const previous = [\n    lot(11, 1, 9, 'A09364', 38, 58400, 5, 318400, 4, '我'),\n    lot(12, 1, 3, 'A03185', 33, 66200, 7, 356200, 5, '0x7b0....c19d'),\n    lot(13, 1, 21, 'A21640', 44, 45500, 3, 265500, -1, '0x2d8....a5e4'),\n    lot(14, 1, 27, 'A27352', 46, 41700, 0, 241700, -1, ''),\n    lot(15, 1, 36, 'A36018', 48, 37300, 2, 247300, -1, '0xc63....7f02'),\n  ];\n  // handoff_mine=0：模拟我还没参与任何场次（两期都没有我的出价）\n  if (localStorage.getItem('handoff_mine') === '0') {\n    [...current, ...previous].forEach(l => { if (l.status >= 2) { l.status = -1; if (l.addr === '我') l.addr = '0x4aa....d61e'; } });\n  }\n  const mine = list => list.filter(l => l.status === 2 || l.status === 3);\n\n  function summary() {\n    const count = list => ({ totalNum: list.length, localNum: list.filter(l => !l.times).length });\n    const next = { configId: 2, ...count(current), fromTime: iso(now + 4 * D + 2 * H), endTime: iso(now + 7 * D + 2 * H) };\n    const base = { configId: 0, oldConfigId: 0, totalNum: 0, localNum: 0, fromTime: EMPTY, endTime: EMPTY, leadingCount: 0, outbidCount: 0, frozenAmount: 0, nextConfig: null };\n    const live = {\n      ...base, configId: 2, oldConfigId: 1, ...count(current),\n      leadingCount: current.filter(l => l.status === 2).length,\n      outbidCount: current.filter(l => l.status === 3).length,\n      frozenAmount: current.filter(l => l.status === 2).reduce((sum, l) => sum + l.localPrice, 0),\n    };\n    switch (phase) {\n      case 'none': return null;\n      case 'first-upcoming': return { ...base, nextConfig: next };\n      case 'next-upcoming': return { ...base, oldConfigId: 1, wonCount: 1, nextConfig: next };\n      case 'between': return { ...base, oldConfigId: 1, wonCount: 1 };\n      case 'settling': return { ...live, fromTime: iso(now - 3 * D), endTime: iso(now - 2 * 60e3) };\n      default: return { ...live, fromTime: iso(now - 2 * D), endTime: iso(now + D + 5 * H + 23 * 60e3) };\n    }\n  }\n\n  function history(infoId) {\n    const l = [...current, ...previous].find(x => x.infoId === infoId);\n    if (!l || !l.times) return [];\n    const others = ['0x81d....44e0', '0x3f1....9a2c', '0xa20....1bd3', '0x5c4....e7f1'];\n    return Array.from({ length: Math.min(l.times, 6) }, (_, i) => {\n      const top = i === 0;\n      const isMine = l.status === 2 || l.status === 4 ? top : (l.status === 3 || l.status === 5) && i === 1;\n      return {\n        hisId: infoId * 100 + i,\n        createTime: iso(now - (i + 1) * 3.3 * H),\n        localPrice: l.localPrice - i * 10000,\n        status: top ? 1 : 0,\n        addr: isMine ? '0xme' : others[i % others.length],\n        isMine,\n      };\n    });\n  }\n\n  function page(items) {\n    return { pageIndex: 1, pageSize: 20, totalCount: items.length, totalPages: 1, items };\n  }\n\n  function handle(name, req) {\n    if (name === 'GetZsAuctionSummary') return summary();\n    if (name === 'GetZsAuctionList') return page(Number(req.configId) === 1 ? previous : Number(req.configId) === 2 ? current : []);\n    if (name === 'GetZsAuctionBidHistory') return page(history(Number(req.infoId)));\n    // BidZsAuction：出价成功后这一场转为我领先\n    const l = current.find(x => x.infoId === Number(req.infoId));\n    if (l) Object.assign(l, { localPrice: Number(req.amount), times: l.times + 1, status: 2 });\n    return { configId: 2, infoId: Number(req.infoId), localPrice: Number(req.amount), times: l ? l.times : 1, freezeHisId: 1, refundedOwnPreviousBid: false, refundedAmount: 0 };\n  }\n  void mine;\n\n  const open = XMLHttpRequest.prototype.open;\n  const send = XMLHttpRequest.prototype.send;\n  XMLHttpRequest.prototype.open = function (method, url) {\n    this.__handoffUrl = String(url);\n    return open.apply(this, arguments);\n  };\n  XMLHttpRequest.prototype.send = function (body) {\n    const match = /(GetZsAuctionSummary|GetZsAuctionList|GetZsAuctionBidHistory|BidZsAuction)/.exec(this.__handoffUrl || '');\n    if (!match) return send.apply(this, arguments);\n    let req = {};\n    try { req = JSON.parse(body); } catch (e) { /* 非 JSON 请求体按空处理 */ }\n    const text = JSON.stringify({ data: handle(match[1], req), result: 1, message: '成功' });\n    const xhr = this;\n    const def = (key, value) => Object.defineProperty(xhr, key, { configurable: true, get: () => value });\n    setTimeout(() => {\n      def('readyState', 4);\n      def('status', 200);\n      def('statusText', 'OK');\n      def('responseText', text);\n      def('response', xhr.responseType === 'json' ? JSON.parse(text) : text);\n      def('responseURL', xhr.__handoffUrl);\n      xhr.getAllResponseHeaders = () => 'content-type: application/json\\r\\n';\n      xhr.getResponseHeader = key => (/content-type/i.test(key) ? 'application/json' : null);\n      ['readystatechange', 'load', 'loadend'].forEach(type => xhr.dispatchEvent(new Event(type)));\n    }, 80);\n  };\n})();\n",
+  "screens": [
+    {
+      "id": "entry",
+      "title": "知识宇宙页的竞拍入口",
+      "tag": "new",
+      "path": [
+        "知识宇宙页",
+        "资产卡下方"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'live'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        }
+      ],
+      "highlight": [
+        "css:button:has(.i-fa6-solid\\:gavel)"
+      ],
+      "changes": [
+        "入口卡在知识宇宙页资产卡下方，点击进入竞拍列表",
+        "副标题下方是本期结束倒计时",
+        "副标题是本期在拍节点数，其中还没有人出价的单独点出来",
+        "自己有参与时追加一行：出价领先几场、出价被超过几场；有被超过的场次时转红色"
+      ]
+    },
+    {
+      "id": "list",
+      "title": "竞拍列表",
+      "tag": "new",
+      "path": [
+        "知识宇宙页",
+        "创世节点竞拍"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'live'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        }
+      ],
+      "highlight": [
+        "css:div.grid-cols-2:has(> button)",
+        "css:div.relative.z-10.items-end"
+      ],
+      "changes": [
+        "顶部深金头图里是本期状态（竞拍中或开拍时间）和倒计时，右侧是「竞拍规则」入口；两个分段下都显示",
+        "下面分「本期竞拍（N）」和「上期结果」两段",
+        "自己参与的场次置顶，分「我参与的（N）」和「其他场次（N）」",
+        "我参与的里被超过的排最前；其他场次按上月排名，一期内顺序固定，价格刷新时卡片不跳",
+        "本期其他场次标题右侧有「还没有人出价」筛选（竞拍中且已有场次被出价时才出现）和「价格从低到高」排序，场次数随筛选变化",
+        "每行三行：席位号与状态徽章（竞拍中且我没出价时不显示徽章）、上月名次与空投、当前价或起拍价与按钮",
+        "行右侧按钮按我的状态变化：出价（浅金底，我没参与）、继续加价（白底描边，我领先）、立即加价（实心金色，已被超过）；点整行进详情",
+        "我领先的行是浅蓝底，已被超过的行是浅红底；当前价上涨时价格闪一下并显示涨了多少",
+        "停留在页面时自动刷新，切回前台时也刷新"
+      ]
+    },
+    {
+      "id": "bid-sheet",
+      "title": "出价页",
+      "tag": "new",
+      "path": [
+        "竞拍列表",
+        "某一场的出价按钮"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'live'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        },
+        {
+          "eval": "[...document.querySelectorAll('.gn-auction-card')].find(c => /创世 #25/.test(c.textContent)).querySelector(':scope > div:last-child > button').click()",
+          "wait": 1800
+        }
+      ],
+      "highlight": [
+        "css:.stake-code-stepper"
+      ],
+      "changes": [
+        "独立页面，从列表或详情的出价按钮进入；确认出价按钮紧跟在表单下方，出价成功后返回上一页",
+        "立即加价与确认出价为实心金色；我没参与的出价为浅金底；我领先时的继续加价为白底棕色描边",
+        "标题是「为创世 #N 出价」，上方显示当前价或起拍价，以及已出价次数与下次出价至少多少",
+        "金额按一万步进，另有 +10,000 / +50,000 / +100,000 三个快捷加价",
+        "只用站内 PB 出价，快捷加价下方显示可用余额；余额不足时提示还差多少并禁用按钮",
+        "低于最低出价时出红字提示；别人抢先加价后只提示新的最低价，已输入的金额不变",
+        "自己已领先时顶部提示：上一笔先退回再冻结新出价；余额是否够按「余额 + 上一笔」计算"
+      ]
+    },
+    {
+      "id": "bid-done",
+      "title": "出价成功后的列表",
+      "tag": "new",
+      "path": [
+        "出价页",
+        "确认出价"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'live'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        },
+        {
+          "eval": "[...document.querySelectorAll('.gn-auction-card')].find(c => /创世 #25/.test(c.textContent)).querySelector(':scope > div:last-child > button').click()",
+          "wait": 1800
+        },
+        {
+          "click": "text:确认出价",
+          "wait": 2500
+        }
+      ],
+      "highlight": [
+        "css:.gn-auction-card:has-text(\"创世 #25\")"
+      ],
+      "changes": [
+        "出价成功后弹出提示，说明冻结金额；覆盖自己上一笔出价时一并说明上一笔已退回（提示已消失，截图中未显示）",
+        "刚出价的那一行移到「我参与的」，转成「我领先」，按钮变为「继续加价」"
+      ]
+    },
+    {
+      "id": "detail",
+      "title": "竞拍详情",
+      "tag": "new",
+      "path": [
+        "竞拍列表",
+        "点击整行"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'live'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        },
+        {
+          "eval": "[...document.querySelectorAll('.gn-auction-card')].find(c => /已被超过/.test(c.textContent)).click()",
+          "wait": 1800
+        }
+      ],
+      "highlight": [
+        "css:div.text-gn-auction.font-600.border-b-1"
+      ],
+      "changes": [
+        "顶部是当前价与倒计时，下面是上月名次、上月空投额度",
+        "有人出价后单独列出起拍价",
+        "出价记录里自己的那行高亮并标「我」，已被超过的追加「已退回」",
+        "底部固定金色按钮：出价 / 继续加价（我领先）/ 尚未开拍；期次结束后隐藏"
+      ]
+    },
+    {
+      "id": "previous-list",
+      "title": "上期结果列表",
+      "tag": "new",
+      "path": [
+        "竞拍列表",
+        "上期结果"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'live'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        },
+        {
+          "click": "text:上期结果",
+          "wait": 900
+        }
+      ],
+      "highlight": [
+        "css:div.px-1.text-3.font-600"
+      ],
+      "changes": [
+        "同样分「我参与的（N）」和「其他场次」",
+        "自己参与过的场次标「我已拍得」或「未拍得」，其余场次标「已成交」或「无人出价」",
+        "每行显示名次与空投额度、成交价；无人出价的显示起拍价",
+        "行右侧统一是「查看结果」，点击进入该场详情"
+      ]
+    },
+    {
+      "id": "settled",
+      "title": "上期结果详情",
+      "tag": "new",
+      "path": [
+        "竞拍列表",
+        "上期结果",
+        "某一场"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'live'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        },
+        {
+          "click": "text:上期结果",
+          "wait": 900
+        },
+        {
+          "eval": "[...document.querySelectorAll('.gn-auction-card')].find(c => /我已拍得/.test(c.textContent)).click()",
+          "wait": 1800
+        }
+      ],
+      "changes": [
+        "结算信息列出成交价与拍得人，拍得人是自己时显示「我」",
+        "无人出价的场次显示「本场无人出价」"
+      ]
+    },
+    {
+      "id": "settling",
+      "title": "期次刚结束：结果统计中",
+      "tag": "new",
+      "path": [
+        "竞拍列表",
+        "点击整行"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'settling'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        },
+        {
+          "eval": "[...document.querySelectorAll('.gn-auction-card')].find(c => /我已拍得|未拍得|结果统计中/.test(c.textContent)).click()",
+          "wait": 1800
+        }
+      ],
+      "changes": [
+        "期次结束后不能再出价，底部出价按钮隐藏",
+        "接口返回结算结果之前，列表徽章和详情页显示「结果统计中」，详情页提示「成交结果统计中，几分钟后更新」",
+        "结算完成后自动显示成交价与拍得人"
+      ]
+    },
+    {
+      "id": "rules",
+      "title": "竞拍规则说明",
+      "tag": "new",
+      "path": [
+        "竞拍列表",
+        "规则"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'live'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        },
+        {
+          "click": "css:button:has(> .i-lucide\\:info)",
+          "wait": 1000
+        }
+      ],
+      "changes": [
+        "四条规则：末 50 名进入竞拍、起拍价构成与最低加价、冻结与退回到站内 PB 余额、节点被竞拍时你获得的金额"
+      ]
+    },
+    {
+      "id": "load-failed",
+      "title": "加载失败",
+      "tag": "new",
+      "path": [
+        "知识宇宙页",
+        "创世节点竞拍"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'live'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        },
+        {
+          "eval": "(() => { const s = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('web3_genesis_node_auction_local_store'); s.set_item('attemptedAt', Date.now() + 600000); s.set_item('lots', []); s.set_item('failed', true); })()",
+          "wait": 800
+        }
+      ],
+      "changes": [
+        "一次都没拉到数据时显示「竞拍信息没有加载出来」和「重试」",
+        "已经有数据时拉取失败不打断页面，继续显示上次的数据并自动重试"
+      ]
+    },
+    {
+      "id": "none",
+      "title": "还没有任何一期：入口卡隐藏",
+      "tag": "new",
+      "path": [
+        "知识宇宙页"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'none'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        }
+      ],
+      "changes": [
+        "第一期名单公布之前，知识宇宙页不显示竞拍入口卡"
+      ]
+    },
+    {
+      "id": "first-upcoming-entry",
+      "title": "第一期开拍前：入口卡",
+      "tag": "new",
+      "path": [
+        "知识宇宙页",
+        "资产卡下方"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'first-upcoming'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        }
+      ],
+      "highlight": [
+        "css:button:has(.i-fa6-solid\\:gavel)"
+      ],
+      "changes": [
+        "名单公布后、开拍前，入口卡显示「本期 N 个创世节点即将开拍」",
+        "倒计时改为距开拍"
+      ]
+    },
+    {
+      "id": "first-upcoming-list",
+      "title": "第一期开拍前：竞拍列表",
+      "tag": "new",
+      "path": [
+        "知识宇宙页",
+        "创世节点竞拍"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'first-upcoming'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        }
+      ],
+      "highlight": [
+        "css:div.relative.z-10.items-end"
+      ],
+      "changes": [
+        "没有上一期，所以不显示分段，只列出本期节点",
+        "顶部状态条显示「本期 N 个创世节点」和开拍时间：超过一天显示具体开拍日期时间，一天内显示倒计时",
+        "每场显示起拍价，徽章为「即将开拍」，按钮为「查看详情」；详情页底部按钮为不可点的「尚未开拍」"
+      ]
+    },
+    {
+      "id": "between-entry",
+      "title": "两期之间：入口卡",
+      "tag": "new",
+      "path": [
+        "知识宇宙页",
+        "资产卡下方"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'between'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        }
+      ],
+      "highlight": [
+        "css:button:has(.i-fa6-solid\\:gavel)"
+      ],
+      "changes": [
+        "一期结束后、下期名单公布前，入口卡保留，文案为「上期竞拍已结束，可查看成交结果」",
+        "拍得节点的人追加一行「你拍得了 N 个创世节点」",
+        "这段时间没有倒计时"
+      ]
+    },
+    {
+      "id": "between-list",
+      "title": "两期之间：竞拍列表",
+      "tag": "new",
+      "path": [
+        "知识宇宙页",
+        "创世节点竞拍"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'between'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        }
+      ],
+      "highlight": [
+        "css:div.px-1.text-3.font-600"
+      ],
+      "changes": [
+        "没有本期，所以不显示分段，直接展示上期结果",
+        "自己参与过的场次置顶，徽章为「我已拍得」或「未拍得」"
+      ]
+    },
+    {
+      "id": "next-upcoming-list",
+      "title": "下期名单已公布、尚未开拍：竞拍列表",
+      "tag": "new",
+      "path": [
+        "知识宇宙页",
+        "创世节点竞拍"
+      ],
+      "steps": [
+        {
+          "eval": "localStorage.setItem('handoff_phase', 'next-upcoming'); setTimeout(() => location.reload(), 0)",
+          "wait": 3000
+        },
+        {
+          "eval": "new Promise(r => { let n = 0; const t = setInterval(() => { const b = document.querySelector('button[aria-label=close]'); if (b) { b.click(); clearInterval(t); setTimeout(r, 600); } else if (++n > 20) { clearInterval(t); r(); } }, 150); })",
+          "wait": 300
+        },
+        {
+          "click": "css:button:has(.i-fa6-solid\\:gavel)",
+          "wait": 1800
+        }
+      ],
+      "highlight": [
+        "css:div.grid-cols-2:has(> button)",
+        "css:div.relative.z-10.items-end"
+      ],
+      "changes": [
+        "下期名单公布后，入口卡同第一期开拍前，显示即将开拍和距开拍倒计时",
+        "列表恢复分段：第一段为「即将开拍（N）」，第二段为「上期结果」"
+      ]
+    }
+  ]
+}

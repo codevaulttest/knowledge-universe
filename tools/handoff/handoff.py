@@ -63,6 +63,9 @@ def capture(spec, base_url, out_dir: Path):
         for screen in spec['screens']:
             # 每屏都从干净的首页开始，保证截图可复现、互不串状态
             context = browser.new_context(viewport=viewport, device_scale_factor=2, locale='zh-CN')
+            if spec.get('initScript'):
+                # 页面脚本执行前注入（如演示账户的本地存储），保证每屏起点一致
+                context.add_init_script(spec['initScript'])
             page = context.new_page()
             page.goto(base_url + spec.get('startPath', '/'), wait_until='networkidle')
             page.wait_for_timeout(600)
@@ -91,7 +94,7 @@ def render_screen(screen, index):
     changes = ''.join(f'<li>{esc(c)}</li>' for c in screen.get('changes', []))
     dev_notes = screen.get('devNotes', [])
     notes = (
-        '<div class="notes"><h4>开发注意</h4><ul>' + ''.join(f'<li>{esc(n)}</li>' for n in dev_notes) + '</ul></div>'
+        '<div class="notes"><h4>' + esc(screen.get('notesTitle', '开发注意')) + '</h4><ul>' + ''.join(f'<li>{esc(n)}</li>' for n in dev_notes) + '</ul></div>'
         if dev_notes else ''
     )
     tag = screen.get('tag', '')

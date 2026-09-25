@@ -1,0 +1,276 @@
+<title>创世节点竞拍</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap">
+<style>
+  :root {
+    --ground: #F4F7FB;
+    --surface: #FFFFFF;
+    --ink: #0E1830;
+    --ink-soft: #4A5670;
+    --line: #D9E1EC;
+    --accent: #1B6BFF;
+    --accent-ink: #1456D6;
+    --accent-wash: #E6EEFF;
+    --new: #0F7B4A;
+    --new-wash: #DDF3E8;
+    --changed: #9A4A00;
+    --changed-wash: #FDEBD6;
+    --removed: #B42318;
+    --removed-wash: #FDE4E1;
+    --phone-frame: #0E1830;
+    --sans: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0B1120; --surface: #121A2C; --ink: #E7ECF5; --ink-soft: #A3AEC4; --line: #25304A;
+      --accent: #5B93FF; --accent-ink: #8AB2FF; --accent-wash: #16264A;
+      --new: #5FD39A; --new-wash: #10301F; --changed: #F5B065; --changed-wash: #3A2410;
+      --removed: #FF8A7E; --removed-wash: #3D1512; --phone-frame: #2A3550;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0B1120; --surface: #121A2C; --ink: #E7ECF5; --ink-soft: #A3AEC4; --line: #25304A;
+    --accent: #5B93FF; --accent-ink: #8AB2FF; --accent-wash: #16264A;
+    --new: #5FD39A; --new-wash: #10301F; --changed: #F5B065; --changed-wash: #3A2410;
+    --removed: #FF8A7E; --removed-wash: #3D1512; --phone-frame: #2A3550;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font: 15px/1.7 var(--sans);
+    padding-inline: 20px;
+    padding-block: 0 72px;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+
+  header.top { padding-block: 44px 28px; border-bottom: 1px solid var(--line); display: grid; gap: 14px; }
+  .eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); margin: 0; }
+  h1 { font-size: clamp(28px, 4.4vw, 40px); line-height: 1.2; font-weight: 900; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+  .intro { color: var(--ink-soft); max-width: 62ch; margin: 0; }
+  dl.meta { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 6px 0 0; }
+  dl.meta div { display: grid; gap: 2px; }
+  dl.meta dt { font: 500 12px/1.4 var(--mono); color: var(--ink-soft); letter-spacing: .04em; }
+  dl.meta dd { margin: 0; font: 500 14px/1.4 var(--mono); }
+
+  .overview { padding-block: 28px 8px; max-width: 520px; }
+  .overview h2 { font-size: 13px; font-weight: 700; letter-spacing: .06em; color: var(--ink-soft); margin: 0 0 10px; }
+  .toc { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; counter-reset: toc; }
+  .toc li { counter-increment: toc; }
+  .toc a { display: flex; gap: 10px; color: var(--ink); text-decoration: none; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+  .toc a::before { content: counter(toc, decimal-leading-zero); font: 500 12px/1.9 var(--mono); color: var(--accent-ink); }
+  .toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .toc a:hover { color: var(--accent-ink); }
+
+
+  .screens { display: grid; gap: 0; margin-top: 36px; }
+  .screen { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 40px; padding-block: 40px; border-top: 1px solid var(--line); align-items: start; }
+  .phone { margin: 0; background: var(--phone-frame); padding: 8px; border-radius: 34px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+  .phone img { display: block; width: 100%; height: auto; border-radius: 27px; }
+  .screen-body { display: grid; gap: 14px; max-width: 60ch; }
+  .screen-index { margin: 0; font: 500 12px/1 var(--mono); color: var(--ink-soft); letter-spacing: .06em; }
+  .screen h3 { margin: 0; font-size: 22px; line-height: 1.35; font-weight: 700; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; text-wrap: balance; }
+  .tag { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; line-height: 1.4; }
+  .tag--new { color: var(--new); background: var(--new-wash); }
+  .tag--changed { color: var(--changed); background: var(--changed-wash); }
+  .tag--removed { color: var(--removed); background: var(--removed-wash); }
+
+  .path { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font: 13px/1.5 var(--mono); }
+  .path li { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; }
+  .path li + li::before { content: "→"; color: var(--ink-soft); margin-right: 6px; margin-left: -4px; }
+  .path li + li { position: relative; }
+
+  .changes { margin: 0; padding-left: 1.1em; display: grid; gap: 8px; }
+  .notes { background: var(--accent-wash); border-radius: 10px; padding: 12px 16px; }
+  .notes h4 { margin: 0 0 6px; font-size: 13px; color: var(--accent-ink); }
+  .notes ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; font-size: 14px; }
+
+  footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 13px; }
+
+  @media (max-width: 760px) {
+    .screen { grid-template-columns: 1fr; gap: 20px; }
+    .phone { position: static; max-width: 280px; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">知识宇宙 · 功能交付</p>
+    <h1>创世节点竞拍</h1>
+    <p class="intro">每月排名末 50 名的创世节点在次月公开竞拍，出价最高者获得节点。本页只展示各页面和各阶段的样子；接口字段、状态取值和规则见接口契约。开发环境目前只有即将开拍的测试数据，为了展示各阶段，截图时模拟了接口返回，页面代码与联调时相同。</p>
+    <dl class="meta"><div><dt>代码位置</dt><dd>wujie_mono · apps/web3/genesis_node</dd></div><div><dt>分支</dt><dd>feat/genesis-node-auction（MR !53，提交 b879f418）</dd></div><div><dt>日期</dt><dd>2026-09-25</dd></div><div><dt>接口契约</dt><dd>https://claude.ai/artifact/Cs6dsAJY8HjmTL6hZoLeuq（字段、状态、竞拍时间、结算与刷新规则以此为准）</dd></div><div><dt>涉及页面</dt><dd>知识宇宙页 · 竞拍列表 · 竞拍详情 · 出价页 · 规则弹窗</dd></div></dl>
+  </header>
+
+  <nav class="overview" aria-label="屏幕目录">
+    <h2>逐屏说明</h2>
+    <ol class="toc"><li><a href="#entry">知识宇宙页的竞拍入口</a></li><li><a href="#list">竞拍列表</a></li><li><a href="#bid-sheet">出价页</a></li><li><a href="#bid-done">出价成功后的列表</a></li><li><a href="#detail">竞拍详情</a></li><li><a href="#previous-list">上期结果列表</a></li><li><a href="#settled">上期结果详情</a></li><li><a href="#settling">期次刚结束：结果统计中</a></li><li><a href="#rules">竞拍规则说明</a></li><li><a href="#load-failed">加载失败</a></li><li><a href="#none">还没有任何一期：入口卡隐藏</a></li><li><a href="#first-upcoming-entry">第一期开拍前：入口卡</a></li><li><a href="#first-upcoming-list">第一期开拍前：竞拍列表</a></li><li><a href="#between-entry">两期之间：入口卡</a></li><li><a href="#between-list">两期之间：竞拍列表</a></li><li><a href="#next-upcoming-list">下期名单已公布、尚未开拍：竞拍列表</a></li></ol>
+  </nav>
+
+  <section class="screens">
+    <article class="screen" id="entry">
+      <figure class="phone"><img src="shots/entry.png" alt="知识宇宙页的竞拍入口 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 1</p>
+        <h3>知识宇宙页的竞拍入口<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>知识宇宙页</li><li>资产卡下方</li></ol>
+        <ul class="changes"><li>入口卡在知识宇宙页资产卡下方，点击进入竞拍列表</li><li>副标题下方是本期结束倒计时</li><li>副标题是本期在拍节点数，其中还没有人出价的单独点出来</li><li>自己有参与时追加一行：出价领先几场、出价被超过几场；有被超过的场次时转红色</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="list">
+      <figure class="phone"><img src="shots/list.png" alt="竞拍列表 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 2</p>
+        <h3>竞拍列表<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>知识宇宙页</li><li>创世节点竞拍</li></ol>
+        <ul class="changes"><li>顶部深金头图里是本期状态（竞拍中或开拍时间）和倒计时，右侧是「竞拍规则」入口；两个分段下都显示</li><li>下面分「本期竞拍（N）」和「上期结果」两段</li><li>自己参与的场次置顶，分「我参与的（N）」和「其他场次（N）」</li><li>我参与的里被超过的排最前；其他场次按上月排名，一期内顺序固定，价格刷新时卡片不跳</li><li>本期其他场次标题右侧有「还没有人出价」筛选（竞拍中且已有场次被出价时才出现）和「价格从低到高」排序，场次数随筛选变化</li><li>每行三行：席位号与状态徽章（竞拍中且我没出价时不显示徽章）、上月名次与空投、当前价或起拍价与按钮</li><li>行右侧按钮按我的状态变化：出价（浅金底，我没参与）、继续加价（白底描边，我领先）、立即加价（实心金色，已被超过）；点整行进详情</li><li>我领先的行是浅蓝底，已被超过的行是浅红底；当前价上涨时价格闪一下并显示涨了多少</li><li>停留在页面时自动刷新，切回前台时也刷新</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="bid-sheet">
+      <figure class="phone"><img src="shots/bid-sheet.png" alt="出价页 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 3</p>
+        <h3>出价页<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>竞拍列表</li><li>某一场的出价按钮</li></ol>
+        <ul class="changes"><li>独立页面，从列表或详情的出价按钮进入；确认出价按钮紧跟在表单下方，出价成功后返回上一页</li><li>立即加价与确认出价为实心金色；我没参与的出价为浅金底；我领先时的继续加价为白底棕色描边</li><li>标题是「为创世 #N 出价」，上方显示当前价或起拍价，以及已出价次数与下次出价至少多少</li><li>金额按一万步进，另有 +10,000 / +50,000 / +100,000 三个快捷加价</li><li>只用站内 PB 出价，快捷加价下方显示可用余额；余额不足时提示还差多少并禁用按钮</li><li>低于最低出价时出红字提示；别人抢先加价后只提示新的最低价，已输入的金额不变</li><li>自己已领先时顶部提示：上一笔先退回再冻结新出价；余额是否够按「余额 + 上一笔」计算</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="bid-done">
+      <figure class="phone"><img src="shots/bid-done.png" alt="出价成功后的列表 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 4</p>
+        <h3>出价成功后的列表<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>出价页</li><li>确认出价</li></ol>
+        <ul class="changes"><li>出价成功后弹出提示，说明冻结金额；覆盖自己上一笔出价时一并说明上一笔已退回（提示已消失，截图中未显示）</li><li>刚出价的那一行移到「我参与的」，转成「我领先」，按钮变为「继续加价」</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="detail">
+      <figure class="phone"><img src="shots/detail.png" alt="竞拍详情 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 5</p>
+        <h3>竞拍详情<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>竞拍列表</li><li>点击整行</li></ol>
+        <ul class="changes"><li>顶部是当前价与倒计时，下面是上月名次、上月空投额度</li><li>有人出价后单独列出起拍价</li><li>出价记录里自己的那行高亮并标「我」，已被超过的追加「已退回」</li><li>底部固定金色按钮：出价 / 继续加价（我领先）/ 尚未开拍；期次结束后隐藏</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="previous-list">
+      <figure class="phone"><img src="shots/previous-list.png" alt="上期结果列表 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 6</p>
+        <h3>上期结果列表<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>竞拍列表</li><li>上期结果</li></ol>
+        <ul class="changes"><li>同样分「我参与的（N）」和「其他场次」</li><li>自己参与过的场次标「我已拍得」或「未拍得」，其余场次标「已成交」或「无人出价」</li><li>每行显示名次与空投额度、成交价；无人出价的显示起拍价</li><li>行右侧统一是「查看结果」，点击进入该场详情</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="settled">
+      <figure class="phone"><img src="shots/settled.png" alt="上期结果详情 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 7</p>
+        <h3>上期结果详情<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>竞拍列表</li><li>上期结果</li><li>某一场</li></ol>
+        <ul class="changes"><li>结算信息列出成交价与拍得人，拍得人是自己时显示「我」</li><li>无人出价的场次显示「本场无人出价」</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="settling">
+      <figure class="phone"><img src="shots/settling.png" alt="期次刚结束：结果统计中 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 8</p>
+        <h3>期次刚结束：结果统计中<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>竞拍列表</li><li>点击整行</li></ol>
+        <ul class="changes"><li>期次结束后不能再出价，底部出价按钮隐藏</li><li>接口返回结算结果之前，列表徽章和详情页显示「结果统计中」，详情页提示「成交结果统计中，几分钟后更新」</li><li>结算完成后自动显示成交价与拍得人</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="rules">
+      <figure class="phone"><img src="shots/rules.png" alt="竞拍规则说明 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 9</p>
+        <h3>竞拍规则说明<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>竞拍列表</li><li>规则</li></ol>
+        <ul class="changes"><li>四条规则：末 50 名进入竞拍、起拍价构成与最低加价、冻结与退回到站内 PB 余额、节点被竞拍时你获得的金额</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="load-failed">
+      <figure class="phone"><img src="shots/load-failed.png" alt="加载失败 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 10</p>
+        <h3>加载失败<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>知识宇宙页</li><li>创世节点竞拍</li></ol>
+        <ul class="changes"><li>一次都没拉到数据时显示「竞拍信息没有加载出来」和「重试」</li><li>已经有数据时拉取失败不打断页面，继续显示上次的数据并自动重试</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="none">
+      <figure class="phone"><img src="shots/none.png" alt="还没有任何一期：入口卡隐藏 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 11</p>
+        <h3>还没有任何一期：入口卡隐藏<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>知识宇宙页</li></ol>
+        <ul class="changes"><li>第一期名单公布之前，知识宇宙页不显示竞拍入口卡</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="first-upcoming-entry">
+      <figure class="phone"><img src="shots/first-upcoming-entry.png" alt="第一期开拍前：入口卡 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 12</p>
+        <h3>第一期开拍前：入口卡<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>知识宇宙页</li><li>资产卡下方</li></ol>
+        <ul class="changes"><li>名单公布后、开拍前，入口卡显示「本期 N 个创世节点即将开拍」</li><li>倒计时改为距开拍</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="first-upcoming-list">
+      <figure class="phone"><img src="shots/first-upcoming-list.png" alt="第一期开拍前：竞拍列表 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 13</p>
+        <h3>第一期开拍前：竞拍列表<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>知识宇宙页</li><li>创世节点竞拍</li></ol>
+        <ul class="changes"><li>没有上一期，所以不显示分段，只列出本期节点</li><li>顶部状态条显示「本期 N 个创世节点」和开拍时间：超过一天显示具体开拍日期时间，一天内显示倒计时</li><li>每场显示起拍价，徽章为「即将开拍」，按钮为「查看详情」；详情页底部按钮为不可点的「尚未开拍」</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="between-entry">
+      <figure class="phone"><img src="shots/between-entry.png" alt="两期之间：入口卡 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 14</p>
+        <h3>两期之间：入口卡<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>知识宇宙页</li><li>资产卡下方</li></ol>
+        <ul class="changes"><li>一期结束后、下期名单公布前，入口卡保留，文案为「上期竞拍已结束，可查看成交结果」</li><li>拍得节点的人追加一行「你拍得了 N 个创世节点」</li><li>这段时间没有倒计时</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="between-list">
+      <figure class="phone"><img src="shots/between-list.png" alt="两期之间：竞拍列表 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 15</p>
+        <h3>两期之间：竞拍列表<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>知识宇宙页</li><li>创世节点竞拍</li></ol>
+        <ul class="changes"><li>没有本期，所以不显示分段，直接展示上期结果</li><li>自己参与过的场次置顶，徽章为「我已拍得」或「未拍得」</li></ul>
+        
+      </div>
+    </article>
+    <article class="screen" id="next-upcoming-list">
+      <figure class="phone"><img src="shots/next-upcoming-list.png" alt="下期名单已公布、尚未开拍：竞拍列表 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 16</p>
+        <h3>下期名单已公布、尚未开拍：竞拍列表<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>知识宇宙页</li><li>创世节点竞拍</li></ol>
+        <ul class="changes"><li>下期名单公布后，入口卡同第一期开拍前，显示即将开拍和距开拍倒计时</li><li>列表恢复分段：第一段为「即将开拍（N）」，第二段为「上期结果」</li></ul>
+        
+      </div>
+    </article></section>
+
+  <footer>截图由脚本从原型自动生成，橙色描边标出本次改动的位置。原型数据全部为本地演示数据。</footer>
+</div>
+
