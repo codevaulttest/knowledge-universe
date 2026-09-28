@@ -9,6 +9,7 @@ HERE = Path(__file__).resolve().parent
 
 USER_STORE = json.dumps({'userInfo': {'purseDtos': [
     {'id': 183, 'pursename': 'PB', 'balance': 943996, 'freeze': 0, 'usableBalance': 943996, 'pursetype': 101},
+    {'id': 184, 'pursename': 'SUP', 'balance': 5000, 'freeze': 0, 'usableBalance': 5000, 'pursetype': 102},
 ]}}, ensure_ascii=False)
 INIT = (
     'try { if (!localStorage.getItem("web3_genesis_node_user_local_store")) '
@@ -38,6 +39,10 @@ def start(phase, enter=True):
     if enter:
         steps.append({'click': ENTRY, 'wait': 1800})
     return steps
+
+
+# 开发环境会用真实账户余额覆盖本地钱包，出价相关截图前把页面上的 PB / SUP 余额调到够用
+FUND = {'eval': "(() => { const u = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('web3_genesis_node_user_local_store'); for (const p of u.userInfo.purseDtos) { if (p.id == 183) p.usableBalance = 943996; if (p.id == 184) p.usableBalance = 5000; } })()", 'wait': 300}
 
 
 def click_card(pattern, action=False):
@@ -83,15 +88,18 @@ screens = [
     },
     {
         'id': 'bid-sheet', 'title': '出价页', 'tag': 'new', 'path': ['竞拍列表', '某一场的出价按钮'],
-        'steps': start('live') + [click_card('创世 #25', action=True)], 'highlight': ['css:.stake-code-stepper'],
+        'steps': start('live') + [click_card('创世 #25', action=True), FUND], 'highlight': ['css:.stake-code-stepper'],
         'changes': [
             '独立页面，从列表或详情的出价按钮进入；确认出价按钮紧跟在表单下方，出价成功后返回上一页',
             '出价、立即加价与确认出价为实心金色；我领先时的继续加价为白底棕色描边',
             '标题是「为创世 #N 出价」，上方显示当前价或起拍价，以及已出价次数与下次出价至少多少',
             '出价须为起拍价 + 1 万的整数倍，不在档位上时提示最近可出金额并禁用确认；另有 +10,000 / +50,000 / +100,000 三个快捷加价',
             '只用站内 PB 出价，快捷加价下方显示可用余额；余额不足时提示还差多少并禁用按钮',
+            '每次出价另收 SUP 作为 Gas 费，金额显示在余额下方，确认按钮同时写出 PB 和 SUP；自己领先时继续加价只按加价部分收，其余按出价全额收',
+            'SUP 不足时提示还差多少并禁用按钮；接口没返回费率时不显示 Gas 费',
             '低于最低出价时出红字提示；别人抢先加价后只提示新的最低价，已输入的金额不变',
             '自己已领先时顶部提示：上一笔先退回再冻结新出价；余额是否够按「余额 + 上一笔」计算',
+            '冻结说明：出价的 PB 被他人超过或流拍时自动退回',
         ],
         'devNotes': [
             'BidZsAuction 传 infoId、amount；只扣站内 PB（purseDtos 中 id=183）',
@@ -99,8 +107,18 @@ screens = [
         ],
     },
     {
-        'id': 'bid-done', 'title': '出价成功后的列表', 'tag': 'new', 'path': ['出价页', '确认出价'],
-        'steps': start('live') + [click_card('创世 #25', action=True), {'click': 'text:确认出价', 'wait': 2500}],
+        'id': 'bid-confirm', 'title': '出价确认弹窗', 'tag': 'new', 'path': ['出价页', '确认出价'],
+        'steps': start('live') + [click_card('创世 #25', action=True), FUND, {'click': 'text:确认出价', 'wait': 900}],
+        'highlight': ['css:.van-dialog'],
+        'changes': [
+            '点确认出价后先弹窗核对，确认后才提交，避免误点直接扣费',
+            '弹窗分两组：出价 N PB（被超过或流拍时退回）、Gas 费 N SUP',
+            '弹窗打开期间切换了账户或 Gas 费变化时，点确认会提示并不提交，需重新确认',
+        ],
+    },
+    {
+        'id': 'bid-done', 'title': '出价成功后的列表', 'tag': 'new', 'path': ['出价确认弹窗', '确认出价'],
+        'steps': start('live') + [click_card('创世 #25', action=True), FUND, {'click': 'text:确认出价', 'wait': 900}, {'click': 'css:.van-dialog__confirm', 'wait': 2500}],
         'highlight': ['css:.gn-auction-card:has-text("创世 #25")'],
         'changes': [
             '出价成功后弹出提示，说明冻结金额；覆盖自己上一笔出价时一并说明上一笔已退回（提示已消失，截图中未显示）',
@@ -228,15 +246,14 @@ spec = {
     'footer': '截图由脚本从 wujie_mono 正式代码的本地开发环境自动生成，橙色描边标出本次改动的位置。接口数据为截图用的模拟数据。',
     'intro': (
         '每月排名末 50 名的创世节点在次月公开竞拍，出价最高者获得节点。本页只展示各页面和各阶段的样子；'
-        '接口字段、状态取值和规则见接口契约。开发环境目前只有即将开拍的测试数据，为了展示各阶段，'
-        '截图时模拟了接口返回，页面代码与联调时相同。'
+        '接口字段、状态取值和规则见接口契约。为了展示各阶段，截图时模拟了接口返回，页面代码与联调时相同。'
     ),
     'meta': {
         '代码位置': 'wujie_mono · apps/web3/genesis_node',
-        '分支': 'feat/genesis-node-auction（MR !53，提交 8f9f38e5）',
+        '分支': 'fix/genesis-auction-web-header（MR !56，提交 4bdfab7d；竞拍主体已随 MR !53 合入 develop）',
         '日期': '2026-09-28',
         '接口契约': 'https://claude.ai/artifact/Cs6dsAJY8HjmTL6hZoLeuq（字段、状态、竞拍时间、结算与刷新规则以此为准）',
-        '涉及页面': '知识宇宙页 · 竞拍列表 · 竞拍详情 · 出价页 · 规则弹窗',
+        '涉及页面': '知识宇宙页 · 竞拍列表 · 竞拍详情 · 出价页 · 出价确认弹窗 · 规则弹窗',
     },
     'startPath': '/web3_genesis_node/planet',
     'initScript': INIT,

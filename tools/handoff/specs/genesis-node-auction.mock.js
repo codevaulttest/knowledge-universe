@@ -10,7 +10,7 @@
   const lot = (infoId, configId, seat, code, rank, airdrop, times, price, status, addr) => ({
     infoId, configId, fromInfo: '创世节点#' + seat, thirdCode: code,
     note: `上月第${rank}名,上月空投${airdrop}PB`, addr: addr || '',
-    beginPrice: 200000 + airdrop, addPrice: 10000, localPrice: price, times, status, statusInfo: '',
+    beginPrice: 200000 + airdrop, addPrice: 10000, supFeeRate: 0.001, localPrice: price, times, status, statusInfo: '',
   });
 
   const upcoming = phase === 'first-upcoming' || phase === 'next-upcoming';
