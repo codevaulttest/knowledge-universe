@@ -96,7 +96,6 @@
 <tr><td><code>POST /api/Cert/GetCertDetail</code></td><td>单个认证的证书详情</td><td>点确权徽章、从版本记录进入证书</td></tr>
 <tr><td><code>POST /api/Cert/GetRealNameStatus</code></td><td>当前账号的实名认证状态</td><td>打开自动确权设置</td></tr>
 <tr><td><code>POST /api/Cert/SubmitRealName</code></td><td>提交实名资料，进入人工审核</td><td>设置流程第一步点「提交实名认证」</td></tr>
-
 <tr><td><code>POST /api/Cert/GetPostVersions</code></td><td>帖子的版本记录（各版本内容与认证状态）</td><td>点帖子详情的版本号</td></tr>
 <tr><td><code>POST /api/Cert/GetAutoCertSetting</code></td><td>自动确权设置：开关、阈值、授权单价、是否需要重新授权、挂起中的帖子</td><td>进入自动确权设置页</td></tr>
 <tr><td><code>POST /api/Cert/SaveAutoCertSetting</code></td><td>开启、修改或关闭自动确权，并记录本次授权的单价</td><td>设置页保存、调价后重新授权</td></tr>
@@ -130,7 +129,7 @@
 <div class="table-wrap"><table>
 <tr><th>状态</th><th><code>realNameStatus</code></th><th>前端显示</th></tr>
 <tr><td>未提交</td><td><code>0</code></td><td>开启自动确权第一步：选择证件类型、上传证件照、提交</td></tr>
-<tr><td>审核中</td><td><code>1</code></td><td>第一步显示「实名资料审核中」，不能进入兑换那一步</td></tr>
+<tr><td>审核中</td><td><code>1</code></td><td>第一步显示「实名资料审核中」，不能进入授权那一步</td></tr>
 <tr><td>已通过</td><td><code>2</code></td><td>开启自动确权时直接从第二步（扣费授权）开始</td></tr>
 </table></div>
 <p>实名做一次，之后修改自动确权设置不再要求上传证件。</p>
@@ -152,7 +151,7 @@
 <tr><td>开启前的存量帖子</td><td>开启时已经超过阈值的历史帖子是否补铸，待确认</td></tr>
 </table></div>
 <div class="callout"><p><span class="pill ask">待确认（7 项）</span> 一、倒计时与挂起任务由谁驱动（服务端定时任务），前端只读展示是否可行；二、挂起任务的状态取值，以及前端在帖子上如何区分「倒计时中」和「挂起中」；三、重新授权后补铸是一次性全部发起还是分批，作者能否先看清单再确认；四、实名未通过或被撤销时自动确权如何处理；五、自动确权的扣费通知与账单记录走哪条链路；六、开启自动确权时，已经超过阈值的历史帖子是否补铸、补铸范围如何界定；七、作者关闭自动确权时，正在倒计时和挂起中的任务如何处置。</p></div>
-<p>这条路径前端原型尚未实现，字段对照待接口方案确定后补充。</p>
+<p>设置本身的字段见 3.5，帖子上的倒计时与挂起状态见 3.1。前端原型目前仍是旧的手动申请流程，会按这套规则改造。</p>
 
 <h2 id="fields">3. 字段对照</h2>
 
@@ -180,7 +179,7 @@
 <tr><td><code>items[].certId</code></td><td>string</td><td>认证 ID；倒计时中、挂起中还没铸造的帖子为空</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>items[].certStatus</code></td><td>int</td><td>认证状态，见 2.1</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>items[].version</code></td><td>int</td><td>认证对应的版本号</td><td><span class="pill add">建议新增</span></td></tr>
-
+<tr><td><code>items[].autoCertState</code></td><td>int</td><td>见 3.1；倒计时中、挂起中的帖子在列表里带对应提示</td><td><span class="pill add">建议新增</span></td></tr>
 </table></div>
 <p>列表为空时前端显示空态「还没有知识确权认证」。帖子本身的内容仍走帖子接口或由本接口带上，取决于后端哪种方便，请告知。</p>
 
@@ -197,17 +196,21 @@
 <div class="callout"><p><span class="pill ask">待确认（3 项）</span> 一、证件照走哪个上传接口、传 URL 还是 base64；二、除证件照外是否还要姓名、证件号码、人脸核验，前端原型目前只有证件类型和证件照两项；三、提交后能否修改或撤回。</p></div>
 <p>返回只需 <code>result</code> 和 <code>message</code>，成功后前端把状态置为审核中并提示「资料已提交，审核通过后会通知你」。</p>
 
-<h3>3.5 自动确权的扣费与铸造</h3>
-<p>扣费与铸造由服务端在倒计时结束时发起，前端不调用申请接口。作者在设置里授权时提交的是阈值、扣费钱包和当时的确权费单价（<code>SaveAutoCertSetting</code>）。下表是前端在帖子和设置页上需要看到的结果字段：</p>
+<h3>3.5 <code>GetAutoCertSetting</code> / <code>SaveAutoCertSetting</code></h3>
+<p>作者在设置页开启自动确权：保存时提交阈值和扣费钱包，服务端记下当时的确权费单价作为本次授权的单价。扣费与铸造之后由服务端在倒计时结束时自行发起，前端不调用任何申请接口。</p>
 <div class="table-wrap"><table>
-<tr><th>响应字段</th><th>前端用途</th><th>状态</th></tr>
-<tr><td><code>certId</code></td><td>自动发起后生成的认证 ID，用于跳转证书页</td><td><span class="pill add">建议新增</span></td></tr>
-<tr><td><code>certStatus</code></td><td>发起后应为 <code>1</code>（确权中）</td><td><span class="pill add">建议新增</span></td></tr>
-<tr><td><code>costPb</code></td><td>实际扣除的 PB，用于提示与对账</td><td><span class="pill add">建议新增</span></td></tr>
-<tr><td><code>supFee</code></td><td>实际扣除的 SUP 手续费</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><th>字段</th><th>类型</th><th>前端用途</th><th>状态</th></tr>
+<tr><td><code>enabled</code></td><td>bool</td><td>自动确权开关</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>threshold</code></td><td>int</td><td>作者设定的赞数阈值，保存时校验不小于 100</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>payWallet</code></td><td>string</td><td>扣费使用的 PB 钱包</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>authorizedPrice</code></td><td>number</td><td>本次授权的确权费单价，设置页展示「已授权 500 PB / 次」</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>currentPrice</code></td><td>number</td><td>当前确权费单价，与上一项不同时说明已调价</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>needReauthorize</code></td><td>bool</td><td>为 true 时设置页显示「确权费已调整为 X PB，重新授权后恢复」，自动确权处于暂停</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>pendingCount</code></td><td>int</td><td>挂起中的帖子数量，提示「N 篇帖子等待恢复后铸造」</td><td><span class="pill add">建议新增</span></td></tr>
 </table></div>
+<p><code>SaveAutoCertSetting</code> 的请求参数即 <code>enabled</code>、<code>threshold</code>、<code>payWallet</code>；调价后重新授权也走这个接口，服务端据此刷新 <code>authorizedPrice</code>。返回只需 <code>result</code> 和 <code>message</code>。</p>
+<p>每次自动铸造产生的扣费结果（实际扣除的 PB 与 SUP、生成的 <code>certId</code>）前端在帖子和证书页上看到即可，不单独取一个接口，但需要有账单记录可查。</p>
 <div class="callout"><p><span class="pill ask">待确认（4 项）</span> 一、确权兑换费金额，前端原型用的是占位值 500 PB；二、可用哪些 PB 钱包（原型暂按可提取 PB 和链上 PB）；三、手续费是否与竞拍一致，按万分之一收 SUP；四、铸造失败或认证被撤销时费用是否退回。</p></div>
-
 
 <h3>3.6 <code>GetCertDetail</code> → <code>data</code></h3>
 <div class="table-wrap"><table>
@@ -255,11 +258,9 @@
 <tr><th>场景</th><th>规则</th></tr>
 <tr><td>阈值过低</td><td>保存设置时阈值小于 100 则拒绝</td></tr>
 <tr><td>当前版本已有认证</td><td>确权中、已确权、已撤销都算已有，同一版本不重复铸造</td></tr>
-
 <tr><td>实名未通过</td><td><code>realNameStatus</code> 不是已通过时不能开启自动确权</td></tr>
 <tr><td>PB 余额不足</td><td>倒计时结束时所选钱包可用 PB 小于兑换金额，任务转为挂起</td></tr>
 <tr><td>SUP 不足</td><td>站内 SUP 小于手续费；是否收手续费待确认（见 3.5）</td></tr>
-
 </table></div>
 
 <h2 id="conventions">5. 通用约定</h2>
@@ -275,16 +276,20 @@
 <h2 id="todo">6. 待确认汇总</h2>
 <ol class="todo">
   <li>接口路径与字段命名，以及本模块是否在 Apifox 建目录（第 1 节）。</li>
+  <li>倒计时与挂起任务由谁驱动，状态如何返回给前端（2.4）。</li>
+  <li>开启自动确权时，已经超过阈值的历史帖子是否补铸、范围如何界定（2.4）。</li>
+  <li>调价后重新授权时，挂起的帖子是一次性全部补铸还是分批，作者能否先看清单再确认（2.4）。</li>
+  <li>作者关闭自动确权时，正在倒计时和挂起中的任务如何处置（2.4）。</li>
+  <li>自动确权的扣费通知与账单记录走哪条链路（2.4）。</li>
+  <li>确权兑换费金额、可用钱包、是否收 SUP 手续费、失败或撤销是否退费（3.5）。</li>
   <li>铸造失败返回什么状态、能否重试（2.1）。</li>
   <li>版本号与每版赞数由后端维护的方案是否可行（2.2）。</li>
   <li>实名审核是否有驳回状态与驳回原因、审核时效、结果如何通知（2.3）。</li>
-  <li>实名是否会失效、需要重新认证，以及重新认证期间已有认证是否受影响（2.3）。</li>
+  <li>实名是否会失效、需要重新认证，此时自动确权是否暂停（2.3）。</li>
   <li>证件照上传方式，以及除证件照外还需要哪些实名资料（3.4）。</li>
-  <li>确权兑换费金额、可用钱包、是否收 SUP 手续费、失败或撤销是否退费（3.5）。</li>
   <li>区块浏览器交易页地址前缀（3.6）。</li>
   <li>撤销原因代码清单，撤销是人工还是有自动规则（3.7）。</li>
   <li>链上 NFT 的持有方，证书上是否展示持有地址（第 5 节）。</li>
-  <li>自动确权的倒计时与挂起任务如何驱动、状态如何返回、补铸怎么发起（2.4）。</li>
 </ol>
 <p>产品侧已定：确权只通过作者设置的阈值自动发起，不保留手动申请入口；阈值不低于 100 赞；认证按帖子版本绑定、新版本赞数从 0 重新累计；认证由平台发出无需作者签名；开启自动确权前需通过实名审核并授权扣费；按开启时的单价扣费，调价后须重新授权；到达阈值后倒计时 24 小时再铸造；撤销后链上保留撤销时间和原因；赞数回落不撤销认证。</p>
 
