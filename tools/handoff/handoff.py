@@ -109,6 +109,13 @@ def render_screen(screen, index):
     </article>'''
 
 
+def render_fact(fact):
+    # [标签, 说明] 或 [标签, 说明, 链接]
+    label, text, *rest = fact
+    body = f'<a href="{esc(rest[0])}">{esc(text)}</a>' if rest else esc(text)
+    return f'<div><dt>{esc(label)}</dt><dd>{body}</dd></div>'
+
+
 def build_page(spec, out_dir: Path):
     screens_html = ''.join(render_screen(s, i + 1) for i, s in enumerate(spec['screens']))
     toc = ''.join(f'<li><a href="#{esc(s["id"])}">{esc(s["title"])}</a></li>' for s in spec['screens'])
@@ -116,7 +123,7 @@ def build_page(spec, out_dir: Path):
     meta_html = ''.join(f'<div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>' for k, v in meta.items())
     facts = spec.get('facts', [])
     facts_html = (
-        '<dl class="facts">' + ''.join(f'<div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>' for k, v in facts) + '</dl>'
+        '<dl class="facts">' + ''.join(render_fact(f) for f in facts) + '</dl>'
         if facts else ''
     )
     page = TEMPLATE.read_text(encoding='utf-8')
