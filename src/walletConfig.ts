@@ -59,6 +59,8 @@ export const PB_USE_ALLOWED_WALLETS: Record<PbUse, readonly PbWalletId[]> = {
   channel_collab: ['airdrop'],
   // 会议尚未覆盖以下用途，原型先保守仅开放通用 PB。
   tip: ['airdrop', 'onchain'],
+  // 知识确权兑换费：金额和可用钱包待产品确认，原型先开放通用 PB。
+  cert: ['airdrop', 'onchain'],
   // 发帖超长费：可从可提取、站内或链上 PB 中任选其一，不跨钱包拼单。
   post_overlength: ['airdrop', 'station', 'onchain'],
 };
@@ -84,7 +86,7 @@ export function supReasonForPbUse(use: PbUse): SupTransactionReason {
     save: 'save', unlock: 'unlock', partner: 'partner',
     channel_subscribe: 'chain_unlock', purchase: 'purchase', tip: 'chain_unlock',
     node_upgrade: 'node_upgrade', node_transfer: 'node_transfer',
-    channel_collab: 'channel_collab', post_overlength: 'post',
+    channel_collab: 'channel_collab', post_overlength: 'post', cert: 'chain_unlock',
   };
   return map[use];
 }

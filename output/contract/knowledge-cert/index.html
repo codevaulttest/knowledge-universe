@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>知识确权接口契约</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap">
+<style>
+  :root {
+    --ground: #F4F7FB; --surface: #FFFFFF; --ink: #0E1830; --ink-soft: #4A5670; --line: #D9E1EC;
+    --accent: #1B6BFF; --accent-ink: #1456D6; --accent-wash: #E6EEFF;
+    --ok: #0F7B4A; --ok-wash: #DDF3E8; --add: #1456D6; --add-wash: #E6EEFF; --ask: #9A4A00; --ask-wash: #FDEBD6;
+    --code-bg: #EEF2F8;
+    --sans: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0B1120; --surface: #121A2C; --ink: #E7ECF5; --ink-soft: #A3AEC4; --line: #25304A;
+      --accent: #5B93FF; --accent-ink: #8AB2FF; --accent-wash: #16264A;
+      --ok: #5FD39A; --ok-wash: #10301F; --add: #8AB2FF; --add-wash: #16264A; --ask: #F5B065; --ask-wash: #3A2410;
+      --code-bg: #0E1628;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0B1120; --surface: #121A2C; --ink: #E7ECF5; --ink-soft: #A3AEC4; --line: #25304A;
+    --accent: #5B93FF; --accent-ink: #8AB2FF; --accent-wash: #16264A;
+    --ok: #5FD39A; --ok-wash: #10301F; --add: #8AB2FF; --add-wash: #16264A; --ask: #F5B065; --ask-wash: #3A2410;
+    --code-bg: #0E1628;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 15px/1.7 var(--sans); padding-inline: 20px; padding-block: 0 72px; }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  header { padding-block: 40px 24px; border-bottom: 1px solid var(--line); display: grid; gap: 12px; }
+  .eyebrow { margin: 0; font: 500 12px/1 var(--mono); letter-spacing: .08em; color: var(--accent-ink); }
+  h1 { margin: 0; font-size: clamp(28px, 4.4vw, 38px); line-height: 1.2; font-weight: 900; text-wrap: balance; }
+  .lede { margin: 0; color: var(--ink-soft); max-width: 66ch; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--ink-soft); }
+  h2 { font-size: 21px; margin: 44px 0 12px; text-wrap: balance; }
+  h3 { font-size: 16px; margin: 28px 0 8px; }
+  h3 code { font-size: 15px; }
+  p, li { max-width: 72ch; }
+  code { font: 13px/1.5 var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; font-weight: 700; color: var(--ink-soft); letter-spacing: .04em; background: var(--ground); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  td:first-child code { white-space: nowrap; }
+  .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+  .ok { color: var(--ok); background: var(--ok-wash); }
+  .add { color: var(--add); background: var(--add-wash); }
+  .ask { color: var(--ask); background: var(--ask-wash); }
+  .callout { background: var(--ask-wash); border-radius: 10px; padding: 10px 14px; margin: 12px 0; max-width: 72ch; }
+  .callout.done { background: var(--ok-wash); }
+  .callout p { margin: 0; }
+  ol.todo { padding-left: 1.4em; display: grid; gap: 6px; }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; margin-top: 10px; }
+  summary { cursor: pointer; padding: 10px 14px; font-weight: 700; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  summary span { font-weight: 400; font-size: 13px; color: var(--ink-soft); }
+  summary:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .json-bar { display: flex; justify-content: flex-end; padding: 0 14px 8px; }
+  button.copy { font: 500 13px var(--sans); color: var(--accent-ink); background: var(--accent-wash); border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  pre { margin: 0; padding: 12px 14px; background: var(--code-bg); border-top: 1px solid var(--line); font: 12.5px/1.55 var(--mono); overflow-x: auto; max-height: 520px; border-radius: 0 0 10px 10px; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="eyebrow">知识宇宙 · 知识确权</p>
+  <h1>知识确权接口契约</h1>
+  <p class="lede">前端页面：帖子卡片与帖子详情的确权徽章、申请确权（实名认证 + 确权兑换两步）、版本记录、认证证书详情、个人主页「确权」筛选。本模块 Apifox 暂无对应目录，下表接口与字段都是前端按已定规则提出的建议，路径与字段名由后端确定；第 7 节是前端期望的接口返回，可直接改名后录入。规则来源：2026-09-22 及之后群内讨论——满 100 赞由作者申请、认证按帖子版本绑定、申请前需实名审核、认证由平台发出、撤销后链上保留记录。最近更新：2026-09-30 首次发布，待确认项见第 6 节。</p>
+  <div class="legend"><span><span class="pill ok">已有</span> 接口已提供</span><span><span class="pill ok">已确认</span> 双方已对齐</span><span><span class="pill add">建议新增</span> 字段名可由后端定</span><span><span class="pill ask">待确认</span> 需要后端回复</span></div>
+</header>
+
+<h2 id="apis">1. 接口清单</h2>
+<div class="table-wrap"><table>
+<tr><th>接口</th><th>用途</th><th>前端调用时机</th></tr>
+<tr><td><code>POST /api/Cert/GetMyCertList</code></td><td>我的确权列表：已申请的认证 + 可申请的帖子</td><td>进入个人主页「确权」筛选</td></tr>
+<tr><td><code>POST /api/Cert/GetCertDetail</code></td><td>单个认证的证书详情</td><td>点确权徽章、从版本记录进入证书</td></tr>
+<tr><td><code>POST /api/Cert/GetRealNameStatus</code></td><td>当前账号的实名认证状态</td><td>打开申请确权流程</td></tr>
+<tr><td><code>POST /api/Cert/SubmitRealName</code></td><td>提交实名资料，进入人工审核</td><td>实名那一步点「提交实名认证」</td></tr>
+<tr><td><code>POST /api/Cert/ApplyCert</code></td><td>扣除确权兑换费并提交确权申请</td><td>兑换那一步点「兑换并申请」</td></tr>
+<tr><td><code>POST /api/Cert/GetPostVersions</code></td><td>帖子的版本记录（各版本内容与认证状态）</td><td>点帖子详情的版本号</td></tr>
+</table></div>
+<p>帖子列表、帖子详情接口需要补充确权信息，见 3.1，前端不额外请求一次确权接口。</p>
+
+<h2 id="phases">2. 状态判定</h2>
+<h3>2.1 认证状态</h3>
+<p>一条认证对应「一个帖子的一个版本」。前端按 <code>certStatus</code> 显示徽章：</p>
+<div class="table-wrap"><table>
+<tr><th>状态</th><th><code>certStatus</code></th><th>含义</th><th>前端显示</th></tr>
+<tr><td>确权中</td><td><code>1</code></td><td>已提交申请、链上铸造未完成</td><td>灰色「确权中」徽章，只有作者本人看得到</td></tr>
+<tr><td>已确权</td><td><code>2</code></td><td>铸造完成</td><td>蓝色「已确权」徽章，所有人可见，点开是证书</td></tr>
+<tr><td>已撤销</td><td><code>3</code></td><td>人工核查后撤销</td><td>红色「已撤销」徽章，证书显示撤销原因和时间</td></tr>
+</table></div>
+<div class="callout"><p><span class="pill ask">待确认</span> <strong>铸造失败</strong>：链上铸造失败时返回什么状态？前端目前只有上面三种。如果失败可重试，建议单独一个取值，前端显示「铸造失败，可重新申请」。</p></div>
+
+<h3>2.2 按版本绑定</h3>
+<p>认证绑定申请时的版本号。作者编辑有认证的帖子时，旧版本连同它的认证一起保留，新内容成为下一个版本：</p>
+<div class="table-wrap"><table>
+<tr><th>情况</th><th>帖子 <code>version</code></th><th>当前版本的认证</th><th>前端显示</th></tr>
+<tr><td>从没申请过确权</td><td><code>1</code></td><td>无</td><td>无徽章；编辑不生成新版本，不弹提示</td></tr>
+<tr><td>当前版本已确权</td><td>如 <code>1</code></td><td><code>certStatus=2</code></td><td>「已确权」；编辑前提示会生成新版本</td></tr>
+<tr><td>确权后被编辑过</td><td><code>2</code></td><td>无</td><td>灰色「v1 已确权」，点开是 v1 的证书；当前版本赞数从 0 重新累计</td></tr>
+<tr><td>新版本又申请了</td><td><code>2</code></td><td><code>certStatus=1</code> 或 <code>2</code></td><td>按当前版本的状态显示；v1 的认证仍可在版本记录里查看</td></tr>
+</table></div>
+<div class="callout"><p><span class="pill ask">待确认</span> <strong>版本号与赞数由谁维护</strong>：前端建议后端在帖子上维护 <code>version</code>（从 1 开始）和 <code>versionStartLikes</code>（该版本开始时帖子的累计赞数）。当前版本赞数 = 帖子累计赞数 − <code>versionStartLikes</code>，满 100 才能申请。帖子列表和详情仍返回累计赞数，前端照常显示。只有申请过确权的帖子（任一状态）在编辑保存时才归档旧版本、版本号 +1。</p></div>
+
+<h3>2.3 实名认证状态</h3>
+<div class="table-wrap"><table>
+<tr><th>状态</th><th><code>realNameStatus</code></th><th>前端显示</th></tr>
+<tr><td>未提交</td><td><code>0</code></td><td>申请流程第一步：选择证件类型、上传证件照、提交</td></tr>
+<tr><td>审核中</td><td><code>1</code></td><td>第一步显示「实名资料审核中」，不能进入兑换那一步</td></tr>
+<tr><td>已通过</td><td><code>2</code></td><td>申请流程直接从第二步（确权兑换）开始</td></tr>
+</table></div>
+<div class="callout"><p><span class="pill ask">待确认（3 项）</span> 一、审核被驳回是否单独一个状态、是否返回驳回原因，能否重新提交；二、审核时效，前端文案不写时长，只说审核完成后会通知作者；三、审核结果用什么通知作者（站内信 / 推送）。</p></div>
+
+<h2 id="fields">3. 字段对照</h2>
+
+<h3>3.1 帖子列表 / 帖子详情 → 确权信息</h3>
+<p>帖子对象上补充以下字段，前端据此显示徽章、版本号和申请入口：</p>
+<div class="table-wrap"><table>
+<tr><th>字段</th><th>类型</th><th>前端用途</th><th>状态</th></tr>
+<tr><td><code>version</code></td><td>int</td><td>当前版本号，大于 1 时显示「v2 · 已编辑」并可点开版本记录</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>versionLikes</code></td><td>int</td><td>当前版本获得的赞数，判断是否满 100 可申请；后端也可只返回 <code>versionStartLikes</code>，由前端相减</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>certId</code></td><td>string</td><td>当前版本的认证 ID，查证书详情用；没有则为空</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>certStatus</code></td><td>int</td><td>当前版本的认证状态，见 2.1；没有认证时为 <code>0</code></td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>lastCertVersion</code></td><td>int</td><td>该帖子最近一个已确权的版本号；当前版本没有认证时显示「vN 已确权」</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>lastCertId</code></td><td>string</td><td>上一条的认证 ID，点徽章进入该版本的证书</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>canApplyCert</code></td><td>bool</td><td>是否显示「申请确权」入口；后端不返回时，前端按「本人 + <code>versionLikes ≥ 100</code> + 当前版本无认证」自行判断</td><td><span class="pill add">建议新增</span></td></tr>
+</table></div>
+<p>「确权中」徽章只对作者本人显示，前端已按作者判断，接口可以对所有人返回同样的数据。</p>
+
+<h3>3.2 <code>GetMyCertList</code> → <code>data</code></h3>
+<p>个人主页「确权」筛选一次取两部分：已申请的认证（含已撤销）和可申请的帖子。</p>
+<div class="table-wrap"><table>
+<tr><th>字段</th><th>类型</th><th>前端用途</th><th>状态</th></tr>
+<tr><td><code>certCount</code></td><td>int</td><td>筛选标签旁的数量</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>items[].postId</code></td><td>string</td><td>帖子 ID，列表里渲染整张帖子卡片</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>items[].certId</code></td><td>string</td><td>认证 ID；可申请但还没申请的帖子为空</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>items[].certStatus</code></td><td>int</td><td>认证状态，见 2.1</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>items[].version</code></td><td>int</td><td>认证对应的版本号</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>items[].canApply</code></td><td>bool</td><td>为 true 时卡片上方显示「已满 100 赞，可申请确权」和申请按钮</td><td><span class="pill add">建议新增</span></td></tr>
+</table></div>
+<p>列表为空时前端显示空态「还没有知识确权认证」。帖子本身的内容仍走帖子接口或由本接口带上，取决于后端哪种方便，请告知。</p>
+
+<h3>3.3 <code>GetRealNameStatus</code> → <code>data</code></h3>
+<div class="table-wrap"><table>
+<tr><th>字段</th><th>类型</th><th>前端用途</th><th>状态</th></tr>
+<tr><td><code>realNameStatus</code></td><td>int</td><td>见 2.3，决定申请流程从哪一步开始</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>submitTime</code></td><td>datetime</td><td>审核中时展示提交时间</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>rejectReason</code></td><td>string</td><td>驳回时展示原因；没有驳回状态则不需要</td><td><span class="pill ask">待确认</span></td></tr>
+</table></div>
+
+<h3>3.4 <code>SubmitRealName</code></h3>
+<p>请求参数建议：<code>idType</code>（<code>1</code> 身份证 / <code>2</code> 护照）、<code>idImages</code>（证件照，身份证两张、护照一张）。</p>
+<div class="callout"><p><span class="pill ask">待确认（3 项）</span> 一、证件照走哪个上传接口、传 URL 还是 base64；二、除证件照外是否还要姓名、证件号码、人脸核验，前端原型目前只有证件类型和证件照两项；三、提交后能否修改或撤回。</p></div>
+<p>返回只需 <code>result</code> 和 <code>message</code>，成功后前端把状态置为审核中并提示「资料已提交，审核通过后会通知你」。</p>
+
+<h3>3.5 <code>ApplyCert</code></h3>
+<p>请求参数建议：<code>postId</code>、<code>version</code>（前端拿到的当前版本号，供后端校验版本未变）、<code>payWallet</code>（兑换使用的 PB 钱包）。</p>
+<div class="table-wrap"><table>
+<tr><th>响应字段</th><th>前端用途</th><th>状态</th></tr>
+<tr><td><code>certId</code></td><td>新建的认证 ID，用于跳转证书页</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>certStatus</code></td><td>提交后应为 <code>1</code>（确权中）</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>costPb</code></td><td>实际扣除的 PB，用于提示与对账</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>supFee</code></td><td>实际扣除的 SUP 手续费</td><td><span class="pill add">建议新增</span></td></tr>
+</table></div>
+<div class="callout"><p><span class="pill ask">待确认（4 项）</span> 一、确权兑换费金额，前端原型用的是占位值 500 PB；二、可用哪些 PB 钱包（原型暂按可提取 PB 和链上 PB）；三、手续费是否与竞拍一致，按万分之一收 SUP；四、申请后铸造失败或认证被撤销时费用是否退回。</p></div>
+<p>扣费与创建认证需在同一次请求内完成，前端不做两步提交。成功后前端刷新钱包余额和确权列表。</p>
+
+<h3>3.6 <code>GetCertDetail</code> → <code>data</code></h3>
+<div class="table-wrap"><table>
+<tr><th>字段</th><th>类型</th><th>前端用途</th><th>状态</th></tr>
+<tr><td><code>certNo</code></td><td>string</td><td>证书编号，如 <code>WV-KC-20260001007</code>；确权中时可为空，前端显示「铸造完成后生成」</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>certStatus</code></td><td>int</td><td>见 2.1</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>postId</code></td><td>string</td><td>返回帖子</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>version</code></td><td>int</td><td>「认证版本 v1」，可点开版本记录</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>authorName</code></td><td>string</td><td>「认证作者」</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>likesAtApply</code></td><td>int</td><td>申请时该版本的赞数</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>contentHash</code></td><td>string</td><td>内容指纹，64 位 hex，可复制</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>issuerAddress</code></td><td>string</td><td>发行方地址</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>tokenId</code></td><td>string</td><td>链上 Token ID；确权中时为空</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>txHash</code></td><td>string</td><td>铸造交易哈希，可复制、可跳区块浏览器；确权中时为空</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>mintedTime</code></td><td>datetime</td><td>铸造日期；确权中时为空，前端显示「铸造中」</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>revokedTime</code></td><td>datetime</td><td>撤销时间</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>revokeReason</code></td><td>int</td><td>撤销原因代码，见 3.7</td><td><span class="pill add">建议新增</span></td></tr>
+</table></div>
+<div class="callout"><p><span class="pill ask">待确认</span> <strong>区块浏览器地址</strong>：前端需要一个可拼接 <code>txHash</code> 的交易页地址前缀，目前站内是占位面板。</p></div>
+
+<h3>3.7 <code>revokeReason</code> 取值</h3>
+<div class="table-wrap"><table>
+<tr><th>值</th><th>含义</th><th>前端显示</th></tr>
+<tr><td><code>1</code></td><td>刷赞</td><td>存在异常点赞</td></tr>
+<tr><td><code>2</code></td><td>内容违规</td><td>内容违规</td></tr>
+<tr><td><code>3</code></td><td>抄袭</td><td>内容抄袭</td></tr>
+<tr><td><code>9</code></td><td>其他</td><td>其他违规</td></tr>
+</table></div>
+<div class="callout"><p><span class="pill ask">待确认</span> 原因代码清单以后端为准。撤销是人工操作还是有自动规则（例如检测到刷赞自动撤销）也请一并说明。赞数正常回落不撤销认证，这是产品已定的规则。</p></div>
+
+<h3>3.8 <code>GetPostVersions</code> → <code>data.items[]</code></h3>
+<div class="table-wrap"><table>
+<tr><th>字段</th><th>类型</th><th>前端用途</th><th>状态</th></tr>
+<tr><td><code>version</code></td><td>int</td><td>版本号，当前版本排最前</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>title</code></td><td>string</td><td>该版本的内容，点开可查看原文</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>editedTime</code></td><td>datetime</td><td>该版本被替换的时间，显示「更新为 v2」；当前版本为空</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>certId</code></td><td>string</td><td>该版本的认证 ID，可跳证书</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>certStatus</code></td><td>int</td><td>该版本的认证状态，列表里显示对应标签</td><td><span class="pill add">建议新增</span></td></tr>
+</table></div>
+<p>当前版本那一行前端还会显示「本版本 N 赞」，数据取自 3.1 的 <code>versionLikes</code>。</p>
+
+<h2 id="errors">4. 错误约定</h2>
+<p>沿用竞拍的约定：同一接口的各种失败共用一个 <code>result</code>，通过 <code>message</code> 区分，前端直接显示 <code>message</code>。<code>result</code> 请避开 <code>-2</code>、<code>-7</code>、<code>-8</code>、<code>-9</code>、<code>-11</code>、<code>-16</code>，前端请求层会把这几个值当作登录失效。页面有简中、繁中、英文，<code>message</code> 方便的话按请求语言返回。</p>
+<div class="table-wrap"><table>
+<tr><th>场景</th><th>规则</th></tr>
+<tr><td>赞数不足</td><td>当前版本赞数小于 100 时拒绝申请</td></tr>
+<tr><td>当前版本已有认证</td><td>确权中、已确权、已撤销都算已有，同一版本不能重复申请</td></tr>
+<tr><td>版本已变化</td><td>请求里的 <code>version</code> 与服务端当前版本不一致时拒绝，前端刷新后重新申请</td></tr>
+<tr><td>实名未通过</td><td><code>realNameStatus</code> 不是已通过时拒绝申请</td></tr>
+<tr><td>PB 余额不足</td><td>所选钱包可用 PB 小于兑换金额</td></tr>
+<tr><td>SUP 不足</td><td>站内 SUP 小于手续费；是否收手续费待确认（见 3.5）</td></tr>
+<tr><td>非本人</td><td>只有作者本人能为自己的帖子申请确权</td></tr>
+</table></div>
+
+<h2 id="conventions">5. 通用约定</h2>
+<ul>
+  <li><strong>时区</strong>：所有时间字段为北京时间，不带时区标记，前端按 +08:00 解析。</li>
+  <li><strong>金额单位</strong>：兑换金额单位为 PB，手续费单位为 SUP。</li>
+  <li><strong>认证主体</strong>：认证由平台发出，前端没有作者签名环节，申请接口不带任何签名参数。</li>
+  <li><strong>徽章数据来源</strong>：确权信息随帖子一起返回（见 3.1），前端不为每条帖子单独请求确权接口。</li>
+  <li><strong>证书详情</strong>：已确权和已撤销的证书对所有人可见；确权中的认证只有作者本人能看到入口。</li>
+</ul>
+<div class="callout"><p><span class="pill ask">待确认</span> <strong>认证归属</strong>：链上 NFT 由平台钱包持有还是记在作者的托管地址？证书上的「认证作者」目前显示作者昵称，如果要展示持有地址请提供对应字段。</p></div>
+
+<h2 id="todo">6. 待确认汇总</h2>
+<ol class="todo">
+  <li>接口路径与字段命名，以及本模块是否在 Apifox 建目录（第 1 节）。</li>
+  <li>铸造失败返回什么状态、能否重试（2.1）。</li>
+  <li>版本号与每版赞数由后端维护的方案是否可行（2.2）。</li>
+  <li>实名审核是否有驳回状态与驳回原因、审核时效、结果如何通知（2.3）。</li>
+  <li>证件照上传方式，以及除证件照外还需要哪些实名资料（3.4）。</li>
+  <li>确权兑换费金额、可用钱包、是否收 SUP 手续费、失败或撤销是否退费（3.5）。</li>
+  <li>区块浏览器交易页地址前缀（3.6）。</li>
+  <li>撤销原因代码清单，撤销是人工还是有自动规则（3.7）。</li>
+  <li>链上 NFT 的持有方，证书上是否展示持有地址（第 5 节）。</li>
+</ol>
+<p>产品侧已定：满 100 赞由作者申请、认证按帖子版本绑定、新版本赞数从 0 重新累计、认证由平台发出无需作者签名、申请前需实名审核、撤销后链上保留撤销时间和原因、赞数回落不撤销认证。</p>
+
+<h2 id="fixtures">7. 各场景期望返回</h2>
+<p>字段名是前端的建议命名，后端改名后同步告知前端即可。</p>
+
+<details open><summary>申请确权全流程 <span>apply-flow.json · 实名未提交 → 审核中 → 已通过 → 申请成功。</span></summary><div class="json-bar"><button type="button" class="copy" data-target="fx-0">复制 JSON</button></div><pre id="fx-0">{
+  "_说明": "申请确权流程：先查实名状态，未提交则提交资料进入审核，通过后扣费并提交确权申请。",
+  "_当前时间": "2026-09-30 12:00:00",
+  "GetRealNameStatus() 未提交": {
+    "result": 0,
+    "message": null,
+    "data": { "realNameStatus": 0, "submitTime": null, "rejectReason": null }
+  },
+  "SubmitRealName(idType=1, idImages=[...])": {
+    "result": 0,
+    "message": null,
+    "data": null
+  },
+  "GetRealNameStatus() 审核中": {
+    "result": 0,
+    "message": null,
+    "data": { "realNameStatus": 1, "submitTime": "2026-09-30 12:01:20", "rejectReason": null }
+  },
+  "GetRealNameStatus() 已通过": {
+    "result": 0,
+    "message": null,
+    "data": { "realNameStatus": 2, "submitTime": "2026-09-30 12:01:20", "rejectReason": null }
+  },
+  "ApplyCert(postId=p_2001, version=2, payWallet=onchain)": {
+    "result": 0,
+    "message": null,
+    "data": {
+      "certId": "c_9001",
+      "certStatus": 1,
+      "costPb": 500,
+      "supFee": 0.05
+    }
+  }
+}</pre></details>
+
+<details><summary>帖子上的确权信息 <span>post-cert.json · 四种情况：无认证、确权中、已确权、确权后被编辑。</span></summary><div class="json-bar"><button type="button" class="copy" data-target="fx-1">复制 JSON</button></div><pre id="fx-1">{
+  "_说明": "帖子列表 / 详情里每条帖子补充的确权字段。likes 仍是累计赞数，versionLikes 是当前版本的赞数。",
+  "_当前时间": "2026-09-30 12:00:00",
+  "GetPostList() → data.items[]": [
+    {
+      "postId": "p_1001",
+      "likes": 42,
+      "version": 1,
+      "versionLikes": 42,
+      "certId": "",
+      "certStatus": 0,
+      "lastCertVersion": 0,
+      "lastCertId": "",
+      "canApplyCert": false
+    },
+    {
+      "postId": "p_1002",
+      "likes": 128,
+      "version": 1,
+      "versionLikes": 128,
+      "certId": "c_8001",
+      "certStatus": 1,
+      "lastCertVersion": 0,
+      "lastCertId": "",
+      "canApplyCert": false
+    },
+    {
+      "postId": "p_1003",
+      "likes": 260,
+      "version": 1,
+      "versionLikes": 260,
+      "certId": "c_8002",
+      "certStatus": 2,
+      "lastCertVersion": 1,
+      "lastCertId": "c_8002",
+      "canApplyCert": false
+    },
+    {
+      "postId": "p_2001",
+      "likes": 218,
+      "version": 2,
+      "versionLikes": 115,
+      "certId": "",
+      "certStatus": 0,
+      "lastCertVersion": 1,
+      "lastCertId": "c_8003",
+      "canApplyCert": true
+    }
+  ]
+}</pre></details>
+
+<details><summary>我的确权列表 <span>my-cert-list.json · 已确权 + 确权中 + 已撤销 + 可申请。</span></summary><div class="json-bar"><button type="button" class="copy" data-target="fx-2">复制 JSON</button></div><pre id="fx-2">{
+  "_说明": "个人主页「确权」筛选：已申请的认证排在前，可申请的帖子排在后。certCount 用于筛选标签旁的数字。",
+  "_当前时间": "2026-09-30 12:00:00",
+  "GetMyCertList(pageIndex=1, pageSize=20)": {
+    "result": 0,
+    "message": null,
+    "data": {
+      "pageIndex": 1,
+      "pageSize": 20,
+      "totalCount": 4,
+      "totalPages": 1,
+      "certCount": 3,
+      "items": [
+        { "postId": "p_1003", "certId": "c_8002", "certStatus": 2, "version": 1, "canApply": false },
+        { "postId": "p_1002", "certId": "c_8001", "certStatus": 1, "version": 1, "canApply": false },
+        { "postId": "p_1004", "certId": "c_8005", "certStatus": 3, "version": 1, "canApply": false },
+        { "postId": "p_2001", "certId": "", "certStatus": 0, "version": 2, "canApply": true }
+      ]
+    }
+  }
+}</pre></details>
+
+<details><summary>证书详情 <span>cert-detail.json · 确权中 / 已确权 / 已撤销三种。</span></summary><div class="json-bar"><button type="button" class="copy" data-target="fx-3">复制 JSON</button></div><pre id="fx-3">{
+  "_说明": "证书详情三种状态。确权中时编号、TokenId、交易哈希、铸造日期为空，前端显示占位文案。",
+  "_当前时间": "2026-09-30 12:00:00",
+  "GetCertDetail(certId=c_8001) 确权中": {
+    "result": 0,
+    "message": null,
+    "data": {
+      "certNo": "",
+      "certStatus": 1,
+      "postId": "p_1002",
+      "version": 1,
+      "authorName": "d6c3e8",
+      "likesAtApply": 128,
+      "contentHash": "9f2c41ab77d05e6b3c8a1d4f0e97b25c6a8d3f1e42b7c905d6e8f1a3b4c7d2e5",
+      "issuerAddress": "0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74",
+      "tokenId": "",
+      "txHash": "",
+      "mintedTime": null,
+      "revokedTime": null,
+      "revokeReason": 0
+    }
+  },
+  "GetCertDetail(certId=c_8002) 已确权": {
+    "result": 0,
+    "message": null,
+    "data": {
+      "certNo": "WV-KC-20260001007",
+      "certStatus": 2,
+      "postId": "p_1003",
+      "version": 1,
+      "authorName": "d6c3e8",
+      "likesAtApply": 213,
+      "contentHash": "3b81e07fa25c94d6018e7b3c5a2f9d4e6c17b8a0d3f25e914c6b7a8d0e2f4c19",
+      "issuerAddress": "0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74",
+      "tokenId": "10078",
+      "txHash": "0x7d41c9a2e85b0f36d14a7c298e5b0d3f6a18c2e7b94d05f3a6c8e1b2d4f7a903",
+      "mintedTime": "2026-09-18 09:42:00",
+      "revokedTime": null,
+      "revokeReason": 0
+    }
+  },
+  "GetCertDetail(certId=c_8005) 已撤销": {
+    "result": 0,
+    "message": null,
+    "data": {
+      "certNo": "WV-KC-20260000466",
+      "certStatus": 3,
+      "postId": "p_1004",
+      "version": 1,
+      "authorName": "d6c3e8",
+      "likesAtApply": 156,
+      "contentHash": "c04f7b13d8a5e2609b7c4f1a3d6e8b2c5079a4d1f3b6e8c2a5d7f0b9e1c4a836",
+      "issuerAddress": "0x0EF376766C69400A8A6C3e92c07eDD18e7d6eA74",
+      "tokenId": "10042",
+      "txHash": "0x2a6f39c1b74e05d8a3f7c2e69b1d40a5c8e73f2b9d06a4c1e5b8d3f7a0c294e6",
+      "mintedTime": "2026-09-10 14:05:00",
+      "revokedTime": "2026-09-21 11:30:00",
+      "revokeReason": 1
+    }
+  }
+}</pre></details>
+
+<details><summary>版本记录 <span>post-versions.json · v2 为当前版本，v1 已确权。</span></summary><div class="json-bar"><button type="button" class="copy" data-target="fx-4">复制 JSON</button></div><pre id="fx-4">{
+  "_说明": "版本记录：当前版本排最前，editedTime 为空；历史版本带被替换的时间和它的认证状态。",
+  "_当前时间": "2026-09-30 12:00:00",
+  "GetPostVersions(postId=p_2001)": {
+    "result": 0,
+    "message": null,
+    "data": {
+      "items": [
+        {
+          "version": 2,
+          "title": "2025 年个人阅读 Top 5 书单",
+          "editedTime": null,
+          "certId": "",
+          "certStatus": 0
+        },
+        {
+          "version": 1,
+          "title": "2025 年个人阅读书单",
+          "editedTime": "2026-09-20 16:24:00",
+          "certId": "c_8003",
+          "certStatus": 2
+        }
+      ]
+    }
+  }
+}</pre></details>
+
+<footer>docs/knowledge-cert/api-contract.md</footer>
+</div>
+
+<script>
+  document.querySelectorAll('button.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var pre = document.getElementById(btn.dataset.target);
+      var done = function () { btn.textContent = '已复制'; setTimeout(function () { btn.textContent = '复制 JSON'; }, 1500); };
+      var fallback = function () { var r = document.createRange(); r.selectNodeContents(pre); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = '已选中，按复制键'; };
+      try { navigator.clipboard.writeText(pre.textContent).then(done, fallback); } catch (e) { fallback(); }
+    });
+  });
+</script>
+</body>
+</html>

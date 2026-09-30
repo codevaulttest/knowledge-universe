@@ -372,6 +372,9 @@ export type PbWalletId = 'onchain' | 'station' | 'credibility' | 'airdrop';
 export type SupWalletId = 'site' | 'onchain';
 
 /** 需要消耗 PB 的业务用途，用于集中校验钱包可用范围。 */
+/** 实名认证状态：未提交 / 审核中 / 已通过 */
+export type RealNameStatus = 'none' | 'reviewing' | 'verified';
+
 export type PbUse =
   | 'channel_open'
   | 'bsp_invest'
@@ -389,7 +392,8 @@ export type PbUse =
   | 'node_upgrade'
   | 'node_transfer'
   | 'channel_collab'
-  | 'post_overlength';
+  | 'post_overlength'
+  | 'cert';
 
 /** 地址迁移由后续服务执行；前端只维护申请、撤销与展示状态。 */
 export type AddressMigrationStatus = 'pending' | 'cancelled' | 'awaiting_execution' | 'completed';

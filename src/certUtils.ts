@@ -4,6 +4,9 @@ import type { KnowledgeCert, Post, RevokeReason } from './types';
 /** 申请确权的点赞门槛 */
 export const CERT_LIKES_THRESHOLD = 100;
 
+/** 确权兑换费：金额待产品确认，原型先用占位数值 */
+export const CERT_APPLY_PB = 500;
+
 export const currentVersion = (post: Pick<Post, 'version'>) => post.version ?? 1;
 
 /** 当前版本获得的赞数：新版本从 0 重新累计 */

@@ -100,13 +100,13 @@
   <header class="top">
     <p class="eyebrow">知识宇宙 · 功能交付</p>
     <h1>内容确权</h1>
-    <p class="intro">确权改为作者主动申请：帖子满 100 赞后，作者在弹窗里确认申请，由平台发出认证并铸造上链。认证绑定帖子的一个版本：修改有认证的帖子会生成新版本，旧版本和它的认证一起保留，读者可以点版本号查看。人工核查发现问题时认证被撤销，链上保留撤销时间和原因。</p>
-    <dl class="meta"><div><dt>提交范围</dt><dd>7846000</dd></div><div><dt>日期</dt><dd>2026-09-22</dd></div><div><dt>涉及页面</dt><dd>个人主页 · 帖子详情 · 申请确权 · 认证详情</dd></div></dl>
+    <p class="intro">确权改为作者主动申请：帖子满 100 赞后，作者走一个全页面流程完成实名认证和确权兑换，由平台发出认证并铸造上链。实名资料提交后需要人工审核，通过后才能进入兑换那一步。认证绑定帖子的一个版本：修改有认证的帖子会生成新版本，旧版本和它的认证一起保留，读者可以点版本号查看。人工核查发现问题时认证被撤销，链上保留撤销时间和原因。接口字段与待确认项见接口契约。</p>
+    <dl class="meta"><div><dt>提交范围</dt><dd>7846000</dd></div><div><dt>日期</dt><dd>2026-09-30</dd></div><div><dt>涉及页面</dt><dd>个人主页 · 帖子详情 · 申请确权 · 实名认证 · 认证详情</dd></div></dl>
   </header>
 
   <nav class="overview" aria-label="屏幕目录">
     <h2>逐屏说明</h2>
-    <ol class="toc"><li><a href="#profile-apply">个人主页：可申请确权的帖子</a></li><li><a href="#apply-modal">申请确权弹窗</a></li><li><a href="#minting">提交后：确权中</a></li><li><a href="#cert-minting">认证详情：确权中</a></li><li><a href="#edit-confirm">编辑有认证的帖子前的提示</a></li><li><a href="#versions">帖子详情：版本记录</a></li><li><a href="#version-v1">查看旧版本原文</a></li><li><a href="#cert-version">认证详情：已确权</a></li><li><a href="#revoked">认证详情：已撤销</a></li><li><a href="#rules">确权规则</a></li></ol>
+    <ol class="toc"><li><a href="#profile-apply">个人主页：可申请确权的帖子</a></li><li><a href="#apply-realname">申请确权第一步：实名认证</a></li><li><a href="#apply-review">实名资料审核中</a></li><li><a href="#apply-pay">申请确权第二步：确权兑换</a></li><li><a href="#minting">提交后：确权中</a></li><li><a href="#cert-minting">认证详情：确权中</a></li><li><a href="#edit-confirm">编辑有认证的帖子前的提示</a></li><li><a href="#versions">帖子详情：版本记录</a></li><li><a href="#version-v1">查看旧版本原文</a></li><li><a href="#cert-version">认证详情：已确权</a></li><li><a href="#revoked">认证详情：已撤销</a></li><li><a href="#rules">确权规则</a></li></ol>
   </nav>
 
   <section class="screens">
@@ -120,22 +120,42 @@
         <div class="notes"><h4>开发注意</h4><ul><li>「申请确权」同时出现在自己帖子的「…」菜单和帖子详情的「…」菜单</li><li>可申请条件：作者本人、当前版本赞数 ≥ 100、当前版本没有任何认证（确权中 / 已确权 / 已撤销都算有）</li></ul></div>
       </div>
     </article>
-    <article class="screen" id="apply-modal">
-      <figure class="phone"><img src="shots/apply-modal.png" alt="申请确权弹窗 截图" loading="lazy" width="390" height="844"></figure>
+    <article class="screen" id="apply-realname">
+      <figure class="phone"><img src="shots/apply-realname.png" alt="申请确权第一步：实名认证 截图" loading="lazy" width="390" height="844"></figure>
       <div class="screen-body">
         <p class="screen-index">屏 2</p>
-        <h3>申请确权弹窗<span class="tag tag--new">新增</span></h3>
+        <h3>申请确权第一步：实名认证<span class="tag tag--new">新增</span></h3>
         <ol class="path" aria-label="入口路径"><li>确权筛选</li><li>申请确权</li></ol>
-        <ul class="changes"><li>一个居中确认弹窗完成申请：标题「为 vN 申请确权」，说明内容指纹和作者信息永久记录在链上、认证绑定当前版本、之后修改会生成新版本并可单独申请</li><li>主按钮「确认申请」：提交后提示「已提交确权，铸造完成后通知你」；次按钮「取消」</li></ul>
-        <div class="notes"><h4>开发注意</h4><ul><li>弹窗沿用连接钱包弹窗的样式</li><li>认证由平台发出，前端没有作者签名环节</li><li>实名认证和费用后续版本再加</li></ul></div>
+        <ul class="changes"><li>申请确权是一个全页面流程，顶部两步进度：实名认证、确权兑换</li><li>说明内容指纹和作者信息永久记录在链上、认证绑定当前版本、之后修改会生成新版本并可单独申请</li><li>第一步选择证件类型（身份证 / 护照）并上传证件照，上传后「提交实名认证」可点</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>证件照上传是演示占位，原型不收集任何真实资料；实际需要哪些字段、走哪个上传接口待与后端确认</li><li>实名只做一次，已通过的账号再次申请直接从第二步开始</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="apply-review">
+      <figure class="phone"><img src="shots/apply-review.png" alt="实名资料审核中 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 3</p>
+        <h3>实名资料审核中<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>实名认证</li><li>提交实名认证</li></ol>
+        <ul class="changes"><li>提交后进入等待人工审核的状态，不能继续到兑换那一步</li><li>文案不承诺审核时长，只说审核完成后会通知作者</li><li>toast「资料已提交，审核通过后会通知你」；「知道了」退出流程</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>实名状态三态：未认证 / 审核中 / 已通过；是否有驳回态与驳回原因待后端确认</li><li>审核结果用什么方式通知作者待确认</li></ul></div>
+      </div>
+    </article>
+    <article class="screen" id="apply-pay">
+      <figure class="phone"><img src="shots/apply-pay.png" alt="申请确权第二步：确权兑换 截图" loading="lazy" width="390" height="844"></figure>
+      <div class="screen-body">
+        <p class="screen-index">屏 4</p>
+        <h3>申请确权第二步：确权兑换<span class="tag tag--new">新增</span></h3>
+        <ol class="path" aria-label="入口路径"><li>实名已通过</li><li>申请确权</li></ol>
+        <ul class="changes"><li>实名已通过时直接进入第二步，第一步显示为已完成</li><li>列出所需 PB 与 Gas 费，下方注明兑换金额待产品确认、当前为占位数值</li><li>选择 PB 钱包后「兑换并申请」可点；余额不足时提示并可重试</li></ul>
+        <div class="notes"><h4>开发注意</h4><ul><li>兑换金额、可用钱包、是否收 Gas 费都待产品与后端确认，原型用 500 PB 占位</li><li>扣费与创建认证需在同一个接口里完成，前端不做两步提交</li></ul></div>
       </div>
     </article>
     <article class="screen" id="minting">
       <figure class="phone"><img src="shots/minting.png" alt="提交后：确权中 截图" loading="lazy" width="390" height="844"></figure>
       <div class="screen-body">
-        <p class="screen-index">屏 3</p>
+        <p class="screen-index">屏 5</p>
         <h3>提交后：确权中<span class="tag tag--new">新增</span></h3>
-        <ol class="path" aria-label="入口路径"><li>确认申请</li><li>回到确权筛选</li></ol>
+        <ol class="path" aria-label="入口路径"><li>兑换并申请</li><li>回到确权筛选</li></ol>
         <ul class="changes"><li>帖子徽章显示「确权中」，只有作者本人看得到</li><li>点击进入认证详情查看进度</li></ul>
         <div class="notes"><h4>开发注意</h4><ul><li>后端状态 Pending / Minting 都显示为「确权中」；Failed 的展示待与后端对齐</li></ul></div>
       </div>
@@ -143,7 +163,7 @@
     <article class="screen" id="cert-minting">
       <figure class="phone"><img src="shots/cert-minting.png" alt="认证详情：确权中 截图" loading="lazy" width="390" height="844"></figure>
       <div class="screen-body">
-        <p class="screen-index">屏 4</p>
+        <p class="screen-index">屏 6</p>
         <h3>认证详情：确权中<span class="tag tag--changed">改动</span></h3>
         <ol class="path" aria-label="入口路径"><li>「确权中」徽章</li><li>认证详情</li></ol>
         <ul class="changes"><li>证书编号、交易哈希显示「铸造完成后生成」，铸造日期显示「铸造中」</li><li>新增「认证版本」字段；「当前持有人」改为「认证作者」</li><li>顶部说明改为：确权认证绑定帖子的一个版本，永久记录在链上</li></ul>
@@ -153,7 +173,7 @@
     <article class="screen" id="edit-confirm">
       <figure class="phone"><img src="shots/edit-confirm.png" alt="编辑有认证的帖子前的提示 截图" loading="lazy" width="390" height="844"></figure>
       <div class="screen-body">
-        <p class="screen-index">屏 5</p>
+        <p class="screen-index">屏 7</p>
         <h3>编辑有认证的帖子前的提示<span class="tag tag--new">新增</span></h3>
         <ol class="path" aria-label="入口路径"><li>有认证的帖子</li><li>…</li><li>编辑</li></ol>
         <ul class="changes"><li>当前版本有认证（确权中 / 已确权 / 已撤销）时，编辑前弹出「修改后将生成新版本」</li><li>正文按认证状态说明影响：已确权——原版本的确权保留在原版本；确权中——认证对应提交时的内容，铸造完成后保留在原版本；已撤销——撤销记录保留在原版本</li><li>新版本没有确权标识，赞数从 0 开始累计，满 100 赞后可以单独申请；选「继续修改」进入编辑，「取消」关闭</li></ul>
@@ -163,7 +183,7 @@
     <article class="screen" id="versions">
       <figure class="phone"><img src="shots/versions.png" alt="帖子详情：版本记录 截图" loading="lazy" width="390" height="844"></figure>
       <div class="screen-body">
-        <p class="screen-index">屏 6</p>
+        <p class="screen-index">屏 8</p>
         <h3>帖子详情：版本记录<span class="tag tag--new">新增</span></h3>
         <ol class="path" aria-label="入口路径"><li>帖子详情</li><li>v2 · 已编辑</li></ol>
         <ul class="changes"><li>有历史版本的帖子，作者行显示「v2 · 已编辑」，旁边是「v1 已确权」徽章</li><li>点版本号打开版本记录：当前版本在最前，显示本版本获得的赞数；历史版本标明更新时间和认证状态（已确权 / 确权中 / 已撤销）</li></ul>
@@ -173,7 +193,7 @@
     <article class="screen" id="version-v1">
       <figure class="phone"><img src="shots/version-v1.png" alt="查看旧版本原文 截图" loading="lazy" width="390" height="844"></figure>
       <div class="screen-body">
-        <p class="screen-index">屏 7</p>
+        <p class="screen-index">屏 9</p>
         <h3>查看旧版本原文<span class="tag tag--new">新增</span></h3>
         <ol class="path" aria-label="入口路径"><li>版本记录</li><li>v1</li></ol>
         <ul class="changes"><li>展示该版本的原文，已确权的版本附「查看认证证书」</li></ul>
@@ -183,7 +203,7 @@
     <article class="screen" id="cert-version">
       <figure class="phone"><img src="shots/cert-version.png" alt="认证详情：已确权 截图" loading="lazy" width="390" height="844"></figure>
       <div class="screen-body">
-        <p class="screen-index">屏 8</p>
+        <p class="screen-index">屏 10</p>
         <h3>认证详情：已确权<span class="tag tag--changed">改动</span></h3>
         <ol class="path" aria-label="入口路径"><li>v1</li><li>查看认证证书</li></ol>
         <ul class="changes"><li>「认证版本 v1」可点，打开版本记录并定位到该版本</li><li>「前往区块链浏览器」打开铸造交易哈希，可复制</li></ul>
@@ -193,7 +213,7 @@
     <article class="screen" id="revoked">
       <figure class="phone"><img src="shots/revoked.png" alt="认证详情：已撤销 截图" loading="lazy" width="390" height="844"></figure>
       <div class="screen-body">
-        <p class="screen-index">屏 9</p>
+        <p class="screen-index">屏 11</p>
         <h3>认证详情：已撤销<span class="tag tag--changed">改动</span></h3>
         <ol class="path" aria-label="入口路径"><li>「已撤销」徽章</li><li>认证详情</li></ol>
         <ul class="changes"><li>原「已销毁」改为「已撤销」，帖子徽章为红色</li><li>证书显示「该认证已撤销」、撤销原因、撤销时间，并说明链上记录永久保留</li></ul>
@@ -203,7 +223,7 @@
     <article class="screen" id="rules">
       <figure class="phone"><img src="shots/rules.png" alt="确权规则 截图" loading="lazy" width="390" height="844"></figure>
       <div class="screen-body">
-        <p class="screen-index">屏 10</p>
+        <p class="screen-index">屏 12</p>
         <h3>确权规则<span class="tag tag--changed">改动</span></h3>
         <ol class="path" aria-label="入口路径"><li>认证详情</li><li>了解知识确权规则</li></ol>
         <ul class="changes"><li>改为五段：申请条件（作者申请，平台发出认证并铸造上链）、上链记录、按版本确权（新版本赞数从 0 开始累计）、查看位置、撤销机制</li><li>底部提示：认证一经撤销无法恢复，请确保帖子内容原创、点赞来自真实互动</li></ul>

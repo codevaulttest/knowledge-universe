@@ -15,7 +15,7 @@ export function DevPanel({ children }: DevPanelProps) {
     walletConnected, connectWallet, disconnectWallet, demoHideOwnChannels, toggleDemoHideOwnChannels, demoCollabPhase, cycleDemoCollabPhase, t,
     taskSnapshotToday, resetDemoTasks, simulateDemoTaskInteractions, setDemoPbWallets,
     demoForceLadder, toggleDemoForceLadder, demoForceNewUser, toggleDemoForceNewUser,
-    demoFiveStarNodeCount, cycleDemoFiveStarNodeCount,
+    demoFiveStarNodeCount, cycleDemoFiveStarNodeCount, realNameStatus, cycleDemoRealName,
   } = useApp();
 
   if (!visible) return null;
@@ -122,6 +122,12 @@ export function DevPanel({ children }: DevPanelProps) {
           >
             <span>{t('切换直连五星节点数')}</span>
             <span className="planet-dev-menu-toggle">{demoFiveStarNodeCount}</span>
+          </button>
+          <button type="button" className="planet-dev-menu-item" onClick={cycleDemoRealName}>
+            <span>{t('切换实名认证状态')}</span>
+            <span className="planet-dev-menu-toggle">
+              {realNameStatus === 'verified' ? t('已通过') : realNameStatus === 'reviewing' ? t('审核中') : t('未认证')}
+            </span>
           </button>
           <button type="button" className="planet-dev-menu-item" onClick={() => setDemoPbWallets('normal')}>
             <span>{t('恢复钱包余额')}</span>

@@ -655,3 +655,112 @@
   font: var(--ku-text-badge);
   cursor: pointer;
 }
+
+/* ═══════════════════════════════════ 申请确权：实名认证 + 兑换 */
+
+.cert-apply-sheet {
+  display: grid;
+  align-content: start;
+  gap: var(--ku-space-3);
+}
+.cert-apply-lead {
+  margin: 0;
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-secondary);
+}
+.cert-apply-section-title {
+  margin: var(--ku-space-1) 0 0;
+  font: var(--ku-text-author-name);
+  color: var(--ku-color-text-primary);
+}
+.cert-apply-hint {
+  margin: 0;
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-meta);
+}
+.cert-id-kinds {
+  display: flex;
+  gap: var(--ku-space-2);
+}
+.cert-id-kind {
+  flex: 1;
+  padding: 10px var(--ku-space-3);
+  border: 1px solid var(--ku-color-border-control);
+  border-radius: var(--ku-radius-pill);
+  background: var(--ku-color-bg-phone);
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-secondary);
+}
+.cert-id-kind--active {
+  border-color: var(--ku-color-primary);
+  color: var(--ku-color-primary-on-tint);
+  font-weight: 600;
+}
+.cert-id-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ku-space-2);
+  padding: var(--ku-space-4);
+  border: 1px dashed var(--ku-color-border-control);
+  border-radius: var(--ku-radius-card);
+  background: var(--ku-color-bg-secondary);
+  font: var(--ku-text-body-sm);
+  color: var(--ku-color-text-secondary);
+}
+.cert-id-upload--done {
+  border-style: solid;
+  border-color: var(--ku-color-primary);
+  color: var(--ku-color-primary-on-tint);
+}
+.cert-apply-steps {
+  list-style: none;
+  display: flex;
+  gap: var(--ku-space-2);
+  margin: 0;
+  padding: 0;
+}
+.cert-apply-step {
+  display: flex;
+  align-items: center;
+  gap: var(--ku-space-1);
+  flex: 1;
+  min-width: 0;
+  font: var(--ku-text-meta);
+  color: var(--ku-color-text-secondary);
+  white-space: nowrap;
+}
+.cert-apply-step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ku-color-bg-secondary);
+  font: var(--ku-text-meta);
+}
+.cert-apply-step--active {
+  color: var(--ku-color-text-primary);
+  font-weight: 600;
+}
+.cert-apply-step--active .cert-apply-step-dot,
+.cert-apply-step--done .cert-apply-step-dot {
+  background: var(--ku-color-primary-on-tint);
+  color: var(--ku-color-bg-phone);
+}
+.cert-review-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--ku-space-3);
+  padding: var(--ku-space-6) 0 0;
+  text-align: center;
+}
+.cert-review-icon {
+  color: var(--ku-color-primary-on-tint);
+}
+.cert-review-state .planet-confirm-btn {
+  width: 100%;
+  margin-top: var(--ku-space-2);
+}

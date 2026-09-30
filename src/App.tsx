@@ -5,7 +5,7 @@ import { withFreeTier } from './channelTiers';
 import { ACTIVITY_GROUPS, ALL_CHANNELS, ALL_POSTS, AVATAR_PRESET_SEEDS, CURRENT_USER, DEFAULT_WALLET_DISPLAY, findRegisteredUserByAddress, MOCK_CHANNEL_AUTHORIZATIONS, MOCK_CHANNEL_COLLAB_LICENSES, MOCK_FIVE_STAR_NODE_COUNT, NODE_STARS_BY_CODE, MOCK_MERIT_BALANCE, MOCK_MY_INVITE_CODE, MOCK_OUTGOING_TIPS, MOCK_PB_AIRDROP_AMOUNT, MOCK_PB_WALLETS, MOCK_KNOWLEDGE_CERTS, MOCK_SHIPPING_ADDRESSES, MOCK_SHOP_ORDERS, MOCK_SUP_WALLETS, MOCK_WALLET_ADDRESS, getAirdropDeadline, resolveInviterAddress } from './mockData';
 import { formatScheduledAt } from './dateUtils';
 import { isValidWalletAddress } from './formatAddress';
-import type { AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, CertStatus, Draft, InteractionAction, KnowledgeCert, Language, RevokeReason, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import type { AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, CertStatus, Draft, InteractionAction, KnowledgeCert, Language, RevokeReason, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, RealNameStatus, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import { CHANNEL_COLLAB_ANNUAL_PB, CHANNEL_COLLAB_DEMO_NOW, CHANNEL_COLLAB_GRACE_END, CHANNEL_COLLAB_TERM_MS, CHANNEL_COLLAB_TRIAL_END, COLLAB_PHASE_CYCLE, channelCollabPhaseAt, PB_WALLETS, PB_WALLET_DISPLAY_ORDER, PB_WALLET_PRIORITY, allowedWalletsForUse, isWalletAllowedForUse, pbOnchainFee, resolveSupPool, splitAirdropClaim, supReasonForPbUse, walletConsumesSup } from './walletConfig';
 import { computeUnitMerit } from './shopConfig';
 import { getShopVariant, isMultiVariantShop } from './shopUtils';
@@ -33,7 +33,7 @@ import { ShopPage } from './pages/ShopPage';
 import { ShopItemPage } from './pages/ShopItemPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { CertApplySheet } from './components/CertApplySheet';
-import { certForVersion, currentVersion, hasAnyCert } from './certUtils';
+import { CERT_APPLY_PB, certForVersion, currentVersion, hasAnyCert } from './certUtils';
 import { CertDetailPage } from './pages/CertDetailPage';
 import { NodeDetailPage } from './pages/NodeDetailPage';
 import { AdnPage } from './pages/AdnPage';
@@ -1263,6 +1263,16 @@ export default function App({ account, onLanguageChange }: {
   };
 
   // ── 知识确权：作者主动申请 ──
+  // 实名认证：演示用，只记状态，不收集真实证件信息；提交后进入人工审核
+  const [realNameStatus, setRealNameStatus] = useState<RealNameStatus>('none');
+  const realNameVerified = realNameStatus === 'verified';
+  const submitRealName = () => setRealNameStatus('reviewing');
+  const cycleDemoRealName = () => setRealNameStatus(prev => (
+    prev === 'none' ? 'reviewing' : prev === 'reviewing' ? 'verified' : 'none'
+  ));
+  /** 确权兑换费：金额和可用钱包待产品确认 */
+  const payCertFee = (wallet: PbWalletId) =>
+    payPb({ amount: CERT_APPLY_PB, use: 'cert', wallet, supCost: pbOnchainFee(CERT_APPLY_PB) });
   const [certApplyPostId, setCertApplyPostId] = useState<string | null>(null);
   const openCertApply = (postId: string) => requireWallet(() => setCertApplyPostId(postId));
   const applyCert = (postId: string) => {
@@ -1508,7 +1518,7 @@ export default function App({ account, onLanguageChange }: {
     addShippingAddress, setDefaultAddress, removeShippingAddress, updateShippingAddress,
     placeShopOrder, shipShopOrder, confirmShopReceipt, simulateShopSettle, requestShopRefund,
     knowledgeCerts, simulateCertMint, simulateCertRevoke,
-    openCertApply, applyCert,
+    openCertApply, applyCert, realNameStatus, realNameVerified, submitRealName, cycleDemoRealName, payCertFee,
     navBarsHidden, setNavBarsHidden,
   };
 

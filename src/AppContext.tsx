@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ActivityGroup, AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, Draft, InteractionAction, KnowledgeCert, Language, RevokeReason, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
+import type { ActivityGroup, AddressMigration, Channel, ChannelAuthorization, ChannelCollabPhase, Draft, InteractionAction, KnowledgeCert, Language, RealNameStatus, RevokeReason, NewChannelData, NewPostData, OutgoingTip, PayCtx, PbUse, PbWalletId, Post, PostAction, Reply, Route, ShippingAddress, ShopInfo, ShopOrder, StakeModalRequest, SupTransaction, SupTransactionReason, SupWalletId, UserProfile } from './types';
 import type { LotQuota, TaskCalendarMonth, TaskDaySnapshot } from './taskConfig';
 
 export type AppContextValue = {
@@ -246,6 +246,11 @@ export type AppContextValue = {
   openCertApply: (postId: string) => void;
   /** 签名提交后生成一条「确权中」证书 */
   applyCert: (postId: string) => void;
+  realNameStatus: RealNameStatus;
+  realNameVerified: boolean;
+  submitRealName: () => void;
+  cycleDemoRealName: () => void;
+  payCertFee: (wallet: PbWalletId) => boolean;
   /** 首页信息流下滑时，顶部/底部导航渐隐让出沉浸空间 */
   navBarsHidden: boolean;
   setNavBarsHidden: Dispatch<SetStateAction<boolean>>;

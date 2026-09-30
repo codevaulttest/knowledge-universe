@@ -1,11 +1,11 @@
 {
   "slug": "knowledge-cert",
   "feature": "内容确权",
-  "intro": "确权改为作者主动申请：帖子满 100 赞后，作者在弹窗里确认申请，由平台发出认证并铸造上链。认证绑定帖子的一个版本：修改有认证的帖子会生成新版本，旧版本和它的认证一起保留，读者可以点版本号查看。人工核查发现问题时认证被撤销，链上保留撤销时间和原因。",
+  "intro": "确权改为作者主动申请：帖子满 100 赞后，作者走一个全页面流程完成实名认证和确权兑换，由平台发出认证并铸造上链。实名资料提交后需要人工审核，通过后才能进入兑换那一步。认证绑定帖子的一个版本：修改有认证的帖子会生成新版本，旧版本和它的认证一起保留，读者可以点版本号查看。人工核查发现问题时认证被撤销，链上保留撤销时间和原因。接口字段与待确认项见接口契约。",
   "meta": {
     "提交范围": "7846000",
-    "日期": "2026-09-22",
-    "涉及页面": "个人主页 · 帖子详情 · 申请确权 · 认证详情"
+    "日期": "2026-09-30",
+    "涉及页面": "个人主页 · 帖子详情 · 申请确权 · 实名认证 · 认证详情"
   },
   "hide": [
     ".planet-dev-entry"
@@ -22,7 +22,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();const r=document.querySelector('.profile-cert-apply-row'); r.scrollIntoView({block:'center'}); hl(r);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const r=document.querySelector('.profile-cert-apply-row'); r.scrollIntoView({block:'center'}); hl(r);}",
           "wait": 500
         }
       ],
@@ -37,8 +37,8 @@
       ]
     },
     {
-      "id": "apply-modal",
-      "title": "申请确权弹窗",
+      "id": "apply-realname",
+      "title": "申请确权第一步：实名认证",
       "tag": "new",
       "path": [
         "确权筛选",
@@ -46,18 +46,66 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(400);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));await openApply();}",
           "wait": 500
         }
       ],
       "changes": [
-        "一个居中确认弹窗完成申请：标题「为 vN 申请确权」，说明内容指纹和作者信息永久记录在链上、认证绑定当前版本、之后修改会生成新版本并可单独申请",
-        "主按钮「确认申请」：提交后提示「已提交确权，铸造完成后通知你」；次按钮「取消」"
+        "申请确权是一个全页面流程，顶部两步进度：实名认证、确权兑换",
+        "说明内容指纹和作者信息永久记录在链上、认证绑定当前版本、之后修改会生成新版本并可单独申请",
+        "第一步选择证件类型（身份证 / 护照）并上传证件照，上传后「提交实名认证」可点"
       ],
       "devNotes": [
-        "弹窗沿用连接钱包弹窗的样式",
-        "认证由平台发出，前端没有作者签名环节",
-        "实名认证和费用后续版本再加"
+        "证件照上传是演示占位，原型不收集任何真实资料；实际需要哪些字段、走哪个上传接口待与后端确认",
+        "实名只做一次，已通过的账号再次申请直接从第二步开始"
+      ]
+    },
+    {
+      "id": "apply-review",
+      "title": "实名资料审核中",
+      "tag": "new",
+      "path": [
+        "实名认证",
+        "提交实名认证"
+      ],
+      "steps": [
+        {
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));await openApply();document.querySelector('.cert-id-upload').click(); await w(250);[...document.querySelectorAll('.cert-apply-sheet .planet-confirm-btn')].pop().click(); await w(1600);}",
+          "wait": 500
+        }
+      ],
+      "changes": [
+        "提交后进入等待人工审核的状态，不能继续到兑换那一步",
+        "文案不承诺审核时长，只说审核完成后会通知作者",
+        "toast「资料已提交，审核通过后会通知你」；「知道了」退出流程"
+      ],
+      "devNotes": [
+        "实名状态三态：未认证 / 审核中 / 已通过；是否有驳回态与驳回原因待后端确认",
+        "审核结果用什么方式通知作者待确认"
+      ]
+    },
+    {
+      "id": "apply-pay",
+      "title": "申请确权第二步：确权兑换",
+      "tag": "new",
+      "path": [
+        "实名已通过",
+        "申请确权"
+      ],
+      "steps": [
+        {
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));await rn('已通过'); await openApply(); await pickWallet();}",
+          "wait": 500
+        }
+      ],
+      "changes": [
+        "实名已通过时直接进入第二步，第一步显示为已完成",
+        "列出所需 PB 与 Gas 费，下方注明兑换金额待产品确认、当前为占位数值",
+        "选择 PB 钱包后「兑换并申请」可点；余额不足时提示并可重试"
+      ],
+      "devNotes": [
+        "兑换金额、可用钱包、是否收 Gas 费都待产品与后端确认，原型用 500 PB 占位",
+        "扣费与创建认证需在同一个接口里完成，前端不做两步提交"
       ]
     },
     {
@@ -65,12 +113,12 @@
       "title": "提交后：确权中",
       "tag": "new",
       "path": [
-        "确认申请",
+        "兑换并申请",
         "回到确权筛选"
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(400);sb('确认申请'); await w(1400); const c=card('周报模板完整版'); c.scrollIntoView({block:'center'}); hl(c.querySelector('.post-cert-badge'));}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));await rn('已通过'); await openApply(); await pickWallet();[...document.querySelectorAll('.cert-apply-sheet .planet-confirm-btn')].pop().click(); await w(1600);const c=card('周报模板完整版'); c.scrollIntoView({block:'center'}); hl(c.querySelector('.post-cert-badge'));}",
           "wait": 500
         }
       ],
@@ -92,7 +140,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='确权中').click(); await w(700);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='确权中').click(); await w(700);}",
           "wait": 500
         }
       ],
@@ -116,7 +164,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();const c=card('机械键盘'); c.scrollIntoView({block:'center'}); c.querySelector('.post-more-trigger').click(); await w(250); [...c.querySelectorAll('[role=menuitem]')].find(b=>b.textContent.includes('编辑')).click(); await w(500);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const c=card('机械键盘'); c.scrollIntoView({block:'center'}); c.querySelector('.post-more-trigger').click(); await w(250); [...c.querySelectorAll('[role=menuitem]')].find(b=>b.textContent.includes('编辑')).click(); await w(500);}",
           "wait": 500
         }
       ],
@@ -141,7 +189,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);}",
           "wait": 500
         }
       ],
@@ -165,7 +213,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);document.querySelectorAll('.post-version-item')[1].click(); await w(300);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);document.querySelectorAll('.post-version-item')[1].click(); await w(300);}",
           "wait": 500
         }
       ],
@@ -183,7 +231,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);document.querySelectorAll('.post-version-item')[1].click(); await w(300); document.querySelector('.post-version-content .planet-confirm-btn').click(); await w(700); hl(document.querySelector('.cert-version-link'));}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));card('Top 5 书单').querySelector('.post-text, .post-title, p').click(); await w(800); document.querySelector('.post-version-pill').click(); await w(400);document.querySelectorAll('.post-version-item')[1].click(); await w(300); document.querySelector('.post-version-content .planet-confirm-btn').click(); await w(700); hl(document.querySelector('.cert-version-link'));}",
           "wait": 500
         }
       ],
@@ -205,7 +253,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();const b=[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='已撤销'); b.scrollIntoView({block:'center'}); b.click(); await w(700);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const b=[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='已撤销'); b.scrollIntoView({block:'center'}); b.click(); await w(700);}",
           "wait": 500
         }
       ],
@@ -228,7 +276,7 @@
       ],
       "steps": [
         {
-          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));const sb=t=>[...document.querySelectorAll('.connect-wallet-modal button')].find(b=>b.textContent.includes(t)).click();[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='确权中').click(); await w(700); document.querySelector('[aria-label=了解知识确权规则]').click(); await w(400);}",
+          "eval": "async () => {const w=ms=>new Promise(r=>setTimeout(r,ms));const hl=el=>el&&el.setAttribute('style',(el.getAttribute('style')||'')+';outline:3px solid #FF5A1F;outline-offset:3px;border-radius:6px');const rn=async target=>{document.querySelector('.planet-dev-entry button').click(); await w(250);const it=[...document.querySelectorAll('.planet-dev-menu-item')].find(b=>b.textContent.includes('切换实名认证状态'));for(let i=0;i<4 && !it.textContent.includes(target);i++){it.click(); await w(200);}document.querySelector('.planet-dev-menu-close').click(); await w(300);};const openApply=async()=>{const bs=document.querySelectorAll('.profile-cert-apply-btn'); bs[bs.length-1].click(); await w(450);};const pickWallet=async()=>{document.querySelector('.pb-wallet-trigger').click(); await w(300);[...document.querySelectorAll('.planet-node-dropdown-item--wallet')].find(b=>!b.disabled).click(); await w(350);};document.querySelector('[role=dialog] [aria-label=关闭]')?.click(); await w(250); [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='我').click(); await w(700); [...document.querySelectorAll('.activity-filter-tab')].find(b=>b.textContent.startsWith('确权')).click(); await w(500);const card=t=>[...document.querySelectorAll('article, .post-card, .feed-item')].find(c=>c.textContent.includes(t));[...document.querySelectorAll('.post-cert-badge')].find(b=>b.textContent==='确权中').click(); await w(700); document.querySelector('[aria-label=了解知识确权规则]').click(); await w(400);}",
           "wait": 500
         }
       ],
