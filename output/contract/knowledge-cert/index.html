@@ -79,12 +79,12 @@
 <header>
   <p class="eyebrow">知识宇宙 · 知识确权</p>
   <h1>知识确权接口契约</h1>
-  <p class="lede">这份契约覆盖确权徽章、申请确权（实名认证 + 确权兑换两步）、版本记录、认证证书详情、个人主页「确权」筛选这几处前端页面。</p>
+  <p class="lede">这份契约覆盖确权徽章、自动确权设置（实名认证 + 扣费授权两步）、版本记录、认证证书详情、个人主页「确权」筛选这几处前端页面。</p>
   <dl class="facts">
     <div><dt>接口来源</dt><dd>本模块 Apifox 暂无对应目录。下表接口与字段是前端按已定规则提出的建议，路径与字段名由后端确定。</dd></div>
-    <div><dt>现行规则</dt><dd>帖子当前版本满 100 赞后可确权，作者既可以手动申请，也可以设置满 N 赞（不低于 100）自动确权。首次申请前需通过实名审核。认证由平台发出并铸造上链，按帖子版本绑定，人工核查后可撤销，链上保留撤销记录。</dd></div>
+    <div><dt>现行规则</dt><dd>确权只有自动一条路径：作者在设置里开启自动确权并设定阈值（不低于 100 赞），帖子达标后由服务端发起，没有逐篇的申请入口。开启前需通过实名审核并授权扣费。认证由平台发出并铸造上链，按帖子版本绑定，人工核查后可撤销，链上保留撤销记录。</dd></div>
     <div><dt>怎么用</dt><dd>第 7 节是前端期望的接口返回，改名后可直接录入；第 6 节汇总所有待确认项。</dd></div>
-    <div><dt>最近更新</dt><dd>2026-09-30 首次发布；补充实名有效期与重新认证的待确认项，新增自动确权规则（2.4）。</dd></div>
+    <div><dt>最近更新</dt><dd>2026-09-30 首次发布；确权改为只走自动确权，手动申请接口已从本页移除。</dd></div>
   </dl>
   <div class="legend"><span><span class="pill ok">已有</span> 接口已提供</span><span><span class="pill ok">已确认</span> 双方已对齐</span><span><span class="pill add">建议新增</span> 字段名可由后端定</span><span><span class="pill ask">待确认</span> 需要后端回复</span></div>
 </header>
@@ -92,11 +92,11 @@
 <h2 id="apis">1. 接口清单</h2>
 <div class="table-wrap"><table>
 <tr><th>接口</th><th>用途</th><th>前端调用时机</th></tr>
-<tr><td><code>POST /api/Cert/GetMyCertList</code></td><td>我的确权列表：已申请的认证 + 可申请的帖子</td><td>进入个人主页「确权」筛选</td></tr>
+<tr><td><code>POST /api/Cert/GetMyCertList</code></td><td>我的确权列表：已发起的认证 + 倒计时中和挂起中的帖子</td><td>进入个人主页「确权」筛选</td></tr>
 <tr><td><code>POST /api/Cert/GetCertDetail</code></td><td>单个认证的证书详情</td><td>点确权徽章、从版本记录进入证书</td></tr>
-<tr><td><code>POST /api/Cert/GetRealNameStatus</code></td><td>当前账号的实名认证状态</td><td>打开申请确权流程</td></tr>
-<tr><td><code>POST /api/Cert/SubmitRealName</code></td><td>提交实名资料，进入人工审核</td><td>实名那一步点「提交实名认证」</td></tr>
-<tr><td><code>POST /api/Cert/ApplyCert</code></td><td>扣除确权兑换费并提交确权申请</td><td>兑换那一步点「兑换并申请」</td></tr>
+<tr><td><code>POST /api/Cert/GetRealNameStatus</code></td><td>当前账号的实名认证状态</td><td>打开自动确权设置</td></tr>
+<tr><td><code>POST /api/Cert/SubmitRealName</code></td><td>提交实名资料，进入人工审核</td><td>设置流程第一步点「提交实名认证」</td></tr>
+
 <tr><td><code>POST /api/Cert/GetPostVersions</code></td><td>帖子的版本记录（各版本内容与认证状态）</td><td>点帖子详情的版本号</td></tr>
 <tr><td><code>POST /api/Cert/GetAutoCertSetting</code></td><td>自动确权设置：开关、阈值、授权单价、是否需要重新授权、挂起中的帖子</td><td>进入自动确权设置页</td></tr>
 <tr><td><code>POST /api/Cert/SaveAutoCertSetting</code></td><td>开启、修改或关闭自动确权，并记录本次授权的单价</td><td>设置页保存、调价后重新授权</td></tr>
@@ -109,35 +109,35 @@
 <p>一条认证对应「一个帖子的一个版本」。前端按 <code>certStatus</code> 显示徽章：</p>
 <div class="table-wrap"><table>
 <tr><th>状态</th><th><code>certStatus</code></th><th>含义</th><th>前端显示</th></tr>
-<tr><td>确权中</td><td><code>1</code></td><td>已提交申请、链上铸造未完成</td><td>灰色「确权中」徽章，只有作者本人看得到</td></tr>
+<tr><td>确权中</td><td><code>1</code></td><td>已发起、链上铸造未完成</td><td>灰色「确权中」徽章，只有作者本人看得到</td></tr>
 <tr><td>已确权</td><td><code>2</code></td><td>铸造完成</td><td>蓝色「已确权」徽章，所有人可见，点开是证书</td></tr>
 <tr><td>已撤销</td><td><code>3</code></td><td>人工核查后撤销</td><td>红色「已撤销」徽章，证书显示撤销原因和时间</td></tr>
 </table></div>
-<div class="callout"><p><span class="pill ask">待确认</span> <strong>铸造失败</strong>：链上铸造失败时返回什么状态？前端目前只有上面三种。如果失败可重试，建议单独一个取值，前端显示「铸造失败，可重新申请」。</p></div>
+<div class="callout"><p><span class="pill ask">待确认</span> <strong>铸造失败</strong>：链上铸造失败时返回什么状态？前端目前只有上面三种。如果失败可重试，建议单独一个取值，前端显示「铸造失败」并说明是否会自动重试。</p></div>
 
 <h3>2.2 按版本绑定</h3>
-<p>认证绑定申请时的版本号。作者编辑有认证的帖子时，旧版本连同它的认证一起保留，新内容成为下一个版本：</p>
+<p>认证绑定发起时的版本号。作者编辑有认证的帖子时，旧版本连同它的认证一起保留，新内容成为下一个版本：</p>
 <div class="table-wrap"><table>
 <tr><th>情况</th><th>帖子 <code>version</code></th><th>当前版本的认证</th><th>前端显示</th></tr>
-<tr><td>从没申请过确权</td><td><code>1</code></td><td>无</td><td>无徽章；编辑不生成新版本，不弹提示</td></tr>
+<tr><td>从没确权过</td><td><code>1</code></td><td>无</td><td>无徽章；编辑不生成新版本，不弹提示</td></tr>
 <tr><td>当前版本已确权</td><td>如 <code>1</code></td><td><code>certStatus=2</code></td><td>「已确权」；编辑前提示会生成新版本</td></tr>
 <tr><td>确权后被编辑过</td><td><code>2</code></td><td>无</td><td>灰色「v1 已确权」，点开是 v1 的证书；当前版本赞数从 0 重新累计</td></tr>
-<tr><td>新版本又申请了</td><td><code>2</code></td><td><code>certStatus=1</code> 或 <code>2</code></td><td>按当前版本的状态显示；v1 的认证仍可在版本记录里查看</td></tr>
+<tr><td>新版本又达标了</td><td><code>2</code></td><td><code>certStatus=1</code> 或 <code>2</code></td><td>按当前版本的状态显示；v1 的认证仍可在版本记录里查看</td></tr>
 </table></div>
-<div class="callout"><p><span class="pill ask">待确认</span> <strong>版本号与赞数由谁维护</strong>：前端建议后端在帖子上维护 <code>version</code>（从 1 开始）和 <code>versionStartLikes</code>（该版本开始时帖子的累计赞数）。当前版本赞数 = 帖子累计赞数 − <code>versionStartLikes</code>，满 100 才能申请。帖子列表和详情仍返回累计赞数，前端照常显示。只有申请过确权的帖子（任一状态）在编辑保存时才归档旧版本、版本号 +1。</p></div>
+<div class="callout"><p><span class="pill ask">待确认</span> <strong>版本号与赞数由谁维护</strong>：前端建议后端在帖子上维护 <code>version</code>（从 1 开始）和 <code>versionStartLikes</code>（该版本开始时帖子的累计赞数）。当前版本赞数 = 帖子累计赞数 − <code>versionStartLikes</code>，达到作者设定的阈值才会发起自动确权。帖子列表和详情仍返回累计赞数，前端照常显示。只有确权过的帖子（任一状态）在编辑保存时才归档旧版本、版本号 +1。</p></div>
 
 <h3>2.3 实名认证状态</h3>
 <div class="table-wrap"><table>
 <tr><th>状态</th><th><code>realNameStatus</code></th><th>前端显示</th></tr>
-<tr><td>未提交</td><td><code>0</code></td><td>申请流程第一步：选择证件类型、上传证件照、提交</td></tr>
+<tr><td>未提交</td><td><code>0</code></td><td>开启自动确权第一步：选择证件类型、上传证件照、提交</td></tr>
 <tr><td>审核中</td><td><code>1</code></td><td>第一步显示「实名资料审核中」，不能进入兑换那一步</td></tr>
-<tr><td>已通过</td><td><code>2</code></td><td>申请流程直接从第二步（确权兑换）开始</td></tr>
+<tr><td>已通过</td><td><code>2</code></td><td>开启自动确权时直接从第二步（扣费授权）开始</td></tr>
 </table></div>
-<p>实名做一次，之后每次申请确权直接从兑换那一步开始，不再要求上传证件。</p>
-<div class="callout"><p><span class="pill ask">待确认（4 项）</span> 一、审核被驳回是否单独一个状态、是否返回驳回原因，能否重新提交；二、审核时效，前端文案不写时长，只说审核完成后会通知作者；三、审核结果用什么通知作者（站内信 / 推送）；四、实名是否会失效、需要重新认证：证件过期、作者更换证件、风控要求复核时状态如何变化，是否需要一个「需重新认证」的取值，以及此时已申请的认证是否受影响。</p></div>
+<p>实名做一次，之后修改自动确权设置不再要求上传证件。</p>
+<div class="callout"><p><span class="pill ask">待确认（4 项）</span> 一、审核被驳回是否单独一个状态、是否返回驳回原因，能否重新提交；二、审核时效，前端文案不写时长，只说审核完成后会通知作者；三、审核结果用什么通知作者（站内信 / 推送）；四、实名是否会失效、需要重新认证：证件过期、作者更换证件、风控要求复核时状态如何变化，是否需要一个「需重新认证」的取值，以及此时自动确权是否暂停、已有认证是否受影响。</p></div>
 
-<h3>2.4 自动确权</h3>
-<p>作者可以设置「满 N 赞自动确权」，由服务端到点发起，不需要作者每次打开申请流程。规则如下：</p>
+<h3>2.4 自动确权（唯一路径）</h3>
+<p>确权只由服务端按作者设置的阈值自动发起，没有逐篇申请的接口。规则如下：</p>
 <div class="table-wrap"><table>
 <tr><th>规则</th><th>说明</th></tr>
 <tr><td>阈值下限</td><td>N 不得小于 100，作者只能往上调</td></tr>
@@ -145,46 +145,49 @@
 <tr><td>调价</td><td>确权费一经调整，自动确权立即暂停并通知作者；未重新授权前不扣费、不铸造</td></tr>
 <tr><td>倒计时</td><td>帖子达到阈值时先通知「24 小时后自动确权」，到点才扣费铸造</td></tr>
 <tr><td>倒计时期间编辑</td><td>作者改了内容则顺延重新计时，并按新版本重新判断赞数是否达标</td></tr>
-<tr><td>作者取消</td><td>倒计时期间可取消这一次，帖子回到手动申请状态</td></tr>
+<tr><td>作者取消</td><td>倒计时期间可取消这一次，该版本之后不再自动确权</td></tr>
 <tr><td>暂停期间达标</td><td>挂起等待，作者重新授权后补铸，不设过期时间</td></tr>
 <tr><td>余额不足</td><td>标记为挂起，待余额补足后继续，不作废、不设过期时间</td></tr>
+<tr><td>未开启</td><td>没有开启自动确权的作者，帖子达标也不会铸造，也没有别的确权途径</td></tr>
+<tr><td>开启前的存量帖子</td><td>开启时已经超过阈值的历史帖子是否补铸，待确认</td></tr>
 </table></div>
-<div class="callout"><p><span class="pill ask">待确认（5 项）</span> 一、倒计时与挂起任务由谁驱动（服务端定时任务），前端只读展示是否可行；二、挂起任务的状态取值，以及前端在帖子上如何区分「倒计时中」和「挂起中」；三、重新授权后补铸是一次性全部发起还是分批，作者能否先看清单再确认；四、实名未通过或被撤销时自动确权如何处理；五、自动确权的扣费通知与账单记录走哪条链路。</p></div>
+<div class="callout"><p><span class="pill ask">待确认（7 项）</span> 一、倒计时与挂起任务由谁驱动（服务端定时任务），前端只读展示是否可行；二、挂起任务的状态取值，以及前端在帖子上如何区分「倒计时中」和「挂起中」；三、重新授权后补铸是一次性全部发起还是分批，作者能否先看清单再确认；四、实名未通过或被撤销时自动确权如何处理；五、自动确权的扣费通知与账单记录走哪条链路；六、开启自动确权时，已经超过阈值的历史帖子是否补铸、补铸范围如何界定；七、作者关闭自动确权时，正在倒计时和挂起中的任务如何处置。</p></div>
 <p>这条路径前端原型尚未实现，字段对照待接口方案确定后补充。</p>
 
 <h2 id="fields">3. 字段对照</h2>
 
 <h3>3.1 帖子列表 / 帖子详情 → 确权信息</h3>
-<p>帖子对象上补充以下字段，前端据此显示徽章、版本号和申请入口：</p>
+<p>帖子对象上补充以下字段，前端据此显示徽章、版本号和自动确权进度：</p>
 <div class="table-wrap"><table>
 <tr><th>字段</th><th>类型</th><th>前端用途</th><th>状态</th></tr>
 <tr><td><code>version</code></td><td>int</td><td>当前版本号，大于 1 时显示「v2 · 已编辑」并可点开版本记录</td><td><span class="pill add">建议新增</span></td></tr>
-<tr><td><code>versionLikes</code></td><td>int</td><td>当前版本获得的赞数，判断是否满 100 可申请；后端也可只返回 <code>versionStartLikes</code>，由前端相减</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>versionLikes</code></td><td>int</td><td>当前版本获得的赞数，用于展示距离阈值还差多少；后端也可只返回 <code>versionStartLikes</code>，由前端相减</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>certId</code></td><td>string</td><td>当前版本的认证 ID，查证书详情用；没有则为空</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>certStatus</code></td><td>int</td><td>当前版本的认证状态，见 2.1；没有认证时为 <code>0</code></td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>lastCertVersion</code></td><td>int</td><td>该帖子最近一个已确权的版本号；当前版本没有认证时显示「vN 已确权」</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>lastCertId</code></td><td>string</td><td>上一条的认证 ID，点徽章进入该版本的证书</td><td><span class="pill add">建议新增</span></td></tr>
-<tr><td><code>canApplyCert</code></td><td>bool</td><td>是否显示「申请确权」入口；后端不返回时，前端按「本人 + <code>versionLikes ≥ 100</code> + 当前版本无认证」自行判断</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>autoCertState</code></td><td>int</td><td>该帖子在自动确权里的处境：无（0）、倒计时中（1）、挂起中（2）；前端据此在帖子上显示倒计时或挂起提示</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>autoCertTime</code></td><td>datetime</td><td>倒计时结束时间</td><td><span class="pill add">建议新增</span></td></tr>
 </table></div>
 <p>「确权中」徽章只对作者本人显示，前端已按作者判断，接口可以对所有人返回同样的数据。</p>
 
 <h3>3.2 <code>GetMyCertList</code> → <code>data</code></h3>
-<p>个人主页「确权」筛选一次取两部分：已申请的认证（含已撤销）和可申请的帖子。</p>
+<p>个人主页「确权」筛选一次取两部分：已发起的认证（含已撤销）和正在倒计时、挂起中的帖子。</p>
 <div class="table-wrap"><table>
 <tr><th>字段</th><th>类型</th><th>前端用途</th><th>状态</th></tr>
 <tr><td><code>certCount</code></td><td>int</td><td>筛选标签旁的数量</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>items[].postId</code></td><td>string</td><td>帖子 ID，列表里渲染整张帖子卡片</td><td><span class="pill add">建议新增</span></td></tr>
-<tr><td><code>items[].certId</code></td><td>string</td><td>认证 ID；可申请但还没申请的帖子为空</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>items[].certId</code></td><td>string</td><td>认证 ID；倒计时中、挂起中还没铸造的帖子为空</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>items[].certStatus</code></td><td>int</td><td>认证状态，见 2.1</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>items[].version</code></td><td>int</td><td>认证对应的版本号</td><td><span class="pill add">建议新增</span></td></tr>
-<tr><td><code>items[].canApply</code></td><td>bool</td><td>为 true 时卡片上方显示「已满 100 赞，可申请确权」和申请按钮</td><td><span class="pill add">建议新增</span></td></tr>
+
 </table></div>
 <p>列表为空时前端显示空态「还没有知识确权认证」。帖子本身的内容仍走帖子接口或由本接口带上，取决于后端哪种方便，请告知。</p>
 
 <h3>3.3 <code>GetRealNameStatus</code> → <code>data</code></h3>
 <div class="table-wrap"><table>
 <tr><th>字段</th><th>类型</th><th>前端用途</th><th>状态</th></tr>
-<tr><td><code>realNameStatus</code></td><td>int</td><td>见 2.3，决定申请流程从哪一步开始</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>realNameStatus</code></td><td>int</td><td>见 2.3，决定开启流程从哪一步开始</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>submitTime</code></td><td>datetime</td><td>审核中时展示提交时间</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>rejectReason</code></td><td>string</td><td>驳回时展示原因；没有驳回状态则不需要</td><td><span class="pill ask">待确认</span></td></tr>
 </table></div>
@@ -194,17 +197,17 @@
 <div class="callout"><p><span class="pill ask">待确认（3 项）</span> 一、证件照走哪个上传接口、传 URL 还是 base64；二、除证件照外是否还要姓名、证件号码、人脸核验，前端原型目前只有证件类型和证件照两项；三、提交后能否修改或撤回。</p></div>
 <p>返回只需 <code>result</code> 和 <code>message</code>，成功后前端把状态置为审核中并提示「资料已提交，审核通过后会通知你」。</p>
 
-<h3>3.5 <code>ApplyCert</code></h3>
-<p>请求参数建议：<code>postId</code>、<code>version</code>（前端拿到的当前版本号，供后端校验版本未变）、<code>payWallet</code>（兑换使用的 PB 钱包）。</p>
+<h3>3.5 自动确权的扣费与铸造</h3>
+<p>扣费与铸造由服务端在倒计时结束时发起，前端不调用申请接口。作者在设置里授权时提交的是阈值、扣费钱包和当时的确权费单价（<code>SaveAutoCertSetting</code>）。下表是前端在帖子和设置页上需要看到的结果字段：</p>
 <div class="table-wrap"><table>
 <tr><th>响应字段</th><th>前端用途</th><th>状态</th></tr>
-<tr><td><code>certId</code></td><td>新建的认证 ID，用于跳转证书页</td><td><span class="pill add">建议新增</span></td></tr>
-<tr><td><code>certStatus</code></td><td>提交后应为 <code>1</code>（确权中）</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>certId</code></td><td>自动发起后生成的认证 ID，用于跳转证书页</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>certStatus</code></td><td>发起后应为 <code>1</code>（确权中）</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>costPb</code></td><td>实际扣除的 PB，用于提示与对账</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>supFee</code></td><td>实际扣除的 SUP 手续费</td><td><span class="pill add">建议新增</span></td></tr>
 </table></div>
-<div class="callout"><p><span class="pill ask">待确认（4 项）</span> 一、确权兑换费金额，前端原型用的是占位值 500 PB；二、可用哪些 PB 钱包（原型暂按可提取 PB 和链上 PB）；三、手续费是否与竞拍一致，按万分之一收 SUP；四、申请后铸造失败或认证被撤销时费用是否退回。</p></div>
-<p>扣费与创建认证需在同一次请求内完成，前端不做两步提交。成功后前端刷新钱包余额和确权列表。</p>
+<div class="callout"><p><span class="pill ask">待确认（4 项）</span> 一、确权兑换费金额，前端原型用的是占位值 500 PB；二、可用哪些 PB 钱包（原型暂按可提取 PB 和链上 PB）；三、手续费是否与竞拍一致，按万分之一收 SUP；四、铸造失败或认证被撤销时费用是否退回。</p></div>
+
 
 <h3>3.6 <code>GetCertDetail</code> → <code>data</code></h3>
 <div class="table-wrap"><table>
@@ -214,7 +217,7 @@
 <tr><td><code>postId</code></td><td>string</td><td>返回帖子</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>version</code></td><td>int</td><td>「认证版本 v1」，可点开版本记录</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>authorName</code></td><td>string</td><td>「认证作者」</td><td><span class="pill add">建议新增</span></td></tr>
-<tr><td><code>likesAtApply</code></td><td>int</td><td>申请时该版本的赞数</td><td><span class="pill add">建议新增</span></td></tr>
+<tr><td><code>likesAtApply</code></td><td>int</td><td>发起时该版本的赞数</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>contentHash</code></td><td>string</td><td>内容指纹，64 位 hex，可复制</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>issuerAddress</code></td><td>string</td><td>发行方地址</td><td><span class="pill add">建议新增</span></td></tr>
 <tr><td><code>tokenId</code></td><td>string</td><td>链上 Token ID；确权中时为空</td><td><span class="pill add">建议新增</span></td></tr>
@@ -250,20 +253,20 @@
 <p>沿用竞拍的约定：同一接口的各种失败共用一个 <code>result</code>，通过 <code>message</code> 区分，前端直接显示 <code>message</code>。<code>result</code> 请避开 <code>-2</code>、<code>-7</code>、<code>-8</code>、<code>-9</code>、<code>-11</code>、<code>-16</code>，前端请求层会把这几个值当作登录失效。页面有简中、繁中、英文，<code>message</code> 方便的话按请求语言返回。</p>
 <div class="table-wrap"><table>
 <tr><th>场景</th><th>规则</th></tr>
-<tr><td>赞数不足</td><td>当前版本赞数小于 100 时拒绝申请</td></tr>
-<tr><td>当前版本已有认证</td><td>确权中、已确权、已撤销都算已有，同一版本不能重复申请</td></tr>
-<tr><td>版本已变化</td><td>请求里的 <code>version</code> 与服务端当前版本不一致时拒绝，前端刷新后重新申请</td></tr>
-<tr><td>实名未通过</td><td><code>realNameStatus</code> 不是已通过时拒绝申请</td></tr>
-<tr><td>PB 余额不足</td><td>所选钱包可用 PB 小于兑换金额</td></tr>
+<tr><td>阈值过低</td><td>保存设置时阈值小于 100 则拒绝</td></tr>
+<tr><td>当前版本已有认证</td><td>确权中、已确权、已撤销都算已有，同一版本不重复铸造</td></tr>
+
+<tr><td>实名未通过</td><td><code>realNameStatus</code> 不是已通过时不能开启自动确权</td></tr>
+<tr><td>PB 余额不足</td><td>倒计时结束时所选钱包可用 PB 小于兑换金额，任务转为挂起</td></tr>
 <tr><td>SUP 不足</td><td>站内 SUP 小于手续费；是否收手续费待确认（见 3.5）</td></tr>
-<tr><td>非本人</td><td>只有作者本人能为自己的帖子申请确权</td></tr>
+
 </table></div>
 
 <h2 id="conventions">5. 通用约定</h2>
 <ul>
   <li><strong>时区</strong>：所有时间字段为北京时间，不带时区标记，前端按 +08:00 解析。</li>
   <li><strong>金额单位</strong>：兑换金额单位为 PB，手续费单位为 SUP。</li>
-  <li><strong>认证主体</strong>：认证由平台发出，前端没有作者签名环节，申请接口不带任何签名参数。</li>
+  <li><strong>认证主体</strong>：认证由平台发出，前端没有作者签名环节，铸造由服务端发起。</li>
   <li><strong>徽章数据来源</strong>：确权信息随帖子一起返回（见 3.1），前端不为每条帖子单独请求确权接口。</li>
   <li><strong>证书详情</strong>：已确权和已撤销的证书对所有人可见；确权中的认证只有作者本人能看到入口。</li>
 </ul>
@@ -283,13 +286,13 @@
   <li>链上 NFT 的持有方，证书上是否展示持有地址（第 5 节）。</li>
   <li>自动确权的倒计时与挂起任务如何驱动、状态如何返回、补铸怎么发起（2.4）。</li>
 </ol>
-<p>产品侧已定：当前版本满 100 赞可确权（手动申请或按作者设置的阈值自动确权，阈值不低于 100）、认证按帖子版本绑定、新版本赞数从 0 重新累计、认证由平台发出无需作者签名、首次申请前需通过实名审核、自动确权按开启时的单价扣费且调价后须重新授权、到达阈值后倒计时 24 小时再铸造、撤销后链上保留撤销时间和原因、赞数回落不撤销认证。</p>
+<p>产品侧已定：确权只通过作者设置的阈值自动发起，不保留手动申请入口；阈值不低于 100 赞；认证按帖子版本绑定、新版本赞数从 0 重新累计；认证由平台发出无需作者签名；开启自动确权前需通过实名审核并授权扣费；按开启时的单价扣费，调价后须重新授权；到达阈值后倒计时 24 小时再铸造；撤销后链上保留撤销时间和原因；赞数回落不撤销认证。</p>
 
 <h2 id="fixtures">7. 各场景期望返回</h2>
 <p>字段名是前端的建议命名，后端改名后同步告知前端即可。</p>
 
-<details open><summary>申请确权全流程 <span>apply-flow.json · 实名未提交 → 审核中 → 已通过 → 申请成功。</span></summary><div class="json-bar"><button type="button" class="copy" data-target="fx-0">复制 JSON</button></div><pre id="fx-0">{
-  "_说明": "申请确权流程：先查实名状态，未提交则提交资料进入审核，通过后扣费并提交确权申请。",
+<details open><summary>开启自动确权全流程 <span>auto-cert-setup.json · 实名未提交 → 审核中 → 已通过 → 保存设置。</span></summary><div class="json-bar"><button type="button" class="copy" data-target="fx-0">复制 JSON</button></div><pre id="fx-0">{
+  "_说明": "开启自动确权：先查实名状态，未提交则提交资料进入审核，通过后保存阈值与扣费授权。",
   "_当前时间": "2026-09-30 12:00:00",
   "GetRealNameStatus() 未提交": {
     "result": 0,
@@ -311,20 +314,41 @@
     "message": null,
     "data": { "realNameStatus": 2, "submitTime": "2026-09-30 12:01:20", "rejectReason": null }
   },
-  "ApplyCert(postId=p_2001, version=2, payWallet=onchain)": {
+  "SaveAutoCertSetting(enabled=true, threshold=100, payWallet=onchain)": {
+    "result": 0,
+    "message": null,
+    "data": null
+  },
+  "GetAutoCertSetting() 开启后": {
     "result": 0,
     "message": null,
     "data": {
-      "certId": "c_9001",
-      "certStatus": 1,
-      "costPb": 500,
-      "supFee": 0.05
+      "enabled": true,
+      "threshold": 100,
+      "payWallet": "onchain",
+      "authorizedPrice": 500,
+      "currentPrice": 500,
+      "needReauthorize": false,
+      "pendingCount": 0
+    }
+  },
+  "GetAutoCertSetting() 确权费调价后": {
+    "result": 0,
+    "message": null,
+    "data": {
+      "enabled": true,
+      "threshold": 100,
+      "payWallet": "onchain",
+      "authorizedPrice": 500,
+      "currentPrice": 800,
+      "needReauthorize": true,
+      "pendingCount": 3
     }
   }
 }</pre></details>
 
-<details><summary>帖子上的确权信息 <span>post-cert.json · 四种情况：无认证、确权中、已确权、确权后被编辑。</span></summary><div class="json-bar"><button type="button" class="copy" data-target="fx-1">复制 JSON</button></div><pre id="fx-1">{
-  "_说明": "帖子列表 / 详情里每条帖子补充的确权字段。likes 仍是累计赞数，versionLikes 是当前版本的赞数。",
+<details><summary>帖子上的确权信息 <span>post-cert.json · 四种情况：无认证、确权中、已确权、编辑后新版本倒计时中。</span></summary><div class="json-bar"><button type="button" class="copy" data-target="fx-1">复制 JSON</button></div><pre id="fx-1">{
+  "_说明": "帖子列表 / 详情里每条帖子补充的确权字段。likes 仍是累计赞数，versionLikes 是当前版本的赞数，autoCertState 说明这篇是否正在自动确权的倒计时或挂起中。",
   "_当前时间": "2026-09-30 12:00:00",
   "GetPostList() → data.items[]": [
     {
@@ -336,7 +360,8 @@
       "certStatus": 0,
       "lastCertVersion": 0,
       "lastCertId": "",
-      "canApplyCert": false
+      "autoCertState": 0,
+      "autoCertTime": null
     },
     {
       "postId": "p_1002",
@@ -347,7 +372,8 @@
       "certStatus": 1,
       "lastCertVersion": 0,
       "lastCertId": "",
-      "canApplyCert": false
+      "autoCertState": 0,
+      "autoCertTime": null
     },
     {
       "postId": "p_1003",
@@ -358,7 +384,8 @@
       "certStatus": 2,
       "lastCertVersion": 1,
       "lastCertId": "c_8002",
-      "canApplyCert": false
+      "autoCertState": 0,
+      "autoCertTime": null
     },
     {
       "postId": "p_2001",
@@ -369,13 +396,14 @@
       "certStatus": 0,
       "lastCertVersion": 1,
       "lastCertId": "c_8003",
-      "canApplyCert": true
+      "autoCertState": 1,
+      "autoCertTime": "2026-10-01 09:20:00"
     }
   ]
 }</pre></details>
 
-<details><summary>我的确权列表 <span>my-cert-list.json · 已确权 + 确权中 + 已撤销 + 可申请。</span></summary><div class="json-bar"><button type="button" class="copy" data-target="fx-2">复制 JSON</button></div><pre id="fx-2">{
-  "_说明": "个人主页「确权」筛选：已申请的认证排在前，可申请的帖子排在后。certCount 用于筛选标签旁的数字。",
+<details><summary>我的确权列表 <span>my-cert-list.json · 已确权 + 确权中 + 已撤销 + 倒计时中。</span></summary><div class="json-bar"><button type="button" class="copy" data-target="fx-2">复制 JSON</button></div><pre id="fx-2">{
+  "_说明": "个人主页「确权」筛选：已发起的认证排在前，倒计时中和挂起中的帖子排在后。certCount 用于筛选标签旁的数字。",
   "_当前时间": "2026-09-30 12:00:00",
   "GetMyCertList(pageIndex=1, pageSize=20)": {
     "result": 0,
@@ -387,10 +415,10 @@
       "totalPages": 1,
       "certCount": 3,
       "items": [
-        { "postId": "p_1003", "certId": "c_8002", "certStatus": 2, "version": 1, "canApply": false },
-        { "postId": "p_1002", "certId": "c_8001", "certStatus": 1, "version": 1, "canApply": false },
-        { "postId": "p_1004", "certId": "c_8005", "certStatus": 3, "version": 1, "canApply": false },
-        { "postId": "p_2001", "certId": "", "certStatus": 0, "version": 2, "canApply": true }
+        { "postId": "p_1003", "certId": "c_8002", "certStatus": 2, "version": 1, "autoCertState": 0 },
+        { "postId": "p_1002", "certId": "c_8001", "certStatus": 1, "version": 1, "autoCertState": 0 },
+        { "postId": "p_1004", "certId": "c_8005", "certStatus": 3, "version": 1, "autoCertState": 0 },
+        { "postId": "p_2001", "certId": "", "certStatus": 0, "version": 2, "autoCertState": 1 }
       ]
     }
   }
