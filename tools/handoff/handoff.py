@@ -114,11 +114,17 @@ def build_page(spec, out_dir: Path):
     toc = ''.join(f'<li><a href="#{esc(s["id"])}">{esc(s["title"])}</a></li>' for s in spec['screens'])
     meta = spec.get('meta', {})
     meta_html = ''.join(f'<div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>' for k, v in meta.items())
+    facts = spec.get('facts', [])
+    facts_html = (
+        '<dl class="facts">' + ''.join(f'<div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>' for k, v in facts) + '</dl>'
+        if facts else ''
+    )
     page = TEMPLATE.read_text(encoding='utf-8')
     for key, value in {
         '{{TITLE}}': esc(spec['feature']),
         '{{FEATURE}}': esc(spec['feature']),
         '{{INTRO}}': esc(spec.get('intro', '')),
+        '{{FACTS}}': facts_html,
         '{{META}}': meta_html,
         '{{TOC}}': toc,
         '{{SCREENS}}': screens_html,

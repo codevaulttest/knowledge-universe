@@ -51,6 +51,11 @@
   .eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); margin: 0; }
   h1 { font-size: clamp(28px, 4.4vw, 40px); line-height: 1.2; font-weight: 900; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
   .intro { color: var(--ink-soft); max-width: 62ch; margin: 0; }
+  dl.facts { margin: 0; display: grid; gap: 8px; max-width: 70ch; }
+  dl.facts div { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 12px; }
+  dl.facts dt { font: 500 13px/1.75 var(--mono); color: var(--accent-ink); }
+  dl.facts dd { margin: 0; color: var(--ink-soft); font-size: 14px; }
+  @media (max-width: 560px) { dl.facts div { grid-template-columns: 1fr; gap: 0; } }
   dl.meta { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 6px 0 0; }
   dl.meta div { display: grid; gap: 2px; }
   dl.meta dt { font: 500 12px/1.4 var(--mono); color: var(--ink-soft); letter-spacing: .04em; }
@@ -100,7 +105,8 @@
   <header class="top">
     <p class="eyebrow">知识宇宙 · 功能交付</p>
     <h1>内容确权</h1>
-    <p class="intro">确权改为作者主动申请：帖子满 100 赞后，作者走一个全页面流程完成实名认证和确权兑换，由平台发出认证并铸造上链。实名资料提交后需要人工审核，通过后才能进入兑换那一步。认证绑定帖子的一个版本：修改有认证的帖子会生成新版本，旧版本和它的认证一起保留，读者可以点版本号查看。人工核查发现问题时认证被撤销，链上保留撤销时间和原因。接口字段与待确认项见接口契约。</p>
+    <p class="intro">确权改为作者主动申请：帖子满 100 赞后，作者走一个全页面流程完成实名认证和确权兑换，由平台发出认证并铸造上链。</p>
+    <dl class="facts"><div><dt>实名审核</dt><dd>实名资料提交后需要人工审核，通过后才能进入兑换那一步。</dd></div><div><dt>按版本绑定</dt><dd>认证绑定帖子的一个版本。修改有认证的帖子会生成新版本，旧版本和它的认证一起保留，读者可以点版本号查看。</dd></div><div><dt>撤销</dt><dd>人工核查发现问题时认证被撤销，链上保留撤销时间和原因。</dd></div><div><dt>接口</dt><dd>字段对照与待确认项见接口契约。</dd></div></dl>
     <dl class="meta"><div><dt>提交范围</dt><dd>5162dcd</dd></div><div><dt>日期</dt><dd>2026-09-30</dd></div><div><dt>涉及页面</dt><dd>个人主页 · 帖子详情 · 申请确权 · 实名认证 · 认证详情</dd></div></dl>
   </header>
 

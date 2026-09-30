@@ -39,6 +39,11 @@
   .eyebrow { margin: 0; font: 500 12px/1 var(--mono); letter-spacing: .08em; color: var(--accent-ink); }
   h1 { margin: 0; font-size: clamp(28px, 4.4vw, 38px); line-height: 1.2; font-weight: 900; text-wrap: balance; }
   .lede { margin: 0; color: var(--ink-soft); max-width: 66ch; }
+  dl.facts { margin: 0; display: grid; gap: 8px; max-width: 72ch; }
+  dl.facts div { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 12px; }
+  dl.facts dt { font: 500 13px/1.75 var(--mono); color: var(--accent-ink); }
+  dl.facts dd { margin: 0; color: var(--ink-soft); font-size: 14px; }
+  @media (max-width: 560px) { dl.facts div { grid-template-columns: 1fr; gap: 0; } }
   .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--ink-soft); }
   h2 { font-size: 21px; margin: 44px 0 12px; text-wrap: balance; }
   h3 { font-size: 16px; margin: 28px 0 8px; }
@@ -74,7 +79,13 @@
 <header>
   <p class="eyebrow">知识宇宙 · 知识确权</p>
   <h1>知识确权接口契约</h1>
-  <p class="lede">前端页面：帖子卡片与帖子详情的确权徽章、申请确权（实名认证 + 确权兑换两步）、版本记录、认证证书详情、个人主页「确权」筛选。本模块 Apifox 暂无对应目录，下表接口与字段都是前端按已定规则提出的建议，路径与字段名由后端确定；第 7 节是前端期望的接口返回，可直接改名后录入。规则来源：2026-09-22 及之后群内讨论——满 100 赞由作者申请、认证按帖子版本绑定、申请前需实名审核、认证由平台发出、撤销后链上保留记录。最近更新：2026-09-30 首次发布，待确认项见第 6 节。</p>
+  <p class="lede">这份契约覆盖确权徽章、申请确权（实名认证 + 确权兑换两步）、版本记录、认证证书详情、个人主页「确权」筛选这几处前端页面。</p>
+  <dl class="facts">
+    <div><dt>接口来源</dt><dd>本模块 Apifox 暂无对应目录。下表接口与字段是前端按已定规则提出的建议，路径与字段名由后端确定。</dd></div>
+    <div><dt>规则来源</dt><dd>2026-09-22 及之后的群内讨论：满 100 赞由作者申请、认证按帖子版本绑定、申请前需实名审核、认证由平台发出、撤销后链上保留记录。</dd></div>
+    <div><dt>怎么用</dt><dd>第 7 节是前端期望的接口返回，改名后可直接录入；第 6 节汇总所有待确认项。</dd></div>
+    <div><dt>最近更新</dt><dd>2026-09-30 首次发布。</dd></div>
+  </dl>
   <div class="legend"><span><span class="pill ok">已有</span> 接口已提供</span><span><span class="pill ok">已确认</span> 双方已对齐</span><span><span class="pill add">建议新增</span> 字段名可由后端定</span><span><span class="pill ask">待确认</span> 需要后端回复</span></div>
 </header>
 
